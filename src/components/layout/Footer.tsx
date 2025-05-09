@@ -16,19 +16,19 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start">
                 <MapPin size={20} className="mr-2 mt-1 flex-shrink-0 text-[#FF4081]" />
-                <span>61 Bis, Rue de Marrakech, 80020, Agadir, Maroc</span>
+                <span>61 Bis, Rue de Marrakech, 80020, Agadir</span>
               </li>
               <li className="flex flex-col">
                 <div className="flex items-center mb-1">
                   <Phone size={20} className="mr-2 flex-shrink-0 text-[#FF4081]" />
-                  <span className="font-semibold">Laboratoire COVID et NON COVID:</span>
+                  <span className="font-semibold">Contact Laboratoire :</span>
                 </div>
                 <div className="ml-7">
-                  <p>Fixe: <a href="tel:+212528843384" className="hover:underline">0528 84 33 84</a></p>
-                  <p>WhatsApp: <a href="https://wa.me/212634293900" className="hover:underline">0634 29 39 00</a></p>
-                  <p>WhatsApp: <a href="https://wa.me/212707291873" className="hover:underline">0707 29 18 73</a></p>
-                  <p>Sociétés: <a href="tel:+212664727681" className="hover:underline">0664 72 76 81</a></p>
-                  <p>Fax: 0528 82 87 58</p>
+                  <p>Fixe: <a href="tel:0528843384" className="hover:underline">0528843384</a></p>
+                  <p>WhatsApp: <a href="https://wa.me/212634293900" className="hover:underline">0634293900</a></p>
+                  <p>WhatsApp: <a href="https://wa.me/212707291873" className="hover:underline">0707291873</a></p>
+                  <p>Sociétés et autres: <a href="tel:0664727681" className="hover:underline">0664727681</a></p>
+                  <p>Fax: 0528828758</p>
                 </div>
               </li>
               <li className="flex items-center">
@@ -37,16 +37,13 @@ const Footer = () => {
                   <a href="mailto:laboelallali@gmail.com" className="hover:underline">
                     laboelallali@gmail.com
                   </a>
-                  <a href="mailto:laboelallalicovid19@gmail.com" className="hover:underline">
-                    laboelallalicovid19@gmail.com
-                  </a>
                 </div>
               </li>
               <li className="flex items-start">
                 <Clock size={20} className="mr-2 mt-1 flex-shrink-0 text-[#FF4081]" />
                 <div>
-                  <p>Lundi au Samedi: 7h30 - 18h30</p>
-                  <p>Dimanche: 08h00 - 18h00</p>
+                  <p>Lundi au Samedi: 7h30 to 18h30</p>
+                  <p>Dimanche: 08h00 to 18h00</p>
                 </div>
               </li>
             </ul>
@@ -94,7 +91,7 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">À Propos</h3>
             <p className="mb-4">
-              Laboratoire d'analyses médicales de référence à Agadir, engagé à fournir des résultats précis et un service patient de qualité.
+              Laboratoire d&apos;analyses médicales de référence à Agadir, engagé à fournir des résultats précis et un service patient de qualité.
             </p>
             <a 
               href="https://wa.me/212528000000" 

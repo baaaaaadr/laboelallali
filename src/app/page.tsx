@@ -1,7 +1,7 @@
 "use client";
 
 import HeroBanner from '@/components/features/home/HeroBanner';
-import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, HomeIcon, Info, MapPin, ChevronRight } from 'lucide-react';
+import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, HomeIcon, Info, MapPin, ChevronRight, Navigation } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, Suspense } from "react";
 import dynamic from 'next/dynamic';
@@ -49,7 +49,7 @@ export default function HomePage() {
   <div className="flex-1 w-full md:w-auto">
     <h3 className="text-lg font-bold text-[#800020] mb-1 flex items-center">
       <Clock size={20} className="mr-2 text-[#FF4081]" />
-      Horaires d'ouverture
+      Horaires d&apos;ouverture
     </h3>
     <p className="text-sm text-gray-700">Lun-Sam : 7h30 - 18h30<br/>Dim : 08h00 - 18h00</p>
   </div>
@@ -178,7 +178,7 @@ export default function HomePage() {
                 <LocationMap 
                   latitude={30.4173116} 
                   longitude={-9.589799900000001} 
-                  name="Laboratoire El Allali d'Analyses Médicales" 
+                  name="Laboratoire El Allali d&apos;Analyses Médicales" 
                   address="CC86+W3, Agadir, Maroc" 
                 />
               </Suspense>
@@ -189,14 +189,26 @@ export default function HomePage() {
                 61 Bis, Rue de Marrakech, 80020, Agadir, Maroc
               </p>
               <div className="flex flex-wrap gap-3">
-                <a 
-                  href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary"
-                >
-                  Itinéraire
-                </a>
+                <div className="flex flex-wrap gap-4 items-center">
+                  <a
+                    href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center min-w-[160px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#F50057] focus:bg-[#F50057] gap-2"
+                  >
+                    <MapPin size={22} className="mr-2 -ml-1" />
+                    Itinéraire
+                  </a>
+                  <a
+                    href="https://www.google.com/maps/dir/?api=1&destination=61+Bis+Rue+de+Marrakech+80020+Agadir"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center min-w-[220px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#F50057] focus:bg-[#F50057] gap-2"
+                  >
+                    <Navigation size={22} className="mr-2 -ml-1" />
+                    Naviguer vers le labo
+                  </a>
+                </div>
                 <a 
                   href="https://wa.me/212634293900" 
                   target="_blank"
@@ -226,11 +238,11 @@ export default function HomePage() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Conseils pour vos analyses</h3>
                 <div className="space-y-3 mb-4">
-                  <p className="text-gray-600">Pour la plupart des analyses sanguines, un jeûne de 8 à 12 heures est recommandé. N'hésitez pas à nous consulter pour des instructions spécifiques à votre analyse.</p>
-                  <p className="text-gray-600">Apportez votre pièce d'identité, votre ordonnance et votre carte d'assurance lors de votre visite.</p>
+                  <p className="text-gray-600">Pour la plupart des analyses sanguines, un jeûne de 8 à 12 heures est recommandé. N&apos;hésitez pas à nous consulter pour des instructions spécifiques à votre analyse.</p>
+                  <p className="text-gray-600">Apportez votre pièce d&apos;identité, votre ordonnance et votre carte d&apos;assurance lors de votre visite.</p>
                 </div>
                 <Link href="#" className="btn-text">
-                  Plus d'informations
+                  Plus d&apos;informations
                 </Link>
               </div>
             </div>

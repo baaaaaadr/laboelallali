@@ -7,8 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "deploy": "next build && firebase deploy --only hosting",
     "context": "powershell -ExecutionPolicy Bypass -NoProfile -File ./generate_context.ps1",
-    "tailwind:build": "tailwindcss -i ./src/app/globals.css -o ./output.css --content \"./src/**/*.{js,ts,jsx,tsx,mdx}\""
+    "tailwind:build": "tailwindcss -i ./src/app/globals.css -o ./output.css --content \"./src/**/*.{js,ts,jsx,tsx,mdx}\"",
+    "git": "git add . && git commit -m \"update\" && git push"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
@@ -22,6 +24,7 @@
     "next-i18next": "^15.4.2",
     "next-pwa": "^5.6.0",
     "react": "^19.0.0",
+    "react-datepicker": "^8.3.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.2",
     "react-leaflet": "^5.0.0",

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Public+Sans:wght@400;500;700&display=swap');
+
 @import "tailwindcss";
 
 /* Workaround for Tailwind v4 custom brand color */

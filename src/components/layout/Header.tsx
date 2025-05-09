@@ -30,13 +30,12 @@ const Header = () => {
             <Link href="/" className="hover:text-rose-200 transition-colors">
               Accueil
             </Link>
-            <Link href="#services" className="hover:text-rose-200 transition-colors">
-              Nos Services
+
+            <Link href="/rendez-vous" className="hover:text-rose-200 transition-colors font-semibold">
+              Prendre RDV
             </Link>
-            <Link href="#info" className="hover:text-rose-200 transition-colors">
-              Infos Pratiques
-            </Link>
-            <Link href="#contact" className="hover:text-rose-200 transition-colors">
+
+            <Link href="/contact" className="hover:text-rose-200 transition-colors">
               Contact
             </Link>
           </nav>
@@ -86,22 +85,17 @@ const Header = () => {
               >
                 Accueil
               </Link>
+
               <Link 
-                href="#services" 
-                className="text-gray-800 hover:text-[#800020] transition-colors"
+                href="/rendez-vous" 
+                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
                 onClick={toggleMenu}
               >
-                Nos Services
+                Prendre RDV
               </Link>
+
               <Link 
-                href="#info" 
-                className="text-gray-800 hover:text-[#800020] transition-colors"
-                onClick={toggleMenu}
-              >
-                Infos Pratiques
-              </Link>
-              <Link 
-                href="#contact" 
+                href="/contact" 
                 className="text-gray-800 hover:text-[#800020] transition-colors"
                 onClick={toggleMenu}
               >
