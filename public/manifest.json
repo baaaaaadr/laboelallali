@@ -1,0 +1,21 @@
+{
+    "name": "Laboratoire El Allali",
+    "short_name": "Lab El Allali",
+    "description": "Laboratoire d'analyses médicales à Agadir",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FFFFFF",
+    "theme_color": "#800020",
+    "icons": [
+      {
+        "src": "/icons/icon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/icons/icon-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
