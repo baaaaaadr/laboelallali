@@ -34,6 +34,10 @@ const Header = () => {
             <Link href="/rendez-vous" className="hover:text-rose-200 transition-colors font-semibold">
               Prendre RDV
             </Link>
+            
+            <Link href="/glabo" className="hover:text-rose-200 transition-colors font-semibold">
+              Prélèvement à Domicile
+            </Link>
 
             <Link href="/contact" className="hover:text-rose-200 transition-colors">
               Contact
@@ -92,6 +96,14 @@ const Header = () => {
                 onClick={toggleMenu}
               >
                 Prendre RDV
+              </Link>
+              
+              <Link 
+                href="/glabo" 
+                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
+                onClick={toggleMenu}
+              >
+                Prélèvement à Domicile
               </Link>
 
               <Link 
