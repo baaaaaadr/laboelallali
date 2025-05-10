@@ -1,0 +1,2164 @@
+﻿# Laboratoire El Allali - Code Source et Configuration
+*GÃ©nÃ©rÃ© le 2025-05-10 13:03:40*
+
+## FILE: next.config.js
+```
+// next.config.js (or .mjs)
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  output: 'export', // This is key for static site generation
+};
+
+module.exports = nextConfig; // or export default nextConfig; for .mjs
+```
+
+## FILE: tailwind.config.js
+```
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+    content: [
+      "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+      "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+      "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    ],
+    theme: {
+      extend: {
+        // Note: Avec Tailwind v4, ces couleurs personnalisées peuvent ne pas fonctionner
+        // comme prévu. On utilisera des notations directes dans le code.
+      },
+    },
+    plugins: [],
+  }
+```
+
+## FILE: package.json
+```
+{
+  "name": "laboelallali",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "deploy": "next build && firebase deploy --only hosting",
+    "context": "powershell -ExecutionPolicy Bypass -NoProfile -File ./generate_context.ps1",
+    "tailwind:build": "tailwindcss -i ./src/app/globals.css -o ./output.css --content \"./src/**/*.{js,ts,jsx,tsx,mdx}\"",
+    "git": "git add . && git commit -m \"update\" && git push"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.2",
+    "@hookform/resolvers": "^5.0.1",
+    "date-fns": "^4.1.0",
+    "firebase": "^11.6.1",
+    "firebase-admin": "^13.3.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.507.0",
+    "next": "15.3.1",
+    "next-i18next": "^15.4.2",
+    "next-pwa": "^5.6.0",
+    "react": "^19.0.0",
+    "react-datepicker": "^8.3.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.56.2",
+    "react-leaflet": "^5.0.0",
+    "yup": "^1.6.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4.1.5",
+    "@types/leaflet": "^1.9.17",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.1",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.5",
+    "typescript": "^5"
+  }
+}
+
+```
+
+## FILE: tsconfig.json
+```
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+```
+
+## FILE: postcss.config.js
+```
+module.exports = {
+  plugins: {
+    '@tailwindcss/postcss': {},
+    'autoprefixer': {},
+  },
+};
+```
+
+## FILE: firebase.json
+```
+{
+  "hosting": {
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "/rendez-vous",
+        "destination": "/rendez-vous.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
+
+```
+
+## FILE: README.md
+```
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+```
+
+## FILE: src\app\contact\page.tsx
+```
+"use client";
+import React from "react";
+import { MapPin, Phone, Smartphone, Mail } from "lucide-react";
+import dynamic from "next/dynamic";
+
+// Dynamically import LocationMap with SSR disabled
+const LocationMap = dynamic(
+  () => import("@/components/features/maps/LocationMap"),
+  { ssr: false }
+);
+
+
+const ContactPage = () => {
+  return (
+    <main className="p-4 md:p-8 bg-[var(--medical-background)] min-h-screen flex flex-col items-center">
+      <div className="w-full max-w-4xl mx-auto">
+
+      <h1 className="text-[var(--primary-bordeaux)] text-2xl font-bold mb-4">
+        Nous Contacter et Informations du Laboratoire
+      </h1>
+      <section className="mt-8">
+        <h2 className="text-2xl font-semibold text-[var(--bordeaux-dark)] mb-4">
+          Coordonnées du Laboratoire
+        </h2>
+        <div className="space-y-4 bg-white rounded-xl shadow p-6 border border-[var(--gray-200)] max-w-xl">
+          <a
+            href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center text-base text-[var(--gray-800)] hover:text-[var(--primary-bordeaux)] transition-colors group"
+          >
+            <span className="mr-2 text-[var(--primary-bordeaux)]">
+              <MapPin size={20} />
+            </span>
+            <span>
+              <strong>Adresse :</strong> 61 Bis, Rue de Marrakech, 80020, Agadir
+            </span>
+          </a>
+          <a
+            href="tel:0528843384"
+            className="flex items-center text-base text-[var(--gray-800)] hover:text-[var(--primary-bordeaux)] transition-colors group"
+          >
+            <span className="mr-2 text-[var(--primary-bordeaux)]">
+              <Phone size={20} />
+            </span>
+            <span>
+              <strong>Fixe :</strong> 0528843384
+            </span>
+          </a>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center text-base text-[var(--gray-800)] gap-2">
+              <span className="mr-2 text-[var(--accent-fuchsia)]">
+                <Smartphone size={20} />
+              </span>
+              <strong>WhatsApp :</strong>
+              <a
+                href="https://wa.me/2120634293900"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold btn-primary shadow hover:scale-105 transition-transform text-white"
+                style={{ background: 'var(--accent-fuchsia)' }}
+              >
+                0634293900
+              </a>
+              <a
+                href="https://wa.me/2120707291873"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold btn-primary shadow hover:scale-105 transition-transform text-white"
+                style={{ background: 'var(--accent-fuchsia)' }}
+              >
+                0707291873
+              </a>
+            </div>
+            <a
+              href="tel:0664727681"
+              className="flex items-center text-base text-[var(--gray-800)] hover:text-[var(--accent-fuchsia)] transition-colors group mt-2"
+            >
+              <span className="mr-2 text-[var(--accent-fuchsia)]">
+                <Smartphone size={20} />
+              </span>
+              <span>
+                <strong>Sociétés et autres :</strong> 0664727681
+              </span>
+            </a>
+          </div>
+          <a
+            href="mailto:laboelallali@gmail.com"
+            className="flex items-center text-base text-[var(--gray-800)] hover:text-[var(--primary-bordeaux)] transition-colors group"
+          >
+            <span className="mr-2 text-[var(--primary-bordeaux)]">
+              <Mail size={20} />
+            </span>
+            <span>
+              <strong>Email :</strong> laboelallali@gmail.com
+            </span>
+          </a>
+          <div className="flex items-center text-base text-[var(--gray-800)] mt-1">
+            <span className="mr-2 text-[var(--primary-bordeaux)]">
+              <Phone size={20} />
+            </span>
+            <span>
+              <strong>Fax :</strong> 0528828758
+            </span>
+          </div>
+        </div>
+      </section>
+      <section className="mt-8">
+        <h2 className="text-2xl font-semibold text-[var(--bordeaux-dark)] mb-4">
+          Horaires d&apos;Ouverture
+        </h2>
+        <div className="inline-block bg-white rounded-lg px-4 py-2 border border-[var(--gray-200)]">
+          <div className="flex flex-col gap-1 text-base text-[var(--gray-800)]">
+            <span><span className="font-medium">Lun-Sam :</span> 7h30 - 18h30</span>
+            <span><span className="font-medium">Dim :</span> 08h00 - 18h00</span>
+          </div>
+        </div>
+      </section>
+      <section className="mt-8">
+        <h2 className="text-2xl font-semibold text-[var(--bordeaux-dark)] mb-4">
+          Notre Emplacement
+        </h2>
+        <div className="w-full h-64 md:h-80 rounded-lg border border-[var(--gray-300)] bg-[var(--gray-200)] overflow-hidden mb-4 relative">
+
+          <LocationMap
+            latitude={30.4173116}
+            longitude={-9.589799900000001}
+            name="Laboratoire El Allali"
+            address="61 bis, Rue de Marrakech, 80020 Quartier Industriel, Agadir, Maroc"
+          />
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+          <a
+            href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-2 bg-[var(--primary-bordeaux)] text-white font-semibold rounded-lg shadow hover:bg-[var(--bordeaux-dark)] transition-colors text-center"
+          >
+            Ouvrir dans Google Maps
+          </a>
+          <a
+            href="https://www.google.com/maps/dir/?api=1&destination=61+Bis+Rue+de+Marrakech+80020+Agadir"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-2 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow hover:bg-pink-700 transition-colors text-center"
+          >
+            Naviguer vers le labo
+          </a>
+        </div>
+      </section>
+      </div>
+    </main>
+  );
+};
+
+export default ContactPage;
+
+```
+
+## FILE: src\app\glabo\page.tsx
+```
+"use client";
+
+import React, { useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { fr } from "date-fns/locale";
+import { format } from "date-fns";
+
+const GlaboPage = () => {
+  const [nom, setNom] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [email, setEmail] = useState('');
+  const [adresse, setAdresse] = useState('');
+  const [lieuPrelevement, setLieuPrelevement] = useState('domicile'); // 'domicile' ou 'travail'
+  const [instructionsAcces, setInstructionsAcces] = useState(''); // Pour code d'immeuble, etc.
+  const [geolocStatus, setGeolocStatus] = useState(''); // Pour afficher "Chargement...", "Erreur...", ou l'adresse trouvée
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedTime, setSelectedTime] = useState('');
+  const [hasOrdonnance, setHasOrdonnance] = useState('non'); // 'oui' ou 'non'
+  const [commentaires, setCommentaires] = useState('');
+
+  // Génère les créneaux horaires disponibles en fonction du jour sélectionné
+  function generateTimeSlots(date: Date | null): string[] {
+    if (!date) return [];
+    const day = date.getDay(); // 0=dimanche, 6=samedi
+    const startHour = 7, startMinute = 30;
+    let endHour, endMinute;
+    if (day === 6) { // samedi
+      endHour = 12;
+      endMinute = 0;
+    } else {
+      endHour = 18;
+      endMinute = 30;
+    }
+    const slots: string[] = [];
+    let h = startHour, m = startMinute;
+    while (h < endHour || (h === endHour && m <= endMinute - 15)) {
+      const hh = h.toString().padStart(2, '0');
+      const mm = m.toString().padStart(2, '0');
+      slots.push(`${hh}:${mm}`);
+      m += 15;
+      if (m === 60) {
+        m = 0;
+        h++;
+      }
+    }
+    return slots;
+  }
+
+  const timeSlots = generateTimeSlots(selectedDate);
+
+  // Fonction de géolocalisation
+  const handleGeolocate = () => {
+    // Vérifie si la géolocalisation est supportée par le navigateur
+    if (!navigator.geolocation) {
+      setGeolocStatus("La géolocalisation n'est pas supportée par votre navigateur.");
+      return;
+    }
+    
+    // Affiche le statut de chargement
+    setGeolocStatus("Chargement de la localisation...");
+    
+    // Options pour la géolocalisation (haute précision, timeout de 10s)
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    };
+    
+    // Fonction de succès
+    const success = (position: GeolocationPosition) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      
+      // Créer un lien Google Maps avec les coordonnées
+      const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      
+      setGeolocStatus(`Localisation approximative trouvée.`);
+      setAdresse(`Coordonnées : Lat: ${latitude.toFixed(6)}, Lon: ${longitude.toFixed(6)}\nLien Google Maps: ${googleMapsLink}\nVeuillez compléter votre adresse ci-dessus si nécessaire.`);
+    };
+    
+    // Fonction d'erreur
+    const error = (err: GeolocationPositionError) => {
+      let errorMessage = "";
+      switch (err.code) {
+        case err.PERMISSION_DENIED:
+          errorMessage = "Vous avez refusé l'accès à votre position.";
+          break;
+        case err.POSITION_UNAVAILABLE:
+          errorMessage = "Les informations de localisation ne sont pas disponibles.";
+          break;
+        case err.TIMEOUT:
+          errorMessage = "La demande de localisation a expiré.";
+          break;
+        default:
+          errorMessage = `Erreur inconnue: ${err.message}`;
+      }
+      setGeolocStatus(`Erreur de géolocalisation: ${errorMessage}`);
+    };
+    
+    // Lance la géolocalisation
+    navigator.geolocation.getCurrentPosition(success, error, options);
+  };
+
+  // Soumission du formulaire : génère un mailto: avec toutes les infos
+  const laboWhatsapp = "212654079592"; // Numéro en format international sans +
+  
+  // Fonction pour extraire le lien Google Maps des coordonnées, s'il existe
+  const extractGoogleMapsLink = (addressText: string): string | null => {
+    const googleMapsLinkMatch = addressText.match(/https:\/\/www\.google\.com\/maps\?q=[-+]?[0-9]*\.?[0-9]+,[-+]?[0-9]*\.?[0-9]+/);
+    return googleMapsLinkMatch ? googleMapsLinkMatch[0] : null;
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    // Validation simple
+    if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
+      alert("Veuillez remplir tous les champs obligatoires (nom, téléphone, date, heure).");
+      return;
+    }
+    
+    // Formatage de la date
+    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+    const laboEmail = "laboelallali@gmail.com";
+    const sujet = `Demande de Prélèvement GLABO - ${nom}`;
+    
+    // Extraction du lien Google Maps s'il existe dans l'adresse
+    const googleMapsLink = extractGoogleMapsLink(adresse);
+    
+    // Formattage de l'adresse pour le message
+    let formattedAddress = adresse;
+    if (googleMapsLink) {
+      // Si un lien Google Maps est trouvé, le mettre en évidence pour le staff du laboratoire
+      formattedAddress = adresse.replace(googleMapsLink, 
+        `${googleMapsLink} ⇖ CLIQUEZ SUR CE LIEN POUR OUVRIR GOOGLE MAPS`);
+    }
+    
+    // Création du message pour la demande GLABO
+    const messageText = `Bonjour,
+
+Je souhaite demander un prélèvement à domicile/travail (GLABO) :
+
+Nom : ${nom}
+Téléphone : ${telephone}${email ? `
+Email : ${email}` : ''}
+Lieu du prélèvement : ${lieuPrelevement === 'domicile' ? 'À mon domicile' : 'Sur mon lieu de travail'}
+${formattedAddress ? `Adresse : ${formattedAddress}` : 'Adresse non spécifiée (à confirmer par téléphone).'}${instructionsAcces ? `
+Instructions d'accès : ${instructionsAcces}` : ''}
+Date souhaitée : ${formattedDate}
+Heure souhaitée : ${selectedTime}${commentaires ? `
+Commentaires : ${commentaires}` : ''}
+
+${hasOrdonnance === 'oui' ? `J'ai une ordonnance et je vous l'enverrai en pièce jointe dans mon email.` : "Je n'ai pas d'ordonnance."}
+
+Merci de me contacter pour confirmer les détails.
+
+Cordialement.`;
+    
+    // Fonction pour afficher l'alerte avec les instructions et le bouton de copie
+    function showEmailAlert() {
+      // Essayer de copier le texte dans le presse-papier
+      const copyToClipboard = () => {
+        try {
+          navigator.clipboard.writeText(messageText).then(() => {
+            alert("Message copié dans le presse-papier ! Vous pouvez maintenant le coller dans votre client email.");
+          }).catch(() => {
+            // Fallback si le navigateur n'autorise pas clipboard API
+            showCopyInstructions();
+          });
+        } catch {
+          // Fallback pour les navigateurs sans support de l'API clipboard
+          showCopyInstructions();
+        }
+      };
+      
+      // Afficher les instructions pour la sélection manuelle
+      const showCopyInstructions = () => {
+        alert(`Veuillez envoyer un email à : ${laboEmail}\n\nSujet : ${sujet}\n\nEt copiez ce message dans le corps de l'email :\n\n${messageText}`);
+      };
+
+      // Demander si l'utilisateur souhaite copier le message automatiquement
+      if (confirm(`Il semble que l'ouverture automatique de votre client email n'a pas fonctionné.\n\nVoulez-vous copier le message dans le presse-papier ?\n(Cliquez sur OK pour copier, sur Annuler pour voir le message à copier manuellement)`)) {
+        copyToClipboard();
+      } else {
+        showCopyInstructions();
+      }
+    }
+    
+    // Essayer de lancer le client email natif
+    try {
+      const encodedBody = encodeURIComponent(messageText);
+      const encodedSubject = encodeURIComponent(sujet);
+      const mailtoLink = `mailto:${laboEmail}?subject=${encodedSubject}&body=${encodedBody}`;
+      
+      window.location.href = mailtoLink;
+      
+      setTimeout(() => {
+        showEmailAlert();
+      }, 500);
+    } catch {
+      showEmailAlert();
+    }
+  };
+
+  // Génère le lien WhatsApp avec message prérempli
+  const handleWhatsapp = () => {
+    if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
+      alert("Veuillez remplir tous les champs obligatoires (nom, téléphone, date, heure).");
+      return;
+    }
+    
+    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+    
+    // Extraction du lien Google Maps s'il existe dans l'adresse
+    const googleMapsLink = extractGoogleMapsLink(adresse);
+    
+    // Formattage de l'adresse pour le message
+    let formattedAddress = adresse;
+    if (googleMapsLink) {
+      // Si un lien Google Maps est trouvé, le mettre en évidence pour le staff du laboratoire
+      formattedAddress = adresse.replace(googleMapsLink, 
+        `${googleMapsLink} ⇖ CLIQUEZ SUR CE LIEN POUR OUVRIR GOOGLE MAPS`);
+    }
+    
+    const message = `Bonjour, je souhaite demander un prélèvement ${lieuPrelevement === 'domicile' ? 'à domicile' : 'sur mon lieu de travail'} (GLABO).
+Nom : ${nom}
+Téléphone : ${telephone}${email ? `
+Email : ${email}` : ''}
+Lieu du prélèvement : ${lieuPrelevement === 'domicile' ? 'À mon domicile' : 'Sur mon lieu de travail'}
+${formattedAddress ? `Adresse : ${formattedAddress}` : 'Adresse non spécifiée (à confirmer par téléphone).'}${instructionsAcces ? `
+Instructions d'accès : ${instructionsAcces}` : ''}
+Date souhaitée : ${formattedDate}
+Heure souhaitée : ${selectedTime}${commentaires ? `
+Commentaires : ${commentaires}` : ''}
+${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai séparément par WhatsApp.` : "Je n'ai pas d'ordonnance."}`;
+    
+    const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappLink, '_blank');
+  };
+
+  // Gestion de la sélection de l'option ordonnance
+  const handleOrdonnanceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setHasOrdonnance(e.target.value);
+  };
+
+  return (
+    <main className="p-4 md:p-8 font-sans">
+      <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 font-['Inter','Public Sans',sans-serif]">
+        Demander un prélèvement à domicile ou au travail (GLABO)
+      </h1>
+      <form className="max-w-lg mx-auto" onSubmit={handleSubmit}>
+        {/* Nom complet */}
+        <div className="mb-4">
+          <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Nom complet
+          </label>
+          <input
+            type="text"
+            id="nomComplet"
+            name="nomComplet"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="name"
+            value={nom}
+            onChange={e => setNom(e.target.value)}
+          />
+        </div>
+        {/* Numéro de téléphone */}
+        <div className="mb-4">
+          <label htmlFor="telephone" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Numéro de téléphone
+          </label>
+          <input
+            type="tel"
+            id="telephone"
+            name="telephone"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="tel"
+            inputMode="tel"
+            value={telephone}
+            onChange={e => setTelephone(e.target.value)}
+          />
+        </div>
+        {/* Adresse email (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="email" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Adresse email (optionnel)
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+        </div>
+        {/* Lieu du prélèvement */}
+        <div className="mb-4">
+          <label htmlFor="lieuPrelevement" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Lieu du prélèvement
+          </label>
+          <select
+            id="lieuPrelevement"
+            name="lieuPrelevement"
+            value={lieuPrelevement}
+            onChange={e => setLieuPrelevement(e.target.value)}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          >
+            <option value="domicile">À mon domicile</option>
+            <option value="travail">Sur mon lieu de travail</option>
+          </select>
+        </div>
+        {/* Adresse de prélèvement (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="adresse" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Adresse complète pour le prélèvement (optionnel)
+          </label>
+          <textarea
+            id="adresse"
+            name="adresse"
+            rows={2}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            value={adresse}
+            onChange={e => setAdresse(e.target.value)}
+          />
+          <button 
+            type="button" 
+            onClick={handleGeolocate}
+            className="text-sm text-[var(--accent-fuchsia)] hover:underline mt-2 flex items-center gap-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+            Localisez-moi (Optionnel)
+          </button>
+          {geolocStatus && (
+            <p className="text-xs text-gray-600 mt-1">{geolocStatus}</p>
+          )}
+        </div>
+        {/* Instructions d'accès (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="instructionsAcces" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Instructions d&apos;accès (code immeuble, étage, etc. - optionnel)
+          </label>
+          <input
+            type="text"
+            id="instructionsAcces"
+            name="instructionsAcces"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            value={instructionsAcces}
+            onChange={e => setInstructionsAcces(e.target.value)}
+          />
+        </div>
+        {/* Date souhaitée */}
+        <div className="mb-4">
+          <label htmlFor="date" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Date souhaitée
+          </label>
+          <DatePicker
+            id="date"
+            selected={selectedDate}
+            onChange={(date: Date | null) => setSelectedDate(date)}
+            dateFormat="dd/MM/yyyy"
+            minDate={new Date()}
+            locale={fr}
+            placeholderText="Sélectionnez une date"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          />
+        </div>
+        {/* Heure souhaitée */}
+        <div className="mb-4">
+          <label htmlFor="heure" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Heure souhaitée
+          </label>
+          <select
+            id="heure"
+            name="heure"
+            value={selectedTime}
+            onChange={e => setSelectedTime(e.target.value)}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          >
+            <option value="" disabled>-- Choisissez une heure --</option>
+            {timeSlots.map((slot) => (
+              <option key={slot} value={slot}>{slot}</option>
+            ))}
+          </select>
+        </div>
+        {/* Ordonnance (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="ordonnance" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Avez-vous une ordonnance ?
+          </label>
+          <select
+            id="ordonnance"
+            name="ordonnance"
+            value={hasOrdonnance}
+            onChange={handleOrdonnanceChange}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          >
+            <option value="non">Non</option>
+            <option value="oui">Oui</option>
+          </select>
+          {hasOrdonnance === 'oui' && (
+            <p className="text-xs text-gray-500 mt-1">
+              Note : N&apos;oubliez pas de joindre votre ordonnance lors de l&apos;envoi de votre WhatsApp ou email.
+            </p>
+          )}
+        </div>
+        {/* Commentaires (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Notes ou commentaires supplémentaires (optionnel)
+          </label>
+          <textarea
+            id="commentaires"
+            name="commentaires"
+            rows={3}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            value={commentaires}
+            onChange={e => setCommentaires(e.target.value)}
+          />
+        </div>
+        {/* Boutons de soumission */}
+        <div className="flex flex-col md:flex-row gap-3 justify-end">
+          <button
+            type="submit"
+            className="bg-[var(--accent-fuchsia)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+            Envoyer ma demande de prélèvement par email
+          </button>
+          <button
+            type="button"
+            onClick={handleWhatsapp}
+            className="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+            aria-label="Demander prélèvement par WhatsApp"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="w-5 h-5">
+              <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+            </svg>
+            Demander prélèvement par WhatsApp
+          </button>
+        </div>
+        {/* Rappel ordonnance */}
+        <div className="mt-4 text-sm text-[var(--primary-bordeaux)] bg-[var(--gray-100)] rounded-lg px-4 py-2 border border-[var(--gray-300)]">
+          <strong>Rappel&nbsp;:</strong> Si vous avez une ordonnance, n&apos;oubliez pas de l&apos;attacher à votre email ou à votre message WhatsApp&nbsp;!
+        </div>
+      </form>
+    </main>
+  );
+};
+
+export default GlaboPage;
+
+```
+
+## FILE: src\app\rendez-vous\page.tsx
+```
+"use client";
+
+import React, { useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { fr } from "date-fns/locale";
+import { format } from "date-fns";
+
+const RendezVousPage = () => {
+  const [nom, setNom] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [email, setEmail] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedTime, setSelectedTime] = useState('');
+  const [hasOrdonnance, setHasOrdonnance] = useState('non'); // 'oui' ou 'non'
+
+  const [commentaires, setCommentaires] = useState('');
+
+  // Génère les créneaux horaires disponibles en fonction du jour sélectionné
+  function generateTimeSlots(date: Date | null): string[] {
+    if (!date) return [];
+    const day = date.getDay(); // 0=dimanche, 6=samedi
+    const startHour = 7, startMinute = 30;
+    let endHour, endMinute;
+    if (day === 6) { // samedi
+      endHour = 12;
+      endMinute = 0;
+    } else {
+      endHour = 18;
+      endMinute = 30;
+    }
+    const slots: string[] = [];
+    let h = startHour, m = startMinute;
+    while (h < endHour || (h === endHour && m <= endMinute - 15)) {
+      const hh = h.toString().padStart(2, '0');
+      const mm = m.toString().padStart(2, '0');
+      slots.push(`${hh}:${mm}`);
+      m += 15;
+      if (m === 60) {
+        m = 0;
+        h++;
+      }
+    }
+    return slots;
+  }
+
+  const timeSlots = generateTimeSlots(selectedDate);
+
+  // Soumission du formulaire : génère un mailto: avec toutes les infos
+  
+const laboWhatsapp = "212654079592"; // Numéro en format international sans +
+
+const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    // Validation simple
+    if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
+      alert("Veuillez remplir tous les champs obligatoires (nom, téléphone, date, heure).");
+      return;
+    }
+    // Formatage de la date
+    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+    const laboEmail = "laboelallali@gmail.com";
+    const sujet = `Demande de Rendez-vous - ${nom}`;
+    
+    // Créer le texte du message non-encodé (lisible)
+    const messageText = `Bonjour,
+
+Je souhaite prendre un rendez-vous au laboratoire :
+
+Nom : ${nom}
+Téléphone : ${telephone}${email ? `
+Email : ${email}` : ''}
+Date souhaitée : ${formattedDate}
+Heure souhaitée : ${selectedTime}${commentaires ? `
+Commentaires : ${commentaires}` : ''}
+${hasOrdonnance === 'oui' ? `
+Je dispose d'une ordonnance que je vous enverrai séparément par WhatsApp.` : `Je n'ai pas d'ordonnance.`}
+
+Merci.`;
+    
+    // Fonction pour afficher l'alerte avec les instructions et le bouton de copie
+    function showEmailAlert() {
+      // Essayer de copier le texte dans le presse-papier
+      const copyToClipboard = () => {
+        try {
+          navigator.clipboard.writeText(messageText).then(() => {
+            alert("Message copié dans le presse-papier ! Vous pouvez maintenant le coller dans votre client email.");
+          }).catch(() => {
+            // Fallback si le navigateur n'autorise pas clipboard API
+            showCopyInstructions();
+          });
+        } catch {
+          // Fallback pour les navigateurs sans support de l'API clipboard
+          showCopyInstructions();
+        }
+      };
+      
+      // Afficher les instructions pour la sélection manuelle
+      const showCopyInstructions = () => {
+        alert(`Veuillez envoyer un email à : ${laboEmail}\n\nSujet : ${sujet}\n\nEt copiez ce message dans le corps de l'email :\n\n${messageText}`);
+      };
+
+      // Demander si l'utilisateur souhaite copier le message automatiquement
+      if (confirm(`Il semble que l'ouverture automatique de votre client email n'a pas fonctionné.\n\nVoulez-vous copier le message dans le presse-papier ?\n(Cliquez sur OK pour copier, sur Annuler pour voir le message à copier manuellement)`)) {
+        copyToClipboard();
+      } else {
+        showCopyInstructions();
+      }
+    }
+    
+    // Essayer de lancer le client email natif (pour les utilisateurs sur mobile ou avec client email configuré)
+    try {
+      // Approche sécurisée et simplifiée qui ne crée pas de fenêtre vide
+      const encodedBody = encodeURIComponent(messageText);
+      const encodedSubject = encodeURIComponent(sujet);
+      const mailtoLink = `mailto:${laboEmail}?subject=${encodedSubject}&body=${encodedBody}`;
+      
+      // Utiliser l'API Location plutôt que window.open pour éviter les fenêtres vides
+      window.location.href = mailtoLink;
+      
+      // Attendre un court instant puis afficher les instructions de secours
+      setTimeout(() => {
+        showEmailAlert();
+      }, 500);
+    } catch {
+      // En cas d'erreur, afficher directement l'alerte
+      showEmailAlert();
+    }
+  };
+
+  // Génère le lien WhatsApp avec message prérempli
+  const handleWhatsapp = () => {
+    if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
+      alert("Veuillez remplir tous les champs obligatoires (nom, téléphone, date, heure).");
+      return;
+    }
+    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+    const message = `Bonjour, je souhaite prendre un rendez-vous au laboratoire.\nNom : ${nom}\nTéléphone : ${telephone}${email ? `\nEmail : ${email}` : ''}\nDate souhaitée : ${formattedDate}\nHeure souhaitée : ${selectedTime}${commentaires ? `\nCommentaires : ${commentaires}` : ''}`;
+    const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappLink, '_blank');
+  };
+
+  return (
+    <main className="p-4 md:p-8 font-sans">
+      <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 font-['Inter','Public Sans',sans-serif]">
+        Prendre un rendez-vous au laboratoire
+      </h1>
+      <form className="max-w-lg mx-auto" onSubmit={handleSubmit}>
+        {/* Nom complet */}
+        <div className="mb-4">
+          <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Nom complet
+          </label>
+          <input
+            type="text"
+            id="nomComplet"
+            name="nomComplet"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="name"
+            value={nom}
+            onChange={e => setNom(e.target.value)}
+          />
+        </div>
+        {/* Numéro de téléphone */}
+        <div className="mb-4">
+          <label htmlFor="telephone" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Numéro de téléphone
+          </label>
+          <input
+            type="tel"
+            id="telephone"
+            name="telephone"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="tel"
+            inputMode="tel"
+            value={telephone}
+            onChange={e => setTelephone(e.target.value)}
+          />
+        </div>
+        {/* Adresse email (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="email" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Adresse email (optionnel)
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+        </div>
+        {/* Date souhaitée */}
+        <div className="mb-4">
+          <label htmlFor="date" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Date souhaitée
+          </label>
+          <DatePicker
+            id="date"
+            selected={selectedDate}
+            onChange={(date: Date | null) => setSelectedDate(date)}
+            dateFormat="dd/MM/yyyy"
+            minDate={new Date()}
+            locale={fr}
+            placeholderText="Sélectionnez une date"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          />
+        </div>
+        {/* Heure souhaitée */}
+        <div className="mb-4">
+          <label htmlFor="heure" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Heure souhaitée
+          </label>
+          <select
+            id="heure"
+            name="heure"
+            value={selectedTime}
+            onChange={e => setSelectedTime(e.target.value)}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          >
+            <option value="" disabled>-- Choisissez une heure --</option>
+            {timeSlots.map((slot) => (
+              <option key={slot} value={slot}>{slot}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Ordonnance */}
+        <div className="mb-4">
+          <label htmlFor="ordonnance" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Avez-vous une ordonnance ?
+          </label>
+          <select
+            id="ordonnance"
+            name="ordonnance"
+            value={hasOrdonnance}
+            onChange={e => setHasOrdonnance(e.target.value)}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          >
+            <option value="non">Non</option>
+            <option value="oui">Oui</option>
+          </select>
+          {hasOrdonnance === 'oui' && (
+            <p className="text-xs text-gray-500 mt-1">
+              Note : N&apos;oubliez pas de joindre votre ordonnance lors de l&apos;envoi de votre WhatsApp ou email.
+            </p>
+          )}
+        </div>
+        
+        {/* Commentaires (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            Notes ou commentaires supplémentaires (optionnel)
+          </label>
+          <textarea
+            id="commentaires"
+            name="commentaires"
+            rows={3}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            value={commentaires}
+            onChange={e => setCommentaires(e.target.value)}
+          />
+        </div>
+        {/* Boutons de soumission */}
+        <div className="flex flex-col md:flex-row gap-3 justify-end">
+          <button
+            type="submit"
+            className="bg-[var(--accent-fuchsia)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+            Envoyer ma demande de rdv par email
+          </button>
+          <button
+            type="button"
+            onClick={handleWhatsapp}
+            className="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+            aria-label="Demander RDV par WhatsApp"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="w-5 h-5">
+              <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+            </svg>
+            Demander RDV par WhatsApp
+          </button>
+        </div>
+        
+      </form>
+    </main>
+  );
+};
+
+export default RendezVousPage;
+
+```
+
+## FILE: src\app\globals.css
+```
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Public+Sans:wght@400;500;700&display=swap');
+
+@import "tailwindcss";
+
+/* Workaround for Tailwind v4 custom brand color */
+.bg-bordeaux-custom {
+  background-color: #800020;
+  color: white;
+}
+
+
+/* Styles de base */
+html, body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Couleurs personnalisées comme variables CSS pour référence */
+:root {
+  --primary-bordeaux: #800020;
+  --bordeaux-dark: #600018;
+  --bordeaux-light: #B84C63;
+  --bordeaux-pale: #F7E7EA;
+  --accent-fuchsia: #FF4081;
+  --fuchsia-bright: #F50057;
+  --fuchsia-light: #FF80AB;
+  --fuchsia-pale: #FFF0F5;
+  --medical-background: #FDF8F9;
+}
+
+/* Styles personnalisés pour les boutons et composants */
+@layer components {
+  .footer-gradient {
+    background: linear-gradient(135deg, #800020 0%, #B84C63 60%, #FF4081 100%);
+    @apply text-white;
+  }
+  .footer-gradient ul li {
+    @apply mb-2;
+  }
+  .footer-gradient ul li:last-child {
+    @apply mb-0;
+  }
+  .footer-gradient a {
+    @apply block w-full text-white hover:text-[#FF4081] transition-colors;
+  }
+
+  .btn-primary {
+    @apply bg-[#FF4081] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-[#F50057] hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-[#800020] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-[#600018];
+  }
+
+  .btn-outline {
+    @apply border-2 border-[#800020] text-[#800020] bg-transparent px-6 py-[10px] rounded-lg font-semibold transition-all duration-200;
+  }
+  .btn-outline:hover {
+    @apply bg-[#800020] text-white border-[#800020];
+  }
+
+  .btn-text {
+  color: #FF4081;
+  font-weight: 600;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 1rem;
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: 0.25rem;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+}
+.btn-text:focus {
+  box-shadow: 0 0 0 2px #FF4081;
+  border-bottom: 1px solid #FF4081;
+  background: rgba(255,64,129,0.08);
+}
+.btn-text:hover {
+  border-bottom: 1px solid #FF4081;
+  transform: translateY(-1px);
+  background: rgba(255,64,129,0.04);
+}
+.btn-text .btn-chevron {
+  transition: transform 0.2s;
+  margin-left: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-text:hover .btn-chevron,
+.btn-text:focus .btn-chevron {
+  transform: translateX(2px);
+}
+@media (hover: none) and (pointer: coarse) {
+  .btn-text {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+  .btn-link {
+    @apply text-[#FF4081] bg-transparent px-4 py-2 font-semibold transition-all duration-200 hover:underline;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm p-5 transition-all duration-300 border border-gray-100;
+    transition-property: box-shadow, transform;
+  }
+  .card:hover {
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: 0 4px 12px 0 rgba(128,0,32,0.08), 0 0.75px 3px 0 rgba(255,64,129,0.07);
+  }
+
+  .fade-in-section {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s cubic-bezier(.4,0,.2,1), transform 0.8s cubic-bezier(.4,0,.2,1);
+    will-change: opacity, transform;
+  }
+  .fade-in-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .mobile-menu-transition {
+    transition: opacity 0.4s cubic-bezier(.4,0,.2,1), transform 0.4s cubic-bezier(.4,0,.2,1);
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  .mobile-menu-transition.open {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .footer-whatsapp-btn {
+    background: #800020;
+    color: #fff;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+    box-shadow: 0 1px 3px 0 rgba(128,0,32,0.05);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .footer-whatsapp-btn:hover, .footer-whatsapp-btn:focus {
+    background: #B84C63;
+    color: #fff;
+    box-shadow: 0 4px 12px 0 rgba(128,0,32,0.12);
+    outline: none;
+  }
+  .footer-whatsapp-btn svg {
+    margin-right: 0.5rem;
+    min-width: 20px;
+    min-height: 20px;
+  }
+
+  .footer-copyright {
+    color: #F8F9FA;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .card-header {
+    @apply pb-3 mb-4 border-b border-[#F7E7EA] font-semibold text-[#800020] text-lg;
+  }
+
+  .card-action {
+    @apply text-[#FF4081] font-semibold text-sm mt-2 inline-block;
+  }
+
+  .loading {
+    @apply inline-block w-6 h-6 border-2 border-[#FFF0F5] rounded-full border-t-[#FF4081] animate-spin;
+  }
+
+  .gradient-header {
+    background: linear-gradient(135deg, #800020, #B84C63);
+    @apply text-white p-6 rounded-xl relative overflow-hidden;
+  }
+
+/* Class pour après l'élément gradient-header */
+.gradient-header::after {
+  content: "";
+  @apply absolute top-0 right-0 w-24 h-24 rounded-full opacity-10 translate-x-1/3 -translate-y-1/3;
+  background: #FF4081;
+}
+}
+```
+
+## FILE: src\app\layout.tsx
+```
+import type { Metadata } from 'next'
+import './globals.css'
+import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
+
+// WARNING: Custom fonts not added in pages/_document.js will only load for a single page. For production, move font imports to _document.js. See: https://nextjs.org/docs/messages/no-page-custom-fonts
+export const metadata: Metadata = {
+  title: 'Laboratoire El Allali - Analyses Médicales à Agadir',
+  description: 'Laboratoire d\'analyses médicales de référence à Agadir, Maroc. Analyses de sang, bilans de santé, prélèvements à domicile et résultats rapides.',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="fr">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body className="flex flex-col min-h-screen bg-gray-50">
+        <Header />
+        <main className="flex-grow">
+          {children}
+        </main>
+        <Footer />
+      </body>
+    </html>
+  )
+}
+```
+
+## FILE: src\app\page.tsx
+```
+"use client";
+
+import HeroBanner from '@/components/features/home/HeroBanner';
+import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, HomeIcon, Info, MapPin, ChevronRight, Navigation } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, Suspense } from "react";
+import dynamic from 'next/dynamic';
+
+// Dynamically import the map component with SSR disabled
+const LocationMap = dynamic(
+  () => import('@/components/features/maps/LocationMap'),
+  { ssr: false }
+);
+
+export default function HomePage() {
+  // On peut faire un check pour savoir si le labo est ouvert actuellement
+  const currentHour = new Date().getHours();
+  const currentDay = new Date().getDay(); // 0 = Dimanche, 6 = Samedi
+  const isWeekday = currentDay > 0 && currentDay < 6;
+  const isSaturday = currentDay === 6;
+  const isSunday = currentDay === 0;
+  
+  const isOpen = (isWeekday && currentHour >= 7.5 && currentHour < 18.5) || 
+                 (isSaturday && currentHour >= 7.5 && currentHour < 18.5) ||
+                 (isSunday && currentHour >= 8 && currentHour < 18);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      document.querySelectorAll('.fade-in-section').forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 40) {
+          el.classList.add('visible');
+        }
+      });
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <>
+      {/* Hero Banner */}
+      <HeroBanner />
+      
+      <div className="container mx-auto px-4 pb-12">
+        {/* Status Widget */}
+        <div className="card flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-l-4 border-[#FF4081]">
+  <div className="flex-1 w-full md:w-auto">
+    <h3 className="text-lg font-bold text-[#800020] mb-1 flex items-center">
+      <Clock size={20} className="mr-2 text-[#FF4081]" />
+      Horaires d&apos;ouverture
+    </h3>
+    <p className="text-sm text-gray-700">Lun-Sam : 7h30 - 18h30<br/>Dim : 08h00 - 18h00</p>
+  </div>
+  <div className="flex items-center justify-center md:ml-8">
+    <div className={`${isOpen ? 'bg-green-700' : 'bg-[#B71C1C]'} text-white px-5 py-2 rounded-full font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
+      <span className={`w-3 h-3 ${isOpen ? 'bg-green-300' : 'bg-red-300'} rounded-full`}></span>
+      {isOpen ? 'Ouvert' : 'Fermé'}
+    </div>
+  </div>
+</div>
+        
+        {/* Why Choose Us Section */}
+        <section id="why-us" className="mb-12 fade-in-section">
+          <h2 className="text-2xl font-bold text-[#800020] mb-6">Pourquoi Nous Choisir?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="card">
+              <div className="flex items-start">
+                <div className="bg-[#F7E7EA] p-3 rounded-full mr-3">
+                  <Award className="text-[#FF4081]" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Qualité Certifiée</h3>
+                  <p className="text-gray-600">Laboratoire accrédité aux normes internationales pour des résultats fiables.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <div className="flex items-start">
+                <div className="bg-[#F7E7EA] p-3 rounded-full mr-3">
+                  <FlaskConical className="text-[#FF4081]" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Équipement de Pointe</h3>
+                  <p className="text-gray-600">Technologies avancées pour des analyses précises et rapides.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <div className="flex items-start">
+                <div className="bg-[#F7E7EA] p-3 rounded-full mr-3">
+                  <HeartPulse className="text-[#FF4081]" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Équipe Expérimentée</h3>
+                  <p className="text-gray-600">Biologistes et techniciens hautement qualifiés à votre service.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <div className="flex items-start">
+                <div className="bg-[#F7E7EA] p-3 rounded-full mr-3">
+                  <CheckCircle className="text-[#FF4081]" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Service Patient Dédié</h3>
+                  <p className="text-gray-600">Attention personnalisée et accompagnement à chaque étape.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Services Section */}
+        <section id="services" className="mb-12 fade-in-section">
+          <h2 className="text-2xl font-bold text-[#800020] mb-6">Nos Services Principaux</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="card">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-[#F7E7EA]">
+                  <FlaskConical className="text-[#800020]" size={32} />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Analyses de Sang</h3>
+                <p className="text-gray-600 mb-4">Analyses complètes et spécialisées avec résultats rapides et précis.</p>
+                <Link href="#" className="btn-text" aria-label="En savoir plus sur les analyses de sang">
+                  En savoir plus
+                  <span className="btn-chevron" aria-hidden="true">
+                    <ChevronRight className="text-[#800020]" size={16} />
+                  </span>
+                </Link>
+              </div>
+            </div>
+            
+            <div className="card">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-[#F7E7EA]">
+                  <HeartPulse className="text-[#800020]" size={32} />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Bilans de Santé</h3>
+                <p className="text-gray-600 mb-4">Bilans personnalisés pour le suivi préventif de votre santé.</p>
+                <Link href="#" className="btn-text" aria-label="En savoir plus sur les bilans de santé">
+                  En savoir plus
+                  <span className="btn-chevron" aria-hidden="true">
+                    <ChevronRight className="text-[#800020]" size={16} />
+                  </span>
+                </Link>
+              </div>
+            </div>
+            
+            <div className="card">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-[#F7E7EA]">
+                  <HomeIcon className="text-[#800020]" size={32} />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">GLABO - À Domicile</h3>
+                <p className="text-gray-600 mb-4">Service de prélèvement à domicile pour votre confort et sécurité.</p>
+                <Link href="#" className="btn-text" aria-label="En savoir plus sur le service à domicile">
+                  En savoir plus
+                  <span className="btn-chevron" aria-hidden="true">
+                    <ChevronRight className="text-[#800020]" size={16} />
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Location Section */}
+        <section id="contact" className="mb-12 fade-in-section">
+          <h2 className="text-2xl font-bold text-[#800020] mb-6">Notre Localisation</h2>
+          <div className="card p-0 overflow-hidden">
+            <div className="bg-gray-200 relative">
+              <Suspense fallback={<div className="h-64 md:h-96 flex items-center justify-center"><MapPin size={48} className="text-gray-500" /> <span className="ml-2 text-gray-500">Chargement de la carte...</span></div>}>
+                <LocationMap 
+                  latitude={30.4173116} 
+                  longitude={-9.589799900000001} 
+                  name="Laboratoire El Allali d&apos;Analyses Médicales" 
+                  address="CC86+W3, Agadir, Maroc" 
+                />
+              </Suspense>
+            </div>
+            <div className="p-6">
+              <h3 className="font-semibold text-xl mb-2">Laboratoire El Allali</h3>
+              <p className="text-gray-600 mb-4">
+                61 Bis, Rue de Marrakech, 80020, Agadir, Maroc
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-4 items-center">
+                  <a
+                    href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center min-w-[160px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#F50057] focus:bg-[#F50057] gap-2"
+                  >
+                    <MapPin size={22} className="mr-2 -ml-1" />
+                    Itinéraire
+                  </a>
+                  <a
+                    href="https://www.google.com/maps/dir/?api=1&destination=61+Bis+Rue+de+Marrakech+80020+Agadir"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center min-w-[220px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#F50057] focus:bg-[#F50057] gap-2"
+                  >
+                    <Navigation size={22} className="mr-2 -ml-1" />
+                    Naviguer vers le labo
+                  </a>
+                </div>
+                <a 
+                  href="https://wa.me/212634293900" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                >
+                  <span className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="mr-2" viewBox="0 0 16 16">
+                      <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                    </svg>
+                    WhatsApp
+                  </span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Info Pratiques Preview */}
+        <section id="info" className="mb-12">
+          <h2 className="text-2xl font-bold text-[#800020] mb-6">Infos Pratiques</h2>
+          <div className="card">
+            <div className="flex items-start">
+              <div className="bg-[#F7E7EA] p-3 rounded-full mr-4">
+                <Info className="text-[#800020]" size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Conseils pour vos analyses</h3>
+                <div className="space-y-3 mb-4">
+                  <p className="text-gray-600">Pour la plupart des analyses sanguines, un jeûne de 8 à 12 heures est recommandé. N&apos;hésitez pas à nous consulter pour des instructions spécifiques à votre analyse.</p>
+                  <p className="text-gray-600">Apportez votre pièce d&apos;identité, votre ordonnance et votre carte d&apos;assurance lors de votre visite.</p>
+                </div>
+                <Link href="#" className="btn-text">
+                  Plus d&apos;informations
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
+```
+
+## FILE: src\components\common\buttons\Button.tsx
+```
+```
+
+## FILE: src\components\common\cards\Card.tsx
+```
+```
+
+## FILE: src\components\features\home\HeroBanner.tsx
+```
+import React from 'react';
+import { Navigation } from 'lucide-react';
+
+const HeroBanner = () => {
+  return (
+    <div className="relative overflow-hidden mb-8">
+      {/* Banner Image */}
+      <div className="absolute inset-0 z-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/hero-banner.jpg"
+          alt="Laboratoire El Allali Banner"
+          className="object-cover w-full h-full"
+          style={{ position: 'absolute', inset: 0 }}
+        />
+        {/* Overlay to ensure text is readable */}
+        <div className="absolute inset-0 bg-[#800020] opacity-60"></div>
+      </div>
+      
+      {/* Content */}
+      <div className="container mx-auto px-2 py-16 sm:px-4 sm:py-20 md:py-32 relative z-10">
+        <div className="max-w-2xl">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 break-words text-white">
+            Bienvenue au Laboratoire El Allali
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl mb-8 opacity-90 break-words text-white">
+            Votre santé, notre priorité. Analyses médicales précises et rapides à Agadir.
+          </p>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 w-full">
+            <a
+              href="tel:0528843384"
+              className="flex items-center justify-center min-w-[170px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#F50057] focus:bg-[#F50057] gap-2 w-full sm:w-auto"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="mr-2 -ml-1"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a2 2 0 011.94 1.515l.3 1.2a2 2 0 01-.45 1.95l-1.27 1.27a16.001 16.001 0 006.586 6.586l1.27-1.27a2 2 0 011.95-.45l1.2.3A2 2 0 0121 16.72V19a2 2 0 01-2 2h-1C9.163 21 3 14.837 3 7V5z" /></svg>
+              Nous appeler
+            </a>
+            <a
+              href="https://www.google.com/maps/dir/?api=1&destination=61+Bis+Rue+de+Marrakech+80020+Agadir"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center min-w-[220px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#F50057] focus:bg-[#F50057] gap-2 w-full sm:w-auto"
+            >
+              <Navigation size={22} className="mr-2 -ml-1" />
+              Naviguer vers le labo
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HeroBanner;
+```
+
+## FILE: src\components\features\maps\LocationMap.tsx
+```
+"use client";
+
+import React, { useEffect, useRef } from 'react';
+import type { Map } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+interface LocationMapProps {
+  latitude: number;
+  longitude: number;
+  name: string;
+  address: string;
+}
+
+const LocationMap = ({ latitude, longitude, name, address }: LocationMapProps) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<Map | null>(null);
+  // Generate a unique id for the map container
+  const mapContainerId = React.useMemo(() => `leaflet-map-${Math.random().toString(36).substr(2, 9)}`, []);
+
+  useEffect(() => {
+    // Only import Leaflet on the client side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Dynamic import of Leaflet
+    const initializeMap = async () => {
+      if (!mapRef.current || mapInstanceRef.current) return;
+
+      // Import Leaflet dynamically
+      const L = (await import('leaflet')).default;
+      
+      // Fix Leaflet marker icon issue in Next.js
+      delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => void })._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+      });
+
+      // Remove any previous map instance attached to this container (for hot reloads or remounts)
+      if (mapRef.current && mapContainerId) {
+        try {
+          // Use Leaflet's DomUtil.get to find any existing map instance by id
+          if ((window as unknown as { L?: { DomUtil?: { get?: (id: string) => unknown } } }).L && (window as unknown as { L?: { DomUtil?: { get?: (id: string) => unknown } } }).L!.DomUtil) {
+            const container = (window as unknown as { L?: { DomUtil?: { get?: (id: string) => unknown } } }).L!.DomUtil!.get!(mapContainerId) as { _leaflet_id?: number | null } | null;
+            if (container && container._leaflet_id) {
+              // Remove the old map instance
+              container._leaflet_id = null;
+            }
+          }
+        } catch {}
+        // Remove all child nodes from the container
+        while (mapRef.current.firstChild) {
+          mapRef.current.removeChild(mapRef.current.firstChild);
+        }
+      }
+      // Create map instance
+      const map = L.map(mapRef.current).setView([latitude, longitude], 16);
+      mapInstanceRef.current = map;
+
+      // Add tile layer (OpenStreetMap)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Add marker with popup
+      const marker = L.marker([latitude, longitude]).addTo(map);
+      marker.bindPopup(`
+        <strong>${name}</strong><br>
+        ${address}
+      `).openPopup();
+    };
+
+    initializeMap();
+
+    // Cleanup on unmount
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [latitude, longitude, name, address, mapContainerId]);
+
+  return (
+    <div className="relative w-full h-64 md:h-96 z-0">
+      <div ref={mapRef} id={mapContainerId} className="absolute inset-0" />
+    </div>
+  );
+};
+
+export default LocationMap;
+
+```
+
+## FILE: src\components\layout\Footer.tsx
+```
+import Link from 'next/link';
+import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
+
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+  
+  return (
+    <footer className="footer-gradient text-white pt-12 pb-8 mt-4">
+      <div className="container mx-auto px-4">
+        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[#800020]/70 via-[#B84C63]/70 to-[#FF4081]/70 rounded-full"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm sm:text-base">
+  {/* Sur mobile, grille verticale et padding supplémentaire */}
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-xl font-bold mb-4">Contact</h3>
+            <ul className="space-y-3">
+              <li className="flex items-start">
+                <MapPin size={20} className="mr-2 mt-1 flex-shrink-0 text-[#FF4081]" />
+                <span>61 Bis, Rue de Marrakech, 80020, Agadir</span>
+              </li>
+              <li className="flex flex-col">
+                <div className="flex items-center mb-1">
+                  <Phone size={20} className="mr-2 flex-shrink-0 text-[#FF4081]" />
+                  <span className="font-semibold">Contact Laboratoire :</span>
+                </div>
+                <div className="ml-7">
+                  <p>Fixe: <a href="tel:0528843384" className="hover:underline">0528843384</a></p>
+                  <p>WhatsApp: <a href="https://wa.me/212634293900" className="hover:underline">0634293900</a></p>
+                  <p>WhatsApp: <a href="https://wa.me/212707291873" className="hover:underline">0707291873</a></p>
+                  <p>Sociétés et autres: <a href="tel:0664727681" className="hover:underline">0664727681</a></p>
+                  <p>Fax: 0528828758</p>
+                </div>
+              </li>
+              <li className="flex items-center">
+                <Mail size={20} className="mr-2 flex-shrink-0 text-[#FF4081]" />
+                <div className="flex flex-col">
+                  <a href="mailto:laboelallali@gmail.com" className="hover:underline">
+                    laboelallali@gmail.com
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <Clock size={20} className="mr-2 mt-1 flex-shrink-0 text-[#FF4081]" />
+                <div>
+                  <p>Lundi au Samedi: 7h30 to 18h30</p>
+                  <p>Dimanche: 08h00 to 18h00</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-xl font-bold mb-4">Liens Rapides</h3>
+            <ul className="space-y-2">
+  {/* Liens avec taille minimum pour accessibilité mobile */}
+              <li>
+                <Link href="/" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="mr-2" />
+                  Accueil
+                </Link>
+              </li>
+              <li>
+                <Link href="#services" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="mr-2" />
+                  Nos Services
+                </Link>
+              </li>
+              <li>
+                <Link href="#info" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="mr-2" />
+                  Infos Pratiques
+                </Link>
+              </li>
+              <li>
+                <Link href="#contact" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="mr-2" />
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="#faq" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="mr-2" />
+                  FAQ
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* About Us */}
+          <div>
+            <h3 className="text-xl font-bold mb-4">À Propos</h3>
+            <p className="mb-4">
+              Laboratoire d&apos;analyses médicales de référence à Agadir, engagé à fournir des résultats précis et un service patient de qualité.
+            </p>
+            <a 
+              href="https://wa.me/212528000000" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="footer-whatsapp-btn bg-[#800020] hover:bg-[#B84C63] text-white px-4 py-2 rounded-lg inline-flex items-center transition-colors shadow-sm hover:shadow-md"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="mr-2" viewBox="0 0 16 16">
+                <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+              </svg>
+              Contactez-nous
+            </a>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="border-t border-gray-700 mt-8 pt-6 text-center">
+          <p className="footer-copyright">© {currentYear} Laboratoire El Allali. Tous droits réservés.</p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
+```
+
+## FILE: src\components\layout\Header.tsx
+```
+"use client";
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { Menu, X, Search, User, ChevronDown } from 'lucide-react';
+
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  return (
+    <header className="bg-[#800020] text-white shadow-md">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between py-4">
+          {/* Logo et nom */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center">
+              <div className="bg-white p-1.5 rounded-md mr-2">
+                <span className="text-[#800020] font-bold text-lg">L</span>
+              </div>
+              <h1 className="text-xl font-bold hidden sm:block">Laboratoire El Allali</h1>
+            </Link>
+          </div>
+
+          {/* Navigation desktop */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link href="/" className="hover:text-rose-200 transition-colors">
+              Accueil
+            </Link>
+
+            <Link href="/rendez-vous" className="hover:text-rose-200 transition-colors font-semibold">
+              Prendre RDV
+            </Link>
+            
+            <Link href="/glabo" className="hover:text-rose-200 transition-colors font-semibold">
+              Prélèvement à Domicile
+            </Link>
+
+            <Link href="/contact" className="hover:text-rose-200 transition-colors">
+              Contact
+            </Link>
+          </nav>
+
+          {/* Boutons d'action */}
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <button className="flex items-center text-sm px-3 py-2 min-h-[44px] min-w-[44px] rounded hover:bg-[#600018]">
+                FR
+                <ChevronDown size={16} className="ml-1" />
+              </button>
+            </div>
+            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center">
+              <Search size={20} />
+            </button>
+            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center">
+              <User size={20} />
+            </button>
+            <button 
+              className="md:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center"
+              onClick={toggleMenu}
+            >
+              <Menu size={24} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Menu mobile */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden">
+          <div className={`bg-white h-full w-64 p-4 shadow-lg absolute right-0 mobile-menu-transition ${isMenuOpen ? 'open' : ''}`}>
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center">
+                <span className="bg-[#800020] text-white p-1 rounded text-lg font-bold">LA</span>
+              </div>
+              <button onClick={toggleMenu}>
+                <X size={24} className="text-gray-700" />
+              </button>
+            </div>
+            
+            <nav className="flex flex-col space-y-4">
+              <Link 
+                href="/" 
+                className="text-gray-800 hover:text-[#800020] transition-colors"
+                onClick={toggleMenu}
+              >
+                Accueil
+              </Link>
+
+              <Link 
+                href="/rendez-vous" 
+                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
+                onClick={toggleMenu}
+              >
+                Prendre RDV
+              </Link>
+              
+              <Link 
+                href="/glabo" 
+                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
+                onClick={toggleMenu}
+              >
+                Prélèvement à Domicile
+              </Link>
+
+              <Link 
+                href="/contact" 
+                className="text-gray-800 hover:text-[#800020] transition-colors"
+                onClick={toggleMenu}
+              >
+                Contact
+              </Link>
+              <div className="border-t border-gray-200 my-2 pt-2">
+                <button className="w-full text-left text-gray-700 py-2">
+                  Changer de langue: FR
+                </button>
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+};
+
+export default Header;
+```
+
+## FILE: src\components\layout\MainLayout.tsx
+```
+import React, { ReactNode } from 'react';
+import Head from 'next/head';
+
+interface MainLayoutProps {
+  children: ReactNode;
+  title?: string;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = ({ 
+  children, 
+  title = 'Laboratoire El Allali'
+}) => {
+  return (
+    <>
+      <Head>
+        <title>{title}</title>
+        <meta name="description" content="Application du Laboratoire El Allali pour les résultats d'analyses et rendez-vous" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#800020" />
+      </Head>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header will go here */}
+        <main className="container mx-auto px-4 py-8">
+          {children}
+        </main>
+        {/* Footer will go here */}
+      </div>
+    </>
+  );
+};
+
+export default MainLayout;
+```
+
+## FILE: src\config\firebase.ts
+```
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+export { app, auth, db, storage };
+```
+
+## FILE: next-env.d.ts
+```
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+```
+
+## FILE: PLANNING.md
+```
+```
+
+## FILE: TASK.md
+```
+# Suivi des tâches et fonctionnalités – Laboratoire El Allali
+
+## Fonctionnalités principales déjà en place
+
+- **Site vitrine Next.js** (App Router, TypeScript, Tailwind CSS)
+- **Section GLABO** : demande de prélèvement à domicile ou au travail
+- **Géolocalisation automatique** du patient (bouton "Localisez-moi")
+- **Envoi de la demande** par email (mailto) ou WhatsApp (message prérempli)
+- **Carte Leaflet** pour la localisation du laboratoire
+- **Widget d'ouverture** (statut ouvert/fermé en temps réel)
+- **Section Services, Pourquoi nous choisir, Hero, etc.**
+
+## Nouvelle fonctionnalité : Lien Google Maps cliquable pour la géolocalisation du patient
+
+- Lorsqu'un patient utilise la géolocalisation sur la page GLABO, ses coordonnées GPS sont automatiquement transformées en un lien Google Maps cliquable.
+- Ce lien est ajouté dans le champ d'adresse.
+- Lors de l'envoi de la demande (email ou WhatsApp), le lien Google Maps est mis en évidence avec un texte explicite :
+  - Exemple :
+    ```
+    Lien Google Maps: https://www.google.com/maps?q=30.123456,-9.654321 ⇖ CLIQUEZ SUR CE LIEN POUR OUVRIR GOOGLE MAPS
+    ```
+- Le staff du laboratoire peut simplement cliquer sur ce lien dans l'email ou le message WhatsApp pour ouvrir directement la localisation du patient dans Google Maps.
+- Cette fonctionnalité améliore grandement l'expérience du personnel et évite toute manipulation manuelle des coordonnées.
+
+## Lien avec les autres fonctionnalités
+
+- La génération du lien Google Maps est totalement intégrée au processus GLABO déjà existant (géolocalisation, formulaire, envoi email/WhatsApp).
+- Aucun changement d'usage pour le patient, mais une expérience beaucoup plus fluide pour le staff du labo.
+
+---
+
+Dernière mise à jour : 10/05/2025
+
+```
+
+## FILE: WORKFLOW.md
+```
+```
+
+## Structure du projet
+- app/
+- components/
+- config/
+- context/
+- hooks/
+- services/
+- styles/
+- utils/
+
+## MÃ©tadonnÃ©es de gÃ©nÃ©ration
+- Date de gÃ©nÃ©ration: 2025-05-10 13:04:07
+- Nombre de fichiers de configuration inclus: 7
+- Nombre de fichiers de code inclus: 18
+- Temps d'exÃ©cution: 26.53 secondes

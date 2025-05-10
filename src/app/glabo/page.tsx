@@ -1,12 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { fr } from "date-fns/locale";
+import { fr, ar } from "date-fns/locale";
 import { format } from "date-fns";
+import { useTranslation } from 'react-i18next';
+import { useParams } from 'next/navigation';
 
 const GlaboPage = () => {
+  const params = useParams();
+  const { t, i18n } = useTranslation(['common']);
+  const currentLang = params.lang as string || 'fr';
+  
   const [nom, setNom] = useState('');
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
@@ -18,6 +24,13 @@ const GlaboPage = () => {
   const [selectedTime, setSelectedTime] = useState('');
   const [hasOrdonnance, setHasOrdonnance] = useState('non'); // 'oui' ou 'non'
   const [commentaires, setCommentaires] = useState('');
+  
+  // Set i18n language
+  useEffect(() => {
+    if (i18n.language !== currentLang) {
+      i18n.changeLanguage(currentLang);
+    }
+  }, [currentLang, i18n]);
 
   // Génère les créneaux horaires disponibles en fonction du jour sélectionné
   function generateTimeSlots(date: Date | null): string[] {
@@ -53,12 +66,12 @@ const GlaboPage = () => {
   const handleGeolocate = () => {
     // Vérifie si la géolocalisation est supportée par le navigateur
     if (!navigator.geolocation) {
-      setGeolocStatus("La géolocalisation n'est pas supportée par votre navigateur.");
+      setGeolocStatus(t('geolocation_not_supported', "La géolocalisation n'est pas supportée par votre navigateur."));
       return;
     }
     
     // Affiche le statut de chargement
-    setGeolocStatus("Chargement de la localisation...");
+    setGeolocStatus(t('loading_location', "Chargement de la localisation..."));
     
     // Options pour la géolocalisation (haute précision, timeout de 10s)
     const options = {
@@ -75,8 +88,12 @@ const GlaboPage = () => {
       // Créer un lien Google Maps avec les coordonnées
       const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
       
-      setGeolocStatus(`Localisation approximative trouvée.`);
-      setAdresse(`Coordonnées : Lat: ${latitude.toFixed(6)}, Lon: ${longitude.toFixed(6)}\nLien Google Maps: ${googleMapsLink}\nVeuillez compléter votre adresse ci-dessus si nécessaire.`);
+      setGeolocStatus(t('location_found', "Localisation approximative trouvée."));
+      setAdresse(t('coordinates_text', `Coordonnées : Lat: {{lat}}, Lon: {{lon}}\nLien Google Maps: {{link}}\nVeuillez compléter votre adresse ci-dessus si nécessaire.`, {
+        lat: latitude.toFixed(6),
+        lon: longitude.toFixed(6),
+        link: googleMapsLink
+      }));
     };
     
     // Fonction d'erreur
@@ -84,18 +101,18 @@ const GlaboPage = () => {
       let errorMessage = "";
       switch (err.code) {
         case err.PERMISSION_DENIED:
-          errorMessage = "Vous avez refusé l'accès à votre position.";
+          errorMessage = t('permission_denied', "Vous avez refusé l'accès à votre position.");
           break;
         case err.POSITION_UNAVAILABLE:
-          errorMessage = "Les informations de localisation ne sont pas disponibles.";
+          errorMessage = t('position_unavailable', "Les informations de localisation ne sont pas disponibles.");
           break;
         case err.TIMEOUT:
-          errorMessage = "La demande de localisation a expiré.";
+          errorMessage = t('timeout', "La demande de localisation a expiré.");
           break;
         default:
-          errorMessage = `Erreur inconnue: ${err.message}`;
+          errorMessage = t('unknown_error', `Erreur inconnue: {{message}}`, { message: err.message });
       }
-      setGeolocStatus(`Erreur de géolocalisation: ${errorMessage}`);
+      setGeolocStatus(t('geolocation_error', `Erreur de géolocalisation: {{errorMessage}}`, { errorMessage }));
     };
     
     // Lance la géolocalisation
@@ -115,14 +132,14 @@ const GlaboPage = () => {
     event.preventDefault();
     // Validation simple
     if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
-      alert("Veuillez remplir tous les champs obligatoires (nom, téléphone, date, heure).");
+      alert(t('required_fields_alert', "Veuillez remplir tous les champs obligatoires (nom, téléphone, date, heure)."));
       return;
     }
     
     // Formatage de la date
     const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
     const laboEmail = "laboelallali@gmail.com";
-    const sujet = `Demande de Prélèvement GLABO - ${nom}`;
+    const sujet = t('glabo_request_subject', `Demande de Prélèvement GLABO - {{name}}`, { name: nom });
     
     // Extraction du lien Google Maps s'il existe dans l'adresse
     const googleMapsLink = extractGoogleMapsLink(adresse);
@@ -132,29 +149,47 @@ const GlaboPage = () => {
     if (googleMapsLink) {
       // Si un lien Google Maps est trouvé, le mettre en évidence pour le staff du laboratoire
       formattedAddress = adresse.replace(googleMapsLink, 
-        `${googleMapsLink} ⇖ CLIQUEZ SUR CE LIEN POUR OUVRIR GOOGLE MAPS`);
+        `${googleMapsLink} ⇖ ${t('click_for_maps', "CLIQUEZ SUR CE LIEN POUR OUVRIR GOOGLE MAPS")}`);
     }
     
+    // Déterminer le texte du lieu de prélèvement
+    const samplingPlaceText = lieuPrelevement === 'domicile' 
+      ? t('at_home', 'À mon domicile')
+      : t('at_work', 'Sur mon lieu de travail');
+      
     // Création du message pour la demande GLABO
-    const messageText = `Bonjour,
+    const messageText = t('glabo_email_template', 
+      `Bonjour,
 
 Je souhaite demander un prélèvement à domicile/travail (GLABO) :
 
-Nom : ${nom}
-Téléphone : ${telephone}${email ? `
-Email : ${email}` : ''}
-Lieu du prélèvement : ${lieuPrelevement === 'domicile' ? 'À mon domicile' : 'Sur mon lieu de travail'}
-${formattedAddress ? `Adresse : ${formattedAddress}` : 'Adresse non spécifiée (à confirmer par téléphone).'}${instructionsAcces ? `
-Instructions d'accès : ${instructionsAcces}` : ''}
-Date souhaitée : ${formattedDate}
-Heure souhaitée : ${selectedTime}${commentaires ? `
-Commentaires : ${commentaires}` : ''}
+Nom : {{name}}
+Téléphone : {{phone}}{{email}}
+Lieu du prélèvement : {{samplingPlace}}
+{{address}}{{accessInstructions}}
+Date souhaitée : {{date}}
+Heure souhaitée : {{time}}{{comments}}
 
-${hasOrdonnance === 'oui' ? `J'ai une ordonnance et je vous l'enverrai en pièce jointe dans mon email.` : "Je n'ai pas d'ordonnance."}
+{{prescription}}
 
 Merci de me contacter pour confirmer les détails.
 
-Cordialement.`;
+Cordialement.`, 
+      {
+        name: nom,
+        phone: telephone,
+        email: email ? `\nEmail : ${email}` : '',
+        samplingPlace: samplingPlaceText,
+        address: formattedAddress ? `Adresse : ${formattedAddress}` : t('address_not_specified', 'Adresse non spécifiée (à confirmer par téléphone).'),
+        accessInstructions: instructionsAcces ? `\nInstructions d'accès : ${instructionsAcces}` : '',
+        date: formattedDate,
+        time: selectedTime,
+        comments: commentaires ? `\nCommentaires : ${commentaires}` : '',
+        prescription: hasOrdonnance === 'oui' 
+          ? t('have_prescription', `J'ai une ordonnance et je vous l'enverrai en pièce jointe dans mon email.`)
+          : t('no_prescription', "Je n'ai pas d'ordonnance.")
+      }
+    );
     
     // Fonction pour afficher l'alerte avec les instructions et le bouton de copie
     function showEmailAlert() {
@@ -219,20 +254,44 @@ Cordialement.`;
     if (googleMapsLink) {
       // Si un lien Google Maps est trouvé, le mettre en évidence pour le staff du laboratoire
       formattedAddress = adresse.replace(googleMapsLink, 
-        `${googleMapsLink} ⇖ CLIQUEZ SUR CE LIEN POUR OUVRIR GOOGLE MAPS`);
+        `${googleMapsLink} ⇖ ${t('click_for_maps', "CLIQUEZ SUR CE LIEN POUR OUVRIR GOOGLE MAPS")}`);
     }
+
+    // Déterminer le texte pour le lieu de prélèvement
+    const samplingPlaceText = lieuPrelevement === 'domicile' 
+      ? t('at_home', 'À mon domicile')
+      : t('at_work', 'Sur mon lieu de travail');
+
+    const placeSummary = lieuPrelevement === 'domicile' 
+      ? t('home_sampling', 'à domicile')
+      : t('work_sampling', 'sur mon lieu de travail');
     
-    const message = `Bonjour, je souhaite demander un prélèvement ${lieuPrelevement === 'domicile' ? 'à domicile' : 'sur mon lieu de travail'} (GLABO).
-Nom : ${nom}
-Téléphone : ${telephone}${email ? `
-Email : ${email}` : ''}
-Lieu du prélèvement : ${lieuPrelevement === 'domicile' ? 'À mon domicile' : 'Sur mon lieu de travail'}
-${formattedAddress ? `Adresse : ${formattedAddress}` : 'Adresse non spécifiée (à confirmer par téléphone).'}${instructionsAcces ? `
-Instructions d'accès : ${instructionsAcces}` : ''}
-Date souhaitée : ${formattedDate}
-Heure souhaitée : ${selectedTime}${commentaires ? `
-Commentaires : ${commentaires}` : ''}
-${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai séparément par WhatsApp.` : "Je n'ai pas d'ordonnance."}`;
+    // Construction du message WhatsApp avec traductions
+    const message = t('whatsapp_message_template',
+      `Bonjour, je souhaite demander un prélèvement {{place}} (GLABO).
+Nom : {{name}}
+Téléphone : {{phone}}{{email}}
+Lieu du prélèvement : {{samplingPlace}}
+{{address}}{{accessInstructions}}
+Date souhaitée : {{date}}
+Heure souhaitée : {{time}}{{comments}}
+{{prescription}}`,
+      {
+        place: placeSummary,
+        name: nom,
+        phone: telephone,
+        email: email ? `\nEmail : ${email}` : '',
+        samplingPlace: samplingPlaceText,
+        address: formattedAddress ? `Adresse : ${formattedAddress}` : t('address_not_specified', 'Adresse non spécifiée (à confirmer par téléphone).'),
+        accessInstructions: instructionsAcces ? `\nInstructions d'accès : ${instructionsAcces}` : '',
+        date: formattedDate,
+        time: selectedTime,
+        comments: commentaires ? `\nCommentaires : ${commentaires}` : '',
+        prescription: hasOrdonnance === 'oui' 
+          ? t('have_prescription_whatsapp', `Je dispose d'une ordonnance que je vous enverrai séparément par WhatsApp.`)
+          : t('no_prescription', "Je n'ai pas d'ordonnance.")
+      }
+    );
     
     const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
     window.open(whatsappLink, '_blank');
@@ -243,16 +302,20 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
     setHasOrdonnance(e.target.value);
   };
 
+  // Déterminer la locale pour le DatePicker en fonction de la langue
+  const dateLocale = currentLang === 'ar' ? ar : fr;
+  const isRTL = currentLang === 'ar';
+  
   return (
-    <main className="p-4 md:p-8 font-sans">
+    <main className={`p-4 md:p-8 font-sans ${isRTL ? 'rtl' : 'ltr'}`}>
       <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 font-['Inter','Public Sans',sans-serif]">
-        Demander un prélèvement à domicile ou au travail (GLABO)
+        {t('glabo_title', 'Demander un prélèvement à domicile ou au travail (GLABO)')}
       </h1>
       <form className="max-w-lg mx-auto" onSubmit={handleSubmit}>
         {/* Nom complet */}
         <div className="mb-4">
           <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Nom complet
+            {t('name', "Nom complet")}
           </label>
           <input
             type="text"
@@ -267,7 +330,7 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
         {/* Numéro de téléphone */}
         <div className="mb-4">
           <label htmlFor="telephone" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Numéro de téléphone
+            {t('phone', "Numéro de téléphone")}
           </label>
           <input
             type="tel"
@@ -283,7 +346,7 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
         {/* Adresse email (optionnel) */}
         <div className="mb-4">
           <label htmlFor="email" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Adresse email (optionnel)
+            {t('email', "Adresse e-mail")} ({t('optional', "optionnel")})
           </label>
           <input
             type="email"
@@ -298,7 +361,7 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
         {/* Lieu du prélèvement */}
         <div className="mb-4">
           <label htmlFor="lieuPrelevement" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Lieu du prélèvement
+            {t('sampling_place', "Lieu de prélèvement")}
           </label>
           <select
             id="lieuPrelevement"
@@ -307,14 +370,14 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
             onChange={e => setLieuPrelevement(e.target.value)}
             className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
           >
-            <option value="domicile">À mon domicile</option>
-            <option value="travail">Sur mon lieu de travail</option>
+            <option value="domicile">{t('at_home', "À mon domicile")}</option>
+            <option value="travail">{t('at_work', "Sur mon lieu de travail")}</option>
           </select>
         </div>
         {/* Adresse de prélèvement (optionnel) */}
         <div className="mb-4">
           <label htmlFor="adresse" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Adresse complète pour le prélèvement (optionnel)
+            {t('address_instructions', "Adresse (indiquez pour le prélèvement)")}
           </label>
           <textarea
             id="adresse"
@@ -333,7 +396,7 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
             </svg>
-            Localisez-moi (Optionnel)
+            {t('locate_position', "Localisez-moi (Optionnel)")}
           </button>
           {geolocStatus && (
             <p className="text-xs text-gray-600 mt-1">{geolocStatus}</p>
@@ -342,7 +405,7 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
         {/* Instructions d'accès (optionnel) */}
         <div className="mb-4">
           <label htmlFor="instructionsAcces" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Instructions d&apos;accès (code immeuble, étage, etc. - optionnel)
+            {t('access_instructions', "Instructions d'accès (code immeuble, étage, etc.")} - {t('optional', "optionnel")}
           </label>
           <input
             type="text"
@@ -356,7 +419,7 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
         {/* Date souhaitée */}
         <div className="mb-4">
           <label htmlFor="date" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Date souhaitée
+            {t('desired_date', "Date souhaitée")}
           </label>
           <DatePicker
             id="date"
@@ -364,15 +427,15 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
             onChange={(date: Date | null) => setSelectedDate(date)}
             dateFormat="dd/MM/yyyy"
             minDate={new Date()}
-            locale={fr}
-            placeholderText="Sélectionnez une date"
+            locale={dateLocale}
+            placeholderText={t('date_placeholder', "Sélectionnez une date")}
             className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
           />
         </div>
         {/* Heure souhaitée */}
         <div className="mb-4">
           <label htmlFor="heure" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Heure souhaitée
+            {t('desired_time', "Heure souhaitée")}
           </label>
           <select
             id="heure"
@@ -381,7 +444,7 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
             onChange={e => setSelectedTime(e.target.value)}
             className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
           >
-            <option value="" disabled>-- Choisissez une heure --</option>
+            <option value="" disabled>{t('choose_time', "-- Choisissez une heure --")}</option>
             {timeSlots.map((slot) => (
               <option key={slot} value={slot}>{slot}</option>
             ))}
@@ -390,7 +453,7 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
         {/* Ordonnance (optionnel) */}
         <div className="mb-4">
           <label htmlFor="ordonnance" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Avez-vous une ordonnance ?
+            {t('prescription_question', "Avez-vous une ordonnance ?")}
           </label>
           <select
             id="ordonnance"
@@ -399,19 +462,19 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
             onChange={handleOrdonnanceChange}
             className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
           >
-            <option value="non">Non</option>
-            <option value="oui">Oui</option>
+            <option value="non">{t('no', "Non")}</option>
+            <option value="oui">{t('yes', "Oui")}</option>
           </select>
           {hasOrdonnance === 'oui' && (
             <p className="text-xs text-gray-500 mt-1">
-              Note : N&apos;oubliez pas de joindre votre ordonnance lors de l&apos;envoi de votre WhatsApp ou email.
+              {t('prescription_note', "Note : N'oubliez pas de joindre votre ordonnance lors de l'envoi de votre email ou message WhatsApp.")}
             </p>
           )}
         </div>
         {/* Commentaires (optionnel) */}
         <div className="mb-4">
           <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Notes ou commentaires supplémentaires (optionnel)
+            {t('comments', "Notes ou commentaires supplémentaires")} ({t('optional', "optionnel")})
           </label>
           <textarea
             id="commentaires"
@@ -431,7 +494,7 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
             </svg>
-            Envoyer ma demande de prélèvement par email
+            {t('send_request_email', "Envoyer ma demande de prélèvement par email")}
           </button>
           <button
             type="button"
@@ -442,12 +505,12 @@ ${hasOrdonnance === 'oui' ? `Je dispose d'une ordonnance que je vous enverrai s�
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="w-5 h-5">
               <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
             </svg>
-            Demander prélèvement par WhatsApp
+            {t('send_whatsapp', "Demander prélèvement par WhatsApp")}
           </button>
         </div>
         {/* Rappel ordonnance */}
         <div className="mt-4 text-sm text-[var(--primary-bordeaux)] bg-[var(--gray-100)] rounded-lg px-4 py-2 border border-[var(--gray-300)]">
-          <strong>Rappel&nbsp;:</strong> Si vous avez une ordonnance, n&apos;oubliez pas de l&apos;attacher à votre email ou à votre message WhatsApp&nbsp;!
+          <strong>{t('reminder', "Rappel")}&nbsp;:</strong> {t('prescription_reminder', "Si vous avez une ordonnance, n'oubliez pas de l'attacher à votre email ou à votre message WhatsApp")}!
         </div>
       </form>
     </main>
