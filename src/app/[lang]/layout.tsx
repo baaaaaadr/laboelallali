@@ -5,11 +5,12 @@ import i18nConfig, { defaultNS, supportedLngs } from '../../../i18n';
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next/initReactI18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
-import { dir } from 'i18next'; 
+import { use } from 'react'; 
 import TranslationsProvider from '@/components/providers/TranslationsProvider'; 
 import Header from '@/components/layout/Header'; 
 import Footer from '@/components/layout/Footer'; 
 
+// Define the font to be used throughout the app
 const inter = Inter({ subsets: ['latin'] });
 
 // Initialise i18next pour les Server Components
@@ -34,8 +35,8 @@ export async function generateStaticParams() {
 }
 
 // Génère les métadonnées dynamiques pour la page
-export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
-  const { lang } = await params;
+export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
+  const { lang } = params;
   console.log('generateMetadata pour lang:', lang); // Pour le débogage
   return {
     title: 'Titre Statique Temporaire',
@@ -43,20 +44,22 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   };
 }
 
-// Layout principal de l'application
-export default async function RootLayout({
-  children,
-  params,
-}: {
+// Define the interface that matches Next.js 15.3.1 expectations for layout props
+interface LayoutProps {
   children: React.ReactNode;
-  params: Promise<{ lang: string }>;
-}) {
-  const { lang } = await params;
+  params: { lang: string };
+}
+
+// Layout principal de l'application
+export default function RootLayout(props: LayoutProps) {
+  const { children, params } = props;
+  const { lang } = params;
   const dirValue = lang === 'ar' ? 'rtl' : 'ltr';
   console.log('RootLayout pour lang:', lang); // Pour le débogage
 
-  // Réactivation de la logique i18next côté serveur
-  const i18nInstance = await initServerI18next(lang, [defaultNS]);
+  // We need to initialize i18next on the server side
+  const i18nPromise = initServerI18next(lang, [defaultNS]);
+  const i18nInstance = use(i18nPromise);
   const resources = i18nInstance.services.resourceStore.data;
 
   return (
@@ -65,18 +68,18 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className="flex flex-col min-h-screen bg-gray-50">
+      <body className={`flex flex-col min-h-screen bg-gray-50 ${inter.className}`}>
         <TranslationsProvider
-  locale={lang}
-  namespaces={[defaultNS]}
-  resources={resources}
->
-  <Header />
-  <main className="flex-grow">
-    {children}
-  </main>
-  <Footer />
-</TranslationsProvider>
+          locale={lang}
+          namespaces={[defaultNS]}
+          resources={resources}
+        >
+          <Header />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </TranslationsProvider>
       </body>
     </html>
   );

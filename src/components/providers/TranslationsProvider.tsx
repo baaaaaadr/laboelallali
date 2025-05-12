@@ -2,7 +2,7 @@
 
 "use client";
 
-import { createInstance, i18n as I18nInstanceType } from 'i18next';
+import { createInstance, i18n as I18nInstanceType, Resource } from 'i18next';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { ReactNode, useEffect, useState } from 'react';
 import { fallbackLng as globalFallbackLng, defaultNS as globalDefaultNS } from '../../../i18n';
@@ -11,11 +11,11 @@ interface TranslationsProviderProps {
   children: ReactNode;
   locale: string;
   namespaces: string[];
-  resources: any; // i18next Resource type is complex, 'any' for simplicity here
+  resources: Resource; // Using i18next's built-in Resource type
 }
 
 // Initialize i18next instance
-const initI18next = (locale: string, namespaces: string[], resources: any) => {
+const initI18next = (locale: string, namespaces: string[], resources: Resource) => {
   const i18n = createInstance();
   i18n
     .use(initReactI18next)

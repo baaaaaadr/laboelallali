@@ -1,7 +1,7 @@
 "use client";
 
 import HeroBanner from '@/components/features/home/HeroBanner';
-import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, HomeIcon, Info, MapPin, ChevronRight, Navigation } from 'lucide-react';
+import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, HomeIcon, Info, MapPin, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, Suspense } from "react";
 import dynamic from 'next/dynamic';
@@ -17,7 +17,7 @@ const LocationMap = dynamic(
 
 import { useTranslation } from 'react-i18next';
 
-export default function HomePage({ params }: { params: { lang: string } }) {
+export default function HomePage() {
   const { t } = useTranslation('common');
   // On peut faire un check pour savoir si le labo est ouvert actuellement
   const currentHour = new Date().getHours();

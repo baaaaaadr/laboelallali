@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, ChevronDown, Globe } from 'lucide-react'; 
+import { Menu, X, Search, User, Globe } from 'lucide-react'; 
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
 
