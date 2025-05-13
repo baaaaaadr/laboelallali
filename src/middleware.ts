@@ -38,11 +38,13 @@ export function middleware(req: NextRequest) {
         lng = cookieLang;
       }
     }
-    if (!lng && req.headers.has('accept-language')) {
-      lng = acceptLanguage.get(req.headers.get('accept-language'));
-    }
+    // Décommenter ce bloc si on veut détecter la langue du navigateur
+    // if (!lng && req.headers.has('accept-language')) {
+    //   lng = acceptLanguage.get(req.headers.get('accept-language'));
+    // }
+    // Pour garantir que français est toujours la langue par défaut
     if (!lng) {
-      lng = fallbackLng;
+      lng = fallbackLng; // 'fr' défini dans i18n.ts
     }
 
     // Rediriger vers le même chemin préfixé par la langue détectée

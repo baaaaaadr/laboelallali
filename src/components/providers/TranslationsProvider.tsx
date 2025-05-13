@@ -1,37 +1,47 @@
-"use client";
+// src/components/providers/TranslationsProvider.tsx
+'use client';
 
-"use client";
-
-import { createInstance, i18n as I18nInstanceType, Resource } from 'i18next';
+import { useEffect, useRef } from 'react';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
-import { ReactNode, useEffect, useState } from 'react';
-import { fallbackLng as globalFallbackLng, defaultNS as globalDefaultNS } from '../../../i18n';
+import i18next, { createInstance } from 'i18next';
+import resourcesToBackend from 'i18next-resources-to-backend';
+
+// We're using any here because the exact i18next resource structure is complex
+// and attempting to type it precisely is causing TypeScript errors
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type I18NextResources = any;
 
 interface TranslationsProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
   locale: string;
   namespaces: string[];
-  resources: Resource; // Using i18next's built-in Resource type
+  resources: I18NextResources;
 }
 
-// Initialize i18next instance
-const initI18next = (locale: string, namespaces: string[], resources: Resource) => {
-  const i18n = createInstance();
-  i18n
+// Crée une nouvelle instance i18n pour chaque rendu afin d'éviter
+// les fuites d'état entre les requêtes côté serveur et d'éliminer
+// les décalages d'hydratation.
+function createI18nInstance(locale: string, namespaces: string[], resources: I18NextResources) {
+  const instance = createInstance();
+  instance
     .use(initReactI18next)
+    .use(
+      // Charger les namespaces manquants depuis /public/locales au besoin
+      resourcesToBackend((language: string, namespace: string) =>
+        fetch(`/locales/${language}/${namespace}.json`).then((res) => res.json())
+      )
+    )
     .init({
       lng: locale,
-      fallbackLng: globalFallbackLng,
       ns: namespaces,
-      defaultNS: globalDefaultNS,
       resources,
-      react: {
-        useSuspense: false, // Recommended for App Router
-      },
-      // debug: process.env.NODE_ENV === 'development',
+      fallbackLng: 'fr',
+      defaultNS: 'common',
+      interpolation: { escapeValue: false },
+      react: { useSuspense: false },
     });
-  return i18n;
-};
+  return instance;
+}
 
 export default function TranslationsProvider({
   children,
@@ -39,18 +49,31 @@ export default function TranslationsProvider({
   namespaces,
   resources,
 }: TranslationsProviderProps) {
-  // Memoize the i18next instance to prevent re-initialization on re-renders
-  // Trigger re-initialization only if locale, namespaces or resources change.
-  const [i18n, setI18n] = useState<I18nInstanceType | null>(null);
+  // Conserver l'instance pour la session du composant
+  const i18nRef = useRef(createI18nInstance(locale, namespaces, resources));
 
   useEffect(() => {
-    setI18n(initI18next(locale, namespaces, resources));
-  }, [locale, namespaces, resources]);
+    // CORRECTION: Pour éviter les erreurs d'hydratation, toujours mettre à jour 
+    // la langue côté client immédiatement après le premier rendu
+    const updateLanguage = async () => {
+      if (i18nRef.current.language !== locale) {
+        console.log(`[TranslationsProvider] Changing language from ${i18nRef.current.language} to ${locale}`);
+        await i18nRef.current.changeLanguage(locale);
+      }
+      
+      // Add new resource bundles if needed
+      if (resources && resources[locale]) {
+        Object.keys(resources[locale]).forEach(ns => {
+          if (!i18nRef.current.hasResourceBundle(locale, ns)) {
+            console.log(`[TranslationsProvider] Adding resource bundle for ${locale}/${ns}`);
+            i18nRef.current.addResourceBundle(locale, ns, resources[locale][ns], true, true);
+          }
+        });
+      }
+    };
+    
+    updateLanguage();
+  }, [locale, resources]);
 
-  if (!i18n) {
-    // You can render a loader here if needed, or null
-    return null;
-  }
-
-  return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
+  return <I18nextProvider i18n={i18nRef.current}>{children}</I18nextProvider>;
 }

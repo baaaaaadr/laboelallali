@@ -1,12 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { fr } from "date-fns/locale";
+import { fr, ar } from "date-fns/locale";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
+import { useParams } from "next/navigation";
+import { supportedLngs } from "../../../i18n";
 
 const RendezVousPage = () => {
+  // Récupérer la langue actuelle depuis l'URL
+  const params = useParams();
+  const { t, i18n } = useTranslation(['common', 'appointment']);
+  
+  // Déterminer la langue à partir des paramètres d'URL
+  const lang = typeof params.lang === 'string' && supportedLngs.includes(params.lang) 
+    ? params.lang 
+    : i18n.language || 'fr';
+    
+  // Mettre à jour la langue i18n si nécessaire
+  useEffect(() => {
+    if (i18n.language !== lang) {
+      i18n.changeLanguage(lang);
+    }
+  }, [lang, i18n]);
+  
+  // Déterminer la locale de date-fns en fonction de la langue
+  const dateLocale = lang === 'ar' ? ar : fr;
+  
   const [nom, setNom] = useState('');
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
@@ -143,13 +165,13 @@ Merci.`;
   return (
     <main className="p-4 md:p-8 font-sans">
       <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 font-['Inter','Public Sans',sans-serif]">
-        Prendre un rendez-vous au laboratoire
+        {t('appointment')}
       </h1>
       <form className="max-w-lg mx-auto" onSubmit={handleSubmit}>
         {/* Nom complet */}
         <div className="mb-4">
           <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Nom complet
+            {t('fullName')}
           </label>
           <input
             type="text"
@@ -164,7 +186,7 @@ Merci.`;
         {/* Numéro de téléphone */}
         <div className="mb-4">
           <label htmlFor="telephone" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Numéro de téléphone
+            {t('phoneNumber')}
           </label>
           <input
             type="tel"
@@ -174,13 +196,14 @@ Merci.`;
             autoComplete="tel"
             inputMode="tel"
             value={telephone}
-            onChange={e => setTelephone(e.target.value)}
+            onChange={(e) => setTelephone(e.target.value)}
+            required
           />
         </div>
         {/* Adresse email (optionnel) */}
         <div className="mb-4">
           <label htmlFor="email" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Adresse email (optionnel)
+            {t('email')}
           </label>
           <input
             type="email"
@@ -189,38 +212,40 @@ Merci.`;
             className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
             autoComplete="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         {/* Date souhaitée */}
         <div className="mb-4">
           <label htmlFor="date" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Date souhaitée
+            {t('desiredDate')}
           </label>
           <DatePicker
             id="date"
             selected={selectedDate}
-            onChange={(date: Date | null) => setSelectedDate(date)}
+            onChange={(date) => setSelectedDate(date)}
             dateFormat="dd/MM/yyyy"
             minDate={new Date()}
-            locale={fr}
+            locale={dateLocale}
             placeholderText="Sélectionnez une date"
             className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            required
           />
         </div>
         {/* Heure souhaitée */}
         <div className="mb-4">
           <label htmlFor="heure" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Heure souhaitée
+            {t('desiredTime')}
           </label>
           <select
             id="heure"
             name="heure"
             value={selectedTime}
-            onChange={e => setSelectedTime(e.target.value)}
+            onChange={(e) => setSelectedTime(e.target.value)}
             className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            required
           >
-            <option value="" disabled>-- Choisissez une heure --</option>
+            <option value="">{t('chooseTime')}</option>
             {timeSlots.map((slot) => (
               <option key={slot} value={slot}>{slot}</option>
             ))}
@@ -230,7 +255,7 @@ Merci.`;
         {/* Ordonnance */}
         <div className="mb-4">
           <label htmlFor="ordonnance" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Avez-vous une ordonnance ?
+            {t('prescription')}
           </label>
           <select
             id="ordonnance"
@@ -239,8 +264,8 @@ Merci.`;
             onChange={e => setHasOrdonnance(e.target.value)}
             className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
           >
-            <option value="non">Non</option>
-            <option value="oui">Oui</option>
+            <option value="non">{t('no')}</option>
+            <option value="oui">{t('yes')}</option>
           </select>
           {hasOrdonnance === 'oui' && (
             <p className="text-xs text-gray-500 mt-1">
@@ -252,7 +277,7 @@ Merci.`;
         {/* Commentaires (optionnel) */}
         <div className="mb-4">
           <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            Notes ou commentaires supplémentaires (optionnel)
+            {t('comments')}
           </label>
           <textarea
             id="commentaires"
@@ -272,7 +297,7 @@ Merci.`;
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
             </svg>
-            Envoyer ma demande de rdv par email
+            {t('requestByEmail')}
           </button>
           <button
             type="button"
@@ -283,7 +308,7 @@ Merci.`;
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="w-5 h-5">
               <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
             </svg>
-            Demander RDV par WhatsApp
+            {t('requestByWhatsApp')}
           </button>
         </div>
         

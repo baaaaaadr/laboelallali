@@ -3,9 +3,9 @@
 import HeroBanner from '@/components/features/home/HeroBanner';
 import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, HomeIcon, Info, MapPin, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, Suspense } from "react";
+import React, { useEffect, Suspense } from "react";
 import dynamic from 'next/dynamic';
-// import { supportedLngs } from '../../../i18n'; // Plus nécessaire ici
+import { useTranslation } from 'react-i18next';
 
 // Dynamically import the map component with SSR disabled
 const LocationMap = dynamic(
@@ -13,11 +13,18 @@ const LocationMap = dynamic(
   { ssr: false }
 );
 
-// Ajout des params pour la langue
-
-import { useTranslation } from 'react-i18next';
-
-export default function HomePage() {
+// For Next.js 15.3.1, params in client components should be unwrapped with React.use()
+export default function HomePage({ 
+  params 
+}: { 
+  params: { lang: string } | Promise<{ lang: string }>
+}) {
+  // Unwrap params using React.use() to prevent hydration errors
+  // This works for both Promise<Params> and direct Params
+  const resolvedParams = 'then' in params ? React.use(params) : params;
+  
+  // Log the language for debugging
+  console.log(`Page rendered for language: ${resolvedParams.lang}`);
   const { t } = useTranslation('common');
   // On peut faire un check pour savoir si le labo est ouvert actuellement
   const currentHour = new Date().getHours();

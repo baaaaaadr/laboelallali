@@ -1,0 +1,23 @@
+{
+  "appointment": "Prendre un rendez-vous au laboratoire",
+  "fullName": "Nom complet",
+  "phoneNumber": "Numéro de téléphone",
+  "email": "Adresse email (optionnel)",
+  "desiredDate": "Date souhaitée",
+  "desiredTime": "Heure souhaitée",
+  "chooseTime": "Choisissez une heure",
+  "prescription": "Avez-vous une ordonnance ?",
+  "yes": "OUI",
+  "no": "NON",
+  "comments": "Notes ou commentaires supplémentaires (optionnel)",
+  "requestAppointment": "Demander RDV par",
+  "requestByWhatsApp": "Demander RDV par WhatsApp",
+  "requestByEmail": "Envoyer ma demande de rdv par email",
+  "requiredFields": "Veuillez remplir tous les champs obligatoires (nom, téléphone, date, heure).",
+  "messageCopied": "Message copié dans le presse-papier ! Vous pouvez maintenant le coller dans votre client email.",
+  "emailInstructions": "Veuillez envoyer un email à",
+  "emailSubject": "Demande de Rendez-vous",
+  "emailBody": "Bonjour,\n\nJe souhaite prendre un rendez-vous au laboratoire :\n\nNom : {name}\nTéléphone : {phone}{email}\nDate souhaitée : {date}\nHeure souhaitée : {time}{comments}{prescription}\n\nMerci.",
+  "withPrescription": "Je dispose d'une ordonnance que je vous enverrai séparément par WhatsApp.",
+  "withoutPrescription": "Je n'ai pas d'ordonnance."
+}
