@@ -38,7 +38,7 @@ module.exports = [
     },
     rules: {
       // --- Relax stylistic rules to prevent deployment failures ---
-      quotes: ["error", "double", { avoidEscape: true }],
+      quotes: "off",
       indent: "off",
       "max-len": "off",
       "object-curly-spacing": "off",
