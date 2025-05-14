@@ -14,8 +14,9 @@
 /coverage
 
 # next.js
-/.next/      # For the root Next.js app
+/.next/
 /out/
+.next/
 
 # production
 /build
@@ -30,8 +31,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
+!.env.example
 .env.local
 .env.development.local
 .env.test.local
@@ -45,9 +47,29 @@ yarn-error.log*
 next-env.d.ts
 
 # Firebase
-.firebase/  # THIS IS CRUCIAL
+.firebase/
 firebase-debug.log
 firebase-debug.*.log
+ui-debug.log
 
-# Ignore Next.js build artifacts within the functions directory as well
+# Ignore build artifacts
+**/dist/
+**/build/
+**/.cache/
+**/public/workbox-*.js
+**/public/sw.js
+**/public/fallback-*.js
+
+# Generated files
+*.generated.*
+project_snapshot.txt
+allcode.txt
+context.txt
+
+# Functions build artifacts
+functions/lib/
 functions/.next/
+functions/public/public/
+
+# Local context files (except the generator script)
+context_for_ai.txt

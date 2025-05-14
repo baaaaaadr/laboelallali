@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { fr, ar } from "date-fns/locale";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { supportedLngs } from "../../../../i18n";
+import { useForm } from "react-hook-form";
+import { db, storage } from "../../../config/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 interface RendezVousParams {
   lang: string;
@@ -50,8 +54,14 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   const [email, setEmail] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedTime, setSelectedTime] = useState('');
-  const [hasOrdonnance, setHasOrdonnance] = useState('non'); // 'oui' ou 'non'
+  const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string>('');
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [commentaires, setCommentaires] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Génère les créneaux horaires disponibles en fonction du jour sélectionné
   function generateTimeSlots(date: Date | null): string[] {
@@ -84,12 +94,117 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   const timeSlots = generateTimeSlots(selectedDate);
   const laboWhatsapp = "212654079592"; // Numéro en format international sans +
 
-  const handleSubmit = (event: React.FormEvent) => {
+  // Gère le téléchargement de fichier d'ordonnance
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setPrescriptionFile(file);
+    setFileError('');
+    
+    if (file) {
+      // Valider le type de fichier
+      const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        setFileError(t('invalid_file_type', { ns: 'appointment' }));
+        setPrescriptionFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        setFilePreview(null);
+        return;
+      }
+      
+      // Valider la taille du fichier (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        setFileError(t('file_too_large', { ns: 'appointment' }));
+        setPrescriptionFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        setFilePreview(null);
+        return;
+      }
+      
+      // Créer un aperçu pour les images
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setFilePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setFilePreview(null); // Pas d'aperçu pour les PDFs
+      }
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    // Reset status states
+    setSubmitSuccess(false);
+    setSubmitError(null);
+    
     // Validation simple
     if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
       alert(t('requiredFields', { ns: 'appointment' }));
       return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // 1. Upload prescription file if exists
+      let downloadURL = null;
+      
+      if (prescriptionFile) {
+        // Create a storage reference with a timestamp and original filename
+        const timestamp = Date.now();
+        const fileName = prescriptionFile.name;
+        const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
+        
+        // Upload the file
+        await uploadBytes(storageRef, prescriptionFile);
+        
+        // Get download URL
+        downloadURL = await getDownloadURL(storageRef);
+      }
+      
+      // 2. Format date for Firestore
+      const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+      
+      // 3. Prepare data for Firestore
+      const appointmentData = {
+        name: nom,
+        phone: telephone,
+        email: email || null,
+        desiredDate: formattedDate,
+        desiredTime: selectedTime,
+        comments: commentaires || "",
+        prescriptionImageUrl: downloadURL,
+        submittedAt: serverTimestamp(),
+        status: "new_appointment_request",
+        type: "lab_appointment"
+      };
+      
+      // 4. Save to Firestore
+      await addDoc(collection(db, "appointmentRequests"), appointmentData);
+      
+      // 5. Show success message
+      setSubmitSuccess(true);
+      
+      // 6. Reset the form
+      setNom('');
+      setTelephone('');
+      setEmail('');
+      setSelectedDate(new Date());
+      setSelectedTime('');
+      setPrescriptionFile(null);
+      setFilePreview(null);
+      setCommentaires('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      
+    } catch (error) {
+      console.error("Error submitting appointment request:", error);
+      setSubmitError(t('appointment_request_error', { ns: 'appointment' }));
+    } finally {
+      setIsLoading(false);
     }
     // Formatage de la date
     const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
@@ -104,7 +219,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       date: formattedDate,
       time: selectedTime,
       comments: commentaires ? `\n${t('comments', { ns: 'appointment' })} : ${commentaires}` : '',
-      prescription: hasOrdonnance === 'oui' ? `\n${t('withPrescription', { ns: 'appointment' })}` : `\n${t('withoutPrescription', { ns: 'appointment' })}`
+      prescription: prescriptionFile ? `\n${t('withPrescription', { ns: 'appointment' })}` : `\n${t('withoutPrescription', { ns: 'appointment' })}`
     });
     
     // Fonction pour afficher l'alerte avec les instructions et le bouton de copie
@@ -133,24 +248,8 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       copyToClipboard();
     }
     
-    // Essayer de lancer le client email natif (pour les utilisateurs sur mobile ou avec client email configuré)
-    try {
-      // Approche sécurisée et simplifiée qui ne crée pas de fenêtre vide
-      const encodedBody = encodeURIComponent(messageText);
-      const encodedSubject = encodeURIComponent(sujet);
-      const mailtoLink = `mailto:${laboEmail}?subject=${encodedSubject}&body=${encodedBody}`;
-      
-      // Utiliser l'API Location plutôt que window.open pour éviter les fenêtres vides
-      window.location.href = mailtoLink;
-      
-      // Attendre un court instant puis afficher les instructions de secours
-      setTimeout(() => {
-        showEmailAlert();
-      }, 500);
-    } catch {
-      // En cas d'erreur, afficher directement l'alerte
-      showEmailAlert();
-    }
+    // Maintenant géré par le téléchargement Firebase et l'enregistrement Firestore
+    // Remarque : Le code ci-dessus est conservé comme référence pour le moment mais n'est plus exécuté
   };
 
   // Génère le lien WhatsApp avec message prérempli
@@ -167,10 +266,35 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       date: formattedDate,
       time: selectedTime,
       comments: commentaires ? `\n${t('comments', { ns: 'appointment' })} : ${commentaires}` : '',
-      prescription: hasOrdonnance === 'oui' ? `\n${t('withPrescription', { ns: 'appointment' })}` : `\n${t('withoutPrescription', { ns: 'appointment' })}`
+      prescription: prescriptionFile ? `\n${t('withPrescription', { ns: 'appointment' })}` : `\n${t('withoutPrescription', { ns: 'appointment' })}`
     });
     const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
     window.open(whatsappLink, '_blank');
+    
+    // Également enregistrer dans Firebase pour le suivi
+    try {
+      setIsLoading(true);
+      
+      const appointmentData = {
+        name: nom,
+        phone: telephone,
+        email: email || null,
+        desiredDate: formattedDate,
+        desiredTime: selectedTime,
+        comments: commentaires || "",
+        prescriptionImageUrl: null, // Pas de fichier pour WhatsApp - il sera envoyé directement
+        submittedAt: serverTimestamp(),
+        status: "whatsapp_appointment_request",
+        type: "lab_appointment"
+      };
+      
+      addDoc(collection(db, "appointmentRequests"), appointmentData)
+        .catch(error => console.error("Error saving WhatsApp request to Firestore:", error))
+        .finally(() => setIsLoading(false));
+    } catch (error) {
+      console.error("Error saving WhatsApp request:", error);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -178,6 +302,18 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 font-['Inter','Public Sans',sans-serif]">
         {t('appointment', { ns: 'appointment' })}
       </h1>
+      {submitSuccess && (
+        <div className="max-w-lg mx-auto mb-6 p-4 bg-green-100 border border-green-200 text-green-800 rounded-md">
+          {t('appointment_request_success', { ns: 'appointment' })}
+        </div>
+      )}
+      
+      {submitError && (
+        <div className="max-w-lg mx-auto mb-6 p-4 bg-red-100 border border-red-200 text-red-800 rounded-md">
+          {submitError}
+        </div>
+      )}
+      
       <form className="max-w-lg mx-auto" onSubmit={handleSubmit}>
         {/* Nom complet */}
         <div className="mb-4">
@@ -264,21 +400,40 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
           </select>
         </div>
 
-        {/* Ordonnance */}
+        {/* Téléchargement d'ordonnance */}
         <div className="mb-4">
-          <label htmlFor="ordonnance" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
-            {t('prescription', { ns: 'appointment' })}
+          <label htmlFor="prescriptionFile" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('prescription_upload_label', { ns: 'appointment' })}
           </label>
-          <select
-            id="ordonnance"
-            name="ordonnance"
-            value={hasOrdonnance}
-            onChange={e => setHasOrdonnance(e.target.value)}
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
-          >
-            <option value="non">{t('no', { ns: 'appointment' })}</option>
-            <option value="oui">{t('yes', { ns: 'appointment' })}</option>
-          </select>
+          <input
+            type="file"
+            id="prescriptionFile"
+            name="prescriptionFile"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".jpg,.jpeg,.png,.pdf"
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0 file:text-sm file:font-semibold
+              file:bg-[var(--accent-fuchsia)] file:text-white hover:file:bg-[var(--fuchsia-bright)]
+              file:cursor-pointer file:transition-colors"
+          />
+          {fileError && (
+            <p className="mt-1 text-sm text-red-600">{fileError}</p>
+          )}
+          {prescriptionFile && !fileError && (
+            <div className="mt-2">
+              <p className="text-sm text-gray-600">{t('file_selected', { ns: 'appointment' })} {prescriptionFile.name}</p>
+              {filePreview && (
+                <div className="mt-2 max-w-xs">
+                  <img 
+                    src={filePreview} 
+                    alt="Aperçu"
+                    className="h-24 object-contain border border-gray-200 rounded-md" 
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
         
         {/* Commentaires (optionnel) */}
@@ -299,12 +454,25 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         <div className="flex flex-col md:flex-row gap-3 justify-end">
           <button
             type="submit"
-            className="bg-[var(--accent-fuchsia)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+            disabled={isLoading}
+            className={`bg-[var(--accent-fuchsia)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-            </svg>
-            {t('requestByEmail', { ns: 'appointment' })}
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {t('submitting', { ns: 'appointment' })}
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+                {t('submit_appointment_request', { ns: 'appointment' })}
+              </>
+            )}
           </button>
           <button
             type="button"

@@ -13,11 +13,19 @@
   "requestAppointment": "طلب موعد عبر",
   "requestByWhatsApp": "طلب موعد عبر واتساب",
   "requestByEmail": "إرسال طلب الموعد عبر البريد الإلكتروني",
+  "submit_appointment_request": "إرسال طلب الموعد",
   "requiredFields": "يرجى ملء جميع الحقول المطلوبة (الاسم، رقم الهاتف، التاريخ، الوقت).",
   "messageCopied": "تم نسخ الرسالة إلى الحافظة! يمكنك الآن لصقها في تطبيق البريد الإلكتروني الخاص بك.",
   "emailInstructions": "يرجى إرسال بريد إلكتروني إلى",
   "emailSubject": "طلب موعد",
   "emailBody": "مرحباً،\n\nأرغب في حجز موعد في المختبر:\n\nالاسم: {name}\nرقم الهاتف: {phone}{email}\nالتاريخ المطلوب: {date}\nالوقت المطلوب: {time}{comments}{prescription}\n\nشكراً.",
   "withPrescription": "لدي وصفة طبية سأرسلها لكم بشكل منفصل عبر واتساب.",
-  "withoutPrescription": "ليس لدي وصفة طبية."
+  "withoutPrescription": "ليس لدي وصفة طبية.",
+  "prescription_upload_label": "تحميل وصفتك الطبية (اختياري)",
+  "file_selected": "الملف المحدد:",
+  "file_too_large": "حجم الملف كبير جدا (الحد الأقصى 5 ميجابايت)",
+  "invalid_file_type": "نوع الملف غير مدعوم (يسمح فقط بـ JPG, PNG, PDF)",
+  "appointment_request_success": "تم إرسال طلب الموعد بنجاح. سنتصل بك قريباً.",
+  "appointment_request_error": "حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى أو الاتصال بنا عبر الهاتف.",
+  "submitting": "جاري الإرسال..."
 }

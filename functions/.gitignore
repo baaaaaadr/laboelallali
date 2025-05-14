@@ -8,7 +8,20 @@ typings/
 # Node.js dependency directory
 node_modules/
 
-# Next.js build output for functions
-.next/  # ADD THIS LINE IF IT'S NOT THERE
+# Build output
+lib/
+dist/
+.next/
 
+# Public artifacts and duplicates
+public/public/
+
+# Debug logs
+*.log
+
+# Local environment files
 *.local
+
+# Cache files
+.runtimeconfig.json
+.cache/

@@ -1,176 +1,197 @@
-# generate_context.ps1 - Enhanced Version (excludes .env.local)
-$projectDir = "H:\my apps\laboelallali"
+# generate_context.ps1 - Scalable Version for Git Repository
+# Get current directory rather than hardcoded path to make it portable across computers
+$projectDir = $PSScriptRoot
 Set-Location -Path $projectDir
 $outputFile = "context_for_ai.txt"
+$fileSizeLimit = 102400  # 100KB limit for file size
+
+# Counter for tracking total files
+$totalFilesIncluded = 0
 
 # Start with a fresh file
 "# Laboratoire El Allali PWA - AI Context - $(Get-Date)" | Out-File -FilePath $outputFile -Encoding utf8
 
+# --- Project Overview Info ---
+"`n## --- PROJECT OVERVIEW ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+"Laboratoire El Allali - Medical laboratory website in Agadir, Morocco" | Out-File -FilePath $outputFile -Append -Encoding utf8
+"Built with Next.js App Router, TypeScript, Tailwind CSS, i18n (fr, ar), and Firebase Hosting" | Out-File -FilePath $outputFile -Append -Encoding utf8
+
+# Function to process files with appropriate syntax highlighting
+function Add-FileToContext($filePath, $defaultLangHint = "", $sectionName = "") {
+    $fullPath = Join-Path -Path $projectDir -ChildPath $filePath
+    if (Test-Path -Path $fullPath) {
+        # Skip large files
+        $fileInfo = Get-Item -Path $fullPath
+        if ($fileInfo.Length -gt $fileSizeLimit) {
+            "`n## FILE: $filePath (SKIPPED - TOO LARGE: $([math]::Round($fileInfo.Length / 1024)) KB)" | Out-File -FilePath $outputFile -Append -Encoding utf8
+            return $false
+        }
+
+        # Add section heading if provided and it's the first file in this section
+        if (-not [string]::IsNullOrEmpty($sectionName) -and $script:currentSection -ne $sectionName) {
+            "`n## --- $sectionName ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+            $script:currentSection = $sectionName
+        }
+
+        "`n## FILE: $filePath" | Out-File -FilePath $outputFile -Append -Encoding utf8
+        
+        # Determine language hint for markdown based on extension
+        $langHint = $defaultLangHint
+        if ([string]::IsNullOrEmpty($langHint)) {
+            if ($filePath.EndsWith(".tsx") -or $filePath.EndsWith(".ts")) { $langHint = "typescript" }
+            elseif ($filePath.EndsWith(".jsx") -or $filePath.EndsWith(".js")) { $langHint = "javascript" }
+            elseif ($filePath.EndsWith(".css")) { $langHint = "css" }
+            elseif ($filePath.EndsWith(".json")) { $langHint = "json" }
+            elseif ($filePath.EndsWith(".md")) { $langHint = "markdown" }
+        }
+        
+        "``````$langHint" | Out-File -FilePath $outputFile -Append -Encoding utf8
+        Get-Content -Path $fullPath -Raw -ErrorAction SilentlyContinue | Out-File -FilePath $outputFile -Append -Encoding utf8
+        "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
+        
+        $script:totalFilesIncluded++
+        return $true
+    } else {
+        "`n## FILE: $filePath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
+        return $false
+    }
+}
+
+# Track current section to avoid repeating section headers
+$script:currentSection = ""
+
 # --- Section 1: Core Configuration Files ---
-"`n## --- CORE CONFIGURATION ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+$script:currentSection = "CORE CONFIGURATION"
+"`n## --- $script:currentSection ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+
 $coreConfigFiles = @(
     "package.json",
     "next.config.js",
     "tailwind.config.js",
     "tsconfig.json",
-    "postcss.config.js",
     "firebase.json",
-    ".firebaserc"
-    # Removed ".env.local" from here
-)
-# Also remove from any other general lists if present (though it wasn't in the Get-ChildItem loop)
-
-# Documentation files (safe to include)
-$docFiles = @(
-    "README.md",
-    "PLANNING.md", # If they exist and are relevant
-    "TASK.md",
-    "WORKFLOW.md"
+    ".firebaserc",
+    "firestore.rules",
+    "storage.rules",
+    "i18n.ts"
 )
 
 # Process core config files
 foreach ($filePath in $coreConfigFiles) {
-    $fullPath = Join-Path -Path $projectDir -ChildPath $filePath
-    if (Test-Path -Path $fullPath) {
-        "`n## FILE: $filePath" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8 # General block
-        Get-Content -Path $fullPath -Raw -ErrorAction SilentlyContinue | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    } else {
-        "`n## FILE: $filePath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    }
+    Add-FileToContext $filePath
 }
+
+# Documentation files
+$docFiles = @(
+    "README.md"
+)
 
 # Process documentation files
 foreach ($filePath in $docFiles) {
-    $fullPath = Join-Path -Path $projectDir -ChildPath $filePath
-    if (Test-Path -Path $fullPath) {
-        "`n## FILE: $filePath" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````md" | Out-File -FilePath $outputFile -Append -Encoding utf8 # Markdown block
-        Get-Content -Path $fullPath -Raw -ErrorAction SilentlyContinue | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    } else {
-        "`n## FILE: $filePath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    }
+    Add-FileToContext $filePath "markdown"
 }
-
 
 # --- Section 2: Internationalization (i18n) Setup ---
-"`n## --- I18N SETUP ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+$script:currentSection = "I18N SETUP"
+"`n## --- $script:currentSection ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+
 $i18nFiles = @(
-    "i18n.ts", 
-    "src/middleware.ts", 
-    "src/types/next-i18next.d.ts" # Or your custom i18n type definitions
+    "src/middleware.ts",
+    "src/i18n.server.ts"
 )
 foreach ($filePath in $i18nFiles) {
-    $fullPath = Join-Path -Path $projectDir -ChildPath $filePath
-    if (Test-Path -Path $fullPath) {
-        "`n## FILE: $filePath" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````ts" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        Get-Content -Path $fullPath -Raw -ErrorAction SilentlyContinue | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    } else {
-        "`n## FILE: $filePath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    }
+    Add-FileToContext $filePath "typescript"
 }
 
-# --- Section 3: Public Locales (Translation Files) ---
-"`n## --- PUBLIC LOCALES ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
-$localesPath = Join-Path -Path $projectDir -ChildPath "public\locales"
-if (Test-Path -Path $localesPath) {
-    Get-ChildItem -Path $localesPath -Recurse -Include "*.json" | ForEach-Object {
-        $relativePath = $_.FullName.Substring($projectDir.Length + 1)
-        "`n## FILE: $relativePath" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````json" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        Get-Content -Path $_.FullName -Raw -ErrorAction SilentlyContinue | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    }
-} else {
-    "`n## Path: $localesPath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
+# --- Section 3: Sample Translation Files (1-2 files per language max) ---
+$script:currentSection = "SAMPLE TRANSLATIONS"
+"`n## --- $script:currentSection ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+
+$sampleLocaleFiles = @(
+    "public/locales/fr/common.json",
+    "public/locales/ar/common.json"
+)
+foreach ($filePath in $sampleLocaleFiles) {
+    Add-FileToContext $filePath "json"
 }
 
+# --- Section 4: Automatically find app routes/pages ---
+$script:currentSection = "APP ROUTES AND PAGES"
+"`n## --- $script:currentSection ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
 
-# --- Section 4: Core App Structure (Layouts and Key Pages) ---
-"`n## --- CORE APP STRUCTURE (Layouts, Key Pages) ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
-$appStructureFiles = @(
-    "src/app/layout.tsx",
+# These are the essential files that should always be included
+$essentialRouteFiles = @(
     "src/app/globals.css",
-    "src/app/page.tsx", 
     "src/app/[lang]/layout.tsx",
     "src/app/[lang]/page.tsx"
 )
-foreach ($filePath in $appStructureFiles) {
-    $fullPath = Join-Path -Path $projectDir -ChildPath $filePath
-    if (Test-Path -Path $fullPath) {
-        "`n## FILE: $filePath" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        # Determine language hint for markdown based on extension
-        $langHint = ""
-        if ($filePath.EndsWith(".tsx")) { $langHint = "tsx" }
-        elseif ($filePath.EndsWith(".css")) { $langHint = "css" }
-        "``````$langHint" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        Get-Content -Path $fullPath -Raw -ErrorAction SilentlyContinue | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    } else {
-        "`n## FILE: $filePath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
+
+# Process essential app files first
+foreach ($filePath in $essentialRouteFiles) {
+    Add-FileToContext $filePath
+}
+
+# Auto-discover additional pages (but limit the count for context size)
+$pagesPath = Join-Path -Path $projectDir -ChildPath "src/app/[lang]"
+if (Test-Path -Path $pagesPath) {
+    $maxPageFiles = 5 # Limit to the first 5 page files (to avoid context bloat)
+    $pageCount = 0
+    
+    Get-ChildItem -Path $pagesPath -Recurse -Include "*.tsx", "*.ts", "*.jsx", "*.js" |
+    Where-Object { $_.Name -ne "layout.tsx" -and $pageCount -lt $maxPageFiles } |
+    ForEach-Object {
+        $relativePath = $_.FullName.Substring($projectDir.Length + 1).Replace("\", "/")
+        if (Add-FileToContext $relativePath) {
+            $pageCount++
+        }
     }
 }
 
-# --- Section 5: Key Reusable Components (Header, Footer, Providers) ---
-"`n## --- KEY REUSABLE COMPONENTS ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
-$keyComponents = @(
-    "src/components/layout/Header.tsx",
-    "src/components/layout/Footer.tsx",
-    "src/components/providers/TranslationsProvider.tsx"
-)
-foreach ($filePath in $keyComponents) {
-    $fullPath = Join-Path -Path $projectDir -ChildPath $filePath
-    if (Test-Path -Path $fullPath) {
-        "`n## FILE: $filePath" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````tsx" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        Get-Content -Path $fullPath -Raw -ErrorAction SilentlyContinue | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    } else {
-        "`n## FILE: $filePath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
+# --- Section 5: Auto-discover components by categories ---
+$componentsBasePath = Join-Path -Path $projectDir -ChildPath "src/components"
+if (Test-Path -Path $componentsBasePath) {
+    $componentCategories = @(
+        @{Path = "layout"; Name = "LAYOUT COMPONENTS"; Limit = 3},
+        @{Path = "providers"; Name = "PROVIDER COMPONENTS"; Limit = 2},
+        @{Path = "features"; Name = "FEATURE COMPONENTS"; Limit = 3},
+        @{Path = "ui"; Name = "UI COMPONENTS"; Limit = 3}
+    )
+
+    foreach ($category in $componentCategories) {
+        $categoryPath = Join-Path -Path $componentsBasePath -ChildPath $category.Path
+        if (Test-Path -Path $categoryPath) {
+            $script:currentSection = $category.Name
+            "`n## --- $script:currentSection ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+            
+            $componentCount = 0
+            Get-ChildItem -Path $categoryPath -Recurse -Include "*.tsx", "*.ts", "*.jsx", "*.js" |
+            Where-Object { $componentCount -lt $category.Limit } |
+            ForEach-Object {
+                $relativePath = $_.FullName.Substring($projectDir.Length + 1).Replace("\", "/")
+                if (Add-FileToContext $relativePath) {
+                    $componentCount++
+                }
+            }
+        }
     }
 }
 
 # --- Section 6: Firebase Functions ---
-"`n## --- FIREBASE FUNCTIONS ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+$script:currentSection = "FIREBASE FUNCTIONS"
+"`n## --- $script:currentSection ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+
 $functionsFiles = @(
-    "functions/src/index.ts", 
-    "functions/package.json",
-    "functions/tsconfig.json" 
+    "functions/src/index.ts",
+    "functions/package.json"
 )
 foreach ($filePath in $functionsFiles) {
-    $fullPath = Join-Path -Path $projectDir -ChildPath $filePath
-    if (Test-Path -Path $fullPath) {
-        "`n## FILE: $filePath" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        $langHint = ""
-        if ($filePath.EndsWith(".ts")) { $langHint = "ts" }
-        elseif ($filePath.EndsWith(".json")) { $langHint = "json" }
-        "``````$langHint" | Out-File -FilePath $outputFile -Append -Encoding utf8
-        Get-Content -Path $fullPath -Raw -ErrorAction SilentlyContinue | Out-File -FilePath $outputFile -Append -Encoding utf8
-        "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    } else {
-        "`n## FILE: $filePath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    }
-}
-
-# --- Section 7: Environment Variable Structure (DO NOT INCLUDE ACTUAL VALUES) ---
-"`n## --- ENVIRONMENT VARIABLE STRUCTURE (.env.example or similar) ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
-$envExamplePath = Join-Path -Path $projectDir -ChildPath ".env.example"
-if (Test-Path -Path $envExamplePath) {
-    "`n## FILE: .env.example" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    Get-Content -Path $envExamplePath -Raw -ErrorAction SilentlyContinue | Out-File -FilePath $outputFile -Append -Encoding utf8
-    "``````" | Out-File -FilePath $outputFile -Append -Encoding utf8
-} else {
-    "`n## No .env.example found. Describe required NEXT_PUBLIC_ variables if any." | Out-File -FilePath $outputFile -Append -Encoding utf8
-    "# Example: NEXT_PUBLIC_FIREBASE_API_KEY=your_key_here" | Out-File -FilePath $outputFile -Append -Encoding utf8
-    "# IMPORTANT: Do NOT share actual .env.local values." | Out-File -FilePath $outputFile -Append -Encoding utf8
+    Add-FileToContext $filePath
 }
 
 # --- End of Context ---
 "`n## --- END OF CONTEXT ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+"`n## Total files included: $script:totalFilesIncluded" | Out-File -FilePath $outputFile -Append -Encoding utf8
 
-Write-Host "AI Context file generated at: $($projectDir)\$outputFile"
+Write-Host "AI Context file generated at: $outputFile"
+Write-Host "Context includes $script:totalFilesIncluded files (skipping files larger than 100KB)"
+Write-Host "Context is now auto-discovering new pages and components as your project grows"

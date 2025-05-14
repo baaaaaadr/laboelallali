@@ -13,11 +13,19 @@
   "requestAppointment": "Demander RDV par",
   "requestByWhatsApp": "Demander RDV par WhatsApp",
   "requestByEmail": "Envoyer ma demande de rdv par email",
+  "submit_appointment_request": "Envoyer ma demande de RDV",
   "requiredFields": "Veuillez remplir tous les champs obligatoires (nom, téléphone, date, heure).",
   "messageCopied": "Message copié dans le presse-papier ! Vous pouvez maintenant le coller dans votre client email.",
   "emailInstructions": "Veuillez envoyer un email à",
   "emailSubject": "Demande de Rendez-vous",
   "emailBody": "Bonjour,\n\nJe souhaite prendre un rendez-vous au laboratoire :\n\nNom : {name}\nTéléphone : {phone}{email}\nDate souhaitée : {date}\nHeure souhaitée : {time}{comments}{prescription}\n\nMerci.",
   "withPrescription": "Je dispose d'une ordonnance que je vous enverrai séparément par WhatsApp.",
-  "withoutPrescription": "Je n'ai pas d'ordonnance."
+  "withoutPrescription": "Je n'ai pas d'ordonnance.",
+  "prescription_upload_label": "Télécharger votre ordonnance (optionnel)",
+  "file_selected": "Fichier sélectionné:",
+  "file_too_large": "Le fichier est trop volumineux (max 5MB)",
+  "invalid_file_type": "Type de fichier non supporté (JPG, PNG, PDF uniquement)",
+  "appointment_request_success": "Votre demande de rendez-vous a été envoyée avec succès. Nous vous contacterons bientôt.",
+  "appointment_request_error": "Une erreur s'est produite lors de l'envoi de votre demande. Veuillez réessayer ou nous contacter par téléphone.",
+  "submitting": "Envoi en cours..."
 }

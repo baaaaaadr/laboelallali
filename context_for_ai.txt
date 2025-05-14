@@ -1,9 +1,13 @@
-﻿# Laboratoire El Allali PWA - AI Context - 05/14/2025 16:42:24
+﻿# Laboratoire El Allali PWA - AI Context - 05/14/2025 19:29:29
+
+## --- PROJECT OVERVIEW ---
+Laboratoire El Allali - Medical laboratory website in Agadir, Morocco
+Built with Next.js App Router, TypeScript, Tailwind CSS, i18n (fr, ar), and Firebase Hosting
 
 ## --- CORE CONFIGURATION ---
 
 ## FILE: package.json
-```
+```json
 {
   "name": "laboelallali",
   "version": "0.1.0",
@@ -61,7 +65,7 @@
 ```
 
 ## FILE: next.config.js
-```
+```javascript
 // next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -90,7 +94,7 @@ module.exports = nextConfig;
 ```
 
 ## FILE: tailwind.config.js
-```
+```javascript
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     content: [
@@ -109,7 +113,7 @@ module.exports = {
 ```
 
 ## FILE: tsconfig.json
-```
+```json
 {
   "compilerOptions": {
     "target": "ES2017",
@@ -140,18 +144,8 @@ module.exports = {
 
 ```
 
-## FILE: postcss.config.js
-```
-module.exports = {
-  plugins: {
-    '@tailwindcss/postcss': {},
-    'autoprefixer': {},
-  },
-};
-```
-
 ## FILE: firebase.json
-```
+```json
 {
   "hosting": {
     "source": ".",
@@ -184,63 +178,38 @@ module.exports = {
 
 ```
 
-## FILE: README.md
-```md
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## FILE: firestore.rules
+```
+rules_version = '2';
 
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## FILE: storage.rules
+```
+rules_version = '2';
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
 
 ```
-
-## FILE: PLANNING.md
-```md
-```
-
-## FILE: TASK.md
-```md
-```
-
-## FILE: WORKFLOW.md
-```md
-```
-
-## --- I18N SETUP ---
 
 ## FILE: i18n.ts
-```ts
+```typescript
 // i18n.ts
 import type { InitOptions } from 'i18next';
 
@@ -280,8 +249,51 @@ export default i18nConfig;
 
 ```
 
+## FILE: README.md
+```markdown
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+```
+
+## --- I18N SETUP ---
+
 ## FILE: src/middleware.ts
-```ts
+```typescript
 // src/middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -357,62 +369,133 @@ export function middleware(req: NextRequest) {
 
 ```
 
-## FILE: src/types/next-i18next.d.ts
-```ts
-import 'next-i18next';
-// Adjust the path if your Resources type is elsewhere
-import type { Resources } from '../i18n';
+## FILE: src/i18n.server.ts
+```typescript
+import { createInstance, i18n as I18nInstanceType } from 'i18next';
+import { initReactI18next } from 'react-i18next/initReactI18next';
+import resourcesToBackend from 'i18next-resources-to-backend';
+// Correct path: i18n.ts is one level up from src/ (at project root)
+import { fallbackLng, supportedLngs, defaultNS, i18nConfig } from '../i18n';
 
-declare module 'next-i18next' {
-  interface PublicRuntimeConfig {
-    i18n: {
-      defaultLocale: string;
-      locales: string[];
-    };
-  }
-}
+const initServerI18next = async (lng: string, ns: string | string[]): Promise<I18nInstanceType> => {
+  const i18nInstance = createInstance();
+  await i18nInstance
+    .use(initReactI18next)
+    .use(resourcesToBackend((language: string, namespace: string) =>
+      // Correct path: From src/, go up to project root, then to public/locales
+      import(`../../public/locales/${language}/${namespace}.json`)
+    ))
+    .init({
+      ...i18nConfig,
+      lng: lng,
+      ns: ns,
+      fallbackLng: fallbackLng,
+      supportedLngs: supportedLngs,
+      defaultNS: defaultNS,
+      preload: supportedLngs,
+    });
+  return i18nInstance;
+};
 
-declare module 'i18next' {
-  interface CustomTypeOptions {
-    defaultNS: 'common'; // Adjust if your defaultNS is different
-    resources: Resources;
-    returnNull: false;
-  }
-}
-
+export default initServerI18next;
 ```
 
-## --- PUBLIC LOCALES ---
+## --- SAMPLE TRANSLATIONS ---
 
-## FILE: public\locales\ar\appointment.json
+## FILE: public/locales/fr/common.json
 ```json
 {
-  "appointment": "Ø­Ø¬Ø² Ù…ÙˆØ¹Ø¯ ÙÙŠ Ø§Ù„Ù…Ø®ØªØ¨Ø±",
-  "fullName": "Ø§Ù„Ø§Ø³Ù… Ø§Ù„ÙƒØ§Ù…Ù„",
-  "phoneNumber": "Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ",
-  "email": "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
-  "desiredDate": "Ø§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„Ù…Ø·Ù„ÙˆØ¨",
-  "desiredTime": "Ø§Ù„ÙˆÙ‚Øª Ø§Ù„Ù…Ø·Ù„ÙˆØ¨",
-  "chooseTime": "Ø§Ø®ØªØ± ÙˆÙ‚ØªÙ‹Ø§",
-  "prescription": "Ù‡Ù„ Ù„Ø¯ÙŠÙƒ ÙˆØµÙØ© Ø·Ø¨ÙŠØ©ØŸ",
-  "yes": "Ù†Ø¹Ù…",
-  "no": "Ù„Ø§",
-  "comments": "Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø£Ùˆ ØªØ¹Ù„ÙŠÙ‚Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
-  "requestAppointment": "Ø·Ù„Ø¨ Ù…ÙˆØ¹Ø¯ Ø¹Ø¨Ø±",
-  "requestByWhatsApp": "Ø·Ù„Ø¨ Ù…ÙˆØ¹Ø¯ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨",
-  "requestByEmail": "Ø¥Ø±Ø³Ø§Ù„ Ø·Ù„Ø¨ Ø§Ù„Ù…ÙˆØ¹Ø¯ Ø¹Ø¨Ø± Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ",
-  "requiredFields": "ÙŠØ±Ø¬Ù‰ Ù…Ù„Ø¡ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ„ Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø© (Ø§Ù„Ø§Ø³Ù…ØŒ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙØŒ Ø§Ù„ØªØ§Ø±ÙŠØ®ØŒ Ø§Ù„ÙˆÙ‚Øª).",
-  "messageCopied": "ØªÙ… Ù†Ø³Ø® Ø§Ù„Ø±Ø³Ø§Ù„Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø­Ø§ÙØ¸Ø©! ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø¢Ù† Ù„ØµÙ‚Ù‡Ø§ ÙÙŠ ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ø§Ù„Ø®Ø§Øµ Ø¨Ùƒ.",
-  "emailInstructions": "ÙŠØ±Ø¬Ù‰ Ø¥Ø±Ø³Ø§Ù„ Ø¨Ø±ÙŠØ¯ Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ø¥Ù„Ù‰",
-  "emailSubject": "Ø·Ù„Ø¨ Ù…ÙˆØ¹Ø¯",
-  "emailBody": "Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ\n\nØ£Ø±ØºØ¨ ÙÙŠ Ø­Ø¬Ø² Ù…ÙˆØ¹Ø¯ ÙÙŠ Ø§Ù„Ù…Ø®ØªØ¨Ø±:\n\nØ§Ù„Ø§Ø³Ù…: {name}\nØ±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ: {phone}{email}\nØ§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„Ù…Ø·Ù„ÙˆØ¨: {date}\nØ§Ù„ÙˆÙ‚Øª Ø§Ù„Ù…Ø·Ù„ÙˆØ¨: {time}{comments}{prescription}\n\nØ´ÙƒØ±Ø§Ù‹.",
-  "withPrescription": "Ù„Ø¯ÙŠ ÙˆØµÙØ© Ø·Ø¨ÙŠØ© Ø³Ø£Ø±Ø³Ù„Ù‡Ø§ Ù„ÙƒÙ… Ø¨Ø´ÙƒÙ„ Ù…Ù†ÙØµÙ„ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨.",
-  "withoutPrescription": "Ù„ÙŠØ³ Ù„Ø¯ÙŠ ÙˆØµÙØ© Ø·Ø¨ÙŠØ©."
+  "laboName": "Laboratoire El Allali",
+  "currentLanguage": "FranÃ§ais",
+  "opening_hours": "Horaires d'ouverture",
+  "opening_hours_text": "Lun-Sam : 7h30 - 18h30\nDim : 08h00 - 18h00",
+  "open": "Ouvert",
+  "closed": "FermÃ©",
+
+  "why_choose_us": "Pourquoi Nous Choisir ?",
+  "certified_quality": "QualitÃ© certifiÃ©e",
+  "certified_quality_text": "Laboratoire accrÃ©ditÃ© aux normes internationales pour des rÃ©sultats fiables.",
+  "state_of_the_art_equipment": "Ã‰quipement de pointe",
+  "state_of_the_art_equipment_text": "Technologies avancÃ©es pour des analyses prÃ©cises et rapides.",
+  "experienced_team": "Ã‰quipe expÃ©rimentÃ©e",
+  "experienced_team_text": "Biologistes et techniciens hautement qualifiÃ©s Ã  votre service.",
+  "dedicated_patient_service": "Service patient dÃ©diÃ©",
+  "dedicated_patient_service_text": "Attention personnalisÃ©e et accompagnement Ã  chaque Ã©tape.",
+
+  "our_main_services": "Nos Services Principaux",
+  "about": "Ã€ propos",
+  "about_description": "Laboratoire d'analyses mÃ©dicales offrant une gamme complÃ¨te de services de diagnostic avec des Ã©quipements de pointe et une Ã©quipe expÃ©rimentÃ©e pour des rÃ©sultats prÃ©cis et rapides.",
+  "quick_links": "Liens rapides",
+  "blood_tests": "Analyses de sang",
+  "blood_tests_text": "Analyses complÃ¨tes et spÃ©cialisÃ©es avec rÃ©sultats rapides et prÃ©cis.",
+  "learn_more": "En savoir plus",
+  "home_service": "GLABO - Ã€ Domicile",
+  "home_service_text": "Service de prÃ©lÃ¨vement Ã  domicile pour votre confort et sÃ©curitÃ©.",
+  "health_checks": "Bilans de santÃ©",
+  "health_checks_text": "Bilans personnalisÃ©s pour le suivi prÃ©ventif de votre santÃ©.",
+
+  "get_directions": "ItinÃ©raire",
+  "call_us": "Appeler",
+  "our_location": "Notre Localisation",
+  "laboratory_name": "Laboratoire El Allali",
+  "laboratory_address": "61 Bis, Rue de Marrakech, 80020, Agadir, Maroc",
+  "loading_map": "Chargement de la carte",
+
+  "home": "Accueil",
+  "appointment": "Prendre RDV",
+  "glabo": "PrÃ©lÃ¨vement Ã  Domicile",
+  "contact": "Contact",
+  "changeLanguage": "Changer de langue",
+  "french": "FranÃ§ais",
+  "arabic": "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©",
+
+  "contact_title": "Nous Contacter et Informations du Laboratoire",
+  "lab_coordinates": "CoordonnÃ©es du Laboratoire",
+  "address_label": "Adresse :",
+  "landline_label": "Fixe :",
+  "whatsapp_label": "WhatsApp :",
+  "companies_label": "SociÃ©tÃ©s et autres :",
+  "fax_label": "Fax :",
+  "email_label": "Email :",
+  "working_hours_label": "Horaires :",
+  "monday_to_saturday": "Lundi au Samedi: 7h30 Ã  18h30",
+  "sunday": "Dimanche: 08h00 Ã  18h00",
+  "send": "Envoyer",
+  "view_map": "Voir sur la carte",
+
+  "appointment_title": "Prendre Rendez-vous",
+  "name": "Nom",
+  "phone": "TÃ©lÃ©phone",
+  "email": "Email",
+  "desired_date": "Date souhaitÃ©e",
+  "desired_time": "Heure souhaitÃ©e",
+  "comments": "Commentaires",
+  "prescription": "Ordonnance",
+  "yes": "Oui",
+  "no": "Non",
+  "reset": "RÃ©initialiser",
+  "copy": "Copier",
+  "send_whatsapp": "Envoyer par WhatsApp",
+  "required_fields_alert": "Veuillez remplir tous les champs obligatoires (nom, tÃ©lÃ©phone, date, heure).",
+  "success_message": "Votre demande a bien Ã©tÃ© envoyÃ©e.",
+
+  "glabo_title": "PrÃ©lÃ¨vement Ã  Domicile",
+  "sampling_place": "Lieu de prÃ©lÃ¨vement",
+  "lab_contact": "Contact Laboratoire :",
+
+  "welcome_banner": "Bienvenue au Laboratoire El Allali",
+  "welcome_description": "Votre santÃ©, notre prioritÃ©. Analyses mÃ©dicales prÃ©cises et rapides Ã  Agadir.",
+  "banner_alt": "Laboratoire El Allali Banner",
+  "navigate_to_lab": "Naviguer vers le labo",
+
+  "practical_info": "Informations pratiques",
+  "faq": "Questions frÃ©quentes",
+  "rights_reserved": "Tous droits rÃ©servÃ©s"
 }
 
 ```
 
-## FILE: public\locales\ar\common.json
+## FILE: public/locales/ar/common.json
 ```json
 {
   "laboName": "Ù…Ø®ØªØ¨Ø± Ø§Ù„Ø¹Ù„Ø§Ù„ÙŠ",
@@ -538,224 +621,7 @@ declare module 'i18next' {
 
 ```
 
-## FILE: public\locales\ar\glabo.json
-```json
-{
-  "fullName": "Ø§Ù„Ø§Ø³Ù… Ø§Ù„ÙƒØ§Ù…Ù„",
-  "phoneNumber": "Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ",
-  "email": "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
-  "address": "Ø§Ù„Ø¹Ù†ÙˆØ§Ù†",
-  "location_type": "Ù†ÙˆØ¹ Ø§Ù„Ù…ÙƒØ§Ù†",
-  "home": "Ù…Ù†Ø²Ù„",
-  "workplace": "Ù…ÙƒØ§Ù† Ø§Ù„Ø¹Ù…Ù„",
-  "access_instructions": "ØªØ¹Ù„ÙŠÙ…Ø§Øª Ø§Ù„Ø¯Ø®ÙˆÙ„",
-  "access_instructions_placeholder": "Ø±Ù…Ø² Ø§Ù„Ù…Ø¨Ù†Ù‰ØŒ Ø§Ù„Ø·Ø§Ø¨Ù‚ØŒ Ø¥Ù„Ø®.",
-  "desiredDate": "Ø§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„Ù…Ø·Ù„ÙˆØ¨",
-  "desiredTime": "Ø§Ù„ÙˆÙ‚Øª Ø§Ù„Ù…Ø·Ù„ÙˆØ¨",
-  "chooseTime": "Ø§Ø®ØªØ± ÙˆÙ‚ØªÙ‹Ø§",
-  "prescription": "Ù‡Ù„ Ù„Ø¯ÙŠÙƒ ÙˆØµÙØ© Ø·Ø¨ÙŠØ©ØŸ",
-  "yes": "Ù†Ø¹Ù…",
-  "no": "Ù„Ø§",
-  "comments": "Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø£Ùˆ ØªØ¹Ù„ÙŠÙ‚Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)",
-  "requestByEmail": "Ø¥Ø±Ø³Ø§Ù„ Ø·Ù„Ø¨ÙŠ Ø¹Ø¨Ø± Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ",
-  "requestByWhatsApp": "Ø·Ù„Ø¨ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨",
-  "requiredFields": "ÙŠØ±Ø¬Ù‰ Ù…Ù„Ø¡ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ„ Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø© (Ø§Ù„Ø§Ø³Ù…ØŒ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙØŒ Ø§Ù„Ø¹Ù†ÙˆØ§Ù†ØŒ Ø§Ù„ØªØ§Ø±ÙŠØ®ØŒ Ø§Ù„ÙˆÙ‚Øª).",
-  "withPrescription": "Ù„Ø¯ÙŠ ÙˆØµÙØ© Ø·Ø¨ÙŠØ© Ø³Ø£Ø±Ø³Ù„Ù‡Ø§ Ø¨Ø´ÙƒÙ„ Ù…Ù†ÙØµÙ„ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨.",
-  "withoutPrescription": "Ù„ÙŠØ³ Ù„Ø¯ÙŠ ÙˆØµÙØ© Ø·Ø¨ÙŠØ©.",
-  "home_service_request": "Ø£Ø±ØºØ¨ ÙÙŠ Ø­Ø¬Ø² Ø®Ø¯Ù…Ø© Ø§Ù„ÙØ­Øµ Ø§Ù„Ù…Ù†Ø²Ù„ÙŠ",
-  "greeting": "Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ",
-  "thanks": "Ø´ÙƒØ±Ø§Ù‹ Ø¬Ø²ÙŠÙ„Ø§Ù‹."
-}
-
-```
-
-## FILE: public\locales\fr\appointment.json
-```json
-{
-  "appointment": "Prendre un rendez-vous au laboratoire",
-  "fullName": "Nom complet",
-  "phoneNumber": "NumÃ©ro de tÃ©lÃ©phone",
-  "email": "Adresse email (optionnel)",
-  "desiredDate": "Date souhaitÃ©e",
-  "desiredTime": "Heure souhaitÃ©e",
-  "chooseTime": "Choisissez une heure",
-  "prescription": "Avez-vous une ordonnance ?",
-  "yes": "OUI",
-  "no": "NON",
-  "comments": "Notes ou commentaires supplÃ©mentaires (optionnel)",
-  "requestAppointment": "Demander RDV par",
-  "requestByWhatsApp": "Demander RDV par WhatsApp",
-  "requestByEmail": "Envoyer ma demande de rdv par email",
-  "requiredFields": "Veuillez remplir tous les champs obligatoires (nom, tÃ©lÃ©phone, date, heure).",
-  "messageCopied": "Message copiÃ© dans le presse-papier ! Vous pouvez maintenant le coller dans votre client email.",
-  "emailInstructions": "Veuillez envoyer un email Ã ",
-  "emailSubject": "Demande de Rendez-vous",
-  "emailBody": "Bonjour,\n\nJe souhaite prendre un rendez-vous au laboratoire :\n\nNom : {name}\nTÃ©lÃ©phone : {phone}{email}\nDate souhaitÃ©e : {date}\nHeure souhaitÃ©e : {time}{comments}{prescription}\n\nMerci.",
-  "withPrescription": "Je dispose d'une ordonnance que je vous enverrai sÃ©parÃ©ment par WhatsApp.",
-  "withoutPrescription": "Je n'ai pas d'ordonnance."
-}
-
-```
-
-## FILE: public\locales\fr\common.json
-```json
-{
-  "laboName": "Laboratoire El Allali",
-  "currentLanguage": "FranÃ§ais",
-  "opening_hours": "Horaires d'ouverture",
-  "opening_hours_text": "Lun-Sam : 7h30 - 18h30\nDim : 08h00 - 18h00",
-  "open": "Ouvert",
-  "closed": "FermÃ©",
-
-  "why_choose_us": "Pourquoi Nous Choisir ?",
-  "certified_quality": "QualitÃ© certifiÃ©e",
-  "certified_quality_text": "Laboratoire accrÃ©ditÃ© aux normes internationales pour des rÃ©sultats fiables.",
-  "state_of_the_art_equipment": "Ã‰quipement de pointe",
-  "state_of_the_art_equipment_text": "Technologies avancÃ©es pour des analyses prÃ©cises et rapides.",
-  "experienced_team": "Ã‰quipe expÃ©rimentÃ©e",
-  "experienced_team_text": "Biologistes et techniciens hautement qualifiÃ©s Ã  votre service.",
-  "dedicated_patient_service": "Service patient dÃ©diÃ©",
-  "dedicated_patient_service_text": "Attention personnalisÃ©e et accompagnement Ã  chaque Ã©tape.",
-
-  "our_main_services": "Nos Services Principaux",
-  "about": "Ã€ propos",
-  "about_description": "Laboratoire d'analyses mÃ©dicales offrant une gamme complÃ¨te de services de diagnostic avec des Ã©quipements de pointe et une Ã©quipe expÃ©rimentÃ©e pour des rÃ©sultats prÃ©cis et rapides.",
-  "quick_links": "Liens rapides",
-  "blood_tests": "Analyses de sang",
-  "blood_tests_text": "Analyses complÃ¨tes et spÃ©cialisÃ©es avec rÃ©sultats rapides et prÃ©cis.",
-  "learn_more": "En savoir plus",
-  "home_service": "GLABO - Ã€ Domicile",
-  "home_service_text": "Service de prÃ©lÃ¨vement Ã  domicile pour votre confort et sÃ©curitÃ©.",
-  "health_checks": "Bilans de santÃ©",
-  "health_checks_text": "Bilans personnalisÃ©s pour le suivi prÃ©ventif de votre santÃ©.",
-
-  "get_directions": "ItinÃ©raire",
-  "call_us": "Appeler",
-  "our_location": "Notre Localisation",
-  "laboratory_name": "Laboratoire El Allali",
-  "laboratory_address": "61 Bis, Rue de Marrakech, 80020, Agadir, Maroc",
-  "loading_map": "Chargement de la carte",
-
-  "home": "Accueil",
-  "appointment": "Prendre RDV",
-  "glabo": "PrÃ©lÃ¨vement Ã  Domicile",
-  "contact": "Contact",
-  "changeLanguage": "Changer de langue",
-  "french": "FranÃ§ais",
-  "arabic": "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©",
-
-  "contact_title": "Nous Contacter et Informations du Laboratoire",
-  "lab_coordinates": "CoordonnÃ©es du Laboratoire",
-  "address_label": "Adresse :",
-  "landline_label": "Fixe :",
-  "whatsapp_label": "WhatsApp :",
-  "companies_label": "SociÃ©tÃ©s et autres :",
-  "fax_label": "Fax :",
-  "email_label": "Email :",
-  "working_hours_label": "Horaires :",
-  "monday_to_saturday": "Lundi au Samedi: 7h30 Ã  18h30",
-  "sunday": "Dimanche: 08h00 Ã  18h00",
-  "send": "Envoyer",
-  "view_map": "Voir sur la carte",
-
-  "appointment_title": "Prendre Rendez-vous",
-  "name": "Nom",
-  "phone": "TÃ©lÃ©phone",
-  "email": "Email",
-  "desired_date": "Date souhaitÃ©e",
-  "desired_time": "Heure souhaitÃ©e",
-  "comments": "Commentaires",
-  "prescription": "Ordonnance",
-  "yes": "Oui",
-  "no": "Non",
-  "reset": "RÃ©initialiser",
-  "copy": "Copier",
-  "send_whatsapp": "Envoyer par WhatsApp",
-  "required_fields_alert": "Veuillez remplir tous les champs obligatoires (nom, tÃ©lÃ©phone, date, heure).",
-  "success_message": "Votre demande a bien Ã©tÃ© envoyÃ©e.",
-
-  "glabo_title": "PrÃ©lÃ¨vement Ã  Domicile",
-  "sampling_place": "Lieu de prÃ©lÃ¨vement",
-  "lab_contact": "Contact Laboratoire :",
-
-  "welcome_banner": "Bienvenue au Laboratoire El Allali",
-  "welcome_description": "Votre santÃ©, notre prioritÃ©. Analyses mÃ©dicales prÃ©cises et rapides Ã  Agadir.",
-  "banner_alt": "Laboratoire El Allali Banner",
-  "navigate_to_lab": "Naviguer vers le labo",
-
-  "practical_info": "Informations pratiques",
-  "faq": "Questions frÃ©quentes",
-  "rights_reserved": "Tous droits rÃ©servÃ©s"
-}
-
-```
-
-## FILE: public\locales\fr\glabo.json
-```json
-{
-  "fullName": "Nom complet",
-  "phoneNumber": "NumÃ©ro de tÃ©lÃ©phone",
-  "email": "Adresse email (optionnel)",
-  "address": "Adresse",
-  "location_type": "Type de lieu",
-  "home": "Domicile",
-  "workplace": "Lieu de travail",
-  "access_instructions": "Instructions d'accÃ¨s",
-  "access_instructions_placeholder": "Code d'immeuble, Ã©tage, etc.",
-  "desiredDate": "Date souhaitÃ©e",
-  "desiredTime": "Heure souhaitÃ©e",
-  "chooseTime": "Choisissez une heure",
-  "prescription": "Avez-vous une ordonnance ?",
-  "yes": "OUI",
-  "no": "NON",
-  "comments": "Notes ou commentaires supplÃ©mentaires (optionnel)",
-  "requestByEmail": "Envoyer ma demande par email",
-  "requestByWhatsApp": "Demander par WhatsApp",
-  "requiredFields": "Veuillez remplir tous les champs obligatoires (nom, tÃ©lÃ©phone, adresse, date, heure).",
-  "withPrescription": "Je dispose d'une ordonnance que je vous enverrai sÃ©parÃ©ment par WhatsApp.",
-  "withoutPrescription": "Je n'ai pas d'ordonnance.",
-  "home_service_request": "Je souhaite rÃ©server un prÃ©lÃ¨vement Ã  domicile",
-  "greeting": "Bonjour,",
-  "thanks": "Merci."
-}
-
-```
-
-## --- CORE APP STRUCTURE (Layouts, Key Pages) ---
-
-## FILE: src/app/layout.tsx
-```tsx
-import type { Metadata } from 'next';
-import './globals.css';
-
-export const metadata: Metadata = {
-  title: 'Laboratoire El Allali',
-  description: 'Analyses mÃ©dicales Ã  Agadir.',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Add CSS for RTL support */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          [dir="rtl"] { text-align: right; }
-          [dir="rtl"] .rtl-mirror { transform: scaleX(-1); }
-          [dir="rtl"] .rtl-reverse { flex-direction: row-reverse; }
-        `}} />
-      </head>
-      <body className="flex flex-col min-h-screen bg-gray-50">{children}</body>
-    </html>
-  );
-}
-
-```
+## --- APP ROUTES AND PAGES ---
 
 ## FILE: src/app/globals.css
 ```css
@@ -956,16 +822,154 @@ html, body {
 }
 ```
 
-## FILE: src/app/page.tsx (NOT FOUND)
-
 ## FILE: src/app/[lang]/layout.tsx (NOT FOUND)
 
 ## FILE: src/app/[lang]/page.tsx (NOT FOUND)
 
-## --- KEY REUSABLE COMPONENTS ---
+## --- LAYOUT COMPONENTS ---
+
+## FILE: src/components/layout/Footer.tsx
+```typescript
+"use client";
+import Link from 'next/link';
+import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
+
+import { useTranslation } from 'react-i18next';
+
+// We've commented out unused variables and functions
+// import { usePathname } from 'next/navigation';
+
+// function getLangFromPath(path: string) {
+//   const match = path.match(/^\/([a-zA-Z-]+)/);
+//   return match ? match[1] : 'fr'; // fallback on 'fr'
+// }
+
+const Footer = () => {
+  // Only use the translation function, not i18n instance
+  const { t, i18n } = useTranslation('common');
+  // DÃ©terminer si nous sommes en mode RTL (langue arabe)
+  const isRTL = i18n.language === 'ar';
+  // const pathname = usePathname();
+  // const currentLanguage = i18n.language || getLangFromPath(pathname);
+  const currentYear = new Date().getFullYear();
+  
+  return (
+    <footer className="footer-gradient text-white pt-12 pb-8 mt-4">
+      <div className="container mx-auto px-4">
+        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[#800020]/70 via-[#B84C63]/70 to-[#FF4081]/70 rounded-full"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm sm:text-base">
+  {/* Sur mobile, grille verticale et padding supplÃ©mentaire */}
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-xl font-bold mb-4">{t('contact')}</h3>
+            <ul className="space-y-3">
+              <li className="flex items-start">
+                <MapPin size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} mt-1 flex-shrink-0 text-white`} />
+                <span>{t('laboratory_address')}</span>
+              </li>
+              <li className="flex flex-col">
+                <div className="flex items-center mb-1">
+                  <Phone size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} flex-shrink-0 text-white`} />
+                  <span className="font-semibold">{t('lab_contact')}</span>
+                </div>
+                <div className={`${isRTL ? 'mr-7' : 'ml-7'}`}>
+                  <p>{t('landline_label')} <a href="tel:0528843384" className="hover:underline">0528843384</a></p>
+                  <p>{t('whatsapp_label')} <a href="https://wa.me/212634293900" className="hover:underline">0634293900</a></p>
+                  <p>{t('whatsapp_label')} <a href="https://wa.me/212707291873" className="hover:underline">0707291873</a></p>
+                  <p>{t('companies_label')} <a href="tel:0664727681" className="hover:underline">0664727681</a></p>
+                  <p>{t('fax_label')} 0528828758</p>
+                </div>
+              </li>
+              <li className="flex items-center">
+                <Mail size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} flex-shrink-0 text-white`} />
+                <div className="flex flex-col">
+                  <a href="mailto:laboelallali@gmail.com" className="hover:underline">
+                    laboelallali@gmail.com
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start">
+                <Clock size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} mt-1 flex-shrink-0 text-white`} />
+                <div>
+                  <p>{t('monday_to_saturday')}</p>
+                  <p>{t('sunday')}</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-xl font-bold mb-4">{t('quick_links')}</h3>
+            <ul className="space-y-2">
+  {/* Liens avec taille minimum pour accessibilitÃ© mobile */}
+              <li>
+                <Link href="/" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
+                  {t('home')}
+                </Link>
+              </li>
+              <li>
+                <Link href="#services" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
+                  {t('our_main_services')}
+                </Link>
+              </li>
+              <li>
+                <Link href="#info" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
+                  {t('practical_info')}
+                </Link>
+              </li>
+              <li>
+                <Link href="#contact" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
+                  {t('contact')}
+                </Link>
+              </li>
+              <li>
+                <Link href="#faq" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
+                  {t('faq')}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* About Us */}
+          <div>
+            <h3 className="text-xl font-bold mb-4">{t('about')}</h3>
+            <p className="mb-4">
+              {t('about_description')}
+            </p>
+            <a 
+              href="https://wa.me/212528000000" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="footer-whatsapp-btn bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center transition-colors shadow-sm hover:shadow-md"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" className={`${isRTL ? 'ml-3' : 'mr-3'}`} viewBox="0 0 16 16">
+                <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+              </svg>
+              {t('contact')}
+            </a>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="border-t border-gray-700 mt-8 pt-6 text-center">
+          <p className="footer-copyright">Â© {currentYear} {t('laboratory_name')}. {t('rights_reserved')}</p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
+```
 
 ## FILE: src/components/layout/Header.tsx
-```tsx
+```typescript
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -1153,148 +1157,47 @@ const Header = () => {
 export default Header;
 ```
 
-## FILE: src/components/layout/Footer.tsx
-```tsx
-"use client";
-import Link from 'next/link';
-import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
+## FILE: src/components/layout/MainLayout.tsx
+```typescript
+import React, { ReactNode } from 'react';
+import Head from 'next/head';
 
-import { useTranslation } from 'react-i18next';
+interface MainLayoutProps {
+  children: ReactNode;
+  title?: string;
+}
 
-// We've commented out unused variables and functions
-// import { usePathname } from 'next/navigation';
-
-// function getLangFromPath(path: string) {
-//   const match = path.match(/^\/([a-zA-Z-]+)/);
-//   return match ? match[1] : 'fr'; // fallback on 'fr'
-// }
-
-const Footer = () => {
-  // Only use the translation function, not i18n instance
-  const { t, i18n } = useTranslation('common');
-  // DÃ©terminer si nous sommes en mode RTL (langue arabe)
-  const isRTL = i18n.language === 'ar';
-  // const pathname = usePathname();
-  // const currentLanguage = i18n.language || getLangFromPath(pathname);
-  const currentYear = new Date().getFullYear();
-  
+const MainLayout: React.FC<MainLayoutProps> = ({ 
+  children, 
+  title = 'Laboratoire El Allali'
+}) => {
   return (
-    <footer className="footer-gradient text-white pt-12 pb-8 mt-4">
-      <div className="container mx-auto px-4">
-        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[#800020]/70 via-[#B84C63]/70 to-[#FF4081]/70 rounded-full"></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm sm:text-base">
-  {/* Sur mobile, grille verticale et padding supplÃ©mentaire */}
-          {/* Contact Info */}
-          <div>
-            <h3 className="text-xl font-bold mb-4">{t('contact')}</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <MapPin size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} mt-1 flex-shrink-0 text-white`} />
-                <span>{t('laboratory_address')}</span>
-              </li>
-              <li className="flex flex-col">
-                <div className="flex items-center mb-1">
-                  <Phone size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} flex-shrink-0 text-white`} />
-                  <span className="font-semibold">{t('lab_contact')}</span>
-                </div>
-                <div className={`${isRTL ? 'mr-7' : 'ml-7'}`}>
-                  <p>{t('landline_label')} <a href="tel:0528843384" className="hover:underline">0528843384</a></p>
-                  <p>{t('whatsapp_label')} <a href="https://wa.me/212634293900" className="hover:underline">0634293900</a></p>
-                  <p>{t('whatsapp_label')} <a href="https://wa.me/212707291873" className="hover:underline">0707291873</a></p>
-                  <p>{t('companies_label')} <a href="tel:0664727681" className="hover:underline">0664727681</a></p>
-                  <p>{t('fax_label')} 0528828758</p>
-                </div>
-              </li>
-              <li className="flex items-center">
-                <Mail size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} flex-shrink-0 text-white`} />
-                <div className="flex flex-col">
-                  <a href="mailto:laboelallali@gmail.com" className="hover:underline">
-                    laboelallali@gmail.com
-                  </a>
-                </div>
-              </li>
-              <li className="flex items-start">
-                <Clock size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} mt-1 flex-shrink-0 text-white`} />
-                <div>
-                  <p>{t('monday_to_saturday')}</p>
-                  <p>{t('sunday')}</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-xl font-bold mb-4">{t('quick_links')}</h3>
-            <ul className="space-y-2">
-  {/* Liens avec taille minimum pour accessibilitÃ© mobile */}
-              <li>
-                <Link href="/" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('home')}
-                </Link>
-              </li>
-              <li>
-                <Link href="#services" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('our_main_services')}
-                </Link>
-              </li>
-              <li>
-                <Link href="#info" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('practical_info')}
-                </Link>
-              </li>
-              <li>
-                <Link href="#contact" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('contact')}
-                </Link>
-              </li>
-              <li>
-                <Link href="#faq" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('faq')}
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* About Us */}
-          <div>
-            <h3 className="text-xl font-bold mb-4">{t('about')}</h3>
-            <p className="mb-4">
-              {t('about_description')}
-            </p>
-            <a 
-              href="https://wa.me/212528000000" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="footer-whatsapp-btn bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center transition-colors shadow-sm hover:shadow-md"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" className={`${isRTL ? 'ml-3' : 'mr-3'}`} viewBox="0 0 16 16">
-                <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
-              </svg>
-              {t('contact')}
-            </a>
-          </div>
-        </div>
-
-        {/* Copyright */}
-        <div className="border-t border-gray-700 mt-8 pt-6 text-center">
-          <p className="footer-copyright">Â© {currentYear} {t('laboratory_name')}. {t('rights_reserved')}</p>
-        </div>
+    <>
+      <Head>
+        <title>{title}</title>
+        <meta name="description" content="Application du Laboratoire El Allali pour les rÃ©sultats d'analyses et rendez-vous" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#800020" />
+      </Head>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header will go here */}
+        <main className="container mx-auto px-4 py-8">
+          {children}
+        </main>
+        {/* Footer will go here */}
       </div>
-    </footer>
+    </>
   );
 };
 
-export default Footer;
+export default MainLayout;
 ```
 
+## --- PROVIDER COMPONENTS ---
+
 ## FILE: src/components/providers/TranslationsProvider.tsx
-```tsx
+```typescript
 // src/components/providers/TranslationsProvider.tsx
 'use client';
 
@@ -1376,10 +1279,177 @@ export default function TranslationsProvider({
 }
 ```
 
+## --- FEATURE COMPONENTS ---
+
+## FILE: src/components/features/home/HeroBanner.tsx
+```typescript
+import React from 'react';
+import { Navigation } from 'lucide-react';
+// Import useTranslation hook without type issues
+import { useTranslation as useTranslationOriginal } from 'react-i18next';
+
+// Create a wrapper to avoid TypeScript errors
+const useTranslation = (ns: string) => {
+  return useTranslationOriginal(ns);
+};
+
+const HeroBanner = () => {
+  // Use a simpler approach without type assertions
+  const { t } = useTranslation('common');
+  return (
+    <div className="relative overflow-hidden mb-8 -mt-[1px] w-full">
+      {/* Banner Image */}
+      <div className="absolute inset-0 z-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/hero-banner.jpg"
+          alt={t('banner_alt')}
+          className="object-cover w-full h-full"
+          style={{ position: 'absolute', inset: 0 }}
+        />
+        {/* Overlay to ensure text is readable */}
+        <div className="absolute inset-0 bg-[#800020] opacity-60"></div>
+      </div>
+      
+      {/* Content */}
+      <div className="container mx-auto px-4 py-16 sm:py-20 md:py-32 relative z-10">
+        <div className="max-w-2xl">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 break-words text-white">
+            {t('welcome_banner')}
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl mb-8 opacity-90 break-words text-white">
+            {t('welcome_description')}
+          </p>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 w-full">
+            <a
+              href="tel:0528843384"
+              className="flex items-center justify-center min-w-[170px] h-12 px-6 bg-white text-[var(--accent-fuchsia)] font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#fff] hover:text-[#F50057] focus:bg-[#fff] focus:text-[#F50057] gap-2 w-full sm:w-auto"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="mr-2 -ml-1"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a2 2 0 011.94 1.515l.3 1.2a2 2 0 01-.45 1.95l-1.27 1.27a16.001 16.001 0 006.586 6.586l1.27-1.27a2 2 0 011.95-.45l1.2.3A2 2 0 0121 16.72V19a2 2 0 01-2 2h-1C9.163 21 3 14.837 3 7V5z" /></svg>
+              {t('call_us')}
+            </a>
+            <a
+              href="https://www.google.com/maps/dir/?api=1&destination=61+Bis+Rue+de+Marrakech+80020+Agadir"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center min-w-[220px] h-12 px-6 bg-white text-[var(--accent-fuchsia)] font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#fff] hover:text-[#F50057] focus:bg-[#fff] focus:text-[#F50057] gap-2 w-full sm:w-auto"
+            >
+              <Navigation size={22} className="mr-2 -ml-1" />
+              {t('navigate_to_lab')}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HeroBanner;
+```
+
+## FILE: src/components/features/maps/LocationMap.tsx
+```typescript
+"use client";
+
+import React, { useEffect, useRef } from 'react';
+import type { Map } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+interface LocationMapProps {
+  latitude: number;
+  longitude: number;
+  name: string;
+  address: string;
+}
+
+const LocationMap = ({ latitude, longitude, name, address }: LocationMapProps) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<Map | null>(null);
+  // Generate a unique id for the map container
+  const mapContainerId = React.useMemo(() => `leaflet-map-${Math.random().toString(36).substr(2, 9)}`, []);
+
+  useEffect(() => {
+    // Only import Leaflet on the client side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Dynamic import of Leaflet
+    const initializeMap = async () => {
+      if (!mapRef.current || mapInstanceRef.current) return;
+
+      // Import Leaflet dynamically
+      const L = (await import('leaflet')).default;
+      
+      // Fix Leaflet marker icon issue in Next.js
+      delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => void })._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+      });
+
+      // Remove any previous map instance attached to this container (for hot reloads or remounts)
+      if (mapRef.current && mapContainerId) {
+        try {
+          // Use Leaflet's DomUtil.get to find any existing map instance by id
+          if ((window as unknown as { L?: { DomUtil?: { get?: (id: string) => unknown } } }).L && (window as unknown as { L?: { DomUtil?: { get?: (id: string) => unknown } } }).L!.DomUtil) {
+            const container = (window as unknown as { L?: { DomUtil?: { get?: (id: string) => unknown } } }).L!.DomUtil!.get!(mapContainerId) as { _leaflet_id?: number | null } | null;
+            if (container && container._leaflet_id) {
+              // Remove the old map instance
+              container._leaflet_id = null;
+            }
+          }
+        } catch {}
+        // Remove all child nodes from the container
+        while (mapRef.current.firstChild) {
+          mapRef.current.removeChild(mapRef.current.firstChild);
+        }
+      }
+      // Create map instance
+      const map = L.map(mapRef.current).setView([latitude, longitude], 16);
+      mapInstanceRef.current = map;
+
+      // Add tile layer (OpenStreetMap)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Add marker with popup
+      const marker = L.marker([latitude, longitude]).addTo(map);
+      marker.bindPopup(`
+        <strong>${name}</strong><br>
+        ${address}
+      `).openPopup();
+    };
+
+    initializeMap();
+
+    // Cleanup on unmount
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [latitude, longitude, name, address, mapContainerId]);
+
+  return (
+    <div className="relative w-full h-64 md:h-96 z-0">
+      <div ref={mapRef} id={mapContainerId} className="absolute inset-0" />
+    </div>
+  );
+};
+
+export default LocationMap;
+
+```
+
 ## --- FIREBASE FUNCTIONS ---
 
 ## FILE: functions/src/index.ts
-```ts
+```typescript
 /**
  * Import function triggers from their respective submodules:
  *
@@ -1498,39 +1568,6 @@ export const nextServer = onRequest(
 
 ```
 
-## FILE: functions/tsconfig.json
-```json
-{
-  "compilerOptions": {
-    "module": "CommonJS",
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "outDir": "lib",
-    "sourceMap": true,
-    "strict": true,
-    "target": "es2017",
-    "skipLibCheck": true,
-    "typeRoots": [
-      "node_modules/@types"
-    ]
-  },
-  "compileOnSave": true,
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
-}
-
-```
-
-## --- ENVIRONMENT VARIABLE STRUCTURE (.env.example or similar) ---
-
-## No .env.example found. Describe required NEXT_PUBLIC_ variables if any.
-# Example: NEXT_PUBLIC_FIREBASE_API_KEY=your_key_here
-# IMPORTANT: Do NOT share actual .env.local values.
-
 ## --- END OF CONTEXT ---
+
+## Total files included: 23
