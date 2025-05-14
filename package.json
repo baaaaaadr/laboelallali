@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "next build && firebase deploy --only hosting",
+    "deploy": "next build && firebase deploy",
+    "deploy:hosting": "next build && firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions",
     "context": "powershell -ExecutionPolicy Bypass -NoProfile -File ./generate_context.ps1",
     "tailwind:build": "tailwindcss -i ./src/app/globals.css -o ./output.css --content \"./src/**/*.{js,ts,jsx,tsx,mdx}\"",
     "git": "git add . && git commit -m \"update\" && git push"

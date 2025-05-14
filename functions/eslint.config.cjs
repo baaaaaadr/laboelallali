@@ -45,6 +45,7 @@ module.exports = [
       "comma-dangle": "off",
       "no-multi-spaces": "off",
       "import/no-unresolved": "off",
+      "linebreak-style": "off",
     },
   },
 
