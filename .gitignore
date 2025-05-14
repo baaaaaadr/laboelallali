@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Firebase - ADD THIS SECTION OR LINE
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
