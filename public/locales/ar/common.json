@@ -74,8 +74,8 @@
   "success_message": "تم إرسال طلبك بنجاح.",
 
   "glabo_title": "فحص منزلي",
-  "sampling_place": "مكان الفحص",
-  "lab_contact": "اتصال المختبر :",
+  "sampling_place": "مكان أخذ العينة",
+  "lab_contact": "الاتصال بالمختبر :",
   
   "at_home": "في المنزل",
   "at_work": "في مكان العمل",
@@ -108,5 +108,14 @@
   "prescription_note": "ملاحظة: لا تنس إرفاق وصفتك الطبية عند إرسال بريدك الإلكتروني أو رسالة واتساب.",
   "address_not_specified": "لم يتم تحديد العنوان (سيتم التأكيد عبر الهاتف).",
   "glabo_request_subject": "طلب فحص GLABO - {{name}}",
-  "glabo_email_template": "مرحباً،\n\nأود طلب فحص في المنزل/مكان العمل (GLABO):\n\nالاسم: {{name}}\nالهاتف: {{phone}}{{email}}\nمكان الفحص: {{samplingPlace}}\n{{address}}{{accessInstructions}}\nالتاريخ المطلوب: {{date}}\nالوقت المطلوب: {{time}}{{comments}}\n\n{{prescription}}\n\nشكراً لكم للتواصل معي لتأكيد التفاصيل.\n\nمع أطيب التحيات."
+  "glabo_email_template": "مرحباً،\n\nأود طلب فحص في المنزل/مكان العمل (GLABO):\n\nالاسم: {{name}}\nالهاتف: {{phone}}{{email}}\nمكان الفحص: {{samplingPlace}}\n{{address}}{{accessInstructions}}\nالتاريخ المطلوب: {{date}}\nالوقت المطلوب: {{time}}{{comments}}\n\n{{prescription}}\n\nشكراً لكم للتواصل معي لتأكيد التفاصيل.\n\nمع أطيب التحيات.",
+
+  "welcome_banner": "مرحبًا بكم في مختبر العلالي",
+  "welcome_description": "صحتكم، أولويتنا. تحاليل طبية دقيقة وسريعة في أكادير.",
+  "banner_alt": "صورة مختبر العلالي",
+  "navigate_to_lab": "الاتجاه إلى المختبر",
+
+  "practical_info": "معلومات عملية",
+  "faq": "الأسئلة الشائعة",
+  "rights_reserved": "جميع الحقوق محفوظة"
 }

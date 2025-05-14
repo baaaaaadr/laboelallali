@@ -1,45 +1,20 @@
 {
   "hosting": {
-    "public": "public",
+    "source": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
-      {
-        "source": "**",
-        "function": {
-          "functionId": "nextServer",
-          "region": "europe-southwest1",
-          "codebase": "default"
-        }
-      }
-    ]
+    "frameworksBackend": {
+      "region": "europe-west1"
+    }
   },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "runtime": "nodejs20",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ],
-      "predeploy": [
-        "npm --prefix ./functions run build"
-      ]
-    }
-  ],
   "storage": {
     "rules": "storage.rules"
-  },
-  "emulators": {}
+  }
 }

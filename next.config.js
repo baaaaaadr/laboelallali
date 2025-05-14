@@ -2,7 +2,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // output: 'export', // This is key for static site generation - Commented out to allow middleware
+  // Ensure 'output: "export"' is NOT active for frameworksBackend
+  // We're using App Router with [lang] segments and middleware for i18n
   
   // Disable TypeScript checking during build to bypass TypeScript errors
   typescript: {

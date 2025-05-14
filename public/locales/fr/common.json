@@ -75,5 +75,14 @@
 
   "glabo_title": "Prélèvement à Domicile",
   "sampling_place": "Lieu de prélèvement",
-  "lab_contact": "Contact Laboratoire :"
+  "lab_contact": "Contact Laboratoire :",
+
+  "welcome_banner": "Bienvenue au Laboratoire El Allali",
+  "welcome_description": "Votre santé, notre priorité. Analyses médicales précises et rapides à Agadir.",
+  "banner_alt": "Laboratoire El Allali Banner",
+  "navigate_to_lab": "Naviguer vers le labo",
+
+  "practical_info": "Informations pratiques",
+  "faq": "Questions fréquentes",
+  "rights_reserved": "Tous droits réservés"
 }

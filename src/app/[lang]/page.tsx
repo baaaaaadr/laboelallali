@@ -53,10 +53,11 @@ export default function HomePage({
 
   return (
     <>
-      {/* Hero Banner */}
+      {/* Hero Banner - Now truly full width with no constraints */}
       <HeroBanner />
       
-      <div className="container mx-auto px-4 pb-12">
+      {/* Container for the rest of the content */}
+      <div className="container mx-auto px-4 py-8 pb-12">
         {/* Status Widget */}
         <div className="card flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-l-4 border-[#FF4081]">
   <div className="flex-1 w-full md:w-auto">

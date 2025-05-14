@@ -3,12 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "clean": "rimraf lib .next package.json.bak",
-    "build:nextapp": "npm --prefix .. run build",
-    "copy:nextartifacts": "npm run clean && copyfiles -u 1 ../.next/** ./.next && copyfiles -u 1 ../package.json . && copyfiles -u 1 ../public/** ./public",
-    "build:typescript": "tsc -p tsconfig.json",
-    "build": "npm run build:nextapp && npm run copy:nextartifacts && npm run build:typescript",
-    "lint": "eslint \"src/**/*.{ts,js}\" -c eslint.config.cjs"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "deploy": "next build && firebase deploy",
+    "deploy:hosting": "next build && firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions",
+    "context": "powershell -ExecutionPolicy Bypass -NoProfile -File ./generate_context.ps1",
+    "tailwind:build": "tailwindcss -i ./src/app/globals.css -o ./output.css --content \"./src/**/*.{js,ts,jsx,tsx,mdx}\"",
+    "git": "git add . && git commit -m \"update\" && git push"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
@@ -19,7 +23,6 @@
     "firebase-admin": "^13.3.0",
     "i18next": "^25.1.2",
     "i18next-resources-to-backend": "^1.2.1",
-    "laboelallali": "file:..",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.507.0",
     "next": "15.3.1",
@@ -42,7 +45,6 @@
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
-    "eslint-config-google": "^0.14.0",
     "eslint-config-next": "15.3.1",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.5",

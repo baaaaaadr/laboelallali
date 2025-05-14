@@ -76,7 +76,7 @@ const Header = () => {
                 <span className="text-[#800020] font-bold text-lg">L</span>
               </div>
               <h1 className="text-xl font-bold hidden sm:block">
-                {urlLang === 'ar' ? 'مختبر العلالي' : 'Laboratoire El Allali'}
+                {t('laboName')}
               </h1>
             </Link>
           </div>

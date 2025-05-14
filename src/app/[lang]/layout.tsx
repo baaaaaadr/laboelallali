@@ -128,7 +128,7 @@ export default async function LangLayout({
         resources={resources}
       >
         <Header /> {/* Header and Footer now correctly get i18n context */}
-        <main className="flex-grow container mx-auto px-4 py-8"> {/* Add page container here */}
+        <main className="flex-grow"> {/* Removed container to allow full-width content */}
           {children}
         </main>
         <Footer />
