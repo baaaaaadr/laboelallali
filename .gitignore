@@ -14,7 +14,7 @@
 /coverage
 
 # next.js
-/.next/
+/.next/      # For the root Next.js app
 /out/
 
 # production
@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -40,7 +44,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Firebase - ADD THIS SECTION OR LINE
-.firebase/
+# Firebase
+.firebase/  # THIS IS CRUCIAL
 firebase-debug.log
 firebase-debug.*.log
+
+# Ignore Next.js build artifacts within the functions directory as well
+functions/.next/
