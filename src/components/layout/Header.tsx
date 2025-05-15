@@ -95,6 +95,10 @@ const Header = () => {
               {t('glabo')}
             </Link>
 
+            <Link href={`${currentLanguagePath}/analyses`} className="hover:text-rose-200 transition-colors font-semibold">
+              {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
+            </Link>
+
             <Link href={`${currentLanguagePath}/contact`} className="hover:text-rose-200 transition-colors">
               {t('contact')}
             </Link>
@@ -165,6 +169,14 @@ const Header = () => {
                 onClick={toggleMenu}
               >
                 {t('glabo')}
+              </Link>
+
+              <Link 
+                href={`${currentLanguagePath}/analyses`} 
+                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
+                onClick={toggleMenu}
+              >
+                {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
               </Link>
 
               <Link 

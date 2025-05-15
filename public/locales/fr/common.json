@@ -39,6 +39,9 @@
   "appointment": "Prendre RDV",
   "glabo": "Prélèvement à Domicile",
   "contact": "Contact",
+  "navigation": {
+    "analyses_catalog": "Catalogue Analyses"
+  },
   "changeLanguage": "Changer de langue",
   "french": "Français",
   "arabic": "العربية",

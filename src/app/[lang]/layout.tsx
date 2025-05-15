@@ -15,7 +15,7 @@ import Footer from '@/components/layout/Footer';
 // Initialize i18next for Server Components within this layout
 async function initServerI18next(
   lang: string,
-  namespaces: string[] = [defaultNS, 'appointment', 'glabo']
+  namespaces: string[] = [defaultNS, 'appointment', 'glabo', 'catalog']
 ) {
   const i18nInstance = createInstance();
   await i18nInstance
@@ -124,7 +124,7 @@ export default async function LangLayout({
     <div lang={lang} dir={dirValue} className="h-full">
       <TranslationsProvider
         locale={lang}
-        namespaces={[defaultNS, 'appointment', 'glabo']}
+        namespaces={[defaultNS, 'appointment', 'glabo', 'catalog']}
         resources={resources}
       >
         <Header /> {/* Header and Footer now correctly get i18n context */}

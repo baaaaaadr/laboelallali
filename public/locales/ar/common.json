@@ -39,6 +39,9 @@
   "appointment": "حجز موعد",
   "glabo": "فحص منزلي",
   "contact": "اتصل بنا",
+  "navigation": {
+    "analyses_catalog": "دليل التحاليل"
+  },
   "changeLanguage": "تغيير اللغة",
   "french": "Français",
   "arabic": "العربية",

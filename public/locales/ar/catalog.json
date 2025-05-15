@@ -1,0 +1,22 @@
+{
+  "title": "دليل التحاليل",
+  "search_label": "البحث عن تحليل",
+  "search_placeholder": "اكتب اسم التحليل...",
+  "category_label": "التصنيف",
+  "all_categories": "جميع التصنيفات",
+  "no_results": "لا توجد نتائج مطابقة لمعايير البحث.",
+  "clear_filters": "مسح عوامل التصفية",
+  "no_analyses": "لا توجد تحاليل متاحة حاليًا.",
+  "loading": "جاري التحميل...",
+  "error_fetching": "فشل في تحميل التحاليل",
+  
+  "card": {
+    "category_label": "التصنيف:",
+    "delay_label": "المدة:",
+    "price_currency": "درهم",
+    "show_preparation": "عرض التحضير",
+    "hide_preparation": "إخفاء التحضير",
+    "preparation_label": "تعليمات التحضير:",
+    "no_preparation": "لا توجد تعليمات تحضير محددة."
+  }
+}

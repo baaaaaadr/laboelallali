@@ -2,6 +2,13 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Allow public read access to the analysisCatalog collection
+    match /analysisCatalog/{analysisId} {
+      allow read: if true; // Anyone can read
+      allow write: if false; // No one can write directly from the client
+    }
+
+    // Default deny for anything not explicitly allowed
     match /{document=**} {
       allow read, write: if false;
     }

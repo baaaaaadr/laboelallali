@@ -1,0 +1,22 @@
+{
+  "title": "Catalogue des Analyses",
+  "search_label": "Rechercher une analyse",
+  "search_placeholder": "Tapez le nom d'une analyse...",
+  "category_label": "Catégorie",
+  "all_categories": "Toutes les catégories",
+  "no_results": "Aucun résultat trouvé pour ces critères de recherche.",
+  "clear_filters": "Effacer les filtres",
+  "no_analyses": "Aucune analyse disponible pour le moment.",
+  "loading": "Chargement en cours...",
+  "error_fetching": "Échec du chargement des analyses",
+  
+  "card": {
+    "category_label": "Catégorie:",
+    "delay_label": "Délai:",
+    "price_currency": "MAD",
+    "show_preparation": "Voir Préparation",
+    "hide_preparation": "Masquer Préparation",
+    "preparation_label": "Instructions de préparation:",
+    "no_preparation": "Aucune préparation spécifique."
+  }
+}
