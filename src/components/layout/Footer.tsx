@@ -1,8 +1,13 @@
 "use client";
 import Link from 'next/link';
 import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
-
 import { useTranslation } from 'react-i18next';
+import { 
+  LAB_NAME, 
+  LAB_ADDRESS, 
+  LAB_CONTACT, 
+  LAB_HOURS 
+} from '@/constants/contact';
 
 // We've commented out unused variables and functions
 // import { usePathname } from 'next/navigation';
@@ -17,6 +22,9 @@ const Footer = () => {
   const { t, i18n } = useTranslation('common');
   // Déterminer si nous sommes en mode RTL (langue arabe)
   const isRTL = i18n.language === 'ar';
+  // Get translated lab name and address
+  const labName = t(LAB_NAME);
+  const labAddress = t(LAB_ADDRESS);
   // const pathname = usePathname();
   // const currentLanguage = i18n.language || getLangFromPath(pathname);
   const currentYear = new Date().getFullYear();
@@ -31,36 +39,39 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">{t('contact')}</h3>
             <ul className="space-y-3">
-              <li className="flex items-start">
-                <MapPin size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} mt-1 flex-shrink-0 text-white`} />
-                <span>{t('laboratory_address')}</span>
+              <li className="flex items-start space-x-3">
+                <MapPin size={20} className="flex-shrink-0 text-white mt-0.5" />
+                <span>{labAddress}</span>
               </li>
               <li className="flex flex-col">
-                <div className="flex items-center mb-1">
-                  <Phone size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} flex-shrink-0 text-white`} />
+                <div className="flex items-start space-x-3 mb-1">
+                  <Phone size={20} className="flex-shrink-0 text-white mt-0.5" />
                   <span className="font-semibold">{t('lab_contact')}</span>
                 </div>
                 <div className={`${isRTL ? 'mr-7' : 'ml-7'}`}>
-                  <p>{t('landline_label')} <a href="tel:0528843384" className="hover:underline">0528843384</a></p>
-                  <p>{t('whatsapp_label')} <a href="https://wa.me/212634293900" className="hover:underline">0634293900</a></p>
-                  <p>{t('whatsapp_label')} <a href="https://wa.me/212707291873" className="hover:underline">0707291873</a></p>
-                  <p>{t('companies_label')} <a href="tel:0664727681" className="hover:underline">0664727681</a></p>
-                  <p>{t('fax_label')} 0528828758</p>
+                  <p>{t('landline_label')} <a href={LAB_CONTACT.LANDLINE.url} className="hover:underline">{LAB_CONTACT.LANDLINE.display}</a></p>
+                  {LAB_CONTACT.WHATSAPP.map((whatsapp, index) => (
+                    <p key={index}>
+                      {t('whatsapp_label')} <a href={whatsapp.url} className="hover:underline">{whatsapp.display}</a>
+                    </p>
+                  ))}
+                  <p>{t('companies_label')} <a href={LAB_CONTACT.COMPANIES.url} className="hover:underline">{LAB_CONTACT.COMPANIES.display}</a></p>
+                  <p>{t('fax_label')} {LAB_CONTACT.FAX}</p>
                 </div>
               </li>
-              <li className="flex items-center">
-                <Mail size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} flex-shrink-0 text-white`} />
+              <li className="flex items-start space-x-3">
+                <Mail size={20} className="flex-shrink-0 text-white mt-0.5" />
                 <div className="flex flex-col">
-                  <a href="mailto:laboelallali@gmail.com" className="hover:underline">
-                    laboelallali@gmail.com
+                  <a href={LAB_CONTACT.EMAIL.url} className="hover:underline">
+                    {LAB_CONTACT.EMAIL.display}
                   </a>
                 </div>
               </li>
-              <li className="flex items-start">
-                <Clock size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} mt-1 flex-shrink-0 text-white`} />
+              <li className="flex items-start space-x-3">
+                <Clock size={20} className="flex-shrink-0 text-white mt-0.5" />
                 <div>
-                  <p>{t('monday_to_saturday')}</p>
-                  <p>{t('sunday')}</p>
+                  <p>{LAB_HOURS.WEEKDAYS}</p>
+                  <p>{LAB_HOURS.SUNDAY}</p>
                 </div>
               </li>
             </ul>
@@ -72,33 +83,33 @@ const Footer = () => {
             <ul className="space-y-2">
   {/* Liens avec taille minimum pour accessibilité mobile */}
               <li>
-                <Link href="/" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('home')}
+                <Link href="/" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('home')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#services" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('our_main_services')}
+                <Link href="#services" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('our_main_services')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#info" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('practical_info')}
+                <Link href="#info" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('practical_info')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('contact')}
+                <Link href="#contact" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('contact')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#faq" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('faq')}
+                <Link href="#faq" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('faq')}</span>
                 </Link>
               </li>
             </ul>
@@ -111,15 +122,15 @@ const Footer = () => {
               {t('about_description')}
             </p>
             <a 
-              href="https://wa.me/212528000000" 
+              href={LAB_CONTACT.WHATSAPP[0].url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="footer-whatsapp-btn bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center transition-colors shadow-sm hover:shadow-md"
+              className="bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center space-x-2 transition-colors shadow-sm hover:shadow-md mt-4 w-full justify-center sm:w-auto"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" className={`${isRTL ? 'ml-3' : 'mr-3'}`} viewBox="0 0 16 16">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16" className="flex-shrink-0">
                 <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
               </svg>
-              {t('contact')}
+              <span>{t('contact_on_whatsapp')}</span>
             </a>
           </div>
         </div>

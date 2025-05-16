@@ -32,6 +32,7 @@
   "call_us": "اتصل",
   "our_location": "موقعنا",
   "laboratory_name": "مختبر العلالي",
+  "laboratory_name_short": "مختبر العلالي",
   "laboratory_address": "61 بيس، شارع مراكش، 80020، أغادير، المغرب",
   "loading_map": "جاري تحميل الخريطة...",
 
@@ -45,7 +46,9 @@
   "changeLanguage": "تغيير اللغة",
   "french": "Français",
   "arabic": "العربية",
+  "close_menu": "إغلاق القائمة",
 
+  "contact_on_whatsapp": "اتصل بنا على واتساب",
   "contact_title": "اتصل بنا ومعلومات المختبر",
   "lab_coordinates": "إحداثيات المختبر",
   "address_label": "العنوان :",
@@ -54,6 +57,9 @@
   "companies_label": "شركات وجهات أخرى :",
   "fax_label": "فاكس :",
   "email_label": "البريد الإلكتروني :",
+  "find_us": "كيف تجدنا",
+  "find_us_text": "يقع مختبرنا في قلب أغادير، ويمكن الوصول إليه بسهولة بالسيارة أو وسائل النقل العام. يتوفر موقف سيارات قريب لراحتكم.",
+  "emergency_contact": "في حالة الطوارئ خارج ساعات العمل، يرجى الاتصال برقم الطوارئ المذكور أدناه.",
   "working_hours_label": "ساعات العمل :",
   "monday_to_saturday": "الاثنين إلى السبت: 7:30 إلى 18:30",
   "sunday": "الأحد: 08:00 إلى 18:00",
@@ -114,8 +120,37 @@
   "glabo_email_template": "مرحباً،\n\nأود طلب فحص في المنزل/مكان العمل (GLABO):\n\nالاسم: {{name}}\nالهاتف: {{phone}}{{email}}\nمكان الفحص: {{samplingPlace}}\n{{address}}{{accessInstructions}}\nالتاريخ المطلوب: {{date}}\nالوقت المطلوب: {{time}}{{comments}}\n\n{{prescription}}\n\nشكراً لكم للتواصل معي لتأكيد التفاصيل.\n\nمع أطيب التحيات.",
 
   "welcome_banner": "مرحبًا بكم في مختبر العلالي",
-  "welcome_description": "صحتكم، أولويتنا. تحاليل طبية دقيقة وسريعة في أكادير.",
+  "welcome_description": "صحتك هي أولويتنا. تحاليل طبية دقيقة وسريعة في أكادير.",
   "banner_alt": "صورة مختبر العلالي",
+  
+  "analyses_catalog": {
+    "selection": {
+      "count_zero": "{{count}} تحليل محدد",
+      "count_one": "{{count}} تحليل محدد",
+      "count_other": "{{count}} تحاليل محددة",
+      "analyses_selected": "تحاليل محددة",
+      "total": "المجموع",
+      "reset": "إعادة ضبط",
+      "tooltip": "حساب تلقائي للتكلفة الإجمالية للتحاليل المحددة",
+      "send_whatsapp": "إرسال عبر الواتساب",
+      "whatsapp_message": {
+        "greeting": "مرحباً مختبر العلالي,",
+        "intro": "أنا مهتم/مهتمة بالتحاليل التالية:",
+        "analysis_item_prefix": "- ",
+        "total_label": "التكلفة الإجمالية المقدرة:",
+        "currency": "درهم",
+        "closing_remark": "هل يمكنكم تزويدي بمزيد من المعلومات؟",
+        "website_reference": "تم الاختيار من خلال الموقع الإلكتروني."
+      }
+    }
+  },
+  "TotalCalculator": {
+    "title": "حاسبة التكلفة الإجمالية",
+    "label": "التكلفة الإجمالية",
+    "currency": "درهم",
+    "button": "حساب التكلفة"
+  },
+
   "navigate_to_lab": "الاتجاه إلى المختبر",
 
   "practical_info": "معلومات عملية",

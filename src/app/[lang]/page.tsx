@@ -2,6 +2,12 @@
 
 import HeroBanner from '@/components/features/home/HeroBanner';
 import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, HomeIcon, Info, MapPin, ChevronRight } from 'lucide-react';
+import { 
+  LAB_NAME, 
+  LAB_ADDRESS, 
+  LAB_COORDINATES, 
+  LAB_CONTACT
+} from '@/constants/contact';
 import Link from 'next/link';
 import React, { useEffect, Suspense } from "react";
 import dynamic from 'next/dynamic';
@@ -25,7 +31,13 @@ export default function HomePage({
   
   // Log the language for debugging
   console.log(`Page rendered for language: ${resolvedParams.lang}`);
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
+  const isRTL = i18n.language === 'ar';
+  
+  // Get translated lab name and address
+  const labName = t(LAB_NAME);
+  const labAddress = t(LAB_ADDRESS);
+
   // On peut faire un check pour savoir si le labo est ouvert actuellement
   const currentHour = new Date().getHours();
   const currentDay = new Date().getDay(); // 0 = Dimanche, 6 = Samedi
@@ -190,22 +202,22 @@ export default function HomePage({
             <div className="bg-gray-200 relative">
               <Suspense fallback={<div className="h-64 md:h-96 flex items-center justify-center"><MapPin size={48} className="text-gray-500" /> <span className="ml-2 text-gray-500">{t('loading_map')}</span></div>}>
                 <LocationMap 
-                  latitude={30.4173116} 
-                  longitude={-9.589799900000001} 
-                  name={t('laboratory_name')} 
-                  address={t('laboratory_address')} 
+                  latitude={LAB_COORDINATES.LATITUDE} 
+                  longitude={LAB_COORDINATES.LONGITUDE} 
+                  name={labName} 
+                  address={labAddress} 
                 />
               </Suspense>
             </div>
             <div className="p-6">
-              <h3 className="font-semibold text-xl mb-2">{t('laboratory_name')}</h3>
+              <h3 className="font-semibold text-xl mb-2">{labName}</h3>
               <p className="text-gray-600 mb-4">
-                {t('laboratory_address')}
+                {labAddress}
               </p>
               <div className="flex flex-wrap gap-3">
                 <div className="flex flex-wrap gap-4 items-center">
                   <a
-                    href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
+                    href={LAB_COORDINATES.GOOGLE_MAPS_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center min-w-[160px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#F50057] focus:bg-[#F50057] gap-2"
@@ -214,7 +226,7 @@ export default function HomePage({
                     {t('get_directions')}
                   </a>
                   <a
-                    href="tel:+212528841414" // Remplacez par le numéro de téléphone réel
+                    href={LAB_CONTACT.LANDLINE.url}
                     className="flex items-center justify-center min-w-[160px] h-12 px-6 border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-sm transition-colors text-center text-lg hover:bg-gray-100 focus:bg-gray-100 gap-2"
                   >
                     <Info size={22} className="mr-2 -ml-1" />

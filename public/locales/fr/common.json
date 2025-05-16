@@ -32,6 +32,7 @@
   "call_us": "Appeler",
   "our_location": "Notre Localisation",
   "laboratory_name": "Laboratoire El Allali",
+  "laboratory_name_short": "Labo El Allali",
   "laboratory_address": "61 Bis, Rue de Marrakech, 80020, Agadir, Maroc",
   "loading_map": "Chargement de la carte",
 
@@ -45,7 +46,9 @@
   "changeLanguage": "Changer de langue",
   "french": "Français",
   "arabic": "العربية",
+  "close_menu": "Fermer le menu",
 
+  "contact_on_whatsapp": "Contactez-nous sur WhatsApp",
   "contact_title": "Nous Contacter et Informations du Laboratoire",
   "lab_coordinates": "Coordonnées du Laboratoire",
   "address_label": "Adresse :",
@@ -54,6 +57,9 @@
   "companies_label": "Sociétés et autres :",
   "fax_label": "Fax :",
   "email_label": "Email :",
+  "find_us": "Comment nous trouver",
+  "find_us_text": "Notre laboratoire est situé au cœur d'Agadir, facilement accessible en voiture ou en transport en commun. Un parking est disponible à proximité pour votre commodité.",
+  "emergency_contact": "Pour toute urgence en dehors des heures d'ouverture, veuillez composer le numéro d'urgence indiqué ci-dessous.",
   "working_hours_label": "Horaires :",
   "monday_to_saturday": "Lundi au Samedi: 7h30 à 18h30",
   "sunday": "Dimanche: 08h00 à 18h00",
@@ -87,5 +93,27 @@
 
   "practical_info": "Informations pratiques",
   "faq": "Questions fréquentes",
-  "rights_reserved": "Tous droits réservés"
+  "rights_reserved": "Tous droits réservés",
+  
+  "analyses_catalog": {
+    "selection": {
+      "count_zero": "{{count}} analyse sélectionnée",
+      "count_one": "{{count}} analyse sélectionnée",
+      "count_other": "{{count}} analyses sélectionnées",
+      "analyses_selected": "analyses sélectionnées",
+      "total": "Total",
+      "reset": "Réinitialiser",
+      "tooltip": "Calcul automatique du coût total des analyses sélectionnées",
+      "send_whatsapp": "Envoyer via WhatsApp",
+      "whatsapp_message": {
+        "greeting": "Bonjour Laboratoire El Allali,",
+        "intro": "Je suis intéressé(e) par les analyses suivantes :",
+        "analysis_item_prefix": "- ",
+        "total_label": "Total estimé :",
+        "currency": "MAD",
+        "closing_remark": "Pouvez-vous me donner plus d'informations ?",
+        "website_reference": "Sélection faite depuis le site web."
+      }
+    }
+  }
 }

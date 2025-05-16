@@ -1,4 +1,4 @@
-﻿# Laboratoire El Allali PWA - AI Context - 05/15/2025 12:00:27
+﻿# Laboratoire El Allali PWA - AI Context - 05/16/2025 16:37:19
 
 ## --- PROJECT OVERVIEW ---
 Laboratoire El Allali - Medical laboratory website in Agadir, Morocco
@@ -66,27 +66,24 @@ Built with Next.js App Router, TypeScript, Tailwind CSS, i18n (fr, ar), and Fire
 
 ## FILE: next.config.js
 ```javascript
-// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Ensure 'output: "export"' is NOT active for frameworksBackend
-  // We're using App Router with [lang] segments and middleware for i18n
-  
-  // Disable TypeScript checking during build to bypass TypeScript errors
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
     ignoreBuildErrors: true,
   },
-  
-  // Ignore ESLint errors during build
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
     ignoreDuringBuilds: true,
+  },
+  // Make sure Next.js knows that we have environment variables to process
+  env: {
+    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   },
 };
 
@@ -184,6 +181,13 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Allow public read access to the analysisCatalog collection
+    match /analysisCatalog/{analysisId} {
+      allow read: if true; // Anyone can read
+      allow write: if false; // No one can write directly from the client
+    }
+
+    // Default deny for anything not explicitly allowed
     match /{document=**} {
       allow read, write: if false;
     }
@@ -438,6 +442,7 @@ export default initServerI18next;
   "call_us": "Appeler",
   "our_location": "Notre Localisation",
   "laboratory_name": "Laboratoire El Allali",
+  "laboratory_name_short": "Labo El Allali",
   "laboratory_address": "61 Bis, Rue de Marrakech, 80020, Agadir, Maroc",
   "loading_map": "Chargement de la carte",
 
@@ -445,10 +450,15 @@ export default initServerI18next;
   "appointment": "Prendre RDV",
   "glabo": "PrÃ©lÃ¨vement Ã  Domicile",
   "contact": "Contact",
+  "navigation": {
+    "analyses_catalog": "Catalogue Analyses"
+  },
   "changeLanguage": "Changer de langue",
   "french": "FranÃ§ais",
   "arabic": "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©",
+  "close_menu": "Fermer le menu",
 
+  "contact_on_whatsapp": "Contactez-nous sur WhatsApp",
   "contact_title": "Nous Contacter et Informations du Laboratoire",
   "lab_coordinates": "CoordonnÃ©es du Laboratoire",
   "address_label": "Adresse :",
@@ -457,6 +467,9 @@ export default initServerI18next;
   "companies_label": "SociÃ©tÃ©s et autres :",
   "fax_label": "Fax :",
   "email_label": "Email :",
+  "find_us": "Comment nous trouver",
+  "find_us_text": "Notre laboratoire est situÃ© au cÅ“ur d'Agadir, facilement accessible en voiture ou en transport en commun. Un parking est disponible Ã  proximitÃ© pour votre commoditÃ©.",
+  "emergency_contact": "Pour toute urgence en dehors des heures d'ouverture, veuillez composer le numÃ©ro d'urgence indiquÃ© ci-dessous.",
   "working_hours_label": "Horaires :",
   "monday_to_saturday": "Lundi au Samedi: 7h30 Ã  18h30",
   "sunday": "Dimanche: 08h00 Ã  18h00",
@@ -490,7 +503,29 @@ export default initServerI18next;
 
   "practical_info": "Informations pratiques",
   "faq": "Questions frÃ©quentes",
-  "rights_reserved": "Tous droits rÃ©servÃ©s"
+  "rights_reserved": "Tous droits rÃ©servÃ©s",
+  
+  "analyses_catalog": {
+    "selection": {
+      "count_zero": "{{count}} analyse sÃ©lectionnÃ©e",
+      "count_one": "{{count}} analyse sÃ©lectionnÃ©e",
+      "count_other": "{{count}} analyses sÃ©lectionnÃ©es",
+      "analyses_selected": "analyses sÃ©lectionnÃ©es",
+      "total": "Total",
+      "reset": "RÃ©initialiser",
+      "tooltip": "Calcul automatique du coÃ»t total des analyses sÃ©lectionnÃ©es",
+      "send_whatsapp": "Envoyer via WhatsApp",
+      "whatsapp_message": {
+        "greeting": "Bonjour Laboratoire El Allali,",
+        "intro": "Je suis intÃ©ressÃ©(e) par les analyses suivantes :",
+        "analysis_item_prefix": "- ",
+        "total_label": "Total estimÃ© :",
+        "currency": "MAD",
+        "closing_remark": "Pouvez-vous me donner plus d'informations ?",
+        "website_reference": "SÃ©lection faite depuis le site web."
+      }
+    }
+  }
 }
 
 ```
@@ -531,6 +566,7 @@ export default initServerI18next;
   "call_us": "Ø§ØªØµÙ„",
   "our_location": "Ù…ÙˆÙ‚Ø¹Ù†Ø§",
   "laboratory_name": "Ù…Ø®ØªØ¨Ø± Ø§Ù„Ø¹Ù„Ø§Ù„ÙŠ",
+  "laboratory_name_short": "Ù…Ø®ØªØ¨Ø± Ø§Ù„Ø¹Ù„Ø§Ù„ÙŠ",
   "laboratory_address": "61 Ø¨ÙŠØ³ØŒ Ø´Ø§Ø±Ø¹ Ù…Ø±Ø§ÙƒØ´ØŒ 80020ØŒ Ø£ØºØ§Ø¯ÙŠØ±ØŒ Ø§Ù„Ù…ØºØ±Ø¨",
   "loading_map": "Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø©...",
 
@@ -538,10 +574,15 @@ export default initServerI18next;
   "appointment": "Ø­Ø¬Ø² Ù…ÙˆØ¹Ø¯",
   "glabo": "ÙØ­Øµ Ù…Ù†Ø²Ù„ÙŠ",
   "contact": "Ø§ØªØµÙ„ Ø¨Ù†Ø§",
+  "navigation": {
+    "analyses_catalog": "Ø¯Ù„ÙŠÙ„ Ø§Ù„ØªØ­Ø§Ù„ÙŠÙ„"
+  },
   "changeLanguage": "ØªØºÙŠÙŠØ± Ø§Ù„Ù„ØºØ©",
   "french": "FranÃ§ais",
   "arabic": "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©",
+  "close_menu": "Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©",
 
+  "contact_on_whatsapp": "Ø§ØªØµÙ„ Ø¨Ù†Ø§ Ø¹Ù„Ù‰ ÙˆØ§ØªØ³Ø§Ø¨",
   "contact_title": "Ø§ØªØµÙ„ Ø¨Ù†Ø§ ÙˆÙ…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ù…Ø®ØªØ¨Ø±",
   "lab_coordinates": "Ø¥Ø­Ø¯Ø§Ø«ÙŠØ§Øª Ø§Ù„Ù…Ø®ØªØ¨Ø±",
   "address_label": "Ø§Ù„Ø¹Ù†ÙˆØ§Ù† :",
@@ -550,6 +591,9 @@ export default initServerI18next;
   "companies_label": "Ø´Ø±ÙƒØ§Øª ÙˆØ¬Ù‡Ø§Øª Ø£Ø®Ø±Ù‰ :",
   "fax_label": "ÙØ§ÙƒØ³ :",
   "email_label": "Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ :",
+  "find_us": "ÙƒÙŠÙ ØªØ¬Ø¯Ù†Ø§",
+  "find_us_text": "ÙŠÙ‚Ø¹ Ù…Ø®ØªØ¨Ø±Ù†Ø§ ÙÙŠ Ù‚Ù„Ø¨ Ø£ØºØ§Ø¯ÙŠØ±ØŒ ÙˆÙŠÙ…ÙƒÙ† Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„ÙŠÙ‡ Ø¨Ø³Ù‡ÙˆÙ„Ø© Ø¨Ø§Ù„Ø³ÙŠØ§Ø±Ø© Ø£Ùˆ ÙˆØ³Ø§Ø¦Ù„ Ø§Ù„Ù†Ù‚Ù„ Ø§Ù„Ø¹Ø§Ù…. ÙŠØªÙˆÙØ± Ù…ÙˆÙ‚Ù Ø³ÙŠØ§Ø±Ø§Øª Ù‚Ø±ÙŠØ¨ Ù„Ø±Ø§Ø­ØªÙƒÙ….",
+  "emergency_contact": "ÙÙŠ Ø­Ø§Ù„Ø© Ø§Ù„Ø·ÙˆØ§Ø±Ø¦ Ø®Ø§Ø±Ø¬ Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ø¹Ù…Ù„ØŒ ÙŠØ±Ø¬Ù‰ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø±Ù‚Ù… Ø§Ù„Ø·ÙˆØ§Ø±Ø¦ Ø§Ù„Ù…Ø°ÙƒÙˆØ± Ø£Ø¯Ù†Ø§Ù‡.",
   "working_hours_label": "Ø³Ø§Ø¹Ø§Øª Ø§Ù„Ø¹Ù…Ù„ :",
   "monday_to_saturday": "Ø§Ù„Ø§Ø«Ù†ÙŠÙ† Ø¥Ù„Ù‰ Ø§Ù„Ø³Ø¨Øª: 7:30 Ø¥Ù„Ù‰ 18:30",
   "sunday": "Ø§Ù„Ø£Ø­Ø¯: 08:00 Ø¥Ù„Ù‰ 18:00",
@@ -610,8 +654,37 @@ export default initServerI18next;
   "glabo_email_template": "Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ\n\nØ£ÙˆØ¯ Ø·Ù„Ø¨ ÙØ­Øµ ÙÙŠ Ø§Ù„Ù…Ù†Ø²Ù„/Ù…ÙƒØ§Ù† Ø§Ù„Ø¹Ù…Ù„ (GLABO):\n\nØ§Ù„Ø§Ø³Ù…: {{name}}\nØ§Ù„Ù‡Ø§ØªÙ: {{phone}}{{email}}\nÙ…ÙƒØ§Ù† Ø§Ù„ÙØ­Øµ: {{samplingPlace}}\n{{address}}{{accessInstructions}}\nØ§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„Ù…Ø·Ù„ÙˆØ¨: {{date}}\nØ§Ù„ÙˆÙ‚Øª Ø§Ù„Ù…Ø·Ù„ÙˆØ¨: {{time}}{{comments}}\n\n{{prescription}}\n\nØ´ÙƒØ±Ø§Ù‹ Ù„ÙƒÙ… Ù„Ù„ØªÙˆØ§ØµÙ„ Ù…Ø¹ÙŠ Ù„ØªØ£ÙƒÙŠØ¯ Ø§Ù„ØªÙØ§ØµÙŠÙ„.\n\nÙ…Ø¹ Ø£Ø·ÙŠØ¨ Ø§Ù„ØªØ­ÙŠØ§Øª.",
 
   "welcome_banner": "Ù…Ø±Ø­Ø¨Ù‹Ø§ Ø¨ÙƒÙ… ÙÙŠ Ù…Ø®ØªØ¨Ø± Ø§Ù„Ø¹Ù„Ø§Ù„ÙŠ",
-  "welcome_description": "ØµØ­ØªÙƒÙ…ØŒ Ø£ÙˆÙ„ÙˆÙŠØªÙ†Ø§. ØªØ­Ø§Ù„ÙŠÙ„ Ø·Ø¨ÙŠØ© Ø¯Ù‚ÙŠÙ‚Ø© ÙˆØ³Ø±ÙŠØ¹Ø© ÙÙŠ Ø£ÙƒØ§Ø¯ÙŠØ±.",
+  "welcome_description": "ØµØ­ØªÙƒ Ù‡ÙŠ Ø£ÙˆÙ„ÙˆÙŠØªÙ†Ø§. ØªØ­Ø§Ù„ÙŠÙ„ Ø·Ø¨ÙŠØ© Ø¯Ù‚ÙŠÙ‚Ø© ÙˆØ³Ø±ÙŠØ¹Ø© ÙÙŠ Ø£ÙƒØ§Ø¯ÙŠØ±.",
   "banner_alt": "ØµÙˆØ±Ø© Ù…Ø®ØªØ¨Ø± Ø§Ù„Ø¹Ù„Ø§Ù„ÙŠ",
+  
+  "analyses_catalog": {
+    "selection": {
+      "count_zero": "{{count}} ØªØ­Ù„ÙŠÙ„ Ù…Ø­Ø¯Ø¯",
+      "count_one": "{{count}} ØªØ­Ù„ÙŠÙ„ Ù…Ø­Ø¯Ø¯",
+      "count_other": "{{count}} ØªØ­Ø§Ù„ÙŠÙ„ Ù…Ø­Ø¯Ø¯Ø©",
+      "analyses_selected": "ØªØ­Ø§Ù„ÙŠÙ„ Ù…Ø­Ø¯Ø¯Ø©",
+      "total": "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹",
+      "reset": "Ø¥Ø¹Ø§Ø¯Ø© Ø¶Ø¨Ø·",
+      "tooltip": "Ø­Ø³Ø§Ø¨ ØªÙ„Ù‚Ø§Ø¦ÙŠ Ù„Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ© Ù„Ù„ØªØ­Ø§Ù„ÙŠÙ„ Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©",
+      "send_whatsapp": "Ø¥Ø±Ø³Ø§Ù„ Ø¹Ø¨Ø± Ø§Ù„ÙˆØ§ØªØ³Ø§Ø¨",
+      "whatsapp_message": {
+        "greeting": "Ù…Ø±Ø­Ø¨Ø§Ù‹ Ù…Ø®ØªØ¨Ø± Ø§Ù„Ø¹Ù„Ø§Ù„ÙŠ,",
+        "intro": "Ø£Ù†Ø§ Ù…Ù‡ØªÙ…/Ù…Ù‡ØªÙ…Ø© Ø¨Ø§Ù„ØªØ­Ø§Ù„ÙŠÙ„ Ø§Ù„ØªØ§Ù„ÙŠØ©:",
+        "analysis_item_prefix": "- ",
+        "total_label": "Ø§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ© Ø§Ù„Ù…Ù‚Ø¯Ø±Ø©:",
+        "currency": "Ø¯Ø±Ù‡Ù…",
+        "closing_remark": "Ù‡Ù„ ÙŠÙ…ÙƒÙ†ÙƒÙ… ØªØ²ÙˆÙŠØ¯ÙŠ Ø¨Ù…Ø²ÙŠØ¯ Ù…Ù† Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§ØªØŸ",
+        "website_reference": "ØªÙ… Ø§Ù„Ø§Ø®ØªÙŠØ§Ø± Ù…Ù† Ø®Ù„Ø§Ù„ Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ."
+      }
+    }
+  },
+  "TotalCalculator": {
+    "title": "Ø­Ø§Ø³Ø¨Ø© Ø§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ©",
+    "label": "Ø§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ©",
+    "currency": "Ø¯Ø±Ù‡Ù…",
+    "button": "Ø­Ø³Ø§Ø¨ Ø§Ù„ØªÙƒÙ„ÙØ©"
+  },
+
   "navigate_to_lab": "Ø§Ù„Ø§ØªØ¬Ø§Ù‡ Ø¥Ù„Ù‰ Ø§Ù„Ù…Ø®ØªØ¨Ø±",
 
   "practical_info": "Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø¹Ù…Ù„ÙŠØ©",
@@ -754,14 +827,39 @@ html, body {
     transform: translateY(0);
   }
 
-  .mobile-menu-transition {
-    transition: opacity 0.4s cubic-bezier(.4,0,.2,1), transform 0.4s cubic-bezier(.4,0,.2,1);
+  .backdrop-blur-sm {
+    transition: opacity 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out;
     opacity: 0;
-    transform: translateX(50px);
+    backdrop-filter: blur(0);
   }
+  
+  .backdrop-blur-sm.open {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+
+  .mobile-menu-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    transform: translateX(100%);
+    box-shadow: -4px 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
   .mobile-menu-transition.open {
     opacity: 1;
     transform: translateX(0);
+    animation: menuSlideIn 0.3s ease-out forwards;
+  }
+  
+  @keyframes menuSlideIn {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
 
   .footer-whatsapp-btn {
@@ -833,8 +931,13 @@ html, body {
 "use client";
 import Link from 'next/link';
 import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
-
 import { useTranslation } from 'react-i18next';
+import { 
+  LAB_NAME, 
+  LAB_ADDRESS, 
+  LAB_CONTACT, 
+  LAB_HOURS 
+} from '@/constants/contact';
 
 // We've commented out unused variables and functions
 // import { usePathname } from 'next/navigation';
@@ -849,6 +952,9 @@ const Footer = () => {
   const { t, i18n } = useTranslation('common');
   // DÃ©terminer si nous sommes en mode RTL (langue arabe)
   const isRTL = i18n.language === 'ar';
+  // Get translated lab name and address
+  const labName = t(LAB_NAME);
+  const labAddress = t(LAB_ADDRESS);
   // const pathname = usePathname();
   // const currentLanguage = i18n.language || getLangFromPath(pathname);
   const currentYear = new Date().getFullYear();
@@ -863,36 +969,39 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">{t('contact')}</h3>
             <ul className="space-y-3">
-              <li className="flex items-start">
-                <MapPin size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} mt-1 flex-shrink-0 text-white`} />
-                <span>{t('laboratory_address')}</span>
+              <li className="flex items-start space-x-3">
+                <MapPin size={20} className="flex-shrink-0 text-white mt-0.5" />
+                <span>{labAddress}</span>
               </li>
               <li className="flex flex-col">
-                <div className="flex items-center mb-1">
-                  <Phone size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} flex-shrink-0 text-white`} />
+                <div className="flex items-start space-x-3 mb-1">
+                  <Phone size={20} className="flex-shrink-0 text-white mt-0.5" />
                   <span className="font-semibold">{t('lab_contact')}</span>
                 </div>
                 <div className={`${isRTL ? 'mr-7' : 'ml-7'}`}>
-                  <p>{t('landline_label')} <a href="tel:0528843384" className="hover:underline">0528843384</a></p>
-                  <p>{t('whatsapp_label')} <a href="https://wa.me/212634293900" className="hover:underline">0634293900</a></p>
-                  <p>{t('whatsapp_label')} <a href="https://wa.me/212707291873" className="hover:underline">0707291873</a></p>
-                  <p>{t('companies_label')} <a href="tel:0664727681" className="hover:underline">0664727681</a></p>
-                  <p>{t('fax_label')} 0528828758</p>
+                  <p>{t('landline_label')} <a href={LAB_CONTACT.LANDLINE.url} className="hover:underline">{LAB_CONTACT.LANDLINE.display}</a></p>
+                  {LAB_CONTACT.WHATSAPP.map((whatsapp, index) => (
+                    <p key={index}>
+                      {t('whatsapp_label')} <a href={whatsapp.url} className="hover:underline">{whatsapp.display}</a>
+                    </p>
+                  ))}
+                  <p>{t('companies_label')} <a href={LAB_CONTACT.COMPANIES.url} className="hover:underline">{LAB_CONTACT.COMPANIES.display}</a></p>
+                  <p>{t('fax_label')} {LAB_CONTACT.FAX}</p>
                 </div>
               </li>
-              <li className="flex items-center">
-                <Mail size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} flex-shrink-0 text-white`} />
+              <li className="flex items-start space-x-3">
+                <Mail size={20} className="flex-shrink-0 text-white mt-0.5" />
                 <div className="flex flex-col">
-                  <a href="mailto:laboelallali@gmail.com" className="hover:underline">
-                    laboelallali@gmail.com
+                  <a href={LAB_CONTACT.EMAIL.url} className="hover:underline">
+                    {LAB_CONTACT.EMAIL.display}
                   </a>
                 </div>
               </li>
-              <li className="flex items-start">
-                <Clock size={20} className={`${isRTL ? 'ml-3' : 'mr-3'} mt-1 flex-shrink-0 text-white`} />
+              <li className="flex items-start space-x-3">
+                <Clock size={20} className="flex-shrink-0 text-white mt-0.5" />
                 <div>
-                  <p>{t('monday_to_saturday')}</p>
-                  <p>{t('sunday')}</p>
+                  <p>{LAB_HOURS.WEEKDAYS}</p>
+                  <p>{LAB_HOURS.SUNDAY}</p>
                 </div>
               </li>
             </ul>
@@ -904,33 +1013,33 @@ const Footer = () => {
             <ul className="space-y-2">
   {/* Liens avec taille minimum pour accessibilitÃ© mobile */}
               <li>
-                <Link href="/" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('home')}
+                <Link href="/" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('home')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#services" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('our_main_services')}
+                <Link href="#services" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('our_main_services')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#info" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('practical_info')}
+                <Link href="#info" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('practical_info')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('contact')}
+                <Link href="#contact" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('contact')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#faq" className="flex items-center hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
-                  <ChevronRight size={16} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  {t('faq')}
+                <Link href="#faq" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('faq')}</span>
                 </Link>
               </li>
             </ul>
@@ -943,15 +1052,15 @@ const Footer = () => {
               {t('about_description')}
             </p>
             <a 
-              href="https://wa.me/212528000000" 
+              href={LAB_CONTACT.WHATSAPP[0].url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="footer-whatsapp-btn bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center transition-colors shadow-sm hover:shadow-md"
+              className="bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center space-x-2 transition-colors shadow-sm hover:shadow-md mt-4 w-full justify-center sm:w-auto"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" className={`${isRTL ? 'ml-3' : 'mr-3'}`} viewBox="0 0 16 16">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16" className="flex-shrink-0">
                 <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
               </svg>
-              {t('contact')}
+              <span>{t('contact_on_whatsapp')}</span>
             </a>
           </div>
         </div>
@@ -974,7 +1083,8 @@ export default Footer;
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe } from 'lucide-react'; 
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle } from 'lucide-react'; 
+import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
 import { supportedLngs } from '../../../i18n';
@@ -1040,7 +1150,7 @@ const Header = () => {
   return (
     <header className="bg-[#800020] text-white shadow-md">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between h-16">
           {/* Logo et nom */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
@@ -1065,6 +1175,10 @@ const Header = () => {
             
             <Link href={`${currentLanguagePath}/glabo`} className="hover:text-rose-200 transition-colors font-semibold">
               {t('glabo')}
+            </Link>
+
+            <Link href={`${currentLanguagePath}/analyses`} className="hover:text-rose-200 transition-colors font-semibold">
+              {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
 
             <Link href={`${currentLanguagePath}/contact`} className="hover:text-rose-200 transition-colors">
@@ -1098,58 +1212,134 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Menu mobile */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={toggleMenu}>
-          <div className={`bg-white h-full w-64 p-4 shadow-lg absolute right-0 mobile-menu-transition ${isMenuOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center">
-                <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
-                  <span className="bg-[#800020] text-white p-1 rounded text-lg font-bold mr-2">L</span>
-                  <span className="text-gray-800 font-semibold">{t('laboName')}</span>
-                </Link>
-              </div>
-              <button onClick={toggleMenu}>
-                <X size={24} className="text-gray-700" />
-              </button>
+      {/* Mobile Menu Overlay and Container */}
+      <div 
+        className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
+          isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        style={{
+          transition: isMenuOpen ? 'opacity 0.3s ease-in-out' : 'opacity 0.3s ease-in-out 0.1s'
+        }}
+      >
+        {/* Backdrop with blur effect */}
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+          style={{
+            opacity: isMenuOpen ? 1 : 0,
+            pointerEvents: isMenuOpen ? 'auto' : 'none',
+            transition: 'opacity 0.3s ease-in-out',
+            transitionDelay: isMenuOpen ? '0s' : '0.1s'
+          }}
+          onClick={toggleMenu}
+        />
+        
+        {/* Menu Panel */}
+        <div 
+          className="fixed top-0 right-0 h-full w-72 bg-white shadow-lg z-50 flex flex-col"
+          style={{
+            transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
+            opacity: isMenuOpen ? 1 : 0.7,
+            transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out',
+            transitionDelay: isMenuOpen ? '0s' : '0s',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Menu Header Section - Matches main header height */}
+          <div className="bg-[#800020] text-white h-16 flex items-center justify-between px-4">
+            <div className="flex items-center">
+              <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
+                <span className="bg-white text-[var(--primary-bordeaux)] p-1.5 rounded-md text-lg font-bold mr-3">L</span>
+                <span className="font-semibold text-lg">{t('laboName')}</span>
+              </Link>
             </div>
+            <button 
+              onClick={toggleMenu}
+              className="p-2 rounded-full hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+              aria-label={t('close_menu')}
+            >
+              <X size={24} className="text-white" />
+            </button>
+          </div>
             
-            <nav className="flex flex-col space-y-4">
-              <Link 
-                href={`${currentLanguagePath}/`} 
-                className="text-gray-800 hover:text-[#800020] transition-colors"
-                onClick={toggleMenu}
-              >
-                {t('home')}
-              </Link>
+          <nav className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto bg-white">
+            <Link 
+              href={`${currentLanguagePath}/`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <Home size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('home')}
+            </Link>
 
-              <Link 
-                href={`${currentLanguagePath}/rendez-vous`} 
-                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
-                onClick={toggleMenu}
-              >
-                {t('appointment')}
-              </Link>
-              
-              <Link 
-                href={`${currentLanguagePath}/glabo`} 
-                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
-                onClick={toggleMenu}
-              >
-                {t('glabo')}
-              </Link>
+            <Link 
+              href={`${currentLanguagePath}/rendez-vous`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <CalendarDays size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('appointment')}
+            </Link>
+            
+            <Link 
+              href={`${currentLanguagePath}/glabo`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <Truck size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('glabo')}
+            </Link>
 
-              <Link 
-                href={`${currentLanguagePath}/contact`} 
-                className="text-gray-800 hover:text-[#800020] transition-colors"
-                onClick={toggleMenu}
-              >
-                {t('contact')}
-              </Link>
-            </nav>
+            <Link 
+              href={`${currentLanguagePath}/analyses`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <FlaskConical size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
+            </Link>
+
+            <Link 
+              href={`${currentLanguagePath}/contact`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <Phone size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('contact')}
+            </Link>
+          </nav>
+            
+          {/* Footer with WhatsApp button and language switcher */}
+          <div className="p-4 border-t border-gray-200 bg-white">
+            {/* WhatsApp Contact Button */}
+            <a 
+              href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={toggleMenu}
+              className="w-full flex items-center justify-center text-sm px-3 py-2.5 rounded-md transition-colors mb-3 bg-green-600 text-white hover:bg-green-700 focus:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-700"
+              aria-label="Contact via WhatsApp"
+            >
+              <MessageCircle size={18} className="mr-2" />
+              {t('contact')} WhatsApp
+            </a>
+            
+            {/* Language Switcher Button */}
+            <button 
+              onClick={() => {
+                handleLanguageChange();
+                toggleMenu();
+              }} 
+              className="w-full flex items-center justify-center text-sm px-3 py-2.5 rounded-md transition-colors bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              aria-label={t('changeLanguage')}
+            >
+              <Globe size={18} className="mr-2" />
+              {t('currentLanguage')}
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 };
@@ -1281,6 +1471,510 @@ export default function TranslationsProvider({
 
 ## --- FEATURE COMPONENTS ---
 
+## FILE: src/components/features/catalog/AnalysisCard.tsx
+```typescript
+import React, { useState } from "react";
+
+// Define Analysis interface for type safety
+export interface Analysis {
+  id: string;
+  name_fr: string;
+  name_ar: string;
+  price: number;
+  category_fr: string;
+  category_ar: string;
+  preparation_fr: string;
+  preparation_ar: string;
+  delay_fr: string;
+  delay_ar: string;
+  is_active: boolean;
+}
+
+/**
+ * Props for the AnalysisCard component
+ * @interface AnalysisCardProps
+ * @property {Analysis} analysis - The analysis data to display
+ * @property {string} lang - The current language code ('fr' or 'ar')
+ * @property {boolean} [isSelected] - Whether this analysis is currently selected
+ * @property {Function} [onSelect] - Callback function when the analysis is selected/deselected
+ */
+interface AnalysisCardProps {
+  analysis: Analysis;
+  lang: string;
+  isSelected?: boolean;
+  onSelect?: (analysis: Analysis) => void;
+}
+
+export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: AnalysisCardProps) {
+  // Define animation keyframes for the check icon - client side only
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const style = document.createElement('style');
+      style.innerHTML = `
+        @keyframes appearAnimation {
+          0% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1.2); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-appear {
+          animation: appearAnimation 0.3s ease-out forwards;
+        }
+      `;
+      document.head.appendChild(style);
+
+      return () => {
+        document.head.removeChild(style);
+      };
+    }
+  }, []);
+  const isArabic = lang === "ar";
+  const [showPreparation, setShowPreparation] = useState(false);
+  
+  // Get the preparation text based on the current language
+  const preparationText = isArabic ? analysis.preparation_ar : analysis.preparation_fr;
+  const hasPreparation = preparationText && preparationText.trim().length > 0;
+  
+  // Toggle preparation visibility
+  const togglePreparation = () => {
+    setShowPreparation(prev => !prev);
+  };
+  
+  // Manual translations based on language
+  const translations = {
+    categoryLabel: isArabic ? "Ø§Ù„ØªØµÙ†ÙŠÙ:" : "CatÃ©gorie:",
+    delayLabel: isArabic ? "Ø§Ù„Ù…Ø¯Ø©:" : "DÃ©lai:",
+    priceCurrency: isArabic ? "Ø¯Ø±Ù‡Ù…" : "MAD",
+    showPreparation: isArabic ? "Ø¹Ø±Ø¶ Ø§Ù„ØªØ­Ø¶ÙŠØ±" : "Voir PrÃ©paration",
+    hidePreparation: isArabic ? "Ø¥Ø®ÙØ§Ø¡ Ø§Ù„ØªØ­Ø¶ÙŠØ±" : "Masquer PrÃ©paration",
+    preparationLabel: isArabic ? "ØªØ¹Ù„ÙŠÙ…Ø§Øª Ø§Ù„ØªØ­Ø¶ÙŠØ±:" : "Instructions de prÃ©paration:",
+    noPreparation: isArabic ? "Ù„Ø§ ØªÙˆØ¬Ø¯ ØªØ¹Ù„ÙŠÙ…Ø§Øª ØªØ­Ø¶ÙŠØ± Ù…Ø­Ø¯Ø¯Ø©." : "Aucune prÃ©paration spÃ©cifique.",
+    select: isArabic ? "Ø§Ø®ØªÙŠØ§Ø±" : "SÃ©lectionner",
+    selected: isArabic ? "ØªÙ… Ø§Ù„Ø§Ø®ØªÙŠØ§Ø±" : "SÃ©lectionnÃ©"
+  };
+  
+  // Handle selection
+  const handleSelectClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    if (onSelect) {
+      onSelect(analysis);
+    }
+  };
+
+  return (
+    <div 
+      className={`shadow-lg rounded-lg p-4 mb-4 border 
+        ${isSelected 
+          ? 'border-[var(--accent-fuchsia)] border border-opacity-80 bg-[var(--bordeaux-pale)] ring-1 ring-[var(--accent-fuchsia)] ring-opacity-40' 
+          : 'border-gray-200 bg-white hover:border-gray-300'} 
+        hover:shadow-xl transition-all duration-300 ease-in-out transform ${isSelected ? 'scale-[1.01]' : ''} relative`}
+      onClick={handleSelectClick}
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleSelectClick(e as unknown as React.MouseEvent);
+        }
+      }}
+    >
+      {/* Selection indicator - position based on language direction */}
+      <div 
+        className={`absolute top-3 ${isArabic ? 'left-3' : 'right-3'} flex items-center z-10`}
+        aria-hidden="true"
+      >
+        <div 
+          className={`w-6 h-6 rounded-full 
+            ${isSelected 
+              ? 'bg-[var(--accent-fuchsia)] shadow-md' 
+              : 'border-2 border-gray-300 bg-white hover:border-[var(--accent-fuchsia)] hover:border-opacity-50'} 
+            flex items-center justify-center transform transition-all duration-300 ease-in-out 
+            ${isSelected ? 'scale-110 rotate-3' : ''}`}
+        >
+          {isSelected ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white animate-appear" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          )}
+        </div>
+        <span className="sr-only">{isSelected ? translations.selected : translations.select}</span>
+      </div>
+      
+      <h3 className={`text-xl font-semibold mb-2 ${isSelected ? 'text-[var(--accent-fuchsia)]' : 'text-[var(--primary-bordeaux)]'} ${isArabic ? 'pl-8' : 'pr-8'} transition-colors duration-300`}>
+        {isArabic ? analysis.name_ar : analysis.name_fr}
+      </h3>
+      
+      <div className="mt-2 space-y-1">
+        <p className="text-gray-600">
+          <span className="font-medium">{translations.categoryLabel} </span>
+          {isArabic ? analysis.category_ar : analysis.category_fr}
+        </p>
+        
+        <p className="text-gray-600">
+          <span className="font-medium">{translations.delayLabel} </span>
+          {isArabic ? analysis.delay_ar : analysis.delay_fr}
+        </p>
+        
+        <p className="text-[var(--accent-fuchsia)] font-bold mt-2">
+          {analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {translations.priceCurrency}
+        </p>
+        
+        {/* Preparation toggle button - only show if the analysis has preparation instructions */}
+        {hasPreparation && (
+          <div className="mt-3">
+            <button 
+              onClick={togglePreparation}
+              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors duration-200"
+              aria-expanded={showPreparation}
+            >
+              {showPreparation 
+                ? translations.hidePreparation
+                : translations.showPreparation
+              }
+            </button>
+          </div>
+        )}
+        
+        {/* Preparation details section - conditionally rendered */}
+        {showPreparation && (
+          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+            <h4 className="font-medium text-sm mb-1 text-gray-700">
+              {translations.preparationLabel}
+            </h4>
+            <p className="text-gray-700 text-sm whitespace-pre-line">
+              {hasPreparation 
+                ? preparationText 
+                : translations.noPreparation
+              }
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default AnalysisCard;
+
+```
+
+## FILE: src/components/features/catalog/TotalCalculator.tsx
+```typescript
+"use client";
+
+import React, { useMemo, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Analysis } from './AnalysisCard';
+import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
+
+interface TotalCalculatorProps {
+  totalCost: number;
+  selectedCount: number;
+  onReset: () => void;
+  currencyLabel: string;
+  isRtl?: boolean;
+  // We need access to the selected analyses for WhatsApp sharing
+  selectedAnalyses?: Analysis[];
+  // Les traductions sont maintenant gÃ©rÃ©es Ã  l'intÃ©rieur du composant
+}
+
+/**
+ * A floating bubble component that displays the running total of selected analyses
+ * Appears fixed to the bottom of the viewport
+ */
+export default function TotalCalculator({
+  totalCost,
+  selectedCount,
+  onReset,
+  currencyLabel,
+  isRtl = false,
+  selectedAnalyses = []
+}: TotalCalculatorProps) {
+  // Direct DOM manipulation reference
+  const containerRef = useRef<HTMLDivElement>(null);
+  const prevCountRef = useRef(selectedCount);
+  
+  // Manually flash the calculator when count changes
+  useEffect(() => {
+    console.log('[TotalCalculator] Previous count:', prevCountRef.current, 'New count:', selectedCount);
+    
+    // Skip initial render
+    if (prevCountRef.current === undefined || containerRef.current === null) {
+      prevCountRef.current = selectedCount;
+      return;
+    }
+    
+    // Only animate if count has changed
+    if (prevCountRef.current !== selectedCount) {
+      console.log('[TotalCalculator] Triggering color-only animation');
+      
+      const div = containerRef.current;
+      
+      // Get the original styles
+      const originalBg = window.getComputedStyle(div).backgroundColor;
+      
+      // Create a sequence of colors for a wave effect
+      // All colors are in the bordeaux/burgundy family
+      const colorSequence = [
+        '#8E2042', // Slightly lighter bordeaux
+        '#A02A4D', // Even lighter bordeaux 
+        '#B13558', // Brighter bordeaux
+        '#973048', // Back toward original
+        '#872238', // Almost back to original
+        originalBg   // Back to original
+      ];
+      
+      // Add a transition just for background color
+      div.style.transition = 'background-color 0.25s ease-in-out';
+      
+      // Apply each color in sequence
+      colorSequence.forEach((color, index) => {
+        setTimeout(() => {
+          div.style.backgroundColor = color;
+          
+          // Remove transition after all animations complete
+          if (index === colorSequence.length - 1) {
+            setTimeout(() => {
+              div.style.transition = '';
+            }, 250);
+          }
+        }, index * 150); // 150ms between each color change
+      });
+    }
+    
+    prevCountRef.current = selectedCount;
+  }, [selectedCount]);
+  const { t, i18n } = useTranslation('common');
+  
+  // DÃ©termine la direction de la langue actuelle si isRtl n'est pas spÃ©cifiÃ© explicitement
+  const isRtlDirection = isRtl || i18n.language === 'ar';
+  
+  // Translations as direct values rather than using useMemo for more stable typing
+  const translationsUI = {
+    selectedAnalyses: t('analyses_catalog.selection.analyses_selected', 'analyses sÃ©lectionnÃ©es'),
+    total: t('analyses_catalog.selection.total', 'Total'),
+    reset: t('analyses_catalog.selection.reset', 'RÃ©initialiser'),
+    tooltip: t('analyses_catalog.selection.tooltip', 'Calcul automatique du coÃ»t total des analyses sÃ©lectionnÃ©es'),
+    sendWhatsapp: t('analyses_catalog.selection.send_whatsapp', 'Envoyer via WhatsApp')
+  };
+  
+  // WhatsApp message translations as direct values
+  const whatsappTranslations = {
+    greeting: t('analyses_catalog.selection.whatsapp_message.greeting', 'Bonjour Laboratoire El Allali,'),
+    intro: t('analyses_catalog.selection.whatsapp_message.intro', 'Je suis intÃ©ressÃ©(e) par les analyses suivantes :'),
+    analysisItemPrefix: t('analyses_catalog.selection.whatsapp_message.analysis_item_prefix', '- '),
+    totalLabel: t('analyses_catalog.selection.whatsapp_message.total_label', 'Total estimÃ© :'),
+    currency: t('analyses_catalog.selection.whatsapp_message.currency', 'MAD'),
+    closingRemark: t('analyses_catalog.selection.whatsapp_message.closing_remark', 'Pouvez-vous me donner plus d\'informations ?'),
+    websiteReference: t('analyses_catalog.selection.whatsapp_message.website_reference', 'SÃ©lection faite depuis le site web.')
+  };
+
+  // Laboratory WhatsApp number is imported from constants file
+  
+  // Function to generate WhatsApp message
+  const generateWhatsAppMessage = () => {
+    // Create message in current language
+    let message = `${whatsappTranslations.greeting}\n\n`;
+    message += `${whatsappTranslations.intro}\n`;
+    
+    // Add list of selected analyses
+    selectedAnalyses.forEach(analysis => {
+      const analysisName = i18n.language === 'ar' ? analysis.name_ar : analysis.name_fr;
+      message += `${whatsappTranslations.analysisItemPrefix}${analysisName}\n`;
+    });
+    
+    // Add total cost
+    message += `\n${whatsappTranslations.totalLabel} ${totalCost.toLocaleString()} ${whatsappTranslations.currency}\n\n`;
+    
+    // Add closing
+    message += `${whatsappTranslations.closingRemark}\n\n`;
+    message += whatsappTranslations.websiteReference;
+    
+    return message;
+  };
+  
+  // Handler for WhatsApp button click
+  const handleSendViaWhatsApp = () => {
+    const message = generateWhatsAppMessage();
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${LAB_WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    
+    // Open WhatsApp in a new tab
+    window.open(whatsappUrl, '_blank');
+  };
+  
+  // Only render the component if there are selected items
+  if (selectedCount === 0) return null;
+
+  return (
+    <div 
+      ref={containerRef}
+      className="floating-total-calculator"
+      dir={isRtlDirection ? 'rtl' : 'ltr'}
+      style={{
+        position: 'fixed',
+        bottom: '1rem',
+        [isRtlDirection ? 'left' : 'right']: '1rem',
+        zIndex: 40,
+        backgroundColor: 'var(--primary-bordeaux)',
+        color: 'white',
+        borderRadius: '1rem',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        padding: '0.75rem 1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: '230px',
+        maxWidth: '330px',
+        animation: 'fadeIn 0.3s ease-out forwards'
+      }}
+      title={translationsUI.tooltip}
+      aria-live="polite"
+    >
+      {/* Selected count */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.25)',
+            borderRadius: '9999px',
+            padding: '0 0.5rem',
+            marginRight: isRtlDirection ? 0 : '0.5rem',
+            marginLeft: isRtlDirection ? '0.5rem' : 0,
+            animation: 'countPulse 0.5s ease-out'
+          }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>
+              {selectedCount}
+            </span>
+          </div>
+          <span style={{ fontSize: '0.875rem', fontWeight: '500', marginLeft: '0.5rem' }}>
+            {translationsUI.selectedAnalyses}
+          </span>
+        </div>
+        
+        {/* Reset button */}
+        <button 
+          onClick={onReset}
+          style={{
+            padding: '0.375rem',
+            borderRadius: '9999px',
+            transition: 'background-color 0.2s',
+            cursor: 'pointer',
+            backgroundColor: 'transparent',
+            border: 'none',
+            color: 'white'
+          }}
+          aria-label={translationsUI.reset}
+          title={translationsUI.reset}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
+      </div>
+      
+      {/* Total cost */}
+      <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
+        <span style={{ color: 'white' }}>{translationsUI.total}:</span> 
+        <span style={{ color: 'var(--bordeaux-pale)' }}> {totalCost.toLocaleString()} {currencyLabel}</span>
+      </div>
+      
+      {/* Send via WhatsApp button */}
+      <button 
+        onClick={handleSendViaWhatsApp}
+        style={{
+          marginTop: '0.75rem',
+          padding: '0.5rem',
+          borderRadius: '0.5rem',
+          backgroundColor: 'transparent', // Transparent background
+          color: 'white',
+          border: '1px solid white', // White border
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.2s ease',
+          fontSize: '0.875rem',
+          fontWeight: '500'
+        }}  
+        aria-label={translationsUI.sendWhatsapp}
+        title={translationsUI.sendWhatsapp}
+      >
+        {/* WhatsApp Icon */}
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="16" 
+          height="16" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+          style={{ marginRight: isRtlDirection ? 0 : '0.5rem', marginLeft: isRtlDirection ? '0.5rem' : 0 }}
+        >
+          <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" />
+          <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
+          <path d="M14 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
+          <path d="M8.5 13.5a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 0-1H9a.5.5 0 0 0-.5.5Z" />
+        </svg>
+        <span>{translationsUI.sendWhatsapp}</span>
+      </button>
+      
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        /* Animation removed - using direct DOM manipulation instead */
+        
+        @keyframes countPulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.25); }
+          100% { transform: scale(1); }
+        }
+        
+        @media (min-width: 768px) {
+          .floating-total-calculator {
+            bottom: 2rem !important;
+          }
+          .floating-total-calculator[dir='rtl'] {
+            left: 2rem !important;
+          }
+          .floating-total-calculator[dir='ltr'] {
+            right: 2rem !important;
+          }
+        }
+        
+        /* WhatsApp button hover effect */
+        .floating-total-calculator button:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+          transform: translateY(-1px);
+        }
+        
+        /* Animation spÃ©ciale pour le focus des Ã©lÃ©ments interactifs */
+        .floating-total-calculator button:focus {
+          outline: 2px solid rgba(255, 255, 255, 0.6);
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+          border-radius: 9999px;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+```
+
 ## FILE: src/components/features/home/HeroBanner.tsx
 ```typescript
 import React from 'react';
@@ -1345,105 +2039,6 @@ const HeroBanner = () => {
 };
 
 export default HeroBanner;
-```
-
-## FILE: src/components/features/maps/LocationMap.tsx
-```typescript
-"use client";
-
-import React, { useEffect, useRef } from 'react';
-import type { Map } from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-interface LocationMapProps {
-  latitude: number;
-  longitude: number;
-  name: string;
-  address: string;
-}
-
-const LocationMap = ({ latitude, longitude, name, address }: LocationMapProps) => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<Map | null>(null);
-  // Generate a unique id for the map container
-  const mapContainerId = React.useMemo(() => `leaflet-map-${Math.random().toString(36).substr(2, 9)}`, []);
-
-  useEffect(() => {
-    // Only import Leaflet on the client side
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    // Dynamic import of Leaflet
-    const initializeMap = async () => {
-      if (!mapRef.current || mapInstanceRef.current) return;
-
-      // Import Leaflet dynamically
-      const L = (await import('leaflet')).default;
-      
-      // Fix Leaflet marker icon issue in Next.js
-      delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => void })._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-      });
-
-      // Remove any previous map instance attached to this container (for hot reloads or remounts)
-      if (mapRef.current && mapContainerId) {
-        try {
-          // Use Leaflet's DomUtil.get to find any existing map instance by id
-          if ((window as unknown as { L?: { DomUtil?: { get?: (id: string) => unknown } } }).L && (window as unknown as { L?: { DomUtil?: { get?: (id: string) => unknown } } }).L!.DomUtil) {
-            const container = (window as unknown as { L?: { DomUtil?: { get?: (id: string) => unknown } } }).L!.DomUtil!.get!(mapContainerId) as { _leaflet_id?: number | null } | null;
-            if (container && container._leaflet_id) {
-              // Remove the old map instance
-              container._leaflet_id = null;
-            }
-          }
-        } catch {}
-        // Remove all child nodes from the container
-        while (mapRef.current.firstChild) {
-          mapRef.current.removeChild(mapRef.current.firstChild);
-        }
-      }
-      // Create map instance
-      const map = L.map(mapRef.current).setView([latitude, longitude], 16);
-      mapInstanceRef.current = map;
-
-      // Add tile layer (OpenStreetMap)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(map);
-
-      // Add marker with popup
-      const marker = L.marker([latitude, longitude]).addTo(map);
-      marker.bindPopup(`
-        <strong>${name}</strong><br>
-        ${address}
-      `).openPopup();
-    };
-
-    initializeMap();
-
-    // Cleanup on unmount
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [latitude, longitude, name, address, mapContainerId]);
-
-  return (
-    <div className="relative w-full h-64 md:h-96 z-0">
-      <div ref={mapRef} id={mapContainerId} className="absolute inset-0" />
-    </div>
-  );
-};
-
-export default LocationMap;
-
 ```
 
 ## --- FIREBASE FUNCTIONS ---
@@ -1700,4 +2295,4 @@ export const sendAppointmentRequestEmail = onDocumentCreated(
 
 ## --- END OF CONTEXT ---
 
-## Total files included: 23
+## Total files included: 24

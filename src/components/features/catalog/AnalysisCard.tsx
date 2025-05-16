@@ -15,13 +15,43 @@ export interface Analysis {
   is_active: boolean;
 }
 
-// AnalysisCard component for displaying individual analysis information
+/**
+ * Props for the AnalysisCard component
+ * @interface AnalysisCardProps
+ * @property {Analysis} analysis - The analysis data to display
+ * @property {string} lang - The current language code ('fr' or 'ar')
+ * @property {boolean} [isSelected] - Whether this analysis is currently selected
+ * @property {Function} [onSelect] - Callback function when the analysis is selected/deselected
+ */
 interface AnalysisCardProps {
   analysis: Analysis;
   lang: string;
+  isSelected?: boolean;
+  onSelect?: (analysis: Analysis) => void;
 }
 
-export function AnalysisCard({ analysis, lang }: AnalysisCardProps) {
+export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: AnalysisCardProps) {
+  // Define animation keyframes for the check icon - client side only
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const style = document.createElement('style');
+      style.innerHTML = `
+        @keyframes appearAnimation {
+          0% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1.2); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-appear {
+          animation: appearAnimation 0.3s ease-out forwards;
+        }
+      `;
+      document.head.appendChild(style);
+
+      return () => {
+        document.head.removeChild(style);
+      };
+    }
+  }, []);
   const isArabic = lang === "ar";
   const [showPreparation, setShowPreparation] = useState(false);
   
@@ -42,12 +72,64 @@ export function AnalysisCard({ analysis, lang }: AnalysisCardProps) {
     showPreparation: isArabic ? "عرض التحضير" : "Voir Préparation",
     hidePreparation: isArabic ? "إخفاء التحضير" : "Masquer Préparation",
     preparationLabel: isArabic ? "تعليمات التحضير:" : "Instructions de préparation:",
-    noPreparation: isArabic ? "لا توجد تعليمات تحضير محددة." : "Aucune préparation spécifique."
+    noPreparation: isArabic ? "لا توجد تعليمات تحضير محددة." : "Aucune préparation spécifique.",
+    select: isArabic ? "اختيار" : "Sélectionner",
+    selected: isArabic ? "تم الاختيار" : "Sélectionné"
   };
   
+  // Handle selection
+  const handleSelectClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    if (onSelect) {
+      onSelect(analysis);
+    }
+  };
+
   return (
-    <div className="bg-white shadow-lg rounded-lg p-4 mb-4 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-      <h3 className="text-xl font-semibold text-[var(--primary-bordeaux)] mb-2">
+    <div 
+      className={`shadow-lg rounded-lg p-4 mb-4 border 
+        ${isSelected 
+          ? 'border-[var(--accent-fuchsia)] border border-opacity-80 bg-[var(--bordeaux-pale)] ring-1 ring-[var(--accent-fuchsia)] ring-opacity-40' 
+          : 'border-gray-200 bg-white hover:border-gray-300'} 
+        hover:shadow-xl transition-all duration-300 ease-in-out transform ${isSelected ? 'scale-[1.01]' : ''} relative`}
+      onClick={handleSelectClick}
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleSelectClick(e as unknown as React.MouseEvent);
+        }
+      }}
+    >
+      {/* Selection indicator - position based on language direction */}
+      <div 
+        className={`absolute top-3 ${isArabic ? 'left-3' : 'right-3'} flex items-center z-10`}
+        aria-hidden="true"
+      >
+        <div 
+          className={`w-6 h-6 rounded-full 
+            ${isSelected 
+              ? 'bg-[var(--accent-fuchsia)] shadow-md' 
+              : 'border-2 border-gray-300 bg-white hover:border-[var(--accent-fuchsia)] hover:border-opacity-50'} 
+            flex items-center justify-center transform transition-all duration-300 ease-in-out 
+            ${isSelected ? 'scale-110 rotate-3' : ''}`}
+        >
+          {isSelected ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white animate-appear" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          )}
+        </div>
+        <span className="sr-only">{isSelected ? translations.selected : translations.select}</span>
+      </div>
+      
+      <h3 className={`text-xl font-semibold mb-2 ${isSelected ? 'text-[var(--accent-fuchsia)]' : 'text-[var(--primary-bordeaux)]'} ${isArabic ? 'pl-8' : 'pr-8'} transition-colors duration-300`}>
         {isArabic ? analysis.name_ar : analysis.name_fr}
       </h3>
       

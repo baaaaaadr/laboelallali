@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe } from 'lucide-react'; 
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle } from 'lucide-react'; 
+import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
 import { supportedLngs } from '../../../i18n';
@@ -68,7 +69,7 @@ const Header = () => {
   return (
     <header className="bg-[#800020] text-white shadow-md">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between h-16">
           {/* Logo et nom */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
@@ -130,66 +131,134 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Menu mobile */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={toggleMenu}>
-          <div className={`bg-white h-full w-64 p-4 shadow-lg absolute right-0 mobile-menu-transition ${isMenuOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center">
-                <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
-                  <span className="bg-[#800020] text-white p-1 rounded text-lg font-bold mr-2">L</span>
-                  <span className="text-gray-800 font-semibold">{t('laboName')}</span>
-                </Link>
-              </div>
-              <button onClick={toggleMenu}>
-                <X size={24} className="text-gray-700" />
-              </button>
+      {/* Mobile Menu Overlay and Container */}
+      <div 
+        className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
+          isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        style={{
+          transition: isMenuOpen ? 'opacity 0.3s ease-in-out' : 'opacity 0.3s ease-in-out 0.1s'
+        }}
+      >
+        {/* Backdrop with blur effect */}
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+          style={{
+            opacity: isMenuOpen ? 1 : 0,
+            pointerEvents: isMenuOpen ? 'auto' : 'none',
+            transition: 'opacity 0.3s ease-in-out',
+            transitionDelay: isMenuOpen ? '0s' : '0.1s'
+          }}
+          onClick={toggleMenu}
+        />
+        
+        {/* Menu Panel */}
+        <div 
+          className="fixed top-0 right-0 h-full w-72 bg-white shadow-lg z-50 flex flex-col"
+          style={{
+            transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
+            opacity: isMenuOpen ? 1 : 0.7,
+            transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out',
+            transitionDelay: isMenuOpen ? '0s' : '0s',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Menu Header Section - Matches main header height */}
+          <div className="bg-[#800020] text-white h-16 flex items-center justify-between px-4">
+            <div className="flex items-center">
+              <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
+                <span className="bg-white text-[var(--primary-bordeaux)] p-1.5 rounded-md text-lg font-bold mr-3">L</span>
+                <span className="font-semibold text-lg">{t('laboName')}</span>
+              </Link>
             </div>
+            <button 
+              onClick={toggleMenu}
+              className="p-2 rounded-full hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+              aria-label={t('close_menu')}
+            >
+              <X size={24} className="text-white" />
+            </button>
+          </div>
             
-            <nav className="flex flex-col space-y-4">
-              <Link 
-                href={`${currentLanguagePath}/`} 
-                className="text-gray-800 hover:text-[#800020] transition-colors"
-                onClick={toggleMenu}
-              >
-                {t('home')}
-              </Link>
+          <nav className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto bg-white">
+            <Link 
+              href={`${currentLanguagePath}/`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <Home size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('home')}
+            </Link>
 
-              <Link 
-                href={`${currentLanguagePath}/rendez-vous`} 
-                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
-                onClick={toggleMenu}
-              >
-                {t('appointment')}
-              </Link>
-              
-              <Link 
-                href={`${currentLanguagePath}/glabo`} 
-                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
-                onClick={toggleMenu}
-              >
-                {t('glabo')}
-              </Link>
+            <Link 
+              href={`${currentLanguagePath}/rendez-vous`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <CalendarDays size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('appointment')}
+            </Link>
+            
+            <Link 
+              href={`${currentLanguagePath}/glabo`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <Truck size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('glabo')}
+            </Link>
 
-              <Link 
-                href={`${currentLanguagePath}/analyses`} 
-                className="text-gray-800 hover:text-[#800020] font-semibold transition-colors"
-                onClick={toggleMenu}
-              >
-                {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
-              </Link>
+            <Link 
+              href={`${currentLanguagePath}/analyses`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <FlaskConical size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
+            </Link>
 
-              <Link 
-                href={`${currentLanguagePath}/contact`} 
-                className="text-gray-800 hover:text-[#800020] transition-colors"
-                onClick={toggleMenu}
-              >
-                {t('contact')}
-              </Link>
-            </nav>
+            <Link 
+              href={`${currentLanguagePath}/contact`} 
+              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-slate-700 hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              onClick={toggleMenu}
+            >
+              <Phone size={20} className="mr-3 text-slate-500 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+              {t('contact')}
+            </Link>
+          </nav>
+            
+          {/* Footer with WhatsApp button and language switcher */}
+          <div className="p-4 border-t border-gray-200 bg-white">
+            {/* WhatsApp Contact Button */}
+            <a 
+              href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={toggleMenu}
+              className="w-full flex items-center justify-center text-sm px-3 py-2.5 rounded-md transition-colors mb-3 bg-green-600 text-white hover:bg-green-700 focus:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-700"
+              aria-label="Contact via WhatsApp"
+            >
+              <MessageCircle size={18} className="mr-2" />
+              {t('contact')} WhatsApp
+            </a>
+            
+            {/* Language Switcher Button */}
+            <button 
+              onClick={() => {
+                handleLanguageChange();
+                toggleMenu();
+              }} 
+              className="w-full flex items-center justify-center text-sm px-3 py-2.5 rounded-md transition-colors bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
+              aria-label={t('changeLanguage')}
+            >
+              <Globe size={18} className="mr-2" />
+              {t('currentLanguage')}
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 };
