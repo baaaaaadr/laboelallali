@@ -65,18 +65,20 @@ export default function PWAInstallButton({
     if (typeof window === 'undefined') return;
 
     const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the default prompt
       e.preventDefault();
-      console.log('>>> PWA: beforeinstallprompt event captured');
+      console.log('>>> PWA: beforeinstallprompt event captured', e);
       
       // Store the event
       const installEvent = e as BeforeInstallPromptEvent;
       setInstallPromptEvent(installEvent);
       
-      // For debugging
+      // For debugging and global access
       window.deferredPrompt = installEvent;
       
-      // If this is a popup, show it now
-      if (variant === 'popup') {
+      // Automatically show the popup when the prompt is available
+      // This ensures the user sees our custom UI
+      if (variant === 'popup' && !isAppInstalled) {
         setShowPopup(true);
       }
     };

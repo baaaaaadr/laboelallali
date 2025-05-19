@@ -1,89 +1,80 @@
 // Service Worker for LaboElAllali PWA
-const CACHE_NAME = 'laboelallali-v1';
-const urlsToCache = [
-  '/',
-  '/_next/static/css',
-  '/_next/static/chunks',
-  '/images/icons/icon-192x192.png',
-  '/images/icons/icon-512x512.png',
-  '/manifest.json'
-];
+const CACHE_NAME = 'laboelallali-v2';
+const OFFLINE_PAGE = '/offline.html';
 
 // Install event - cache the application shell
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...');
-  
-  // Perform install steps
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Service Worker: Caching app shell');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(self.skipWaiting());
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   console.log('Service Worker: Activating...');
-  
-  // Remove previous cached data if any
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('Service Worker: Clearing old cache');
-            return caches.delete(cache);
-          }
-        })
-      );
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => {
+            console.log('Service Worker: Removing old cache', name);
+            return caches.delete(name);
+          })
+      ).then(() => self.clients.claim());
     })
   );
-  
-  return self.clients.claim();
 });
 
-// Fetch event - serve from cache, falling back to network
+// Fetch event - cache first, then network
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests, like those for Google Analytics
-  if (!event.request.url.startsWith(self.location.origin)) {
+  // Skip non-GET requests and cross-origin requests
+  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Cache hit - return response
-      if (response) {
-        return response;
-      }
-      
-      // Clone the request
-      const fetchRequest = event.request.clone();
-      
-      return fetch(fetchRequest).then((response) => {
-        // Check if we received a valid response
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+  // Skip chrome-extension and dev tools
+  if (event.request.url.includes('chrome-extension://') || 
+      event.request.url.includes('sockjs-node') || 
+      event.request.url.includes('__webpack_hmr')) {
+    return;
+  }
+
+  // For navigation requests, try network first, then cache, then offline page
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // If we got a valid response, cache it
+          if (response.status === 200 || response.status === 0) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
           return response;
+        })
+        .catch(() => {
+          // If network fails, try cache
+          return caches.match(event.request)
+            .then((response) => response || caches.match(OFFLINE_PAGE));
+        })
+    );
+    return;
+  }
+
+  // For other requests, try cache first, then network
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      return cachedResponse || fetch(event.request).then((response) => {
+        // If we got a valid response, cache it
+        if (response && (response.status === 200 || response.status === 0)) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        
-        // Clone the response
-        const responseToCache = response.clone();
-        
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        
         return response;
       });
     })
   );
-});
-
-// Listen for the 'beforeinstallprompt' event
-self.addEventListener('beforeinstallprompt', (event) => {
-  console.log('Service Worker: beforeinstallprompt event fired');
-  // Don't prevent the default prompt
-  // The browser will handle the prompt
 });

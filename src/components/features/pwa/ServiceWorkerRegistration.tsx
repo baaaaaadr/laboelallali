@@ -4,11 +4,16 @@ import { useEffect } from 'react';
 
 const ServiceWorkerRegistration = () => {
   useEffect(() => {
-    // Only run in production or when explicitly enabled in development
-    if (process.env.NODE_ENV !== 'production' && !process.env.NEXT_PUBLIC_ENABLE_PWA_DEV) {
-      console.log('>>> PWA: Service worker registration is disabled in development');
+    // Check if we're in development and PWA is not explicitly enabled
+    const isDev = process.env.NODE_ENV !== 'production';
+    const enableInDev = process.env.NEXT_PUBLIC_ENABLE_PWA_DEV === 'true';
+    
+    if (isDev && !enableInDev) {
+      console.log('>>> PWA: Service worker registration is disabled in development. Set NEXT_PUBLIC_ENABLE_PWA_DEV=true to enable.');
       return;
     }
+    
+    console.log('>>> PWA: Registering service worker...', { isDev, enableInDev });
 
     if ('serviceWorker' in navigator) {
       console.log('>>> PWA: Registering service worker...');

@@ -37,7 +37,7 @@ const clientSideFallbackConfig: FirebaseOptions = {
 // Log current config values
 console.log("[firebase.ts] Firebase config values:", {
   apiKey: firebaseConfig.apiKey ? "DEFINED" : "UNDEFINED",
-  projectId: firebaseConfig.projectId,
+  projectId: firebaseConfig.projectId || clientSideFallbackConfig.projectId,
   appId: firebaseConfig.appId ? "DEFINED" : "UNDEFINED",
 });
 
