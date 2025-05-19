@@ -95,6 +95,23 @@
   "faq": "Questions fréquentes",
   "rights_reserved": "Tous droits réservés",
   
+  "pwa": {
+    "install_app_title": "Installer l'application",
+    "install_app_button": "Installer l'App",
+    "install_banner_text": "Installez notre application pour un accès rapide !",
+    "install_now": "Installer",
+    "install_popup_title": "Installer l'application LaboElAllali ?",
+    "install_popup_description": "Obtenez une expérience optimisée et un accès rapide à nos services en installant l'application sur votre appareil.",
+    "install_confirm": "Oui, Installer",
+    "later": "Plus tard",
+    "dismiss_popup_aria": "Fermer ce message",
+    "ios_install_prompt_part1": "Pour un accès facile, ajoutez-nous à l'écran d'accueil :",
+    "ios_install_prompt_part2": "Appuyez sur",
+    "ios_install_prompt_part3": "puis 'Sur l'écran d'accueil'.",
+    "ios_share_alt": "l'icône Partager",
+    "dismiss_banner_aria": "Fermer le bandeau d'installation"
+  },
+  
   "analyses_catalog": {
     "selection": {
       "count_zero": "{{count}} analyse sélectionnée",

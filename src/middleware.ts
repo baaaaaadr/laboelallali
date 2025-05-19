@@ -11,13 +11,30 @@ export const config = {
     // Appliquer uniquement aux chemins qui n'incluent PAS déjà une locale supportée,
     // qui ne sont pas des chemins pour des assets statiques ou l'API Next.js,
     // et qui ne ressemblent pas à des chemins de fichiers avec une extension.
-    '/((?!api|_next/static|_next/image|images|assets|favicon.ico|sw.js|locales|(?:[^/]+/)*?[^/]+\.\w+).*)'
+    // Exclure manifest.json car on le gère séparément
+    '/((?!api|_next/static|_next/image|images|assets|favicon.ico|sw.js|locales|manifest.json|(?:[^/]+/)*?[^/]+\.\w+).*)'
   ],
 };
+
+// Fonction pour gérer les requêtes vers manifest.json
+function handleManifestRequest(req: NextRequest) {
+  const url = req.nextUrl.clone();
+  // Si la requête est pour /fr/manifest.json, on la redirige vers /manifest.json
+  if (url.pathname.endsWith('/manifest.json')) {
+    url.pathname = '/manifest.json';
+    return NextResponse.rewrite(url);
+  }
+  return null;
+}
 
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   let lng: string | undefined | null = null;
+
+  // Gérer les requêtes vers manifest.json
+  if (pathname.endsWith('/manifest.json')) {
+    return handleManifestRequest(req);
+  }
 
   // Vérifier si le chemin actuel contient déjà une locale supportée
   const pathnameHasLocale = supportedLngs.some(

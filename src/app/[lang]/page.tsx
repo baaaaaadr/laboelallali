@@ -1,17 +1,31 @@
 "use client";
 
-import HeroBanner from '@/components/features/home/HeroBanner';
+import React, { useState, useEffect, Suspense } from 'react';
+import dynamic from 'next/dynamic';
+import { useTranslation } from 'react-i18next';
+import Link from 'next/link';
 import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, HomeIcon, Info, MapPin, ChevronRight } from 'lucide-react';
+
+// Components
+import HeroBanner from '@/components/features/home/HeroBanner';
 import { 
   LAB_NAME, 
   LAB_ADDRESS, 
   LAB_COORDINATES, 
   LAB_CONTACT
 } from '@/constants/contact';
-import Link from 'next/link';
-import React, { useEffect, Suspense } from "react";
-import dynamic from 'next/dynamic';
-import { useTranslation } from 'react-i18next';
+
+// Type for PWAInstallButton props
+type PWAInstallButtonProps = {
+  variant: 'button' | 'banner' | 'popup';
+  onPopupDismiss?: () => void;
+};
+
+// Dynamically import PWA components with SSR disabled
+const PWAInstallButton = dynamic<PWAInstallButtonProps>(
+  () => import('@/components/features/pwa/PWAInstallButton'),
+  { ssr: false }
+);
 
 // Dynamically import the map component with SSR disabled
 const LocationMap = dynamic(
@@ -30,8 +44,11 @@ export default function HomePage({
   const resolvedParams = 'then' in params ? React.use(params) : params;
   
   // Log the language for debugging
-  console.log(`Page rendered for language: ${resolvedParams.lang}`);
-  const { t, i18n } = useTranslation('common');
+  console.log(`Page rendered for language: resolvedParams.lang`);
+  
+  // Get translation function and i18n instance
+  const { t } = useTranslation('common');
+  const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
   
   // Get translated lab name and address
@@ -63,10 +80,51 @@ export default function HomePage({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // State for controlling the install popup
+  const [showInstallPopup, setShowInstallPopup] = useState(false);
+
+  // Show install popup after a delay if conditions are met
+  useEffect(() => {
+    // Only run on client-side
+    if (typeof window === 'undefined') return;
+
+    // Check if popup was dismissed before
+    const popupDismissed = localStorage.getItem('pwaInstallPopupDismissed');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+
+    if (!popupDismissed && !isIOS) {
+      const timer = setTimeout(() => {
+        // Check if the PWA installation is available
+        const isPWAInstalled = window.matchMedia('(display-mode: standalone)').matches;
+        const hasInstallPrompt = !!(window as any).deferredInstallPrompt;
+        
+        if (!isPWAInstalled && hasInstallPrompt) {
+          setShowInstallPopup(true);
+          console.log('>>> PWA: Showing install popup');
+        }
+      }, 7000); // Show after 7 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handlePopupDismiss = () => {
+    localStorage.setItem('pwaInstallPopupDismissed', 'true');
+    setShowInstallPopup(false);
+    console.log('>>> PWA: Install popup dismissed by user');
+  };
+
   return (
     <>
       {/* Hero Banner - Now truly full width with no constraints */}
       <HeroBanner />
+      
+      {/* PWA Install Button - Centered below hero banner */}
+      <div className="container mx-auto px-4 py-6 text-center">
+        <div className="inline-block">
+          <PWAInstallButton variant="button" />
+        </div>
+      </div>
       
       {/* Container for the rest of the content */}
       <div className="container mx-auto px-4 py-8 pb-12">
@@ -242,6 +300,14 @@ export default function HomePage({
           </div>
         </section>
       </div>
+      
+      {/* PWA Install Popup */}
+      {showInstallPopup && (
+        <PWAInstallButton 
+          variant="popup" 
+          onPopupDismiss={handlePopupDismiss} 
+        />
+      )}
     </>
   );
 }

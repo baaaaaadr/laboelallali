@@ -155,5 +155,22 @@
 
   "practical_info": "معلومات عملية",
   "faq": "الأسئلة الشائعة",
-  "rights_reserved": "جميع الحقوق محفوظة"
+  "rights_reserved": "جميع الحقوق محفوظة",
+  
+  "pwa": {
+    "install_app_title": "تثبيت التطبيق",
+    "install_app_button": "تثبيت التطبيق",
+    "install_banner_text": "ثبت تطبيقنا للوصول السريع!",
+    "install_now": "تثبيت الآن",
+    "install_popup_title": "هل تريد تثبيت تطبيق مختبر العلالي؟",
+    "install_popup_description": "احصل على تجربة محسنة ووصول سريع لخدماتنا عن طريق تثبيت التطبيق على جهازك.",
+    "install_confirm": "نعم، تثبيت",
+    "later": "لاحقًا",
+    "dismiss_popup_aria": "إغلاق هذه الرسالة",
+    "ios_install_prompt_part1": "لسهولة الوصول، أضفنا إلى شاشتك الرئيسية:",
+    "ios_install_prompt_part2": "اضغط على",
+    "ios_install_prompt_part3": "ثم 'إضافة إلى الشاشة الرئيسية'.",
+    "ios_share_alt": "أيقونة المشاركة",
+    "dismiss_banner_aria": "إغلاق شريط التثبيت"
+  }
 }
