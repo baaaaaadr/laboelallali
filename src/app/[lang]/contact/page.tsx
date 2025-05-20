@@ -4,7 +4,20 @@ import React from 'react';
 import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
+
+// Dynamically import SimpleMap with SSR disabled to avoid window is not defined errors
+const SimpleMap = dynamic(
+  () => import('@/components/SimpleMap'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-96 w-full flex items-center justify-center bg-gray-100 rounded-lg">
+        <MapPin size={48} className="text-gray-400" />
+        <span className="ml-2 text-gray-500">Loading map...</span>
+      </div>
+    )
+  }
+);
 import { 
   LAB_NAME, 
   LAB_ADDRESS, 
@@ -12,12 +25,6 @@ import {
   LAB_CONTACT, 
   LAB_HOURS 
 } from '@/constants/contact';
-
-// Dynamically import the map component with SSR disabled
-const LocationMap = dynamic(
-  () => import('@/components/features/maps/LocationMap'),
-  { ssr: false }
-);
 
 export default function ContactPage({ 
   params 
@@ -117,15 +124,13 @@ export default function ContactPage({
         {/* Map Section */}
         <div className="h-full">
           <div className="card h-full p-0 overflow-hidden">
-            <div className="h-64 md:h-full w-full relative">
-              <Suspense fallback={<div className="h-full flex items-center justify-center"><MapPin size={48} className="text-gray-400" /> <span className="ml-2 text-gray-500">{t('loading_map')}</span></div>}>
-                <LocationMap 
-                  latitude={LAB_COORDINATES.LATITUDE} 
-                  longitude={LAB_COORDINATES.LONGITUDE} 
-                  name={labName} 
-                  address={labAddress} 
-                />
-              </Suspense>
+            <div className="w-full" style={{ height: '400px' }}>
+              <SimpleMap 
+                latitude={30.4173116} 
+                longitude={-9.5897999} 
+                markerText={`${labName} - ${labAddress}`}
+                height="100%"
+              />
             </div>
             <div className="p-6">
               <h3 className="font-semibold text-xl mb-2">{labName}</h3>

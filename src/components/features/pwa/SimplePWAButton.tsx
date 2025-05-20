@@ -3,39 +3,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button, ButtonProps } from '@/components/ui/button';
 
-// Define the BeforeInstallPromptEvent interface
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
-
-// Extend Window interface to include deferredPrompt
-declare global {
-  interface WindowEventMap {
-    beforeinstallprompt: BeforeInstallPromptEvent;
-  }
-  
-  interface Window {
-    deferredPrompt: BeforeInstallPromptEvent | null;
-  }
-}
-
-type PWAInstallButtonProps = {
+interface SimplePWAButtonProps {
   variant?: 'button' | 'banner';
   className?: string;
-};
+}
 
-export default function PWAInstallButton({ variant = 'button', className = '' }: PWAInstallButtonProps) {
+export default function SimplePWAButton({ 
+  variant = 'button',
+  className = '' 
+}: SimplePWAButtonProps) {
   const [showButton, setShowButton] = useState(false);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const { t } = useTranslation('common');
-
+  
   // Check if the app is already installed
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -45,7 +26,6 @@ export default function PWAInstallButton({ variant = 'button', className = '' }:
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     
     if (isStandalone || (isIOS && !isSafari)) {
-      console.log('PWA: App is already installed or on iOS');
       setIsAppInstalled(true);
       setShowButton(false);
     }
@@ -55,31 +35,18 @@ export default function PWAInstallButton({ variant = 'button', className = '' }:
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // Check if the app is already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      console.log('PWA: App is already installed');
-      setIsAppInstalled(true);
-      setShowButton(false);
-      return;
-    }
-    
-    // Initialize deferredPrompt for use later to show browser install prompt.
-    window.deferredPrompt = null;
-    
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      console.log('PWA: beforeinstallprompt event fired');
       
-      // Cast the event to our custom type
-      const installEvent = e as unknown as BeforeInstallPromptEvent;
-      
-      // Stash the event so it can be triggered later
-      window.deferredPrompt = installEvent;
-      setShowButton(true);
+      // Store the event for later use
+      const event = e as any;
+      if (event.prompt && typeof event.prompt === 'function') {
+        window.deferredPrompt = event;
+        setShowButton(true);
+      }
     };
 
     const handleAppInstalled = () => {
-      console.log('PWA: App was installed');
       setIsAppInstalled(true);
       setShowButton(false);
     };
@@ -95,37 +62,20 @@ export default function PWAInstallButton({ variant = 'button', className = '' }:
 
   // Handle install button click
   const handleInstallClick = useCallback(async () => {
-    console.log('PWA: Install button clicked');
-    
-    if (!window.deferredPrompt) {
-      console.log('PWA: No install prompt available');
-      return;
-    }
+    if (!window.deferredPrompt) return;
     
     try {
-      // Show the install prompt
-      console.log('PWA: Showing install prompt');
+      await window.deferredPrompt.prompt();
+      const { outcome } = await window.deferredPrompt.userChoice;
       
-      // Trigger the prompt
-      const promptResult = await window.deferredPrompt.prompt();
-      console.log('PWA: Install prompt shown');
-      
-      // Wait for the user to make a choice
-      const choiceResult = await window.deferredPrompt.userChoice;
-      console.log(`PWA: User choice: ${choiceResult.outcome}`);
-      
-      if (choiceResult.outcome === 'accepted') {
-        console.log('PWA: User accepted the install prompt');
+      if (outcome === 'accepted') {
         setIsAppInstalled(true);
         setShowButton(false);
-      } else {
-        console.log('PWA: User dismissed the install prompt');
       }
-    } catch (error) {
-      console.error('PWA: Error showing install prompt:', error);
-    } finally {
-      // Reset the deferred prompt variable as it can only be used once
+      
       window.deferredPrompt = null;
+    } catch (error) {
+      console.error('Error showing install prompt:', error);
     }
   }, []);
 
@@ -166,4 +116,15 @@ export default function PWAInstallButton({ variant = 'button', className = '' }:
       </div>
     </div>
   );
+}
+
+// Add global type for TypeScript
+declare global {
+  interface Window {
+    // Make sure this matches the type in other files
+    deferredPrompt: {
+      prompt: () => Promise<{ outcome: 'accepted' | 'dismissed' }>;
+      userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+    } | null;
+  }
 }

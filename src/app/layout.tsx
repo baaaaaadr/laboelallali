@@ -1,11 +1,10 @@
-import type { Metadata } from 'next';
+'use client';
+
 import './globals.css';
 import EnvProvider from '@/components/EnvProvider';
 
-export const metadata: Metadata = {
-  title: 'Laboratoire El Allali',
-  description: 'Analyses médicales à Agadir.',
-};
+// Metadata is now defined in metadata.ts since this is a Client Component
+// and cannot export metadata directly
 
 export default function RootLayout({
   children,
@@ -15,6 +14,39 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning>
       <head>
+        <style jsx global>{`
+          /* Base imports for fonts */
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Public+Sans:wght@400;500;700&display=swap');
+          
+          /* Base styles */
+          html, body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          }
+          
+          /* Custom colors as CSS variables */
+          :root {
+            --primary-bordeaux: #800020;
+            --bordeaux-dark: #600018;
+            --bordeaux-light: #B84C63;
+            --bordeaux-pale: #F7E7EA;
+            --accent-fuchsia: #FF4081;
+            --fuchsia-bright: #F50057;
+            --fuchsia-light: #FF80AB;
+            --fuchsia-pale: #FFF0F5;
+            --medical-background: #FDF8F9;
+          }
+          
+          /* Custom background color */
+          .bg-bordeaux-custom {
+            background-color: #800020;
+            color: white;
+          }
+        `}</style>
+        {/* Load Tailwind CSS from CDN */}
+        <link
+          href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+          rel="stylesheet"
+        />
         {/* PWA Configuration */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#800020" />

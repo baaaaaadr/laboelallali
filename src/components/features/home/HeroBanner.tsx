@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigation } from 'lucide-react';
+import dynamic from 'next/dynamic';
 // Import useTranslation hook without type issues
 import { useTranslation as useTranslationOriginal } from 'react-i18next';
 
@@ -7,6 +8,15 @@ import { useTranslation as useTranslationOriginal } from 'react-i18next';
 const useTranslation = (ns: string) => {
   return useTranslationOriginal(ns);
 };
+
+// Import the PWA install button component with SSR disabled
+const InstallButton = dynamic<{ className?: string }>(
+  () => import('@/components/features/pwa/InstallButton').then(mod => mod.default),
+  { 
+    ssr: false,
+    loading: () => <div className="w-full h-12"></div> // Keep the layout stable while loading
+  }
+);
 
 const HeroBanner = () => {
   // Use a simpler approach without type assertions
@@ -52,6 +62,9 @@ const HeroBanner = () => {
               <Navigation size={22} className="mr-2 -ml-1" />
               {t('navigate_to_lab')}
             </a>
+            <InstallButton 
+              className="w-full h-12 bg-white text-[var(--accent-fuchsia)] hover:bg-gray-100 font-semibold rounded-lg shadow transition-colors text-center text-lg"
+            />
           </div>
         </div>
       </div>

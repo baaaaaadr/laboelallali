@@ -1,13 +1,6 @@
 "use client";
 import React from "react";
 import { MapPin, Phone, Smartphone, Mail } from "lucide-react";
-import dynamic from "next/dynamic";
-
-// Dynamically import LocationMap with SSR disabled
-const LocationMap = dynamic(
-  () => import("@/components/features/maps/LocationMap"),
-  { ssr: false }
-);
 
 
 const ContactPage = () => {
@@ -120,14 +113,9 @@ const ContactPage = () => {
         <h2 className="text-2xl font-semibold text-[var(--bordeaux-dark)] mb-4">
           Notre Emplacement
         </h2>
-        <div className="w-full h-64 md:h-80 rounded-lg border border-[var(--gray-300)] bg-[var(--gray-200)] overflow-hidden mb-4 relative">
-
-          <LocationMap
-            latitude={30.4173116}
-            longitude={-9.589799900000001}
-            name="Laboratoire El Allali"
-            address="61 bis, Rue de Marrakech, 80020 Quartier Industriel, Agadir, Maroc"
-          />
+        <div className="w-full h-64 md:h-80 rounded-lg border border-[var(--gray-300)] bg-[var(--gray-200)] overflow-hidden mb-4 relative flex items-center justify-center">
+          <MapPin size={48} className="text-gray-500" />
+          <span className="ml-2 text-gray-500">Carte non disponible</span>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 mt-2">
           <a

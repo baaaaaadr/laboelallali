@@ -96,11 +96,12 @@
   "rights_reserved": "Tous droits réservés",
   
   "pwa": {
-    "install_app_title": "Installer l'application",
+    "install_app_title": "Installer l'application du Labo",
+    "install_app_title_labo": "Installer l'application du Labo",
     "install_app_button": "Installer l'App",
     "install_banner_text": "Installez notre application pour un accès rapide !",
+    "install_popup_title": "Installer l'application du Labo ?",
     "install_now": "Installer",
-    "install_popup_title": "Installer l'application LaboElAllali ?",
     "install_popup_description": "Obtenez une expérience optimisée et un accès rapide à nos services en installant l'application sur votre appareil.",
     "install_confirm": "Oui, Installer",
     "later": "Plus tard",

@@ -21,7 +21,6 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -29,8 +28,6 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   experimental: {
-    appDir: true,
-    serverActions: true,
     optimizeCss: true,
     scrollRestoration: true,
   },
@@ -73,7 +70,8 @@ const nextConfig = {
       },
     ];
   },
-  webpack: (config, { isServer }) => {
+  webpack(config, { isServer, dev }) {
+    // Fixes npm packages that depend on `fs` module
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -81,26 +79,40 @@ const nextConfig = {
       };
     }
 
-    // Handle Leaflet CSS
-    config.module.rules.push({
-      test: /\.css$/,
-      include: /node_modules\/leaflet/,
-      use: ['style-loader', 'css-loader'],
-    });
+    // Handle CSS modules
+    const cssRules = [
+      {
+        // Apply to both .module.css and regular .css files
+        test: /\.css$/i,
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              importLoaders: 1,
+              modules: {
+                auto: true, // Auto-enable CSS modules for files ending in .module.css
+                localIdentName: dev 
+                  ? '[path][name]__[local]--[hash:base64:5]' 
+                  : '[hash:base64]',
+              },
+            },
+          },
+          'postcss-loader',
+        ],
+      },
+      // Fix for Leaflet marker icons
+      {
+        test: /\.(png|jpg|jpeg|gif|svg)$/i,
+        type: 'asset/resource',
+      },
+    ];
 
-    // SVG support
-    config.module.rules.push({
-      test: /\.svg$/i,
-      issuer: /\.[jt]sx?$/,
-      use: ['@svgr/webpack'],
-    });
+    // Add the rules to the config
+    config.module.rules.push(...cssRules);
 
+    // Important: return the modified config
     return config;
-  },
-  i18n: {
-    locales: ['fr', 'ar'],
-    defaultLocale: process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'fr',
-    localeDetection: true,
   },
 };
 

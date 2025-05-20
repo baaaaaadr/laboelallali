@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { fr, ar } from "date-fns/locale";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -25,6 +24,20 @@ const RendezVousPage = () => {
       i18n.changeLanguage(lang);
     }
   }, [lang, i18n]);
+  
+  // Load React DatePicker CSS dynamically
+  useEffect(() => {
+    // Add DatePicker CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/react-datepicker/4.15.0/react-datepicker.min.css';
+    document.head.appendChild(link);
+
+    return () => {
+      // Clean up
+      document.head.removeChild(link);
+    };
+  }, []);
   
   // Déterminer la locale de date-fns en fonction de la langue
   const dateLocale = lang === 'ar' ? ar : fr;

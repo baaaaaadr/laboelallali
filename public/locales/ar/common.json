@@ -158,11 +158,12 @@
   "rights_reserved": "جميع الحقوق محفوظة",
   
   "pwa": {
-    "install_app_title": "تثبيت التطبيق",
+    "install_app_title": "تثبيت تطبيق المختبر",
+    "install_app_title_labo": "تثبيت تطبيق المختبر",
     "install_app_button": "تثبيت التطبيق",
     "install_banner_text": "ثبت تطبيقنا للوصول السريع!",
+    "install_popup_title": "تثبيت تطبيق المختبر؟",
     "install_now": "تثبيت الآن",
-    "install_popup_title": "هل تريد تثبيت تطبيق مختبر العلالي؟",
     "install_popup_description": "احصل على تجربة محسنة ووصول سريع لخدماتنا عن طريق تثبيت التطبيق على جهازك.",
     "install_confirm": "نعم، تثبيت",
     "later": "لاحقًا",

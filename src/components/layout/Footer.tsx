@@ -12,8 +12,8 @@ import {
 } from '@/constants/contact';
 
 // Dynamically import the PWA install button with SSR disabled
-const PWAInstallButton = dynamic<{}>(
-  () => import('@/components/PWAInstallButton').then((mod) => mod.default),
+const PWAInstallButton = dynamic(
+  () => import('@/components/features/pwa/PWAInstallButton').then(mod => mod.default),
   { ssr: false }
 );
 
@@ -126,8 +126,11 @@ const Footer = () => {
                 <span>{t('contact_on_whatsapp')}</span>
               </a>
               
-              <div className="flex justify-center sm:justify-start">
-                <PWAInstallButton />
+              <div className="flex justify-center sm:justify-start mt-4">
+                <PWAInstallButton 
+                  variant="banner"
+                  className="bg-bordeaux-custom hover:bg-[#600018] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center space-x-2 transition-colors shadow-sm hover:shadow-md w-full sm:w-auto"
+                />
               </div>
             </div>
           </div>

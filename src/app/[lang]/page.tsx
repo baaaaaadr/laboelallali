@@ -1,70 +1,61 @@
-"use client";
+import { Metadata } from 'next';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import { useTranslation } from 'react-i18next';
-import Link from 'next/link';
-import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, HomeIcon, Info, MapPin, ChevronRight } from 'lucide-react';
-
-// Components
-import HeroBanner from '@/components/features/home/HeroBanner';
+// Constants
 import { 
   LAB_NAME, 
-  LAB_ADDRESS, 
-  LAB_COORDINATES, 
-  LAB_CONTACT
+  LAB_ADDRESS
 } from '@/constants/contact';
 
-// Type for PWAInstallButton props
-type PWAInstallButtonProps = {
-  variant: 'button' | 'banner' | 'popup';
-  onPopupDismiss?: () => void;
+// Import the client component
+import HomeClient from './HomeClient';
+
+type PageProps = {
+  params: { lang: string };
 };
 
-// Dynamically import PWA components with SSR disabled
-const PWAInstallButton = dynamic<PWAInstallButtonProps>(
-  () => import('@/components/features/pwa/PWAInstallButton'),
-  { ssr: false }
-);
-
-// Dynamically import the map component with SSR disabled
-const LocationMap = dynamic(
-  () => import('@/components/features/maps/LocationMap'),
-  { ssr: false }
-);
-
-// For Next.js 15.3.1, params in client components should be unwrapped with React.use()
-export default function HomePage({ 
-  params 
-}: { 
-  params: { lang: string } | Promise<{ lang: string }>
-}) {
-  // Unwrap params using React.use() to prevent hydration errors
-  // This works for both Promise<Params> and direct Params
-  const resolvedParams = 'then' in params ? React.use(params) : params;
+export async function generateMetadata({ params: { lang } }: PageProps): Promise<Metadata> {
+  // Define metadata based on language
+  const metadata = {
+    fr: {
+      title: 'Laboratoire El Allali - Analyses Médicales',
+      description: 'Laboratoire d\'analyses médicales à votre service',
+      keywords: 'laboratoire, analyses médicales, biologie médicale, El Allali',
+      og_title: 'Laboratoire El Allali',
+      og_description: 'Votre partenaire santé pour des analyses médicales fiables'
+    },
+    ar: {
+      title: 'المختبر الطبي العلالي - تحاليل طبية',
+      description: 'مختبر التحاليل الطبية في خدمتكم',
+      keywords: 'مختبر, تحاليل طبية, بيولوجيا طبية, العلالي',
+      og_title: 'المختبر الطبي العلالي',
+      og_description: 'شريككم الصحي لتحاليل طبية موثوقة'
+    }
+  };
   
+  // Get metadata for current language or default to French
+  const meta = metadata[lang as keyof typeof metadata] || metadata.fr;
+  
+  return {
+    title: meta.title,
+    description: meta.description,
+    keywords: meta.keywords,
+    openGraph: {
+      title: meta.og_title,
+      description: meta.og_description,
+      type: 'website',
+      locale: lang,
+      siteName: 'Laboratoire El Allali',
+    },
+  };
+}
+
+export default function Home({ params: { lang } }: PageProps) {
   // Log the language for debugging
-  console.log(`Page rendered for language: resolvedParams.lang`);
+  console.log(`Page rendered for language: ${lang}`);
   
-  // Get translation function and i18n instance
-  const { t } = useTranslation('common');
-  const { i18n } = useTranslation();
-  const isRTL = i18n.language === 'ar';
-  
-  // Get translated lab name and address
-  const labName = t(LAB_NAME);
-  const labAddress = t(LAB_ADDRESS);
-
-  // On peut faire un check pour savoir si le labo est ouvert actuellement
-  const currentHour = new Date().getHours();
-  const currentDay = new Date().getDay(); // 0 = Dimanche, 6 = Samedi
-  const isWeekday = currentDay > 0 && currentDay < 6;
-  const isSaturday = currentDay === 6;
-  const isSunday = currentDay === 0;
-  
-  const isOpen = (isWeekday && currentHour >= 7.5 && currentHour < 18.5) || 
-                 (isSaturday && currentHour >= 7.5 && currentHour < 18.5) ||
-                 (isSunday && currentHour >= 8 && currentHour < 18);
+  // Return the client component with the language prop
+  return <HomeClient lang={lang} />;
+}
 
   useEffect(() => {
     const handleScroll = () => {
@@ -257,16 +248,14 @@ export default function HomePage({
         <section id="contact" className="mb-12 fade-in-section">
           <h2 className="text-2xl font-bold text-[#800020] mb-6">{t('our_location')}</h2>
           <div className="card p-0 overflow-hidden">
-            <div className="bg-gray-200 relative">
-              <Suspense fallback={<div className="h-64 md:h-96 flex items-center justify-center"><MapPin size={48} className="text-gray-500" /> <span className="ml-2 text-gray-500">{t('loading_map')}</span></div>}>
-                <LocationMap 
-                  latitude={LAB_COORDINATES.LATITUDE} 
-                  longitude={LAB_COORDINATES.LONGITUDE} 
-                  name={labName} 
-                  address={labAddress} 
+              <div className="w-full" style={{ height: '400px' }}>
+                <SimpleMap 
+                  latitude={30.4173116} 
+                  longitude={-9.5897999} 
+                  markerText={`${labName} - ${labAddress}`}
+                  height="100%"
                 />
-              </Suspense>
-            </div>
+              </div>
             <div className="p-6">
               <h3 className="font-semibold text-xl mb-2">{labName}</h3>
               <p className="text-gray-600 mb-4">
