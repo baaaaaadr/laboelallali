@@ -1,10 +1,51 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet';
+import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 
-// Import Leaflet CSS
-import 'leaflet/dist/leaflet.css';
+// Dynamically import Leaflet with no SSR
+const LazyMap = dynamic(
+  () => import('leaflet').then((L) => {
+    // Fix for default marker icons
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: '/images/leaflet/marker-icon-2x.png',
+      iconUrl: '/images/leaflet/marker-icon.png',
+      shadowUrl: '/images/leaflet/marker-shadow.png',
+    });
+    
+    // Return the map component
+    return function MapComponent({ mapRef, ...props }: any) {
+      const { MapContainer, TileLayer, Marker, Popup } = require('react-leaflet');
+      return (
+        <MapContainer ref={mapRef} {...props}>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          <Marker position={[props.center[0], props.center[1]]}>
+            {props.children && <Popup>{props.children}</Popup>}
+          </Marker>
+        </MapContainer>
+      );
+    };
+  }),
+  { 
+    ssr: false,
+    loading: () => (
+      <div style={{
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f0f0f0',
+        borderRadius: '8px'
+      }}>
+        <p>Loading map...</p>
+      </div>
+    )
+  }
+);
 
 interface SimpleMapProps {
   latitude: number;
@@ -23,117 +64,51 @@ const SimpleMap: React.FC<SimpleMapProps> = ({
   className = '',
   height = '400px',
 }) => {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<LeafletMap | null>(null);
-  const markerRef = useRef<LeafletMarker | null>(null);
-  const [isClient, setIsClient] = useState(false);
+  const mapRef = React.useRef(null);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Set client-side flag
+  // Set mounted flag
   useEffect(() => {
-    setIsClient(true);
+    setIsMounted(true);
   }, []);
 
-  // Initialize map and handle updates
-  useEffect(() => {
-    if (!isClient || !mapContainerRef.current) return;
-
-    // Store the container reference in a variable to avoid null checks
-    const mapContainer = mapContainerRef.current;
-    if (!mapContainer) return;
-
-    // Dynamically import Leaflet to avoid SSR issues
-    import('leaflet').then((L_instance) => {
-      try {
-        // Fix for default marker icons
-        // @ts-ignore
-        delete L_instance.Icon.Default.prototype._getIconUrl;
-        L_instance.Icon.Default.mergeOptions({
-          iconRetinaUrl: '/images/leaflet/marker-icon-2x.png',
-          iconUrl: '/images/leaflet/marker-icon.png',
-          shadowUrl: '/images/leaflet/marker-shadow.png',
-        });
-
-        // Initialize map if not already done
-        if (!mapRef.current) {
-          const mapInstance = L_instance.map(mapContainer, {
-            center: [latitude, longitude],
-            zoom: zoom,
-            zoomControl: true,
-          });
-
-          // Add OpenStreetMap tile layer
-          L_instance.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19,
-          }).addTo(mapInstance);
-
-          // Store map instance
-          mapRef.current = mapInstance;
-        } else {
-          // Update map view if coordinates change
-          mapRef.current.setView([latitude, longitude], zoom);
-        }
-
-        // Add or update marker
-        if (mapRef.current) {
-          if (markerRef.current) {
-            markerRef.current.setLatLng([latitude, longitude]);
-          } else {
-            markerRef.current = L_instance.marker([latitude, longitude]).addTo(mapRef.current);
-          }
-
-          // Handle popup
-          if (markerText && markerRef.current) {
-            markerRef.current.bindPopup(markerText).openPopup();
-          } else if (markerRef.current) {
-            markerRef.current.unbindPopup();
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing map:', error);
-      }
-    }).catch(error => {
-      console.error('Failed to load Leaflet:', error);
-    });
-
-    // Handle window resize
-    const handleResize = () => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
-    };
-
-    // Add resize listener
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      
-      // Cleanup map on unmount if needed
-      // if (mapRef.current) {
-      //   mapRef.current.remove();
-      //   mapRef.current = null;
-      //   markerRef.current = null;
-      // }
-    };
-  }, [isClient, latitude, longitude, zoom, markerText]);
-
-  // Handle container classes and inline styles
-  const containerStyle: React.CSSProperties = {
-    height: height,
-    width: '100%',
-    borderRadius: '8px',
-    overflow: 'hidden',
-  };
+  if (!isMounted) {
+    return (
+      <div 
+        className={className} 
+        style={{ 
+          height: typeof height === 'number' ? `${height}px` : height,
+          backgroundColor: '#f0f0f0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '8px'
+        }}
+      >
+        <p>Loading map...</p>
+      </div>
+    );
+  }
 
   return (
     <div 
-      ref={mapContainerRef} 
-      style={containerStyle}
-      className={`leaflet-container ${className}`}
-      aria-label="Interactive map"
-    />
+      className={className} 
+      style={{ 
+        height: typeof height === 'number' ? `${height}px` : height,
+        borderRadius: '8px',
+        overflow: 'hidden',
+      }}
+    >
+      <LazyMap 
+        center={[latitude, longitude]}
+        zoom={zoom}
+        style={{ height: '100%', width: '100%' }}
+        zoomControl={true}
+        ref={mapRef}
+      >
+        {markerText}
+      </LazyMap>
+    </div>
   );
 };
 

@@ -6,7 +6,7 @@ $outputFile = "context_for_ai.txt"
 $fileSizeLimit = 102400  # 100KB limit for file size
 
 # Counter for tracking total files
-$totalFilesIncluded = 0
+$script:totalFilesIncluded = 0 # Use script scope for global-like access within functions
 
 # Start with a fresh file
 "# Laboratoire El Allali PWA - AI Context - $(Get-Date)" | Out-File -FilePath $outputFile -Encoding utf8
@@ -19,7 +19,7 @@ $totalFilesIncluded = 0
 # Function to process files with appropriate syntax highlighting
 function Add-FileToContext($filePath, $defaultLangHint = "", $sectionName = "") {
     $fullPath = Join-Path -Path $projectDir -ChildPath $filePath
-    if (Test-Path -Path $fullPath) {
+    if (Test-Path -Path $fullPath -PathType Leaf) { # Ensure it's a file
         # Skip large files
         $fileInfo = Get-Item -Path $fullPath
         if ($fileInfo.Length -gt $fileSizeLimit) {
@@ -73,7 +73,7 @@ $coreConfigFiles = @(
     ".firebaserc",
     "firestore.rules",
     "storage.rules",
-    "i18n.ts"
+    "i18n.ts" # Assuming this is in the project root
 )
 
 # Process core config files
@@ -115,56 +115,93 @@ foreach ($filePath in $sampleLocaleFiles) {
     Add-FileToContext $filePath "json"
 }
 
-# --- Section 4: Automatically find app routes/pages ---
+# --- Section 4: App Routes and Pages ---
 $script:currentSection = "APP ROUTES AND PAGES"
 "`n## --- $script:currentSection ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
 
-# These are the essential files that should always be included
-$essentialRouteFiles = @(
-    "src/app/globals.css",
-    "src/app/[lang]/layout.tsx",
-    "src/app/[lang]/page.tsx"
-)
+# 1. Add globals.css (not language-specific)
+Add-FileToContext "src/app/globals.css"
 
-# Process essential app files first
-foreach ($filePath in $essentialRouteFiles) {
-    Add-FileToContext $filePath
+# 2. Find essential layout.tsx and page.tsx within each language directory
+$appLangBasePath = Join-Path -Path $projectDir -ChildPath "src/app"
+if (Test-Path -Path $appLangBasePath -PathType Container) {
+    Get-ChildItem -Path $appLangBasePath -Directory | ForEach-Object {
+        $langDirName = $_.Name
+        # Basic check for plausible lang directory (e.g., 2-3 chars, or matches your supportedLngs if you want to be stricter)
+        # You could add a filter here: if ("fr", "ar" -contains $langDirName) { ... }
+        # For now, we'll assume any direct subdirectory under src/app is a language folder if it contains layout.tsx or page.tsx
+        
+        $layoutPath = "src/app/$langDirName/layout.tsx"
+        $pagePath = "src/app/$langDirName/page.tsx"
+        
+        # Only try to add if they actually exist to avoid "NOT FOUND" for other non-lang folders in src/app
+        if (Test-Path (Join-Path -Path $projectDir -ChildPath $layoutPath) -PathType Leaf) {
+            Add-FileToContext $layoutPath
+        } else {
+            # Output a (NOT FOUND) only if we expect it, e.g., if $langDirName is 'fr' or 'ar'
+            if ("fr", "ar" -contains $langDirName) { # Adjust "fr", "ar" to your actual language codes
+                 "`n## FILE: $layoutPath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
+            }
+        }
+        
+        if (Test-Path (Join-Path -Path $projectDir -ChildPath $pagePath) -PathType Leaf) {
+            Add-FileToContext $pagePath
+        } else {
+            if ("fr", "ar" -contains $langDirName) { # Adjust "fr", "ar" to your actual language codes
+                "`n## FILE: $pagePath (NOT FOUND)" | Out-File -FilePath $outputFile -Append -Encoding utf8
+            }
+        }
+    }
+} else {
+    Write-Warning "Base app directory not found: $appLangBasePath. Cannot find language-specific layouts and pages."
 }
 
-# Auto-discover additional pages (but limit the count for context size)
-$pagesPath = Join-Path -Path $projectDir -ChildPath "src/app/[lang]"
-if (Test-Path -Path $pagesPath) {
-    $maxPageFiles = 5 # Limit to the first 5 page files (to avoid context bloat)
-    $pageCount = 0
-    
-    Get-ChildItem -Path $pagesPath -Recurse -Include "*.tsx", "*.ts", "*.jsx", "*.js" |
-    Where-Object { $_.Name -ne "layout.tsx" -and $pageCount -lt $maxPageFiles } |
-    ForEach-Object {
-        $relativePath = $_.FullName.Substring($projectDir.Length + 1).Replace("\", "/")
-        if (Add-FileToContext $relativePath) {
-            $pageCount++
+# 3. Auto-discover additional pages (iterating through language directories)
+$maxPageFilesPerLang = 3 # Limit to a few other page files per language
+
+if (Test-Path -Path $appLangBasePath -PathType Container) {
+    Get-ChildItem -Path $appLangBasePath -Directory | ForEach-Object {
+        $langDir = $_ # This is a DirectoryInfo object for the language folder (e.g., 'fr', 'ar')
+        # Again, consider filtering for actual language directories if needed
+        # if ("fr", "ar" -notcontains $langDir.Name) { return } 
+
+        $currentLangPagesPath = $langDir.FullName
+        $pageCountInLang = 0
+        
+        # Get pages, excluding layout.tsx and page.tsx as they are handled above
+        Get-ChildItem -Path $currentLangPagesPath -Recurse -File -Include "*.tsx", "*.ts", "*.jsx", "*.js" |
+        Where-Object { 
+            $_.Name -ne "layout.tsx" -and $_.Name -ne "page.tsx" -and $pageCountInLang -lt $maxPageFilesPerLang 
+        } |
+        ForEach-Object {
+            $relativePath = $_.FullName.Substring($projectDir.Length + 1).Replace("\", "/")
+            if (Add-FileToContext $relativePath) {
+                $pageCountInLang++
+            }
         }
     }
 }
 
 # --- Section 5: Auto-discover components by categories ---
 $componentsBasePath = Join-Path -Path $projectDir -ChildPath "src/components"
-if (Test-Path -Path $componentsBasePath) {
+if (Test-Path -Path $componentsBasePath -PathType Container) {
     $componentCategories = @(
         @{Path = "layout"; Name = "LAYOUT COMPONENTS"; Limit = 3},
         @{Path = "providers"; Name = "PROVIDER COMPONENTS"; Limit = 2},
-        @{Path = "features"; Name = "FEATURE COMPONENTS"; Limit = 3},
+        @{Path = "features"; Name = "FEATURE COMPONENTS"; Limit = 5}, # Increased limit for features
         @{Path = "ui"; Name = "UI COMPONENTS"; Limit = 3}
     )
 
     foreach ($category in $componentCategories) {
         $categoryPath = Join-Path -Path $componentsBasePath -ChildPath $category.Path
-        if (Test-Path -Path $categoryPath) {
-            $script:currentSection = $category.Name
-            "`n## --- $script:currentSection ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
-            
+        if (Test-Path -Path $categoryPath -PathType Container) {
+            # Set section for the category
+            $script:currentSection = "" # Reset to ensure new section header is printed
+            Add-FileToContext "" "" $category.Name # Call with empty file to print section header
+
             $componentCount = 0
-            Get-ChildItem -Path $categoryPath -Recurse -Include "*.tsx", "*.ts", "*.jsx", "*.js" |
+            Get-ChildItem -Path $categoryPath -Recurse -File -Include "*.tsx", "*.ts", "*.jsx", "*.js" |
+            Sort-Object Name | # Optional: sort for consistency
             Where-Object { $componentCount -lt $category.Limit } |
             ForEach-Object {
                 $relativePath = $_.FullName.Substring($projectDir.Length + 1).Replace("\", "/")
@@ -177,8 +214,9 @@ if (Test-Path -Path $componentsBasePath) {
 }
 
 # --- Section 6: Firebase Functions ---
-$script:currentSection = "FIREBASE FUNCTIONS"
-"`n## --- $script:currentSection ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
+# Set section for Firebase Functions
+$script:currentSection = "" # Reset to ensure new section header is printed
+Add-FileToContext "" "" "FIREBASE FUNCTIONS" # Call with empty file to print section header
 
 $functionsFiles = @(
     "functions/src/index.ts",
@@ -193,5 +231,4 @@ foreach ($filePath in $functionsFiles) {
 "`n## Total files included: $script:totalFilesIncluded" | Out-File -FilePath $outputFile -Append -Encoding utf8
 
 Write-Host "AI Context file generated at: $outputFile"
-Write-Host "Context includes $script:totalFilesIncluded files (skipping files larger than 100KB)"
-Write-Host "Context is now auto-discovering new pages and components as your project grows"
+Write-Host "Context includes $script:totalFilesIncluded files (skipping files larger than $($fileSizeLimit / 1024)KB)"

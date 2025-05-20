@@ -22,7 +22,7 @@ export default function PWAComponents() {
   const [isClient, setIsClient] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [showInstallButton, setShowInstallButton] = useState(false);
+  const [showInstallButton, setShowInstallButton] = useState(process.env.NODE_ENV === 'development');
 
   useEffect(() => {
     // Only run on client side and only once
@@ -75,7 +75,8 @@ export default function PWAComponents() {
   }, []);
 
   // Only render PWA components on the client side and if not in standalone mode
-  if (!isClient || isStandalone) {
+  // However, always render in development mode for testing
+  if ((!isClient || isStandalone) && process.env.NODE_ENV !== 'development') {
     console.log(`>>> PWA: Not rendering PWA components. isClient: ${isClient}, isStandalone: ${isStandalone}`);
     return null;
   }
@@ -86,12 +87,7 @@ export default function PWAComponents() {
     <>
       <ServiceWorkerRegistration />
       {isIOS && <IOSInstallBanner />}
-      {showInstallButton && (
-        <PWAInstallButton 
-          variant="button" 
-          className="fixed bottom-4 right-4 z-50 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
-        />
-      )}
+      {/* Le bouton flottant a été supprimé */}
     </>
   );
 }

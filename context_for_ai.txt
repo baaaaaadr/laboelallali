@@ -1,4 +1,4 @@
-﻿# Laboratoire El Allali PWA - AI Context - 05/20/2025 12:14:21
+﻿# Laboratoire El Allali PWA - AI Context - 05/20/2025 20:44:14
 
 ## --- PROJECT OVERVIEW ---
 Laboratoire El Allali - Medical laboratory website in Agadir, Morocco
@@ -63,7 +63,13 @@ Built with Next.js App Router, TypeScript, Tailwind CSS, i18n (fr, ar), and Fire
     "eslint-config-next": "15.3.1",
     "fs-extra": "^11.2.0",
     "next-sitemap": "^4.2.3",
+    "playwright": "^1.52.0",
     "postcss": "^8.5.3",
+    "postcss-import": "^16.1.0",
+    "postcss-loader": "^8.1.1",
+    "postcss-nested": "^7.0.2",
+    "postcss-nesting": "^13.0.1",
+    "postcss-preset-env": "^10.1.6",
     "style-loader": "^4.0.0",
     "tailwindcss": "^4.1.5",
     "typescript": "^5"
@@ -146,21 +152,48 @@ const nextConfig = {
       },
     ];
   },
-  webpack: (config) => {
-    // Use the existing CSS processing for most CSS files
-    // but keep style-loader for specific use cases
-    config.module.rules.push({
-      test: /leaflet\.css$/,
-      use: ['style-loader', 'css-loader'],
-    });
+  webpack(config, { isServer, dev }) {
+    // Fixes npm packages that depend on `fs` module
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
 
-    // SVG support
-    config.module.rules.push({
-      test: /\.svg$/i,
-      issuer: /\.[jt]sx?$/,
-      use: ['@svgr/webpack'],
-    });
+    // Handle CSS modules
+    const cssRules = [
+      {
+        // Apply to both .module.css and regular .css files
+        test: /\.css$/i,
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              importLoaders: 1,
+              modules: {
+                auto: true, // Auto-enable CSS modules for files ending in .module.css
+                localIdentName: dev 
+                  ? '[path][name]__[local]--[hash:base64:5]' 
+                  : '[hash:base64]',
+              },
+            },
+          },
+          'postcss-loader',
+        ],
+      },
+      // Fix for Leaflet marker icons
+      {
+        test: /\.(png|jpg|jpeg|gif|svg)$/i,
+        type: 'asset/resource',
+      },
+    ];
 
+    // Add the rules to the config
+    config.module.rules.push(...cssRules);
+
+    // Important: return the modified config
     return config;
   },
 };
@@ -601,11 +634,12 @@ export default initServerI18next;
   "rights_reserved": "Tous droits rÃ©servÃ©s",
   
   "pwa": {
-    "install_app_title": "Installer l'application",
+    "install_app_title": "Installer l'application du Labo",
+    "install_app_title_labo": "Installer l'application du Labo",
     "install_app_button": "Installer l'App",
     "install_banner_text": "Installez notre application pour un accÃ¨s rapide !",
+    "install_popup_title": "Installer l'application du Labo ?",
     "install_now": "Installer",
-    "install_popup_title": "Installer l'application LaboElAllali ?",
     "install_popup_description": "Obtenez une expÃ©rience optimisÃ©e et un accÃ¨s rapide Ã  nos services en installant l'application sur votre appareil.",
     "install_confirm": "Oui, Installer",
     "later": "Plus tard",
@@ -804,11 +838,12 @@ export default initServerI18next;
   "rights_reserved": "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ‚ Ù…Ø­ÙÙˆØ¸Ø©",
   
   "pwa": {
-    "install_app_title": "ØªØ«Ø¨ÙŠØª Ø§Ù„ØªØ·Ø¨ÙŠÙ‚",
+    "install_app_title": "ØªØ«Ø¨ÙŠØª ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ù…Ø®ØªØ¨Ø±",
+    "install_app_title_labo": "ØªØ«Ø¨ÙŠØª ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ù…Ø®ØªØ¨Ø±",
     "install_app_button": "ØªØ«Ø¨ÙŠØª Ø§Ù„ØªØ·Ø¨ÙŠÙ‚",
     "install_banner_text": "Ø«Ø¨Øª ØªØ·Ø¨ÙŠÙ‚Ù†Ø§ Ù„Ù„ÙˆØµÙˆÙ„ Ø§Ù„Ø³Ø±ÙŠØ¹!",
+    "install_popup_title": "ØªØ«Ø¨ÙŠØª ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ù…Ø®ØªØ¨Ø±ØŸ",
     "install_now": "ØªØ«Ø¨ÙŠØª Ø§Ù„Ø¢Ù†",
-    "install_popup_title": "Ù‡Ù„ ØªØ±ÙŠØ¯ ØªØ«Ø¨ÙŠØª ØªØ·Ø¨ÙŠÙ‚ Ù…Ø®ØªØ¨Ø± Ø§Ù„Ø¹Ù„Ø§Ù„ÙŠØŸ",
     "install_popup_description": "Ø§Ø­ØµÙ„ Ø¹Ù„Ù‰ ØªØ¬Ø±Ø¨Ø© Ù…Ø­Ø³Ù†Ø© ÙˆÙˆØµÙˆÙ„ Ø³Ø±ÙŠØ¹ Ù„Ø®Ø¯Ù…Ø§ØªÙ†Ø§ Ø¹Ù† Ø·Ø±ÙŠÙ‚ ØªØ«Ø¨ÙŠØª Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù„Ù‰ Ø¬Ù‡Ø§Ø²Ùƒ.",
     "install_confirm": "Ù†Ø¹Ù…ØŒ ØªØ«Ø¨ÙŠØª",
     "later": "Ù„Ø§Ø­Ù‚Ù‹Ø§",
@@ -828,6 +863,9 @@ export default initServerI18next;
 ## FILE: src/app/globals.css
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Public+Sans:wght@400;500;700&display=swap');
+
+/* Import Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
 
 @import "tailwindcss";
 
@@ -1049,11 +1087,1040 @@ html, body {
 }
 ```
 
-## FILE: src/app/[lang]/layout.tsx (NOT FOUND)
+## FILE: src/app/contact/page.tsx
+```typescript
+"use client";
+import React from "react";
+import { MapPin, Phone, Smartphone, Mail } from "lucide-react";
 
-## FILE: src/app/[lang]/page.tsx (NOT FOUND)
 
-## --- LAYOUT COMPONENTS ---
+const ContactPage = () => {
+  return (
+    <main className="p-4 md:p-8 bg-[var(--medical-background)] min-h-screen flex flex-col items-center">
+      <div className="w-full max-w-4xl mx-auto">
+
+      <h1 className="text-[var(--primary-bordeaux)] text-2xl font-bold mb-4">
+        Nous Contacter et Informations du Laboratoire
+      </h1>
+      <section className="mt-8">
+        <h2 className="text-2xl font-semibold text-[var(--bordeaux-dark)] mb-4">
+          CoordonnÃ©es du Laboratoire
+        </h2>
+        <div className="space-y-4 bg-white rounded-xl shadow p-6 border border-[var(--gray-200)] max-w-xl">
+          <a
+            href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center text-base text-[var(--gray-800)] hover:text-[var(--primary-bordeaux)] transition-colors group"
+          >
+            <span className="mr-2 text-[var(--primary-bordeaux)]">
+              <MapPin size={20} />
+            </span>
+            <span>
+              <strong>Adresse :</strong> 61 Bis, Rue de Marrakech, 80020, Agadir
+            </span>
+          </a>
+          <a
+            href="tel:0528843384"
+            className="flex items-center text-base text-[var(--gray-800)] hover:text-[var(--primary-bordeaux)] transition-colors group"
+          >
+            <span className="mr-2 text-[var(--primary-bordeaux)]">
+              <Phone size={20} />
+            </span>
+            <span>
+              <strong>Fixe :</strong> 0528843384
+            </span>
+          </a>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center text-base text-[var(--gray-800)] gap-2">
+              <span className="mr-2 text-[var(--accent-fuchsia)]">
+                <Smartphone size={20} />
+              </span>
+              <strong>WhatsApp :</strong>
+              <a
+                href="https://wa.me/2120634293900"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold btn-primary shadow hover:scale-105 transition-transform text-white"
+                style={{ background: 'var(--accent-fuchsia)' }}
+              >
+                0634293900
+              </a>
+              <a
+                href="https://wa.me/2120707291873"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-semibold btn-primary shadow hover:scale-105 transition-transform text-white"
+                style={{ background: 'var(--accent-fuchsia)' }}
+              >
+                0707291873
+              </a>
+            </div>
+            <a
+              href="tel:0664727681"
+              className="flex items-center text-base text-[var(--gray-800)] hover:text-[var(--accent-fuchsia)] transition-colors group mt-2"
+            >
+              <span className="mr-2 text-[var(--accent-fuchsia)]">
+                <Smartphone size={20} />
+              </span>
+              <span>
+                <strong>SociÃ©tÃ©s et autres :</strong> 0664727681
+              </span>
+            </a>
+          </div>
+          <a
+            href="mailto:laboelallali@gmail.com"
+            className="flex items-center text-base text-[var(--gray-800)] hover:text-[var(--primary-bordeaux)] transition-colors group"
+          >
+            <span className="mr-2 text-[var(--primary-bordeaux)]">
+              <Mail size={20} />
+            </span>
+            <span>
+              <strong>Email :</strong> laboelallali@gmail.com
+            </span>
+          </a>
+          <div className="flex items-center text-base text-[var(--gray-800)] mt-1">
+            <span className="mr-2 text-[var(--primary-bordeaux)]">
+              <Phone size={20} />
+            </span>
+            <span>
+              <strong>Fax :</strong> 0528828758
+            </span>
+          </div>
+        </div>
+      </section>
+      <section className="mt-8">
+        <h2 className="text-2xl font-semibold text-[var(--bordeaux-dark)] mb-4">
+          Horaires d&apos;Ouverture
+        </h2>
+        <div className="inline-block bg-white rounded-lg px-4 py-2 border border-[var(--gray-200)]">
+          <div className="flex flex-col gap-1 text-base text-[var(--gray-800)]">
+            <span><span className="font-medium">Lun-Sam :</span> 7h30 - 18h30</span>
+            <span><span className="font-medium">Dim :</span> 08h00 - 18h00</span>
+          </div>
+        </div>
+      </section>
+      <section className="mt-8">
+        <h2 className="text-2xl font-semibold text-[var(--bordeaux-dark)] mb-4">
+          Notre Emplacement
+        </h2>
+        <div className="w-full h-64 md:h-80 rounded-lg border border-[var(--gray-300)] bg-[var(--gray-200)] overflow-hidden mb-4 relative flex items-center justify-center">
+          <MapPin size={48} className="text-gray-500" />
+          <span className="ml-2 text-gray-500">Carte non disponible</span>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+          <a
+            href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-2 bg-[var(--primary-bordeaux)] text-white font-semibold rounded-lg shadow hover:bg-[var(--bordeaux-dark)] transition-colors text-center"
+          >
+            Ouvrir dans Google Maps
+          </a>
+          <a
+            href="https://www.google.com/maps/dir/?api=1&destination=61+Bis+Rue+de+Marrakech+80020+Agadir"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-2 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow hover:bg-pink-700 transition-colors text-center"
+          >
+            Naviguer vers le labo
+          </a>
+        </div>
+      </section>
+      </div>
+    </main>
+  );
+};
+
+export default ContactPage;
+
+```
+
+## FILE: src/app/glabo/layout.tsx
+```typescript
+export const metadata = {
+  title: 'Next.js',
+  description: 'Generated by Next.js',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}
+
+```
+
+## FILE: src/app/glabo/page.tsx
+```typescript
+"use client";
+
+import React, { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { fr, ar } from "date-fns/locale";
+import { format } from "date-fns";
+import { useTranslation } from 'react-i18next';
+import { useParams } from 'next/navigation';
+
+const GlaboPage = () => {
+  const params = useParams();
+  const { t, i18n } = useTranslation(['common']);
+  const currentLang = params.lang as string || 'fr';
+  
+  const [nom, setNom] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [email, setEmail] = useState('');
+  const [adresse, setAdresse] = useState('');
+  const [lieuPrelevement, setLieuPrelevement] = useState('domicile'); // 'domicile' ou 'travail'
+  const [instructionsAcces, setInstructionsAcces] = useState(''); // Pour code d'immeuble, etc.
+  const [geolocStatus, setGeolocStatus] = useState(''); // Pour afficher "Chargement...", "Erreur...", ou l'adresse trouvÃ©e
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedTime, setSelectedTime] = useState('');
+  const [hasOrdonnance, setHasOrdonnance] = useState('non'); // 'oui' ou 'non'
+  const [commentaires, setCommentaires] = useState('');
+  
+  // Set i18n language
+  useEffect(() => {
+    if (i18n.language !== currentLang) {
+      i18n.changeLanguage(currentLang);
+    }
+  }, [currentLang, i18n]);
+
+  // GÃ©nÃ¨re les crÃ©neaux horaires disponibles en fonction du jour sÃ©lectionnÃ©
+  function generateTimeSlots(date: Date | null): string[] {
+    if (!date) return [];
+    const day = date.getDay(); // 0=dimanche, 6=samedi
+    const startHour = 7, startMinute = 30;
+    let endHour, endMinute;
+    if (day === 6) { // samedi
+      endHour = 12;
+      endMinute = 0;
+    } else {
+      endHour = 18;
+      endMinute = 30;
+    }
+    const slots: string[] = [];
+    let h = startHour, m = startMinute;
+    while (h < endHour || (h === endHour && m <= endMinute - 15)) {
+      const hh = h.toString().padStart(2, '0');
+      const mm = m.toString().padStart(2, '0');
+      slots.push(`${hh}:${mm}`);
+      m += 15;
+      if (m === 60) {
+        m = 0;
+        h++;
+      }
+    }
+    return slots;
+  }
+
+  const timeSlots = generateTimeSlots(selectedDate);
+
+  // Fonction de gÃ©olocalisation
+  const handleGeolocate = () => {
+    // VÃ©rifie si la gÃ©olocalisation est supportÃ©e par le navigateur
+    if (!navigator.geolocation) {
+      setGeolocStatus(t('geolocation_not_supported', "La gÃ©olocalisation n'est pas supportÃ©e par votre navigateur."));
+      return;
+    }
+    
+    // Affiche le statut de chargement
+    setGeolocStatus(t('loading_location', "Chargement de la localisation..."));
+    
+    // Options pour la gÃ©olocalisation (haute prÃ©cision, timeout de 10s)
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    };
+    
+    // Fonction de succÃ¨s
+    const success = (position: GeolocationPosition) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      
+      // CrÃ©er un lien Google Maps avec les coordonnÃ©es
+      const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      
+      setGeolocStatus(t('location_found', "Localisation approximative trouvÃ©e."));
+      setAdresse(t('coordinates_text', `CoordonnÃ©es : Lat: {{lat}}, Lon: {{lon}}\nLien Google Maps: {{link}}\nVeuillez complÃ©ter votre adresse ci-dessus si nÃ©cessaire.`, {
+        lat: latitude.toFixed(6),
+        lon: longitude.toFixed(6),
+        link: googleMapsLink
+      }));
+    };
+    
+    // Fonction d'erreur
+    const error = (err: GeolocationPositionError) => {
+      let errorMessage = "";
+      switch (err.code) {
+        case err.PERMISSION_DENIED:
+          errorMessage = t('permission_denied', "Vous avez refusÃ© l'accÃ¨s Ã  votre position.");
+          break;
+        case err.POSITION_UNAVAILABLE:
+          errorMessage = t('position_unavailable', "Les informations de localisation ne sont pas disponibles.");
+          break;
+        case err.TIMEOUT:
+          errorMessage = t('timeout', "La demande de localisation a expirÃ©.");
+          break;
+        default:
+          errorMessage = t('unknown_error', `Erreur inconnue: {{message}}`, { message: err.message });
+      }
+      setGeolocStatus(t('geolocation_error', `Erreur de gÃ©olocalisation: {{errorMessage}}`, { errorMessage }));
+    };
+    
+    // Lance la gÃ©olocalisation
+    navigator.geolocation.getCurrentPosition(success, error, options);
+  };
+
+  // Soumission du formulaire : gÃ©nÃ¨re un mailto: avec toutes les infos
+  const laboWhatsapp = "212654079592"; // NumÃ©ro en format international sans +
+  
+  // Fonction pour extraire le lien Google Maps des coordonnÃ©es, s'il existe
+  const extractGoogleMapsLink = (addressText: string): string | null => {
+    const googleMapsLinkMatch = addressText.match(/https:\/\/www\.google\.com\/maps\?q=[-+]?[0-9]*\.?[0-9]+,[-+]?[0-9]*\.?[0-9]+/);
+    return googleMapsLinkMatch ? googleMapsLinkMatch[0] : null;
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    // Validation simple
+    if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
+      alert(t('required_fields_alert', "Veuillez remplir tous les champs obligatoires (nom, tÃ©lÃ©phone, date, heure)."));
+      return;
+    }
+    
+    // Formatage de la date
+    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+    const laboEmail = "laboelallali@gmail.com";
+    const sujet = t('glabo_request_subject', `Demande de PrÃ©lÃ¨vement GLABO - {{name}}`, { name: nom });
+    
+    // Extraction du lien Google Maps s'il existe dans l'adresse
+    const googleMapsLink = extractGoogleMapsLink(adresse);
+    
+    // Formattage de l'adresse pour le message
+    let formattedAddress = adresse;
+    if (googleMapsLink) {
+      // Si un lien Google Maps est trouvÃ©, le mettre en Ã©vidence pour le staff du laboratoire
+      formattedAddress = adresse.replace(googleMapsLink, 
+        `${googleMapsLink} â‡– ${t('click_for_maps', "CLIQUEZ SUR CE LIEN POUR OUVRIR GOOGLE MAPS")}`);
+    }
+    
+    // DÃ©terminer le texte du lieu de prÃ©lÃ¨vement
+    const samplingPlaceText = lieuPrelevement === 'domicile' 
+      ? t('at_home', 'Ã€ mon domicile')
+      : t('at_work', 'Sur mon lieu de travail');
+      
+    // CrÃ©ation du message pour la demande GLABO
+    const messageText = t('glabo_email_template', 
+      `Bonjour,
+
+Je souhaite demander un prÃ©lÃ¨vement Ã  domicile/travail (GLABO) :
+
+Nom : {{name}}
+TÃ©lÃ©phone : {{phone}}{{email}}
+Lieu du prÃ©lÃ¨vement : {{samplingPlace}}
+{{address}}{{accessInstructions}}
+Date souhaitÃ©e : {{date}}
+Heure souhaitÃ©e : {{time}}{{comments}}
+
+{{prescription}}
+
+Merci de me contacter pour confirmer les dÃ©tails.
+
+Cordialement.`, 
+      {
+        name: nom,
+        phone: telephone,
+        email: email ? `\nEmail : ${email}` : '',
+        samplingPlace: samplingPlaceText,
+        address: formattedAddress ? `Adresse : ${formattedAddress}` : t('address_not_specified', 'Adresse non spÃ©cifiÃ©e (Ã  confirmer par tÃ©lÃ©phone).'),
+        accessInstructions: instructionsAcces ? `\nInstructions d'accÃ¨s : ${instructionsAcces}` : '',
+        date: formattedDate,
+        time: selectedTime,
+        comments: commentaires ? `\nCommentaires : ${commentaires}` : '',
+        prescription: hasOrdonnance === 'oui' 
+          ? t('have_prescription', `J'ai une ordonnance et je vous l'enverrai en piÃ¨ce jointe dans mon email.`)
+          : t('no_prescription', "Je n'ai pas d'ordonnance.")
+      }
+    );
+    
+    // Fonction pour afficher l'alerte avec les instructions et le bouton de copie
+    function showEmailAlert() {
+      // Essayer de copier le texte dans le presse-papier
+      const copyToClipboard = () => {
+        try {
+          navigator.clipboard.writeText(messageText).then(() => {
+            alert("Message copiÃ© dans le presse-papier ! Vous pouvez maintenant le coller dans votre client email.");
+          }).catch(() => {
+            // Fallback si le navigateur n'autorise pas clipboard API
+            showCopyInstructions();
+          });
+        } catch {
+          // Fallback pour les navigateurs sans support de l'API clipboard
+          showCopyInstructions();
+        }
+      };
+      
+      // Afficher les instructions pour la sÃ©lection manuelle
+      const showCopyInstructions = () => {
+        alert(`Veuillez envoyer un email Ã  : ${laboEmail}\n\nSujet : ${sujet}\n\nEt copiez ce message dans le corps de l'email :\n\n${messageText}`);
+      };
+
+      // Demander si l'utilisateur souhaite copier le message automatiquement
+      if (confirm(`Il semble que l'ouverture automatique de votre client email n'a pas fonctionnÃ©.\n\nVoulez-vous copier le message dans le presse-papier ?\n(Cliquez sur OK pour copier, sur Annuler pour voir le message Ã  copier manuellement)`)) {
+        copyToClipboard();
+      } else {
+        showCopyInstructions();
+      }
+    }
+    
+    // Essayer de lancer le client email natif
+    try {
+      const encodedBody = encodeURIComponent(messageText);
+      const encodedSubject = encodeURIComponent(sujet);
+      const mailtoLink = `mailto:${laboEmail}?subject=${encodedSubject}&body=${encodedBody}`;
+      
+      window.location.href = mailtoLink;
+      
+      setTimeout(() => {
+        showEmailAlert();
+      }, 500);
+    } catch {
+      showEmailAlert();
+    }
+  };
+
+  // GÃ©nÃ¨re le lien WhatsApp avec message prÃ©rempli
+  const handleWhatsapp = () => {
+    if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
+      alert("Veuillez remplir tous les champs obligatoires (nom, tÃ©lÃ©phone, date, heure).");
+      return;
+    }
+    
+    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+    
+    // Extraction du lien Google Maps s'il existe dans l'adresse
+    const googleMapsLink = extractGoogleMapsLink(adresse);
+    
+    // Formattage de l'adresse pour le message
+    let formattedAddress = adresse;
+    if (googleMapsLink) {
+      // Si un lien Google Maps est trouvÃ©, le mettre en Ã©vidence pour le staff du laboratoire
+      formattedAddress = adresse.replace(googleMapsLink, 
+        `${googleMapsLink} â‡– ${t('click_for_maps', "CLIQUEZ SUR CE LIEN POUR OUVRIR GOOGLE MAPS")}`);
+    }
+
+    // DÃ©terminer le texte pour le lieu de prÃ©lÃ¨vement
+    const samplingPlaceText = lieuPrelevement === 'domicile' 
+      ? t('at_home', 'Ã€ mon domicile')
+      : t('at_work', 'Sur mon lieu de travail');
+
+    const placeSummary = lieuPrelevement === 'domicile' 
+      ? t('home_sampling', 'Ã  domicile')
+      : t('work_sampling', 'sur mon lieu de travail');
+    
+    // Construction du message WhatsApp avec traductions
+    const message = t('whatsapp_message_template',
+      `Bonjour, je souhaite demander un prÃ©lÃ¨vement {{place}} (GLABO).
+Nom : {{name}}
+TÃ©lÃ©phone : {{phone}}{{email}}
+Lieu du prÃ©lÃ¨vement : {{samplingPlace}}
+{{address}}{{accessInstructions}}
+Date souhaitÃ©e : {{date}}
+Heure souhaitÃ©e : {{time}}{{comments}}
+{{prescription}}`,
+      {
+        place: placeSummary,
+        name: nom,
+        phone: telephone,
+        email: email ? `\nEmail : ${email}` : '',
+        samplingPlace: samplingPlaceText,
+        address: formattedAddress ? `Adresse : ${formattedAddress}` : t('address_not_specified', 'Adresse non spÃ©cifiÃ©e (Ã  confirmer par tÃ©lÃ©phone).'),
+        accessInstructions: instructionsAcces ? `\nInstructions d'accÃ¨s : ${instructionsAcces}` : '',
+        date: formattedDate,
+        time: selectedTime,
+        comments: commentaires ? `\nCommentaires : ${commentaires}` : '',
+        prescription: hasOrdonnance === 'oui' 
+          ? t('have_prescription_whatsapp', `Je dispose d'une ordonnance que je vous enverrai sÃ©parÃ©ment par WhatsApp.`)
+          : t('no_prescription', "Je n'ai pas d'ordonnance.")
+      }
+    );
+    
+    const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappLink, '_blank');
+  };
+
+  // Gestion de la sÃ©lection de l'option ordonnance
+  const handleOrdonnanceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setHasOrdonnance(e.target.value);
+  };
+
+  // DÃ©terminer la locale pour le DatePicker en fonction de la langue
+  const dateLocale = currentLang === 'ar' ? ar : fr;
+  const isRTL = currentLang === 'ar';
+  
+  return (
+    <main className={`p-4 md:p-8 font-sans ${isRTL ? 'rtl' : 'ltr'}`}>
+      <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 font-['Inter','Public Sans',sans-serif]">
+        {t('glabo_title', 'Demander un prÃ©lÃ¨vement Ã  domicile ou au travail (GLABO)')}
+      </h1>
+      <form className="max-w-lg mx-auto" onSubmit={handleSubmit}>
+        {/* Nom complet */}
+        <div className="mb-4">
+          <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('name', "Nom complet")}
+          </label>
+          <input
+            type="text"
+            id="nomComplet"
+            name="nomComplet"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="name"
+            value={nom}
+            onChange={e => setNom(e.target.value)}
+          />
+        </div>
+        {/* NumÃ©ro de tÃ©lÃ©phone */}
+        <div className="mb-4">
+          <label htmlFor="telephone" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('phone', "NumÃ©ro de tÃ©lÃ©phone")}
+          </label>
+          <input
+            type="tel"
+            id="telephone"
+            name="telephone"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="tel"
+            inputMode="tel"
+            value={telephone}
+            onChange={e => setTelephone(e.target.value)}
+          />
+        </div>
+        {/* Adresse email (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="email" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('email', "Adresse e-mail")} ({t('optional', "optionnel")})
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+        </div>
+        {/* Lieu du prÃ©lÃ¨vement */}
+        <div className="mb-4">
+          <label htmlFor="lieuPrelevement" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('sampling_place', "Lieu de prÃ©lÃ¨vement")}
+          </label>
+          <select
+            id="lieuPrelevement"
+            name="lieuPrelevement"
+            value={lieuPrelevement}
+            onChange={e => setLieuPrelevement(e.target.value)}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          >
+            <option value="domicile">{t('at_home', "Ã€ mon domicile")}</option>
+            <option value="travail">{t('at_work', "Sur mon lieu de travail")}</option>
+          </select>
+        </div>
+        {/* Adresse de prÃ©lÃ¨vement (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="adresse" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('address_instructions', "Adresse (indiquez pour le prÃ©lÃ¨vement)")}
+          </label>
+          <textarea
+            id="adresse"
+            name="adresse"
+            rows={2}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            value={adresse}
+            onChange={e => setAdresse(e.target.value)}
+          />
+          <button 
+            type="button" 
+            onClick={handleGeolocate}
+            className="text-sm text-[var(--accent-fuchsia)] hover:underline mt-2 flex items-center gap-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+            {t('locate_position', "Localisez-moi (Optionnel)")}
+          </button>
+          {geolocStatus && (
+            <p className="text-xs text-gray-600 mt-1">{geolocStatus}</p>
+          )}
+        </div>
+        {/* Instructions d'accÃ¨s (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="instructionsAcces" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('access_instructions', "Instructions d'accÃ¨s (code immeuble, Ã©tage, etc.")} - {t('optional', "optionnel")}
+          </label>
+          <input
+            type="text"
+            id="instructionsAcces"
+            name="instructionsAcces"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            value={instructionsAcces}
+            onChange={e => setInstructionsAcces(e.target.value)}
+          />
+        </div>
+        {/* Date souhaitÃ©e */}
+        <div className="mb-4">
+          <label htmlFor="date" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('desired_date', "Date souhaitÃ©e")}
+          </label>
+          <DatePicker
+            id="date"
+            selected={selectedDate}
+            onChange={(date: Date | null) => setSelectedDate(date)}
+            dateFormat="dd/MM/yyyy"
+            minDate={new Date()}
+            locale={dateLocale}
+            placeholderText={t('date_placeholder', "SÃ©lectionnez une date")}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          />
+        </div>
+        {/* Heure souhaitÃ©e */}
+        <div className="mb-4">
+          <label htmlFor="heure" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('desired_time', "Heure souhaitÃ©e")}
+          </label>
+          <select
+            id="heure"
+            name="heure"
+            value={selectedTime}
+            onChange={e => setSelectedTime(e.target.value)}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          >
+            <option value="" disabled>{t('choose_time', "-- Choisissez une heure --")}</option>
+            {timeSlots.map((slot) => (
+              <option key={slot} value={slot}>{slot}</option>
+            ))}
+          </select>
+        </div>
+        {/* Ordonnance (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="ordonnance" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('prescription_question', "Avez-vous une ordonnance ?")}
+          </label>
+          <select
+            id="ordonnance"
+            name="ordonnance"
+            value={hasOrdonnance}
+            onChange={handleOrdonnanceChange}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          >
+            <option value="non">{t('no', "Non")}</option>
+            <option value="oui">{t('yes', "Oui")}</option>
+          </select>
+          {hasOrdonnance === 'oui' && (
+            <p className="text-xs text-gray-500 mt-1">
+              {t('prescription_note', "Note : N'oubliez pas de joindre votre ordonnance lors de l'envoi de votre email ou message WhatsApp.")}
+            </p>
+          )}
+        </div>
+        {/* Commentaires (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('comments', "Notes ou commentaires supplÃ©mentaires")} ({t('optional', "optionnel")})
+          </label>
+          <textarea
+            id="commentaires"
+            name="commentaires"
+            rows={3}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            value={commentaires}
+            onChange={e => setCommentaires(e.target.value)}
+          />
+        </div>
+        {/* Boutons de soumission */}
+        <div className="flex flex-col md:flex-row gap-3 justify-end">
+          <button
+            type="submit"
+            className="bg-[var(--accent-fuchsia)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+            {t('send_request_email', "Envoyer ma demande de prÃ©lÃ¨vement par email")}
+          </button>
+          <button
+            type="button"
+            onClick={handleWhatsapp}
+            className="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+            aria-label="Demander prÃ©lÃ¨vement par WhatsApp"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="w-5 h-5">
+              <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+            </svg>
+            {t('send_whatsapp', "Demander prÃ©lÃ¨vement par WhatsApp")}
+          </button>
+        </div>
+        {/* Rappel ordonnance */}
+        <div className="mt-4 text-sm text-[var(--primary-bordeaux)] bg-[var(--gray-100)] rounded-lg px-4 py-2 border border-[var(--gray-300)]">
+          <strong>{t('reminder', "Rappel")}&nbsp;:</strong> {t('prescription_reminder', "Si vous avez une ordonnance, n'oubliez pas de l'attacher Ã  votre email ou Ã  votre message WhatsApp")}!
+        </div>
+      </form>
+    </main>
+  );
+};
+
+export default GlaboPage;
+
+```
+
+## FILE: src/app/rendez-vous/page.tsx
+```typescript
+"use client";
+
+import React, { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import { fr, ar } from "date-fns/locale";
+import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
+import { useParams } from "next/navigation";
+import { supportedLngs } from "../../../i18n";
+
+const RendezVousPage = () => {
+  // RÃ©cupÃ©rer la langue actuelle depuis l'URL
+  const params = useParams();
+  const { t, i18n } = useTranslation(['common', 'appointment']);
+  
+  // DÃ©terminer la langue Ã  partir des paramÃ¨tres d'URL
+  const lang = typeof params.lang === 'string' && supportedLngs.includes(params.lang) 
+    ? params.lang 
+    : i18n.language || 'fr';
+    
+  // Mettre Ã  jour la langue i18n si nÃ©cessaire
+  useEffect(() => {
+    if (i18n.language !== lang) {
+      i18n.changeLanguage(lang);
+    }
+  }, [lang, i18n]);
+  
+  // Load React DatePicker CSS dynamically
+  useEffect(() => {
+    // Add DatePicker CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/react-datepicker/4.15.0/react-datepicker.min.css';
+    document.head.appendChild(link);
+
+    return () => {
+      // Clean up
+      document.head.removeChild(link);
+    };
+  }, []);
+  
+  // DÃ©terminer la locale de date-fns en fonction de la langue
+  const dateLocale = lang === 'ar' ? ar : fr;
+  
+  const [nom, setNom] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [email, setEmail] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedTime, setSelectedTime] = useState('');
+  const [hasOrdonnance, setHasOrdonnance] = useState('non'); // 'oui' ou 'non'
+
+  const [commentaires, setCommentaires] = useState('');
+
+  // GÃ©nÃ¨re les crÃ©neaux horaires disponibles en fonction du jour sÃ©lectionnÃ©
+  function generateTimeSlots(date: Date | null): string[] {
+    if (!date) return [];
+    const day = date.getDay(); // 0=dimanche, 6=samedi
+    const startHour = 7, startMinute = 30;
+    let endHour, endMinute;
+    if (day === 6) { // samedi
+      endHour = 12;
+      endMinute = 0;
+    } else {
+      endHour = 18;
+      endMinute = 30;
+    }
+    const slots: string[] = [];
+    let h = startHour, m = startMinute;
+    while (h < endHour || (h === endHour && m <= endMinute - 15)) {
+      const hh = h.toString().padStart(2, '0');
+      const mm = m.toString().padStart(2, '0');
+      slots.push(`${hh}:${mm}`);
+      m += 15;
+      if (m === 60) {
+        m = 0;
+        h++;
+      }
+    }
+    return slots;
+  }
+
+  const timeSlots = generateTimeSlots(selectedDate);
+
+  // Soumission du formulaire : gÃ©nÃ¨re un mailto: avec toutes les infos
+  
+const laboWhatsapp = "212654079592"; // NumÃ©ro en format international sans +
+
+const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    // Validation simple
+    if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
+      alert("Veuillez remplir tous les champs obligatoires (nom, tÃ©lÃ©phone, date, heure).");
+      return;
+    }
+    // Formatage de la date
+    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+    const laboEmail = "laboelallali@gmail.com";
+    const sujet = `Demande de Rendez-vous - ${nom}`;
+    
+    // CrÃ©er le texte du message non-encodÃ© (lisible)
+    const messageText = `Bonjour,
+
+Je souhaite prendre un rendez-vous au laboratoire :
+
+Nom : ${nom}
+TÃ©lÃ©phone : ${telephone}${email ? `
+Email : ${email}` : ''}
+Date souhaitÃ©e : ${formattedDate}
+Heure souhaitÃ©e : ${selectedTime}${commentaires ? `
+Commentaires : ${commentaires}` : ''}
+${hasOrdonnance === 'oui' ? `
+Je dispose d'une ordonnance que je vous enverrai sÃ©parÃ©ment par WhatsApp.` : `Je n'ai pas d'ordonnance.`}
+
+Merci.`;
+    
+    // Fonction pour afficher l'alerte avec les instructions et le bouton de copie
+    function showEmailAlert() {
+      // Essayer de copier le texte dans le presse-papier
+      const copyToClipboard = () => {
+        try {
+          navigator.clipboard.writeText(messageText).then(() => {
+            alert("Message copiÃ© dans le presse-papier ! Vous pouvez maintenant le coller dans votre client email.");
+          }).catch(() => {
+            // Fallback si le navigateur n'autorise pas clipboard API
+            showCopyInstructions();
+          });
+        } catch {
+          // Fallback pour les navigateurs sans support de l'API clipboard
+          showCopyInstructions();
+        }
+      };
+      
+      // Afficher les instructions pour la sÃ©lection manuelle
+      const showCopyInstructions = () => {
+        alert(`Veuillez envoyer un email Ã  : ${laboEmail}\n\nSujet : ${sujet}\n\nEt copiez ce message dans le corps de l'email :\n\n${messageText}`);
+      };
+
+      // Demander si l'utilisateur souhaite copier le message automatiquement
+      if (confirm(`Il semble que l'ouverture automatique de votre client email n'a pas fonctionnÃ©.\n\nVoulez-vous copier le message dans le presse-papier ?\n(Cliquez sur OK pour copier, sur Annuler pour voir le message Ã  copier manuellement)`)) {
+        copyToClipboard();
+      } else {
+        showCopyInstructions();
+      }
+    }
+    
+    // Essayer de lancer le client email natif (pour les utilisateurs sur mobile ou avec client email configurÃ©)
+    try {
+      // Approche sÃ©curisÃ©e et simplifiÃ©e qui ne crÃ©e pas de fenÃªtre vide
+      const encodedBody = encodeURIComponent(messageText);
+      const encodedSubject = encodeURIComponent(sujet);
+      const mailtoLink = `mailto:${laboEmail}?subject=${encodedSubject}&body=${encodedBody}`;
+      
+      // Utiliser l'API Location plutÃ´t que window.open pour Ã©viter les fenÃªtres vides
+      window.location.href = mailtoLink;
+      
+      // Attendre un court instant puis afficher les instructions de secours
+      setTimeout(() => {
+        showEmailAlert();
+      }, 500);
+    } catch {
+      // En cas d'erreur, afficher directement l'alerte
+      showEmailAlert();
+    }
+  };
+
+  // GÃ©nÃ¨re le lien WhatsApp avec message prÃ©rempli
+  const handleWhatsapp = () => {
+    if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
+      alert("Veuillez remplir tous les champs obligatoires (nom, tÃ©lÃ©phone, date, heure).");
+      return;
+    }
+    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+    const message = `Bonjour, je souhaite prendre un rendez-vous au laboratoire.\nNom : ${nom}\nTÃ©lÃ©phone : ${telephone}${email ? `\nEmail : ${email}` : ''}\nDate souhaitÃ©e : ${formattedDate}\nHeure souhaitÃ©e : ${selectedTime}${commentaires ? `\nCommentaires : ${commentaires}` : ''}`;
+    const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappLink, '_blank');
+  };
+
+  return (
+    <main className="p-4 md:p-8 font-sans">
+      <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 font-['Inter','Public Sans',sans-serif]">
+        {t('appointment')}
+      </h1>
+      <form className="max-w-lg mx-auto" onSubmit={handleSubmit}>
+        {/* Nom complet */}
+        <div className="mb-4">
+          <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('fullName')}
+          </label>
+          <input
+            type="text"
+            id="nomComplet"
+            name="nomComplet"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="name"
+            value={nom}
+            onChange={e => setNom(e.target.value)}
+          />
+        </div>
+        {/* NumÃ©ro de tÃ©lÃ©phone */}
+        <div className="mb-4">
+          <label htmlFor="telephone" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('phoneNumber')}
+          </label>
+          <input
+            type="tel"
+            id="telephone"
+            name="telephone"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="tel"
+            inputMode="tel"
+            value={telephone}
+            onChange={(e) => setTelephone(e.target.value)}
+            required
+          />
+        </div>
+        {/* Adresse email (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="email" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('email')}
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        {/* Date souhaitÃ©e */}
+        <div className="mb-4">
+          <label htmlFor="date" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('desiredDate')}
+          </label>
+          <DatePicker
+            id="date"
+            selected={selectedDate}
+            onChange={(date) => setSelectedDate(date)}
+            dateFormat="dd/MM/yyyy"
+            minDate={new Date()}
+            locale={dateLocale}
+            placeholderText="SÃ©lectionnez une date"
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            required
+          />
+        </div>
+        {/* Heure souhaitÃ©e */}
+        <div className="mb-4">
+          <label htmlFor="heure" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('desiredTime')}
+          </label>
+          <select
+            id="heure"
+            name="heure"
+            value={selectedTime}
+            onChange={(e) => setSelectedTime(e.target.value)}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            required
+          >
+            <option value="">{t('chooseTime')}</option>
+            {timeSlots.map((slot) => (
+              <option key={slot} value={slot}>{slot}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Ordonnance */}
+        <div className="mb-4">
+          <label htmlFor="ordonnance" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('prescription')}
+          </label>
+          <select
+            id="ordonnance"
+            name="ordonnance"
+            value={hasOrdonnance}
+            onChange={e => setHasOrdonnance(e.target.value)}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+          >
+            <option value="non">{t('no')}</option>
+            <option value="oui">{t('yes')}</option>
+          </select>
+          {hasOrdonnance === 'oui' && (
+            <p className="text-xs text-gray-500 mt-1">
+              Note : N&apos;oubliez pas de joindre votre ordonnance lors de l&apos;envoi de votre WhatsApp ou email.
+            </p>
+          )}
+        </div>
+        
+        {/* Commentaires (optionnel) */}
+        <div className="mb-4">
+          <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+            {t('comments')}
+          </label>
+          <textarea
+            id="commentaires"
+            name="commentaires"
+            rows={3}
+            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            value={commentaires}
+            onChange={e => setCommentaires(e.target.value)}
+          />
+        </div>
+        {/* Boutons de soumission */}
+        <div className="flex flex-col md:flex-row gap-3 justify-end">
+          <button
+            type="submit"
+            className="bg-[var(--accent-fuchsia)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+            {t('requestByEmail')}
+          </button>
+          <button
+            type="button"
+            onClick={handleWhatsapp}
+            className="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+            aria-label="Demander RDV par WhatsApp"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="w-5 h-5">
+              <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+            </svg>
+            {t('requestByWhatsApp')}
+          </button>
+        </div>
+        
+      </form>
+    </main>
+  );
+};
+
+export default RendezVousPage;
+
+```
+
+## FILE:  (NOT FOUND)
 
 ## FILE: src/components/layout/Footer.tsx
 ```typescript
@@ -1071,8 +2138,8 @@ import {
 } from '@/constants/contact';
 
 // Dynamically import the PWA install button with SSR disabled
-const PWAInstallButton = dynamic<{}>(
-  () => import('@/components/PWAInstallButton').then((mod) => mod.default),
+const PWAInstallButton = dynamic(
+  () => import('@/components/features/pwa/PWAInstallButton').then(mod => mod.default),
   { ssr: false }
 );
 
@@ -1185,8 +2252,11 @@ const Footer = () => {
                 <span>{t('contact_on_whatsapp')}</span>
               </a>
               
-              <div className="flex justify-center sm:justify-start">
-                <PWAInstallButton />
+              <div className="flex justify-center sm:justify-start mt-4">
+                <PWAInstallButton 
+                  variant="banner"
+                  className="bg-bordeaux-custom hover:bg-[#600018] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center space-x-2 transition-colors shadow-sm hover:shadow-md w-full sm:w-auto"
+                />
               </div>
             </div>
           </div>
@@ -1512,7 +2582,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 export default MainLayout;
 ```
 
-## --- PROVIDER COMPONENTS ---
+## FILE:  (NOT FOUND)
 
 ## FILE: src/components/providers/TranslationsProvider.tsx
 ```typescript
@@ -1597,7 +2667,7 @@ export default function TranslationsProvider({
 }
 ```
 
-## --- FEATURE COMPONENTS ---
+## FILE:  (NOT FOUND)
 
 ## FILE: src/components/features/catalog/AnalysisCard.tsx
 ```typescript
@@ -1790,323 +2860,11 @@ export default AnalysisCard;
 
 ```
 
-## FILE: src/components/features/catalog/TotalCalculator.tsx
-```typescript
-"use client";
-
-import React, { useMemo, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Analysis } from './AnalysisCard';
-import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
-
-interface TotalCalculatorProps {
-  totalCost: number;
-  selectedCount: number;
-  onReset: () => void;
-  currencyLabel: string;
-  isRtl?: boolean;
-  // We need access to the selected analyses for WhatsApp sharing
-  selectedAnalyses?: Analysis[];
-  // Les traductions sont maintenant gÃ©rÃ©es Ã  l'intÃ©rieur du composant
-}
-
-/**
- * A floating bubble component that displays the running total of selected analyses
- * Appears fixed to the bottom of the viewport
- */
-export default function TotalCalculator({
-  totalCost,
-  selectedCount,
-  onReset,
-  currencyLabel,
-  isRtl = false,
-  selectedAnalyses = []
-}: TotalCalculatorProps) {
-  // Direct DOM manipulation reference
-  const containerRef = useRef<HTMLDivElement>(null);
-  const prevCountRef = useRef(selectedCount);
-  
-  // Manually flash the calculator when count changes
-  useEffect(() => {
-    console.log('[TotalCalculator] Previous count:', prevCountRef.current, 'New count:', selectedCount);
-    
-    // Skip initial render
-    if (prevCountRef.current === undefined || containerRef.current === null) {
-      prevCountRef.current = selectedCount;
-      return;
-    }
-    
-    // Only animate if count has changed
-    if (prevCountRef.current !== selectedCount) {
-      console.log('[TotalCalculator] Triggering color-only animation');
-      
-      const div = containerRef.current;
-      
-      // Get the original styles
-      const originalBg = window.getComputedStyle(div).backgroundColor;
-      
-      // Create a sequence of colors for a wave effect
-      // All colors are in the bordeaux/burgundy family
-      const colorSequence = [
-        '#8E2042', // Slightly lighter bordeaux
-        '#A02A4D', // Even lighter bordeaux 
-        '#B13558', // Brighter bordeaux
-        '#973048', // Back toward original
-        '#872238', // Almost back to original
-        originalBg   // Back to original
-      ];
-      
-      // Add a transition just for background color
-      div.style.transition = 'background-color 0.25s ease-in-out';
-      
-      // Apply each color in sequence
-      colorSequence.forEach((color, index) => {
-        setTimeout(() => {
-          div.style.backgroundColor = color;
-          
-          // Remove transition after all animations complete
-          if (index === colorSequence.length - 1) {
-            setTimeout(() => {
-              div.style.transition = '';
-            }, 250);
-          }
-        }, index * 150); // 150ms between each color change
-      });
-    }
-    
-    prevCountRef.current = selectedCount;
-  }, [selectedCount]);
-  const { t, i18n } = useTranslation('common');
-  
-  // DÃ©termine la direction de la langue actuelle si isRtl n'est pas spÃ©cifiÃ© explicitement
-  const isRtlDirection = isRtl || i18n.language === 'ar';
-  
-  // Translations as direct values rather than using useMemo for more stable typing
-  const translationsUI = {
-    selectedAnalyses: t('analyses_catalog.selection.analyses_selected', 'analyses sÃ©lectionnÃ©es'),
-    total: t('analyses_catalog.selection.total', 'Total'),
-    reset: t('analyses_catalog.selection.reset', 'RÃ©initialiser'),
-    tooltip: t('analyses_catalog.selection.tooltip', 'Calcul automatique du coÃ»t total des analyses sÃ©lectionnÃ©es'),
-    sendWhatsapp: t('analyses_catalog.selection.send_whatsapp', 'Envoyer via WhatsApp')
-  };
-  
-  // WhatsApp message translations as direct values
-  const whatsappTranslations = {
-    greeting: t('analyses_catalog.selection.whatsapp_message.greeting', 'Bonjour Laboratoire El Allali,'),
-    intro: t('analyses_catalog.selection.whatsapp_message.intro', 'Je suis intÃ©ressÃ©(e) par les analyses suivantes :'),
-    analysisItemPrefix: t('analyses_catalog.selection.whatsapp_message.analysis_item_prefix', '- '),
-    totalLabel: t('analyses_catalog.selection.whatsapp_message.total_label', 'Total estimÃ© :'),
-    currency: t('analyses_catalog.selection.whatsapp_message.currency', 'MAD'),
-    closingRemark: t('analyses_catalog.selection.whatsapp_message.closing_remark', 'Pouvez-vous me donner plus d\'informations ?'),
-    websiteReference: t('analyses_catalog.selection.whatsapp_message.website_reference', 'SÃ©lection faite depuis le site web.')
-  };
-
-  // Laboratory WhatsApp number is imported from constants file
-  
-  // Function to generate WhatsApp message
-  const generateWhatsAppMessage = () => {
-    // Create message in current language
-    let message = `${whatsappTranslations.greeting}\n\n`;
-    message += `${whatsappTranslations.intro}\n`;
-    
-    // Add list of selected analyses
-    selectedAnalyses.forEach(analysis => {
-      const analysisName = i18n.language === 'ar' ? analysis.name_ar : analysis.name_fr;
-      message += `${whatsappTranslations.analysisItemPrefix}${analysisName}\n`;
-    });
-    
-    // Add total cost
-    message += `\n${whatsappTranslations.totalLabel} ${totalCost.toLocaleString()} ${whatsappTranslations.currency}\n\n`;
-    
-    // Add closing
-    message += `${whatsappTranslations.closingRemark}\n\n`;
-    message += whatsappTranslations.websiteReference;
-    
-    return message;
-  };
-  
-  // Handler for WhatsApp button click
-  const handleSendViaWhatsApp = () => {
-    const message = generateWhatsAppMessage();
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${LAB_WHATSAPP_NUMBER}?text=${encodedMessage}`;
-    
-    // Open WhatsApp in a new tab
-    window.open(whatsappUrl, '_blank');
-  };
-  
-  // Only render the component if there are selected items
-  if (selectedCount === 0) return null;
-
-  return (
-    <div 
-      ref={containerRef}
-      className="floating-total-calculator"
-      dir={isRtlDirection ? 'rtl' : 'ltr'}
-      style={{
-        position: 'fixed',
-        bottom: '1rem',
-        [isRtlDirection ? 'left' : 'right']: '1rem',
-        zIndex: 40,
-        backgroundColor: 'var(--primary-bordeaux)',
-        color: 'white',
-        borderRadius: '1rem',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        padding: '0.75rem 1rem',
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: '230px',
-        maxWidth: '330px',
-        animation: 'fadeIn 0.3s ease-out forwards'
-      }}
-      title={translationsUI.tooltip}
-      aria-live="polite"
-    >
-      {/* Selected count */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.25)',
-            borderRadius: '9999px',
-            padding: '0 0.5rem',
-            marginRight: isRtlDirection ? 0 : '0.5rem',
-            marginLeft: isRtlDirection ? '0.5rem' : 0,
-            animation: 'countPulse 0.5s ease-out'
-          }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>
-              {selectedCount}
-            </span>
-          </div>
-          <span style={{ fontSize: '0.875rem', fontWeight: '500', marginLeft: '0.5rem' }}>
-            {translationsUI.selectedAnalyses}
-          </span>
-        </div>
-        
-        {/* Reset button */}
-        <button 
-          onClick={onReset}
-          style={{
-            padding: '0.375rem',
-            borderRadius: '9999px',
-            transition: 'background-color 0.2s',
-            cursor: 'pointer',
-            backgroundColor: 'transparent',
-            border: 'none',
-            color: 'white'
-          }}
-          aria-label={translationsUI.reset}
-          title={translationsUI.reset}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
-          </svg>
-        </button>
-      </div>
-      
-      {/* Total cost */}
-      <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
-        <span style={{ color: 'white' }}>{translationsUI.total}:</span> 
-        <span style={{ color: 'var(--bordeaux-pale)' }}> {totalCost.toLocaleString()} {currencyLabel}</span>
-      </div>
-      
-      {/* Send via WhatsApp button */}
-      <button 
-        onClick={handleSendViaWhatsApp}
-        style={{
-          marginTop: '0.75rem',
-          padding: '0.5rem',
-          borderRadius: '0.5rem',
-          backgroundColor: 'transparent', // Transparent background
-          color: 'white',
-          border: '1px solid white', // White border
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.2s ease',
-          fontSize: '0.875rem',
-          fontWeight: '500'
-        }}  
-        aria-label={translationsUI.sendWhatsapp}
-        title={translationsUI.sendWhatsapp}
-      >
-        {/* WhatsApp Icon */}
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="16" 
-          height="16" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-          style={{ marginRight: isRtlDirection ? 0 : '0.5rem', marginLeft: isRtlDirection ? '0.5rem' : 0 }}
-        >
-          <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" />
-          <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
-          <path d="M14 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
-          <path d="M8.5 13.5a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 0-1H9a.5.5 0 0 0-.5.5Z" />
-        </svg>
-        <span>{translationsUI.sendWhatsapp}</span>
-      </button>
-      
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        /* Animation removed - using direct DOM manipulation instead */
-        
-        @keyframes countPulse {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.25); }
-          100% { transform: scale(1); }
-        }
-        
-        @media (min-width: 768px) {
-          .floating-total-calculator {
-            bottom: 2rem !important;
-          }
-          .floating-total-calculator[dir='rtl'] {
-            left: 2rem !important;
-          }
-          .floating-total-calculator[dir='ltr'] {
-            right: 2rem !important;
-          }
-        }
-        
-        /* WhatsApp button hover effect */
-        .floating-total-calculator button:hover {
-          background-color: rgba(255, 255, 255, 0.1);
-          transform: translateY(-1px);
-        }
-        
-        /* Animation spÃ©ciale pour le focus des Ã©lÃ©ments interactifs */
-        .floating-total-calculator button:focus {
-          outline: 2px solid rgba(255, 255, 255, 0.6);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
-          border-radius: 9999px;
-        }
-      `}</style>
-    </div>
-  );
-}
-
-```
-
 ## FILE: src/components/features/home/HeroBanner.tsx
 ```typescript
 import React from 'react';
 import { Navigation } from 'lucide-react';
+import dynamic from 'next/dynamic';
 // Import useTranslation hook without type issues
 import { useTranslation as useTranslationOriginal } from 'react-i18next';
 
@@ -2114,6 +2872,15 @@ import { useTranslation as useTranslationOriginal } from 'react-i18next';
 const useTranslation = (ns: string) => {
   return useTranslationOriginal(ns);
 };
+
+// Import the PWA install button component with SSR disabled
+const InstallButton = dynamic<{ className?: string }>(
+  () => import('@/components/features/pwa/InstallButton').then(mod => mod.default),
+  { 
+    ssr: false,
+    loading: () => <div className="w-full h-12"></div> // Keep the layout stable while loading
+  }
+);
 
 const HeroBanner = () => {
   // Use a simpler approach without type assertions
@@ -2159,6 +2926,9 @@ const HeroBanner = () => {
               <Navigation size={22} className="mr-2 -ml-1" />
               {t('navigate_to_lab')}
             </a>
+            <InstallButton 
+              className="w-full h-12 bg-white text-[var(--accent-fuchsia)] hover:bg-gray-100 font-semibold rounded-lg shadow transition-colors text-center text-lg"
+            />
           </div>
         </div>
       </div>
@@ -2169,7 +2939,312 @@ const HeroBanner = () => {
 export default HeroBanner;
 ```
 
-## --- FIREBASE FUNCTIONS ---
+## FILE: src/components/features/pwa/InstallButton.tsx
+```typescript
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Download } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+// Define the BeforeInstallPromptEvent interface
+declare global {
+  interface WindowEventMap {
+    beforeinstallprompt: BeforeInstallPromptEvent;
+  }
+  
+  interface Window {
+    deferredPrompt: BeforeInstallPromptEvent | null;
+  }
+}
+
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
+type InstallButtonProps = {
+  className?: string;
+};
+
+export default function InstallButton({ className = '' }: InstallButtonProps) {
+  const [showButton, setShowButton] = useState(false);
+  const { t } = useTranslation('common');
+
+  // Check if the app is already installed and set up event listeners
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Check if the app is already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('PWA: App is already installed');
+      return;
+    }
+    
+    // Initialize deferredPrompt
+    window.deferredPrompt = null;
+    
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      console.log('PWA: beforeinstallprompt event fired');
+      
+      // Store the event for later use
+      window.deferredPrompt = e as unknown as BeforeInstallPromptEvent;
+      setShowButton(true);
+    };
+    
+    const handleAppInstalled = () => {
+      console.log('PWA: App installed');
+      setShowButton(false);
+      window.deferredPrompt = null;
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  // Handle install button click
+  const handleClick = async () => {
+    if (!window.deferredPrompt) {
+      console.log('PWA: No install prompt available');
+      return;
+    }
+    
+    try {
+      // Show the install prompt
+      console.log('PWA: Showing install prompt');
+      await window.deferredPrompt.prompt();
+      
+      // Wait for the user to respond to the prompt
+      const choiceResult = await window.deferredPrompt.userChoice;
+      console.log(`PWA: User choice: ${choiceResult.outcome}`);
+      
+      if (choiceResult.outcome === 'accepted') {
+        console.log('PWA: User accepted the install prompt');
+        setShowButton(false);
+      }
+    } catch (error) {
+      console.error('PWA: Error showing install prompt:', error);
+    } finally {
+      // Reset the deferred prompt variable as it can only be used once
+      window.deferredPrompt = null;
+    }
+  };
+
+  if (!showButton) {
+    return null;
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`w-full h-12 bg-white text-[var(--accent-fuchsia)] hover:bg-gray-100 font-semibold rounded-lg shadow transition-colors text-center text-lg flex items-center justify-center gap-2 ${className}`}
+      aria-label={t('pwa.install_app_button')}
+    >
+      <Download size={18} />
+      {t('pwa.install_app_button')}
+    </button>
+  );
+}
+
+```
+
+## FILE: src/components/features/pwa/IOSInstallBanner.tsx
+```typescript
+// src/components/features/pwa/IOSInstallBanner.tsx
+'use client';
+import { X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+
+const IOSInstallBanner = () => {
+  const [showBanner, setShowBanner] = useState(false);
+  const { t } = useTranslation('common');
+
+  useEffect(() => {
+    const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    // VÃ©rifie aussi si l'app n'est PAS dÃ©jÃ  en mode standalone (installÃ©e)
+    const isInStandaloneMode = typeof navigator !== 'undefined' && 'standalone' in navigator && (navigator as any).standalone;
+    
+    if (isIOS && !isInStandaloneMode && !localStorage.getItem('iosInstallBannerDismissed')) {
+      setShowBanner(true);
+      console.log('>>> PWA: iOS device detected, not in standalone, banner not dismissed. Showing banner.');
+    } else {
+      console.log('>>> PWA: iOS banner conditions not met or already dismissed.');
+    }
+  }, []);
+
+  const dismissBanner = () => {
+    localStorage.setItem('iosInstallBannerDismissed', 'true');
+    setShowBanner(false);
+    console.log('>>> PWA: iOS install banner dismissed.');
+  };
+
+  if (!showBanner) return null;
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-[var(--primary-bordeaux)] text-white p-3 text-center text-sm z-[1000] shadow-lg flex items-center justify-between sm:justify-center">
+      <span className="flex-grow sm:flex-grow-0 text-left sm:text-center">
+        {t('pwa.ios_install_prompt_part1', "Pour un accÃ¨s facile, ajoutez-nous Ã  l'Ã©cran d'accueil :")}
+        <br className="sm:hidden"/> {/* Saut de ligne pour mobile */}
+        {t('pwa.ios_install_prompt_part2', "Appuyez sur")} <img src="/images/icons/ios-share-icon.png" alt={t('pwa.ios_share_alt', "l'icÃ´ne Partager")} className="inline h-4 w-4 mx-1" /> {t('pwa.ios_install_prompt_part3', "puis 'Sur l'Ã©cran d'accueil'.")}
+      </span>
+      <button 
+        onClick={dismissBanner} 
+        className="ml-2 p-1 text-white hover:bg-white/20 rounded-full flex-shrink-0"
+        aria-label={t('pwa.dismiss_banner_aria', "Fermer le bandeau d'installation")}
+      >
+        <X size={20} />
+      </button>
+    </div>
+  );
+};
+
+export default IOSInstallBanner;
+
+```
+
+## FILE: src/components/features/pwa/PWABanner.tsx
+```typescript
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { Download } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+// Extend Window interface to include deferredPrompt
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
+declare global {
+  interface WindowEventMap {
+    beforeinstallprompt: BeforeInstallPromptEvent;
+  }
+  
+  interface Window {
+    deferredPrompt: BeforeInstallPromptEvent | null;
+  }
+}
+
+type PWABannerProps = {
+  className?: string;
+};
+
+export default function PWABanner({ className = '' }: PWABannerProps) {
+  const [showBanner, setShowBanner] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const { t } = useTranslation('common');
+
+  // Check if the app is already installed
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    if (isStandalone || (isIOS && !isSafari)) {
+      setIsInstalled(true);
+      setShowBanner(false);
+    }
+  }, []);
+
+  // Set up event listeners for beforeinstallprompt
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      
+      // Store the event for later use
+      const event = e as unknown as { prompt: () => Promise<{ outcome: string }> };
+      if (event.prompt && typeof event.prompt === 'function') {
+        window.deferredPrompt = {
+          prompt: () => event.prompt(),
+          userChoice: Promise.resolve({ outcome: 'dismissed' })
+        } as PWAPrompt;
+        setShowBanner(true);
+      }
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setShowBanner(false);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  // Handle install button click
+  const handleInstallClick = useCallback(async () => {
+    if (!window.deferredPrompt) return;
+    
+    try {
+      await window.deferredPrompt.prompt();
+      const { outcome } = await window.deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+        setShowBanner(false);
+      }
+      
+      window.deferredPrompt = null;
+    } catch (error) {
+      console.error('Error showing install prompt:', error);
+    }
+  }, []);
+
+  if (isInstalled || !showBanner) {
+    return null;
+  }
+  
+  return (
+    <div className="fixed bottom-4 right-4 left-4 sm:left-auto bg-bordeaux-custom text-white p-4 rounded-lg shadow-xl z-[999] flex items-center justify-between">
+      <div className="flex items-center">
+        <div className="flex-shrink-0 mr-3">
+          <Download size={20} className="text-white" />
+        </div>
+        <div>
+          <p className="font-medium">{t('pwa.install_app_title')}</p>
+          <p className="text-sm opacity-90">{t('pwa.install_hint')}</p>
+        </div>
+      </div>
+      <button
+        onClick={handleInstallClick}
+        className="ml-4 px-4 py-2 bg-white text-bordeaux-custom font-medium rounded-md hover:bg-gray-100 transition-colors whitespace-nowrap"
+      >
+        {t('pwa.install_button')}
+      </button>
+    </div>
+  );
+}
+
+```
+
+## FILE:  (NOT FOUND)
 
 ## FILE: functions/src/index.ts
 ```typescript
@@ -2423,4 +3498,4 @@ export const sendAppointmentRequestEmail = onDocumentCreated(
 
 ## --- END OF CONTEXT ---
 
-## Total files included: 24
+## Total files included: 30

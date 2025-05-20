@@ -22,5 +22,10 @@
   "withoutPrescription": "ليس لدي وصفة طبية.",
   "home_service_request": "أرغب في حجز خدمة الفحص المنزلي",
   "greeting": "مرحباً،",
-  "thanks": "شكراً جزيلاً."
+  "thanks": "شكراً جزيلاً.",
+
+  "analysis_tips": "نصائح للتحاليل",
+  "fasting_recommendation": "لبعض التحاليل، قد يكون الصيام لمدة 8 إلى 12 ساعة ضرورياً.",
+  "documents_to_bring": "أحضر بطاقة هويتك والوصفة الطبية وبطاقة التأمين إن وجدت.",
+  "more_information": "المزيد من المعلومات"
 }

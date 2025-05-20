@@ -4,20 +4,35 @@ import { useEffect } from 'react';
 
 const ServiceWorkerRegistration = () => {
   useEffect(() => {
-    // Check if we're in development and PWA is not explicitly enabled
-    const isDev = process.env.NODE_ENV !== 'production';
+    // Check if we're in development mode
+    const isDev = process.env.NODE_ENV === 'development';
+    const isProd = process.env.NODE_ENV === 'production';
     const enableInDev = process.env.NEXT_PUBLIC_ENABLE_PWA_DEV === 'true';
     
+    // In development mode, don't register the service worker unless explicitly enabled
     if (isDev && !enableInDev) {
-      console.log('>>> PWA: Service worker registration is disabled in development. Set NEXT_PUBLIC_ENABLE_PWA_DEV=true to enable.');
+      console.log('>>> PWA: Service worker registration is disabled in development mode');
+      
+      // Unregister any existing service workers in development to prevent loops
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (const registration of registrations) {
+            registration.unregister();
+            console.log('>>> PWA: Unregistered existing service worker in development mode');
+          }
+        });
+      }
       return;
     }
     
-    console.log('>>> PWA: Registering service worker...', { isDev, enableInDev });
+    // Only proceed in production or if explicitly enabled in development
+    if (!isProd && !enableInDev) {
+      return;
+    }
+    
+    console.log('>>> PWA: Starting service worker registration...', { isDev, enableInDev });
 
     if ('serviceWorker' in navigator) {
-      console.log('>>> PWA: Registering service worker...');
-      
       // Don't wait for the load event as it might fire too late
       const registerServiceWorker = async () => {
         try {
@@ -40,6 +55,10 @@ const ServiceWorkerRegistration = () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   // New update available
                   console.log('>>> PWA: New content is available; please refresh.');
+                  // Don't auto-reload in development to prevent infinite loops
+                  if (!isDev) {
+                    // Optional: Show a UI notification to refresh instead of forcing reload
+                  }
                 } else if (newWorker.state === 'activated') {
                   console.log('>>> PWA: Service worker activated');
                 }
@@ -49,7 +68,7 @@ const ServiceWorkerRegistration = () => {
           
           // Ensure the page is controlled by the service worker
           if (navigator.serviceWorker.controller) {
-            console.log('>>> PWA: This page is currently controlled by:', navigator.serviceWorker.controller);
+            console.log('>>> PWA: This page is currently controlled by a service worker');
           } else {
             console.log('>>> PWA: This page is not currently controlled by a service worker');
           }
@@ -66,11 +85,18 @@ const ServiceWorkerRegistration = () => {
         window.addEventListener('load', registerServiceWorker);
       }
       
-      // Listen for controller changes
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('>>> PWA: Controller changed, reloading page...');
-        window.location.reload();
-      });
+      // Listen for controller changes but don't auto-reload in development
+      if (!isDev) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('>>> PWA: Controller changed');
+          // Instead of immediate reload, we could show a refresh button
+          // Only reload in production to prevent infinite loops
+          if (isProd) {
+            console.log('>>> PWA: Reloading page...');
+            window.location.reload();
+          }
+        });
+      }
       
     } else {
       console.log('>>> PWA: Service workers are not supported in this browser');

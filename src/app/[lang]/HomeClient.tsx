@@ -2,12 +2,13 @@
 "use client";
 import HeroBanner from '@/components/features/home/HeroBanner';
 import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, Home as HomeIcon, Info, MapPin, ChevronRight } from 'lucide-react'; // Corrected HomeIcon import
+import SimpleMap from '@/components/SimpleMap';
 import Link from 'next/link';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 
 export default function HomeClient({ lang }: { lang: string }) {
-  const { t, i18n } = useTranslation('common'); // Get i18n instance
+  const { t, i18n } = useTranslation(['common', 'glabo']); // Get i18n instance for multiple namespaces
 
   // Ensure i18n language is set based on the lang prop
   useEffect(() => {
@@ -15,6 +16,12 @@ export default function HomeClient({ lang }: { lang: string }) {
       i18n.changeLanguage(lang);
     }
   }, [lang, i18n]);
+
+  // Track if we're on the client side for map rendering
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // On peut faire un check pour savoir si le labo est ouvert actuellement
   const currentHour = new Date().getHours();
@@ -167,9 +174,21 @@ export default function HomeClient({ lang }: { lang: string }) {
         <section id="contact" className="mb-12 fade-in-section">
           <h2 className="text-2xl font-bold text-[#800020] mb-6">{t('our_location')}</h2>
           <div className="card p-0 overflow-hidden">
-            <div className="bg-gray-200 h-64 md:h-96 flex items-center justify-center">
-              <MapPin size={48} className="text-gray-500" />
-              <span className="ml-2 text-gray-500">{t('map_not_available')}</span>
+            <div className="bg-gray-200 h-64 md:h-96">
+              {isClient ? (
+                <SimpleMap 
+                  latitude={30.4173116} 
+                  longitude={-9.589799900000001} 
+                  zoom={15} 
+                  markerText={t('laboratory_name')} 
+                  height="100%" 
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center">
+                  <MapPin size={48} className="text-gray-500" />
+                  <span className="ml-2 text-gray-500">{t('loading_map')}</span>
+                </div>
+              )}
             </div>
             <div className="p-6">
               <h3 className="font-semibold text-xl mb-2">{t('laboratory_name')}</h3>
@@ -209,18 +228,15 @@ export default function HomeClient({ lang }: { lang: string }) {
                     <Info className="text-[#800020]" size={24} />
                 </div>
                 <div>
-                    <h3 className="text-xl font-semibold mb-2">{t('analysis_tips')}</h3>
-                    <div className="space-y-3 mb-4">
-                        <p className="text-gray-600">
-                            {t('fasting_recommendation')}
-                        </p>
-                        <p className="text-gray-600">
-                            {t('documents_to_bring')}
-                        </p>
+                    <div className="flex items-center justify-center">
+                      <Info size={24} className="text-[#800020] mr-2" />
+                      <h3 className="font-semibold">{t('glabo:analysis_tips')}</h3>
                     </div>
-                    <Link href={`/${lang}/informations/conseils`} className="btn-text">
-                        {t('more_information')}
-                    </Link>
+                    <ul className="list-disc pl-10 pt-4 space-y-2">
+                      <li>{t('glabo:fasting_recommendation')}</li>
+                      <li>{t('glabo:documents_to_bring')}</li>
+                    </ul>
+                    <a href="#" className="text-[#800020] hover:text-[#FF4081] mt-4 inline-block font-medium">{t('glabo:more_information')}</a>
                 </div>
             </div>
           </div>

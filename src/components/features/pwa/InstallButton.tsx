@@ -29,8 +29,14 @@ type InstallButtonProps = {
 };
 
 export default function InstallButton({ className = '' }: InstallButtonProps) {
-  const [showButton, setShowButton] = useState(false);
+  // For development, default to showing button, for production use PWA detection
+  const [showButton, setShowButton] = useState(process.env.NODE_ENV === 'development');
   const { t } = useTranslation('common');
+  
+  // Log visibility state
+  useEffect(() => {
+    console.log('PWA InstallButton state:', { showButton, env: process.env.NODE_ENV });
+  }, [showButton]);
 
   // Check if the app is already installed and set up event listeners
   useEffect(() => {
@@ -75,6 +81,10 @@ export default function InstallButton({ className = '' }: InstallButtonProps) {
   const handleClick = async () => {
     if (!window.deferredPrompt) {
       console.log('PWA: No install prompt available');
+      // For development, show alert instead of PWA prompt
+      if (process.env.NODE_ENV === 'development') {
+        alert('PWA installation prompt not available in development. This button would trigger the PWA installation in production.');
+      }
       return;
     }
     
@@ -106,7 +116,7 @@ export default function InstallButton({ className = '' }: InstallButtonProps) {
   return (
     <button
       onClick={handleClick}
-      className={`w-full h-12 bg-white text-[var(--accent-fuchsia)] hover:bg-gray-100 font-semibold rounded-lg shadow transition-colors text-center text-lg flex items-center justify-center gap-2 ${className}`}
+      className={`w-full h-12 !bg-[#FF4081] text-white font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg flex items-center justify-center gap-2 hover:bg-white hover:text-[#FF4081] focus:bg-white focus:text-[#FF4081] ${className}`}
       aria-label={t('pwa.install_app_button')}
     >
       <Download size={18} />

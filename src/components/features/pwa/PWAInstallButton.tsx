@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button, ButtonProps } from '@/components/ui/button';
 
 // Define the BeforeInstallPromptEvent interface
 interface BeforeInstallPromptEvent extends Event {
@@ -27,14 +26,26 @@ declare global {
 }
 
 type PWAInstallButtonProps = {
-  variant?: 'button' | 'banner';
+  variant?: 'button' | 'banner' | 'footer';
   className?: string;
+  forceShow?: boolean;
 };
 
-export default function PWAInstallButton({ variant = 'button', className = '' }: PWAInstallButtonProps) {
-  const [showButton, setShowButton] = useState(false);
+export default function PWAInstallButton({ variant = 'button', className = '', forceShow = false }: PWAInstallButtonProps) {
+  // For development, default to showing button
+  const [showButton, setShowButton] = useState(process.env.NODE_ENV === 'development' || forceShow);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const { t } = useTranslation('common');
+  
+  // Log state for debugging
+  useEffect(() => {
+    console.log('PWAInstallButton state:', { 
+      showButton, 
+      isAppInstalled, 
+      env: process.env.NODE_ENV,
+      variant
+    });
+  }, [showButton, isAppInstalled, variant]);
 
   // Check if the app is already installed
   useEffect(() => {
@@ -99,6 +110,10 @@ export default function PWAInstallButton({ variant = 'button', className = '' }:
     
     if (!window.deferredPrompt) {
       console.log('PWA: No install prompt available');
+      // Show alert in development mode
+      if (process.env.NODE_ENV === 'development') {
+        alert('PWA installation prompt not available in development. This button would trigger the PWA installation in production.');
+      }
       return;
     }
     
@@ -129,13 +144,14 @@ export default function PWAInstallButton({ variant = 'button', className = '' }:
     }
   }, []);
 
-  if (isAppInstalled || !showButton) {
+  // In development mode or if forceShow is true, always show the button for testing UI
+  if ((isAppInstalled || !showButton) && process.env.NODE_ENV !== 'development' && !forceShow) {
     return null;
   }
   
   if (variant === 'banner') {
     return (
-      <div className="fixed bottom-16 sm:bottom-4 right-4 bg-bordeaux-custom text-white p-3 sm:p-4 rounded-lg shadow-xl z-[999] flex items-center space-x-2 sm:space-x-3 hover:bg-[#600018] transition-colors">
+      <div className="fixed bottom-16 sm:bottom-4 right-4 bg-[#FF4081] text-white p-3 sm:p-4 rounded-lg shadow-xl z-[999] flex items-center space-x-2 sm:space-x-3 hover:bg-white hover:text-[#FF4081] transition-all duration-200">
         <button
           onClick={handleInstallClick}
           className="flex items-center gap-2 text-sm font-medium"
@@ -147,11 +163,26 @@ export default function PWAInstallButton({ variant = 'button', className = '' }:
     );
   }
   
+  if (variant === 'footer') {
+    return (
+      <button
+        onClick={handleInstallClick}
+        className={`bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center transition-colors shadow-sm hover:shadow-md w-full ${className}`}
+        aria-label={t('pwa.install_app_button')}
+      >
+        <div className="flex items-center justify-center gap-2">
+          <Download size={18} />
+          <span>{t('pwa.install_app_button')}</span>
+        </div>
+      </button>
+    );
+  }
+  
   return (
     <div className="w-full sm:w-auto">
       <button
         onClick={handleInstallClick}
-        className={`w-full h-12 px-6 bg-white text-[var(--accent-fuchsia)] font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-gray-100 ${className}`}
+        className={`w-full h-12 px-6 bg-[#FF4081] text-white font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg hover:bg-white hover:text-[#FF4081] focus:bg-white focus:text-[#FF4081] ${className}`}
         title={t('pwa.install_app_title')}
         disabled={!window.deferredPrompt}
         aria-label={t('pwa.install_app_button')}
