@@ -2,11 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Download } from 'lucide-react';  
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle } from 'lucide-react';  
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
 import { supportedLngs } from '../../../i18n';
+import dynamic from 'next/dynamic';
+
+// Import the PWA install button component with SSR disabled
+const PWAInstallButton = dynamic(
+  () => import('@/components/features/pwa/PWAInstallButton').then(mod => mod.default),
+  { 
+    ssr: false,
+    loading: () => <div className="w-full h-3"></div> // Minimal loading placeholder
+  }
+);
 
 function getLangFromPath(path: string) {
   const match = path.match(/^\/([a-zA-Z-]+)/);
@@ -259,29 +269,12 @@ const Header = () => {
                 </span>
               </a>
             
-              {/* PWA Install Button - Maximum Compatibility */}
-              <a 
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  console.log(`[DEBUG] Simple PWA Install button clicked`);
-                  if (typeof window !== 'undefined' && window.deferredPrompt) {
-                    console.log(`[DEBUG] deferredPrompt available, showing prompt`);
-                    window.deferredPrompt.prompt();
-                  } else {
-                    console.log(`[DEBUG] deferredPrompt NOT available, showing alert`);
-                    alert(t('pwa.install_hint') || 'Cette fonctionnalité est disponible uniquement sur les appareils compatibles.');
-                  }
-                  toggleMenu();
-                }}
-                className="block w-full text-center py-3 px-4 rounded-md bg-[#800020] text-white font-medium"
-                id="pwa-install-button-mobile"
-              >
-                <span className="flex items-center justify-center">
-                  <Download size={20} className="mr-2" />
-                  {t('pwa.install_app_button') || 'Installer l\'application'}
-                </span>
-              </a>
+              {/* PWA Install Button - Using consolidated component */}
+              <PWAInstallButton 
+                variant="footer"
+                className="block w-full"
+                style={{ marginBottom: '0' }}
+              />
 
               {/* Language button - Elegant Style */}
               <button

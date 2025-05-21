@@ -50,6 +50,9 @@ export default function HomeClient({ lang }: { lang: string }) {
 
   return (
     <>
+      {/* Default Tailwind Test Div */}
+      <div className="bg-red-500 text-yellow-300 p-4 h-20 w-full m-8">DEFAULT TAILWIND TEST</div>
+      
       {/* Hero Banner */}
       <HeroBanner />
       <div className="container mx-auto px-4 pb-12">

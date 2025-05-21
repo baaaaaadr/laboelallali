@@ -127,24 +127,10 @@ const Footer = () => {
                   <span>{t('contact_on_whatsapp')}</span>
                 </a>
               
-                <a 
-                  href="#" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (typeof window !== 'undefined' && window.deferredPrompt) {
-                      window.deferredPrompt.prompt();
-                    } else {
-                      alert(t('pwa.install_hint') || 'Cette fonctionnalité est disponible uniquement sur les appareils compatibles.');
-                    }
-                  }}
-                  className="bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center space-x-2 transition-colors shadow-sm hover:shadow-md w-full"
-                  aria-label={t('pwa.install_app_button')}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24" className="flex-shrink-0">
-                    <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm9 4v-2H3v2h18z"/>
-                  </svg>
-                  <span>{t('pwa.install_app_button')}</span>
-                </a>
+                <PWAInstallButton 
+                  variant="footer" 
+                  className="w-full"
+                />
               </div>
             </div>
           </div>

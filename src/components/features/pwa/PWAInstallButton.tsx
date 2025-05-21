@@ -3,8 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+// Using require for CommonJS module
+const theme = require('@/styles/theme');
 
-// Define the BeforeInstallPromptEvent interface
+/**
+ * BeforeInstallPromptEvent interface defines the browser event triggered when a PWA can be installed
+ * This is the standardized definition that should be used in all PWA-related components
+ */
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
@@ -25,13 +30,33 @@ declare global {
   }
 }
 
+/**
+ * Props for the PWAInstallButton component
+ */
 type PWAInstallButtonProps = {
+  /** Visual presentation style of the button */
   variant?: 'button' | 'banner' | 'footer';
+  /** Additional CSS classes to apply */
   className?: string;
+  /** Force button to show regardless of installation state (useful for testing) */
   forceShow?: boolean;
+  /** Additional styling for different contexts */
+  style?: React.CSSProperties;
 };
 
-export default function PWAInstallButton({ variant = 'button', className = '', forceShow = false }: PWAInstallButtonProps) {
+/**
+ * PWAInstallButton - The official install button component for the Laboratoire El Allali PWA
+ * 
+ * This component handles detecting PWA install eligibility and provides various visual
+ * presentations through the variant prop. It manages the browser's beforeinstallprompt event
+ * and provides appropriate feedback for iOS Safari which handles installation differently.
+ */
+export default function PWAInstallButton({ 
+  variant = 'button', 
+  className = '', 
+  forceShow = false,
+  style = {}
+}: PWAInstallButtonProps) {
   // For development, default to showing button
   const [showButton, setShowButton] = useState(process.env.NODE_ENV === 'development' || forceShow);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
@@ -122,7 +147,7 @@ export default function PWAInstallButton({ variant = 'button', className = '', f
       console.log('PWA: Showing install prompt');
       
       // Trigger the prompt
-      const promptResult = await window.deferredPrompt.prompt();
+      await window.deferredPrompt.prompt();
       console.log('PWA: Install prompt shown');
       
       // Wait for the user to make a choice
@@ -149,26 +174,33 @@ export default function PWAInstallButton({ variant = 'button', className = '', f
     return null;
   }
   
+  // Banner variant - fixed position at bottom of screen
   if (variant === 'banner') {
     return (
-      <div className="fixed bottom-16 sm:bottom-4 right-4 bg-[#FF4081] text-white p-3 sm:p-4 rounded-lg shadow-xl z-[999] flex items-center space-x-2 sm:space-x-3 hover:bg-white hover:text-[#FF4081] transition-all duration-200">
+      <div 
+        className={`fixed bottom-16 sm:bottom-4 right-4 bg-[${theme.colors.fuchsia.accent}] text-[${theme.colors.white}] p-3 sm:p-4 rounded-lg shadow-xl z-[999] flex items-center space-x-2 sm:space-x-3 hover:bg-[${theme.colors.white}] hover:text-[${theme.colors.fuchsia.accent}] transition-all duration-200`}
+        style={style}
+      >
         <button
           onClick={handleInstallClick}
           className="flex items-center gap-2 text-sm font-medium"
+          aria-label={t('pwa.install_app_button')}
         >
-          <Download size={18} className="text-white" />
+          <Download size={18} />
           <span>{t('pwa.install_app_button')}</span>
         </button>
       </div>
     );
   }
   
+  // Footer variant - full width with bordeaux background
   if (variant === 'footer') {
     return (
       <button
         onClick={handleInstallClick}
-        className={`bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center transition-colors shadow-sm hover:shadow-md w-full ${className}`}
+        className={`bg-[${theme.colors.bordeaux.primary}] hover:bg-[${theme.colors.bordeaux.light}] text-[${theme.colors.white}] px-6 py-3 rounded-lg inline-flex items-center justify-center transition-colors shadow-sm hover:shadow-md w-full ${className}`}
         aria-label={t('pwa.install_app_button')}
+        style={style}
       >
         <div className="flex items-center justify-center gap-2">
           <Download size={18} />
@@ -178,13 +210,14 @@ export default function PWAInstallButton({ variant = 'button', className = '', f
     );
   }
   
+  // Default button variant with hint text
   return (
-    <div className="w-full sm:w-auto">
+    <div className="w-full sm:w-auto" style={style}>
       <button
         onClick={handleInstallClick}
-        className={`w-full h-12 px-6 bg-[#FF4081] text-white font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg hover:bg-white hover:text-[#FF4081] focus:bg-white focus:text-[#FF4081] ${className}`}
+        className={`w-full h-12 px-6 bg-[#FF4081] text-[#FFFFFF] font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg hover:bg-[#FFFFFF] hover:text-[#FF4081] focus:bg-[#FFFFFF] focus:text-[#FF4081] ${className}`}
         title={t('pwa.install_app_title')}
-        disabled={!window.deferredPrompt}
+        disabled={!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow}
         aria-label={t('pwa.install_app_button')}
       >
         <div className="flex items-center justify-center gap-2">
@@ -192,7 +225,7 @@ export default function PWAInstallButton({ variant = 'button', className = '', f
           <span>{t('pwa.install_app_button')}</span>
         </div>
       </button>
-      <div className="text-xs text-white mt-1 text-center">
+      <div className="text-xs text-[#FFFFFF] mt-1 text-center">
         {t('pwa.install_hint')}
       </div>
     </div>

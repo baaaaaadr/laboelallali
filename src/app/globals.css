@@ -3,7 +3,7 @@
 /* Import Leaflet CSS */
 @import 'leaflet/dist/leaflet.css';
 
-@import "tailwindcss";
+@import "tailwindcss"; /* CORRECT for Tailwind v4 */
 
 /* Workaround for Tailwind v4 custom brand color */
 .bg-bordeaux-custom {
@@ -17,18 +17,7 @@ html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Couleurs personnalisées comme variables CSS pour référence */
-:root {
-  --primary-bordeaux: #800020;
-  --bordeaux-dark: #600018;
-  --bordeaux-light: #B84C63;
-  --bordeaux-pale: #F7E7EA;
-  --accent-fuchsia: #FF4081;
-  --fuchsia-bright: #F50057;
-  --fuchsia-light: #FF80AB;
-  --fuchsia-pale: #FFF0F5;
-  --medical-background: #FDF8F9;
-}
+/* Temporarily removed :root CSS variables for refactoring */
 
 /* Styles personnalisés pour les boutons et composants */
 @layer components {

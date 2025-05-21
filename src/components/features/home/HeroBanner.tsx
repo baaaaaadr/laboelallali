@@ -10,8 +10,8 @@ const useTranslation = (ns: string) => {
 };
 
 // Import the PWA install button component with SSR disabled
-const InstallButton = dynamic<{ className?: string }>(
-  () => import('@/components/features/pwa/InstallButton').then(mod => mod.default),
+const PWAInstallButton = dynamic<{ className?: string, variant?: 'button' | 'banner' | 'footer' }>(
+  () => import('@/components/features/pwa/PWAInstallButton').then(mod => mod.default),
   { 
     ssr: false,
     loading: () => <div className="w-full h-12"></div> // Keep the layout stable while loading
@@ -62,8 +62,9 @@ const HeroBanner = () => {
               <Navigation size={22} className="mr-2 -ml-1" />
               {t('navigate_to_lab')}
             </a>
-            <InstallButton 
-              className="flex items-center justify-center min-w-[170px] h-12 px-6 bg-[#FF4081] text-white font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg hover:bg-white hover:text-[#FF4081] focus:bg-white focus:text-[#FF4081] gap-2 w-full sm:w-auto"
+            <PWAInstallButton 
+              variant="button"
+              className="flex items-center justify-center min-w-[170px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg hover:bg-white hover:text-[var(--accent-fuchsia)] focus:bg-white focus:text-[var(--accent-fuchsia)] gap-2 w-full sm:w-auto"
             />
           </div>
         </div>

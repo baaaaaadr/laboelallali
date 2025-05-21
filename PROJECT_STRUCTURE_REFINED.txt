@@ -1,0 +1,275 @@
+Project File Structure - Laboratoire El Allali PWA (Refined)
+
+============================================================
+
+
+--- ROOT LEVEL FILES ---
+
+.env.example
+.env.local
+.eslintrc.json
+.firebaserc
+.gitignore
+.windsurfrules
+allcode.txt
+context.txt
+context_for_ai.txt
+eslint.config.mjs
+firebase.json
+firestore.indexes.json
+firestore.rules
+generate_context.ps1
+i18n.ts
+next-env.d.ts
+next-sitemap.config.js
+next.config.js
+package-lock.json
+package.json
+PLANNING.md
+postcss.config.js
+postcss.config.mjs
+project_snapshot.txt
+PROJECT_STRUCTURE_COMBINED.txt
+PROJECT_STRUCTURE_DRAFT.txt
+PROJECT_STRUCTURE_REFINED.txt
+README.md
+simple-map-test.js
+storage.rules
+tailwind.config.js
+TASK.md
+test-map-fixed.js
+test-map.js
+test-server.js
+tsconfig.json
+WORKFLOW.md
+
+
+--- CORE APPLICATION DIRECTORIES ---
+
+
+--- Directory: src (Full Structure, excluding node_modules) ---
+
+src\custom.d.ts
+src\env-check.js
+src\i18n.server.ts
+src\middleware.ts
+src\app\favicon.ico
+src\app\globals.css
+src\app\layout.tsx
+src\app\metadata.ts
+src\app\contact\page.tsx
+src\app\glabo\layout.tsx
+src\app\glabo\page.tsx
+src\app\rendez-vous\page.tsx
+src\app\[lang]\HomeClient.tsx
+src\app\[lang]\layout.tsx
+src\app\[lang]\metadata.ts
+src\app\[lang]\page.new.tsx
+src\app\[lang]\page.tsx
+src\app\[lang]\page.tsx.new
+src\app\[lang]\analyses\page.tsx
+src\app\[lang]\contact\page.tsx
+src\app\[lang]\glabo\page.tsx
+src\app\[lang]\rendez-vous\page.tsx
+src\components\BaseStyles.tsx
+src\components\EnvironmentScript.tsx
+src\components\EnvProvider.tsx
+src\components\PWAInstallButton.tsx.new
+src\components\RTLAdditionalStyles.tsx
+src\components\RTLStylesProvider.tsx
+src\components\SimpleMap.tsx
+src\components\common\buttons\Button.tsx
+src\components\common\cards\Card.tsx
+src\components\features\catalog\AnalysisCard.tsx
+src\components\features\catalog\TotalCalculator.tsx
+src\components\features\home\HeroBanner.tsx
+src\components\features\pwa\InstallButton.tsx
+src\components\features\pwa\IOSInstallBanner.tsx
+src\components\features\pwa\PWABanner.tsx
+src\components\features\pwa\PWAComponents.tsx
+src\components\features\pwa\PWAInstallButton.tsx
+src\components\features\pwa\ServiceWorkerRegistration.tsx
+src\components\features\pwa\SimplePWAButton.tsx
+src\components\layout\Footer.tsx
+src\components\layout\Header.tsx
+src\components\layout\MainLayout.tsx
+src\components\providers\TranslationsProvider.tsx
+src\config\firebase.ts
+src\constants\contact.ts
+src\hooks\useInstallPrompt.ts
+src\lib\sw.js
+src\styles\leaflet.css
+src\styles\theme.ts
+src\types\next-i18next.d.ts
+                        +--- app
+                        |       favicon.ico
+                        |       globals.css
+                        |       layout.tsx
+                        |       metadata.ts
+                        +--- components
+                        |       BaseStyles.tsx
+                        |       EnvironmentScript.tsx
+                        |       EnvProvider.tsx
+                        |       PWAInstallButton.tsx.new
+                        |       RTLAdditionalStyles.tsx
+                        |       RTLStylesProvider.tsx
+                        |       SimpleMap.tsx
+                        +--- config
+                        |       firebase.ts
+                        +--- constants
+                        |       contact.ts
+                        +--- hooks
+                        |       useInstallPrompt.ts
+                        +--- lib
+                        |       sw.js
+                        +--- styles
+                        |       leaflet.css
+                        |       theme.ts
+                        +--- types
+                        |       next-i18next.d.ts
+                            +--- contact
+                            |       page.tsx
+                            +--- glabo
+                            |       layout.tsx
+                            |       page.tsx
+                            +--- rendez-vous
+                            |       page.tsx
+                            +--- [lang]
+                                +--- analyses
+                                +--- contact
+                                +--- glabo
+                                +--- rendez-vous
+                            +--- common
+                            +--- features
+                            +--- layout
+                            |       Footer.tsx
+                            |       Header.tsx
+                            |       MainLayout.tsx
+                            +--- providers
+                            |       TranslationsProvider.tsx
+                                +--- buttons
+                                |       Button.tsx
+                                +--- cards
+                                |       Card.tsx
+                                +--- catalog
+                                |       AnalysisCard.tsx
+                                |       TotalCalculator.tsx
+                                +--- home
+                                |       HeroBanner.tsx
+                                +--- pwa
+                                |       InstallButton.tsx
+                                |       IOSInstallBanner.tsx
+                                |       PWABanner.tsx
+                                |       PWAComponents.tsx
+                                |       PWAInstallButton.tsx
+                                |       ServiceWorkerRegistration.tsx
+                                |       SimplePWAButton.tsx
+
+
+
+--- Directory: public (Full Structure, excluding node_modules) ---
+
+public\404.html
+public\file.svg
+public\globe.svg
+public\index.html.bak
+public\manifest.json
+public\next.svg
+public\robots.txt
+public\sitemap-0.xml
+public\sitemap.xml
+public\sw.js
+public\vercel.svg
+public\window.svg
+public\workbox-e43f5367.js
+public\images\hero-banner.jpg
+public\images\icons\apple-touch-icon.png
+public\images\icons\icon-192x192-maskable.png
+public\images\icons\icon-192x192.png
+public\images\icons\icon-512x512-maskable.png
+public\images\icons\icon-512x512.png
+public\images\icons\ios-share-icon.png
+public\images\leaflet\marker-icon-2x.png
+public\images\leaflet\marker-icon.png
+public\images\leaflet\marker-shadow.png
+public\images\screenshots\desktop-catalog.png
+public\images\screenshots\mobile-home.png
+public\locales\.gitkeep
+public\locales\ar\appointment.json
+public\locales\ar\catalog.json
+public\locales\ar\common.json
+public\locales\ar\glabo.json
+public\locales\fr\appointment.json
+public\locales\fr\catalog.json
+public\locales\fr\common.json
+public\locales\fr\glabo.json
+                        +--- images
+                        |       hero-banner.jpg
+                        +--- locales
+                        |       .gitkeep
+                            +--- icons
+                            |       apple-touch-icon.png
+                            |       icon-192x192-maskable.png
+                            |       icon-192x192.png
+                            |       icon-512x512-maskable.png
+                            |       icon-512x512.png
+                            |       ios-share-icon.png
+                            +--- leaflet
+                            |       marker-icon-2x.png
+                            |       marker-icon.png
+                            |       marker-shadow.png
+                            +--- screenshots
+                            |       desktop-catalog.png
+                            |       mobile-home.png
+                            +--- ar
+                            |       appointment.json
+                            |       catalog.json
+                            |       common.json
+                            |       glabo.json
+                            +--- fr
+                            |       appointment.json
+                            |       catalog.json
+                            |       common.json
+                            |       glabo.json
+
+
+
+--- Directory: memory-bank (Full Structure, excluding node_modules) ---
+
+memory-bank\AI_ASSISTANT_PROTOCOL.md
+memory-bank\decisionLog.md
+memory-bank\productContext.md
+
+
+
+
+--- FIREBASE FUNCTIONS DIRECTORY (src & key files) ---
+
+
+--- Directory: functions (Key Files & src Structure) ---
+
+.eslintrc.js
+.gitignore
+eslint.config.cjs
+package-lock.json
+package.json
+tsconfig.json
+
+  --- Subdirectory: src (Structure) ---
+Trop de paramètres - 2
+
+  +--- node_modules (Exists, content not detailed)
+
+
+--- OTHER TOP-LEVEL DIRECTORIES (Existence Check Only) ---
+
+- .firebase (Exists - Unexpected Top Level Directory)
+- .next (Exists, content not detailed)
+- .vscode (Exists, content not detailed)
+- node_modules (Exists, content not detailed)
+- out (Exists - Unexpected Top Level Directory)
+- scripts (Exists - Unexpected Top Level Directory)
+
+
+--- END OF STRUCTURE REPORT ---
+

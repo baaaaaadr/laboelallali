@@ -1,0 +1,121 @@
+# --- Windsurf AI Rules: Laboratoire El Allali PWA ---
+
+# Priority: Adhere to these rules for all code generation and suggestions.
+
+## 0. Development Environment
+- **Windows Commands:** Always use PowerShell syntax for all terminal commands on Windows systems.
+  - Use `Remove-Item -Path .next -Recurse -Force` instead of `rm -rf .next`
+  - Use `New-Item -ItemType Directory -Force -Path ./directory` instead of `mkdir -p directory`
+  - Use `Get-ChildItem` instead of `ls` or `dir`
+  - Always use the full command name with parameters (e.g., `Remove-Item` instead of `rm`)
+
+## 1. Core Architecture & Frameworks
+# Reference external documents mentioned herein (e.g., Charte_Graphique.txt, i18n.ts, src/styles/theme.ts) for specifics.
+
+## 1. Core Architecture & Frameworks
+- **Framework:** Next.js 14+ (App Router).
+    - Utilize Server Components by default.
+    - Use 'use client' directive judiciously for Client Components.
+    - API Routes for backend logic as needed.
+- **Styling:** Tailwind CSS.
+    - **Primary Source of Truth for Design Tokens:** All colors, typography, spacing, and component-specific style variables are defined in `src/styles/theme.ts`.
+        - **ALWAYS import and use these exported theme objects (e.g., `theme.colors.bordeaux.primary`, `theme.typography.fontSize.base`, `theme.spacing[4]`) for styling decisions in JavaScript/TypeScript components.**
+        - For applying these tokens with Tailwind utilities, prefer referencing CSS variables set from `theme.ts` (e.g., `className="bg-[var(--primary-bordeaux)]"`) or use Tailwind's arbitrary value syntax if CSS variables are not set up (e.g., `className="bg-[#800020]"`, but always prefer `theme.ts` values).
+    - **Tailwind `theme.extend` in `tailwind.config.js`:** This file primarily uses Tailwind's default theme. Customizations here should be minimal. `src/styles/theme.ts` is the primary design token definition.
+    - **Brand Theme:** Primary: Bordeaux, Accent: Fuchsia (as per `theme.ts`). Refer to `Charte_Graphique.txt` for visual guidelines and the 80/20 color distribution.
+    - **Implementation:** Use Tailwind utility classes primarily. For dynamic styles or component-level styles not achievable with utilities alone, use JavaScript-in-CSS solutions (e.g., inline styles if simple) referencing `theme.ts` variables.
+    - **Custom Global Styles:** `src/app/globals.css` for base resets, font imports, and truly global utility classes (e.g., `.bg-bordeaux-custom` as a Tailwind v4 workaround if `theme.extend` colors are not generating classes).
+    - **UI Components:** Prefer HeadlessUI for unstyled accessible components, styled using Tailwind utilities and `theme.ts` variables.
+    - **Icons:** Use `lucide-react`.
+- **State Management:** React Context API for global client state. Use Local Storage for persistent client state.
+- **Forms:**
+    - **Library:** React Hook Form.
+    - **Validation:** Yup. Schemas in `src/schemas/`.
+    - **File Uploads:** `react-dropzone`.
+- **Internationalization (i18n):**
+    - **Library:** `next-i18next` (configured for App Router as per `i18n.ts`).
+    - **Languages:** Default 'fr'; Supported 'fr', 'ar' (RTL).
+    - **Files:** `public/locales/[lang]/[ns].json`. `common.json` for shared, feature-specific for others.
+    - **Keys:** Structure: `component.section.key` (e.g., `header.nav.home`).
+    - **Implementation:** Wrap ALL user-facing text with `useTranslation` hook and `t()` function.
+    - **Formatting:** Use `react-intl` for dates/numbers if complex formatting is needed beyond `date-fns` and `toLocaleString`.
+- **Date/Time:** Use `date-fns` for all date manipulations. Ensure timezone awareness.
+- **PWA:** Implement using `next-pwa`. Service worker: `public/sw.js`, Manifest: `public/manifest.json`. Config in `next.config.js`.
+
+## 2. Firebase Integration
+- **General:** Create dedicated service files (e.g., `src/services/firebase/authService.ts`, `firestoreService.ts`) for all Firebase interactions. Abstract Firebase calls.
+- **Authentication:** Firebase Auth (Email/Password, Google Sign-In). Lab-provided credentials for results are a specific flow.
+- **Database (Firestore):**
+    - **Collections:** `users`, `appointments`, `prescriptions`, `homeServices`, `testResults`, `catalog`.
+    - **Access:** Enforce role-based access via Firestore Security Rules.
+    - **Content Sync:** `catalog`, `FAQ` data is synced from Google Sheets via Apps Script to Firestore. AI should assume Firestore is the source of truth for the app when reading data.
+- **Storage:** Firebase Storage for `prescriptions` (images/docs), `testResults` (PDFs).
+- **Cloud Functions:**
+    - **Primary Use:** Backend logic triggered by Firestore events or HTTPS calls.
+    - **Notifications:** Send emails (via SendGrid/Nodemailer) for appointments, new results.
+    - **Integrations:** Google Calendar event creation for appointments.
+    - **WhatsApp:** Assist with message formatting for Phase 1 (wa.me links).
+
+## 3. Code Standards & Conventions
+- **Language:** TypeScript.
+- **Components:** Functional components ONLY. PascalCase naming (e.g., `BookingForm`). Define props with TypeScript interfaces.
+- **Imports:** Use absolute paths `@/*` (as per `tsconfig.json`).
+- **RTL (Arabic):**
+    - Apply styles as defined in `theme.typography.rtl` from `src/styles/theme.ts`.
+    - Ensure layout and component logic correctly adapts for RTL. Reference `src/components/RTLAdditionalStyles.tsx` if specific overrides exist.
+- **Animations:** Use `framer-motion` for complex UI animations. Prefer Tailwind transitions for simple effects.
+- **Styling with `theme.ts`:**
+    - **NEVER hardcode color hex codes, font sizes, or spacing values directly in components or Tailwind classes.**
+    - **ALWAYS import and use values from `src/styles/theme.ts`** (e.g., `import theme from '@/styles/theme'; <div style={{ color: theme.colors.bordeaux.primary }}>...</div>`).
+    - For Tailwind classes, if CSS variables are set from `theme.ts`, use them (e.g., `className="bg-[var(--primary-bordeaux)]"`). If not, use Tailwind's arbitrary value syntax referencing theme values (e.g., `className="bg-[${theme.colors.bordeaux.primary}]"`), or apply styles via JS/TS using `theme.ts` objects.
+    - Component-specific style objects in `theme.components` (from `src/styles/theme.ts`) should be the primary reference for styling those components.
+- **Documentation:** JSDoc comments for all non-trivial functions and components.
+
+## 4. Key Feature Implementation Patterns
+- **Prescription Submission:** Upload via `react-dropzone` -> Form (RHF+Yup) -> Firebase Storage -> Firestore record -> Cloud Function triggers email to lab.
+- **Appointment Booking (Lab):** `react-datepicker` for selection -> Form (RHF+Yup) -> Firestore -> Cloud Function triggers GCal event & email.
+- **Home Service (GLABO):** Address/Geolocation via Leaflet -> `react-datepicker` for time -> Form (RHF+Yup) -> Firestore -> Manual lab confirmation workflow (initial focus on request submission).
+- **Test Catalog:** Data from Firestore (synced from GSheets). Implement search/filter. Price calculation for selection.
+- **Results Access:** Firebase Auth -> Fetch from Firestore (links to PDFs in Storage) -> View with `react-pdf`. Implement download/share.
+- **Informative Content (FAQ, Glossary):** Data from Firestore (synced from GSheets). Display bilingually.
+
+## 5. External Integrations - Priorities & Phasing
+- **WhatsApp:**
+    - **Phase 1 (Current):** Implement `wa.me/` links with pre-formatted messages.
+    - **Phase 2 (Future):** Full WhatsApp Business API (Twilio or similar).
+- **Google Workspace:** Primarily for Lab Admin (Sheets, Calendar). App interacts with Firestore/GCal *after* admin actions or via Cloud Functions.
+- **Email (SendGrid/Nodemailer):** Used by Cloud Functions for automated notifications.
+- **CyberLab:** Integration is PENDING. Do not implement direct CyberLab API calls without explicit instruction. Current results flow is via Firebase.
+
+## 6. Performance & Optimization
+- **Images:** ALWAYS use `next/image` for optimization.
+- **Loading States:** Implement clear loading states (e.g., skeletons, spinners from `lucide-react`) for all async operations. Use React Suspense where appropriate for data fetching.
+- **Code Splitting:** Use `next/dynamic` for large components or libraries not needed on initial load.
+- **Memoization:** Use `React.memo` for components with expensive rendering if props don't change often.
+
+## 7. Development Practices & AI Interaction
+- **This File is Key:** Refer to these rules frequently. If I give conflicting instructions, remind me of these rules.
+- **Incremental Changes:** Propose changes for one file or one specific part of a feature at a time.
+- **Clarity:** If a task is unclear, ask for clarification before generating code.
+- **Existing Code:** Prefer extending/refactoring existing relevant code over creating duplicates.
+
+# --- Libraries to Use (Prefer these for consistency) ---
+- **Core:** `next`, `react`, `react-dom`
+- **Firebase:** `firebase` (Client SDK), `firebase-admin` (Admin SDK for Cloud Functions)
+    - *Consider `next-firebase-auth` if specialized Next.js auth handling is beneficial.*
+- **UI & Styling:** `tailwindcss`, `postcss`, `autoprefixer`, `headlessui/react`, `lucide-react`, `framer-motion`
+- **Forms & Validation:** `react-hook-form`, `yup`, `react-dropzone`
+- **i18n:** `next-i18next`, (`react-intl` for complex date/number formatting if `date-fns` + `toLocaleString` is insufficient)
+- **Document Handling:** `react-pdf`, (`html2canvas`, `jspdf` if client-side PDF generation is explicitly needed)
+- **Maps & Location:** `leaflet`, `react-leaflet`
+    - *Consider `google-map-react` ONLY if Leaflet proves insufficient for specific Google Maps features.*
+- **Date & Time:** `date-fns`, `react-datepicker`
+- **Utilities:** `axios` (for external non-Firebase API calls, if any), `lodash` (use specific function imports, e.g., `import get from 'lodash/get'`)
+
+# --- Do NOT ---
+- Do NOT use jQuery or other outdated/unnecessary libraries.
+- Do NOT generate inline styles unless explicitly for a dynamic value that cannot be directly handled by Tailwind utilities or `theme.ts` through JS.
+- Do NOT propose complex global state management libraries (like Redux, Zustand) unless explicitly requested; rely on React Context for global state and component local state (`useState`, `useReducer`) for local UI state.
+- Do NOT bypass Firebase security rules in client-side logic; all sensitive operations should be handled by Cloud Functions or validated by security rules.
+- Do NOT hardcode text strings; ALWAYS use i18n `t()` function.
+- Do NOT hardcode design tokens (colors, spacing, fonts); ALWAYS use `src/styles/theme.ts`.
