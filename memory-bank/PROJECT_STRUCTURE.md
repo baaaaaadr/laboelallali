@@ -77,6 +77,12 @@ When creating new files, follow these patterns or suggest updates to this docume
 - **`app/`**: Next.js App Router pages, layouts, and global styles.
     - `favicon.ico`: Application favicon.
     - `globals.css`: Global stylesheets, Tailwind base/components/utilities, custom global classes.
+      - **Button Styling (Tailwind v4 Compatibility):**
+        - Use simple global CSS classes for button backgrounds (e.g., `.button-style-bordeaux`)
+        - Define hover states in CSS, not with Tailwind variants
+        - Avoid `@apply` for complex button styles
+        - Use Tailwind utilities for layout and spacing only
+        - See Decision Log DL-009 for detailed patterns and rationale
     - `layout.tsx`: Root layout for the entire application.
     - `metadata.ts`: Default metadata for the application.
     - **`(lang)/`**: Dynamic segment for language-specific routes (e.g., `/fr/...`, `/ar/...`).

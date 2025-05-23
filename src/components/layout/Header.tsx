@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle } from 'lucide-react';  
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check } from 'lucide-react';  
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -25,9 +25,13 @@ function getLangFromPath(path: string) {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const { t, i18n } = useTranslation('common');
   const router = useRouter();
   const pathname = usePathname();
+  // Create separate refs for desktop and mobile dropdowns
+  const desktopLangDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileLangDropdownRef = useRef<HTMLDivElement>(null);
 
   const lang = i18n.language || getLangFromPath(pathname);
   // Make sure we're using the language from the URL, not potentially a mismatched language from i18n
@@ -55,32 +59,54 @@ const Header = () => {
     console.log(`[DEBUG] Header rendered, isMenuOpen: ${isMenuOpen}`);
   }, [isMenuOpen]);
 
-  const handleLanguageChange = () => {
-    // CORRECTION: Utiliser la langue de l'URL comme source de vérité, pas i18n.language
-    const currentLang = urlLang; // Utiliser urlLang au lieu de lang
-    const newLocale = currentLang === 'fr' ? 'ar' : 'fr';
-
-    // Extract the path after the language code
-    let pathWithoutLang = pathname;
-    const langPattern = new RegExp(`^/(${supportedLngs.join('|')})`);
-    if (langPattern.test(pathname)) {
-      // Remove the language prefix from the path
-      pathWithoutLang = pathname.replace(langPattern, '');
-      // If the path is empty after removing language code, set it to '/' for homepage
-      if (pathWithoutLang === '') pathWithoutLang = '/';
-    }
-
-    // Construct a new path with the new language code
-    const newPath = pathWithoutLang === '/' 
-      ? `/${newLocale}` 
-      : `/${newLocale}${pathWithoutLang}`;
-
-    console.log(`CORRECTION MAJEURE - Language switch: URL lang=${currentLang} -> ${newLocale}, Path: ${pathname} -> ${newPath}`);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside both dropdown refs
+      const isOutsideDesktop = !desktopLangDropdownRef.current || !desktopLangDropdownRef.current.contains(event.target as Node);
+      const isOutsideMobile = !mobileLangDropdownRef.current || !mobileLangDropdownRef.current.contains(event.target as Node);
+      
+      if (isOutsideDesktop && isOutsideMobile) {
+        setIsLangDropdownOpen(false);
+      }
+    };
     
-    // CORRECTION CRITIQUE: Au lieu d'utiliser router.push qui fait une navigation côté client
-    // et ne recharge pas complètement le contexte i18n, on utilise window.location.href
-    // pour forcer un rechargement complet de la page et réinitialiser le contexte i18n
-    window.location.href = newPath;
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLanguageChange = (newLocale: string) => {
+    // Only change if it's different from current language
+    if (newLocale !== urlLang) {
+      // Extract the path after the language code
+      let pathWithoutLang = pathname;
+      const langPattern = new RegExp(`^/(${supportedLngs.join('|')})`);
+      if (langPattern.test(pathname)) {
+        // Remove the language prefix from the path
+        pathWithoutLang = pathname.replace(langPattern, '');
+        // If the path is empty after removing language code, set it to '/' for homepage
+        if (pathWithoutLang === '') pathWithoutLang = '/';
+      }
+
+      // Construct a new path with the new language code
+      const newPath = pathWithoutLang === '/' 
+        ? `/${newLocale}` 
+        : `/${newLocale}${pathWithoutLang}`;
+
+      console.log(`Language switch: URL lang=${urlLang} -> ${newLocale}, Path: ${pathname} -> ${newPath}`);
+      
+      // Force a full page reload to reset i18n context
+      window.location.href = newPath;
+    }
+    
+    // Close the dropdown
+    setIsLangDropdownOpen(false);
+  };
+
+  const toggleLangDropdown = () => {
+    setIsLangDropdownOpen(!isLangDropdownOpen);
   };
 
   return (
@@ -124,14 +150,39 @@ const Header = () => {
 
           {/* Boutons d'action */}
           <div className="flex items-center space-x-2">
-            <button 
-              onClick={handleLanguageChange} 
-              className="flex items-center text-sm px-3 py-2 min-h-[44px] rounded hover:bg-[#600018] transition-colors"
-              aria-label={t('changeLanguage')}
-            >
-              <Globe size={18} className="mr-1.5" />
-              {t('currentLanguage')}
-            </button>
+            <div className="relative" ref={desktopLangDropdownRef}>
+              <button 
+                onClick={toggleLangDropdown} 
+                className="flex items-center text-sm px-3 py-2 min-h-[44px] rounded hover:bg-[#600018] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
+                aria-label={t('changeLanguage')}
+                aria-haspopup="true"
+                aria-expanded={isLangDropdownOpen}
+              >
+                <Globe size={18} className="mr-1.5" />
+                <span>{urlLang.toUpperCase()}</span>
+                <ChevronDown size={16} className="ml-1" />
+              </button>
+              
+              {/* Language Dropdown Menu */}
+              {isLangDropdownOpen && (
+                <div className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] overflow-hidden">
+                  <button
+                    onClick={() => { handleLanguageChange('fr'); return; }}
+                    className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-t-md"
+                  >
+                    <span className={urlLang === 'fr' ? 'font-bold' : ''}>Français</span>
+                    {urlLang === 'fr' && <Check size={16} />}
+                  </button>
+                  <button
+                    onClick={() => { handleLanguageChange('ar'); return; }}
+                    className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-b-md"
+                  >
+                    <span className={urlLang === 'ar' ? 'font-bold' : ''}>العربية</span>
+                    {urlLang === 'ar' && <Check size={16} />}
+                  </button>
+                </div>
+              )}
+            </div>
             <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center">
               <Search size={20} />
             </button>
@@ -253,40 +304,61 @@ const Header = () => {
             
           {/* Navigation Footer - Branded Buttons Layout */}
           <div className="mt-auto p-4 border-t border-gray-200 bg-white">
-            <div className="space-y-4">
-              {/* WhatsApp Contact Button - Professional Green Style */}
+            <div className="flex flex-col gap-3">
+              {/* WhatsApp Contact Button - Using custom button class */}
               <a 
                 href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={toggleMenu}
-                className="block w-full text-center py-3.5 px-5 rounded-lg bg-gradient-to-br from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 transition-all duration-200 font-medium shadow-sm"
+                className="menu-action-button"
                 aria-label="Contact via WhatsApp"
               >
-                <span className="flex items-center justify-center">
-                  <MessageCircle size={20} className="mr-2.5" />
-                  {t('contact')} WhatsApp
-                </span>
+                <MessageCircle size={20} className="mr-2.5" />
+                {t('contact')} WhatsApp
               </a>
             
               {/* PWA Install Button - Using consolidated component */}
               <PWAInstallButton 
                 variant="footer"
-                className="block w-full"
-                style={{ marginBottom: '0' }}
+                className="w-full menu-action-button"
+                style={{ margin: 0 }}
               />
 
-              {/* Language button - Elegant Style */}
-              <button
-                onClick={handleLanguageChange}
-                className="block w-full text-center py-3 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors font-medium"
-                aria-label={t('changeLanguage')}
-              >
-                <span className="flex items-center justify-center">
-                  <Globe size={18} className="mr-2 text-gray-500" />
-                  {t('currentLanguage')}
-                </span>
-              </button>
+              {/* Language button - Using custom button class */}
+              <div className="relative" ref={mobileLangDropdownRef}>
+                <button
+                  onClick={toggleLangDropdown}
+                  className="menu-action-button flex items-center"
+                  aria-label={t('changeLanguage')}
+                  aria-haspopup="true"
+                  aria-expanded={isLangDropdownOpen}
+                >
+                  <Globe size={20} className="mr-2.5" />
+                  <span>{urlLang.toUpperCase()}</span>
+                  <ChevronDown size={16} className="ml-1" />
+                </button>
+                
+                {/* Mobile Language Dropdown Menu */}
+                {isLangDropdownOpen && (
+                  <div className="absolute right-0 bottom-full mb-1 w-36 bg-white rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] overflow-hidden">
+                    <button
+                      onClick={() => { handleLanguageChange('fr'); return; }}
+                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-t-md"
+                    >
+                      <span className={urlLang === 'fr' ? 'font-bold' : ''}>Français</span>
+                      {urlLang === 'fr' && <Check size={16} />}
+                    </button>
+                    <button
+                      onClick={() => { handleLanguageChange('ar'); return; }}
+                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-b-md"
+                    >
+                      <span className={urlLang === 'ar' ? 'font-bold' : ''}>العربية</span>
+                      {urlLang === 'ar' && <Check size={16} />}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -71,4 +71,81 @@ This log records key architectural, technical, and design decisions made during 
 *   **Impact:** Simplified codebase, consistent styling using theme variables, and reduced maintenance overhead. All PWA installation UI needs can now be handled through this single component with appropriate props.
 
 ---
+
+**2025-05-22:**
+
+*   **Decision ID:** DL-008
+*   **Decision:** Adopt Tailwind CSS v4 with specific configuration for Next.js 15+ compatibility.
+*   **Rationale:** To leverage the latest Tailwind features while ensuring stable theming and build processes. The configuration addresses known issues with Tailwind v4 in Next.js 15+ environments, particularly on Windows.
+*   **Key Configuration Details:**
+      - Use `postcss.config.js` (CommonJS) instead of `.mjs` to avoid module scope issues
+      - Configure PostCSS to use `@tailwindcss/postcss` plugin instead of direct `tailwindcss` reference
+      - Define custom colors through CSS classes in `globals.css` as a workaround for v4 theme extension limitations
+      - Use `@import "tailwindcss";` in CSS files for better v4 compatibility
+      - Clear Next.js cache (`rm -rf .next`) when making configuration changes
+*   **Impact:** Ensures consistent styling across the application while working around Tailwind v4's custom theming limitations. May require using CSS classes or inline styles for brand colors until v4 theme extension matures.
+*   **Alternatives Considered:** 
+      - Downgrading to Tailwind v3 for more stable theming
+      - Using CSS Modules or other CSS-in-JS solutions
+
+---
+
+**2025-05-22:**
+
+*   **Decision ID:** DL-009
+*   **Decision:** Establish standardized button styling patterns for Tailwind CSS v4 compatibility
+*   **Rationale:** After extensive debugging, we identified consistent issues with button styling in Tailwind v4, particularly with background colors and complex class applications. This decision documents the working patterns and best practices.
+*   **Key Findings & Patterns:**
+      1. **Arbitrary Background Colors:** Avoid using arbitrary values (e.g., `bg-[#FF4081]`) directly on `<button>` elements as they may not render consistently.
+      2. **Global CSS Classes:** Use simple, dedicated global CSS classes in `globals.css` for button backgrounds and text colors (e.g., `.button-style-fuchsia { background-color: #FF4081; }`).
+      3. **Complex Classes:** Avoid applying complex global classes with multiple properties (especially those using `@apply`) directly to raw `<button>` elements.
+      4. **Component Usage:** When using button components, apply simple global classes for core styles and use Tailwind utilities for layout and spacing.
+      5. **Hover States:** Define hover states within the global CSS class rather than using Tailwind's hover variants for background colors.
+*   **Implementation Strategy:**
+      - Define simple, single-purpose global classes for button variants
+      - Use Tailwind utilities for layout and spacing
+      - Avoid `@apply` for complex button styles
+      - Test all button variants across different components and states
+*   **Impact:** Ensures consistent button styling across the application while working around Tailwind v4's limitations with button elements. This approach provides reliable theming and maintainability.
+*   **Alternatives Considered:**
+      - Using inline styles (less maintainable)
+      - Creating wrapper components for all buttons (increased complexity)
+      - Downgrading to Tailwind v3 (would lose v4 features)
+
+---
+
+**2025-05-22:**
+
+*   **Decision ID:** DL-010
+*   **Decision:** Adopt Simple Global Classes for Button Backgrounds in Tailwind v4
+*   **Rationale:** After extensive testing, we've identified that complex global classes (even those using plain CSS) and arbitrary values fail to properly apply background colors to `<button>` elements in our Tailwind v4 + Next.js 15 setup. Only simple, single-property global CSS classes reliably work for button backgrounds.
+*   **Key Findings:**
+      1. Complex global classes (like `.btn-primary`) fail to apply background colors to buttons, even when defined with plain CSS
+      2. Arbitrary values (e.g., `bg-[#FF4081]`) also fail on button elements
+      3. Simple global classes (e.g., `.bg-bordeaux-custom { background-color: #800020 }`) work reliably
+      4. This behavior is consistent across both raw buttons and buttons inside components
+*   **Implementation Strategy:**
+      - Use simple, single-purpose global CSS classes for button backgrounds and text colors
+      - Define these classes in `globals.css` with minimal properties (only `background-color` and `color`)
+      - Apply all other styling (padding, borders, hover states, etc.) using Tailwind utility classes directly on elements
+      - Avoid using `@apply` for button styles
+      - Example:
+        ```css
+        /* In globals.css */
+        .btn-bg-bordeaux { background-color: #800020; color: white; }
+        .btn-bg-fuchsia { background-color: #FF4081; color: white; }
+        
+        /* In component */
+        <button className="btn-bg-bordeaux px-4 py-2 rounded hover:opacity-90">
+          Button Text
+        </button>
+        ```
+*   **Impact:** This approach ensures reliable button styling while working around Tailwind v4's limitations. It maintains maintainability by keeping color definitions in one place while allowing for flexible composition of other styles.
+*   **Alternatives Considered:**
+      - Continuing to use complex global classes (proven unreliable)
+      - Using inline styles (less maintainable, harder to theme)
+      - Downgrading to Tailwind v3 (would lose v4 features)
+      - Using CSS Modules or other CSS-in-JS solutions (adds complexity)
+
+---
 *(Add new decisions below this line as they are made)*

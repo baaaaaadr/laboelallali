@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-// Using require for CommonJS module
-const theme = require('@/styles/theme');
 
 /**
  * BeforeInstallPromptEvent interface defines the browser event triggered when a PWA can be installed
@@ -60,7 +58,15 @@ export default function PWAInstallButton({
   // For development, default to showing button
   const [showButton, setShowButton] = useState(process.env.NODE_ENV === 'development' || forceShow);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
-  const { t } = useTranslation('common');
+  const [isClientReady, setIsClientReady] = useState(false);
+  
+  // Set isClientReady to true after component mounts (client-side only)
+  useEffect(() => {
+    setIsClientReady(true);
+  }, []);
+  
+  // Only initialize i18n when client is ready
+  const { t } = useTranslation('common', { useSuspense: false });
   
   // Log state for debugging
   useEffect(() => {
@@ -169,6 +175,11 @@ export default function PWAInstallButton({
     }
   }, []);
 
+  // Don't render anything if not on client yet to prevent hydration mismatch
+  if (!isClientReady) {
+    return null;
+  }
+  
   // In development mode or if forceShow is true, always show the button for testing UI
   if ((isAppInstalled || !showButton) && process.env.NODE_ENV !== 'development' && !forceShow) {
     return null;
@@ -176,18 +187,22 @@ export default function PWAInstallButton({
   
   // Banner variant - fixed position at bottom of screen
   if (variant === 'banner') {
+    const isDisabled = !isClientReady || (!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow);
+    
     return (
       <div 
-        className={`fixed bottom-16 sm:bottom-4 right-4 bg-[${theme.colors.fuchsia.accent}] text-[${theme.colors.white}] p-3 sm:p-4 rounded-lg shadow-xl z-[999] flex items-center space-x-2 sm:space-x-3 hover:bg-[${theme.colors.white}] hover:text-[${theme.colors.fuchsia.accent}] transition-all duration-200`}
+        className="fixed bottom-16 sm:bottom-4 right-4 z-[999] button-fuchsia shadow-xl hover:shadow-2xl"
         style={style}
       >
         <button
           onClick={handleInstallClick}
-          className="flex items-center gap-2 text-sm font-medium"
-          aria-label={t('pwa.install_app_button')}
+          disabled={isDisabled}
+          className={`flex items-center gap-2 text-sm font-medium ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
+          aria-disabled={isDisabled}
         >
           <Download size={18} />
-          <span>{t('pwa.install_app_button')}</span>
+          <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
         </button>
       </div>
     );
@@ -195,39 +210,48 @@ export default function PWAInstallButton({
   
   // Footer variant - full width with bordeaux background
   if (variant === 'footer') {
+    const isDisabled = !isClientReady || (!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow);
+    
     return (
       <button
         onClick={handleInstallClick}
-        className={`bg-[${theme.colors.bordeaux.primary}] hover:bg-[${theme.colors.bordeaux.light}] text-[${theme.colors.white}] px-6 py-3 rounded-lg inline-flex items-center justify-center transition-colors shadow-sm hover:shadow-md w-full ${className}`}
-        aria-label={t('pwa.install_app_button')}
+        className={`button-bordeaux w-full ${className}`}
+        aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
         style={style}
+        disabled={isDisabled}
       >
-        <div className="flex items-center justify-center gap-2">
-          <Download size={18} />
-          <span>{t('pwa.install_app_button')}</span>
-        </div>
+        <Download size={18} />
+        <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
       </button>
     );
   }
   
-  // Default button variant with hint text
+  // Default button variant
+  const isDisabled = !isClientReady || (!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow);
+  
+  // Get the hint text with a fallback
+  const hintText = isClientReady && t('pwa.install_hint') !== 'pwa.install_hint' 
+    ? t('pwa.install_hint') 
+    : 'Accès rapide via l\'application';
+  
   return (
     <div className="w-full sm:w-auto" style={style}>
       <button
         onClick={handleInstallClick}
-        className={`w-full h-12 px-6 bg-[#FF4081] text-[#FFFFFF] font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg hover:bg-[#FFFFFF] hover:text-[#FF4081] focus:bg-[#FFFFFF] focus:text-[#FF4081] ${className}`}
-        title={t('pwa.install_app_title')}
-        disabled={!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow}
-        aria-label={t('pwa.install_app_button')}
+        className={`button-fuchsia ${className}`}
+        title={isClientReady ? t('pwa.install_app_title') : 'Install Application'}
+        disabled={isDisabled}
+        aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
       >
-        <div className="flex items-center justify-center gap-2">
-          <Download size={18} />
-          <span>{t('pwa.install_app_button')}</span>
-        </div>
+        <Download size={20} />
+        <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
       </button>
-      <div className="text-xs text-[#FFFFFF] mt-1 text-center">
-        {t('pwa.install_hint')}
-      </div>
+      {/* Only show hint text if not passed a className that might indicate hero usage */}
+      {!className?.includes('min-w-[170px]') && (
+        <div className="text-xs text-gray-600 dark:text-gray-300 mt-1 text-center">
+          {hintText}
+        </div>
+      )}
     </div>
   );
 }

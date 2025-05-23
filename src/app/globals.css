@@ -3,122 +3,282 @@
 /* Import Leaflet CSS */
 @import 'leaflet/dist/leaflet.css';
 
-@import "tailwindcss"; /* CORRECT for Tailwind v4 */
+/* Import Tailwind - CORRECT for v4 */
+@import "tailwindcss";
 
-/* Workaround for Tailwind v4 custom brand color */
-.bg-bordeaux-custom {
-  background-color: #800020;
-  color: white;
+/* CSS Custom Properties for consistent color management */
+:root {
+  --color-bordeaux-primary: #800020;
+  --color-bordeaux-dark: #600018;
+  --color-bordeaux-light: #B84C63;
+  --color-fuchsia-accent: #FF4081;
+  --color-fuchsia-bright: #F50057;
+  --color-white: #FFFFFF;
+  --color-gray-soft: #FFF0F5;
+  --color-gray-border: #F7E7EA;
 }
 
+/* Reset default button styles that might interfere with Tailwind v4 */
+button {
+  /* Remove all default button styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
 
-/* Styles de base */
+/* Base styles */
 html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Temporarily removed :root CSS variables for refactoring */
+/* Header-specific button styles to override the global reset */
+header button {
+  background-color: transparent !important;
+  color: inherit;
+}
 
-/* Styles personnalisés pour les boutons et composants */
-@layer components {
-  .footer-gradient {
-    background: linear-gradient(135deg, #800020 0%, #B84C63 60%, #FF4081 100%);
-    @apply text-white;
-  }
-  .footer-gradient ul li {
-    @apply mb-2;
-  }
-  .footer-gradient ul li:last-child {
-    @apply mb-0;
-  }
-  .footer-gradient a {
-    @apply block w-full text-white hover:text-[#FF4081] transition-colors;
-  }
+/* Language dropdown specific fixes */
+header .relative > button:has(.mr-1\.5) {
+  background-color: transparent !important;
+  color: rgba(255, 255, 255, 0.85);
+}
 
-  .btn-primary {
-    @apply bg-[#FF4081] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-[#F50057] hover:shadow-md hover:-translate-y-0.5;
-  }
+/* Ensure dropdown toggle buttons maintain transparent background */
+header button:has(svg[size="18"]) {
+  background-color: transparent !important;
+}
 
-  .btn-secondary {
-    @apply bg-[#800020] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-[#600018];
-  }
+/* Fix for dropdown menu items inside the white dropdown */
+header .absolute.bg-white button {
+  background-color: transparent;
+  color: var(--color-bordeaux-primary);
+}
 
-  .btn-outline {
-    @apply border-2 border-[#800020] text-[#800020] bg-transparent px-6 py-[10px] rounded-lg font-semibold transition-all duration-200;
-  }
-  .btn-outline:hover {
-    @apply bg-[#800020] text-white border-[#800020];
-  }
+/* Mobile menu action buttons */
+.menu-action-button {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-white);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
 
-  .btn-text {
-  color: #FF4081;
+.menu-action-button:hover {
+  background-color: var(--color-bordeaux-dark);
+}
+
+/* Direct button classes that work reliably in Tailwind v4 */
+.button-fuchsia {
+  background-color: var(--color-fuchsia-accent);
+  color: var(--color-white);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
   font-weight: 600;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid transparent;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 1rem;
-  min-height: 44px;
-  min-width: 44px;
-  border-radius: 0.25rem;
-  outline: none;
-  cursor: pointer;
-  position: relative;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
-.btn-text:focus {
-  box-shadow: 0 0 0 2px #FF4081;
-  border-bottom: 1px solid #FF4081;
-  background: rgba(255,64,129,0.08);
+
+.button-fuchsia:hover {
+  background-color: var(--color-fuchsia-bright);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-0.125rem);
 }
-.btn-text:hover {
-  border-bottom: 1px solid #FF4081;
-  transform: translateY(-1px);
-  background: rgba(255,64,129,0.04);
+
+.button-fuchsia:focus {
+  outline: 2px solid var(--color-fuchsia-accent);
+  outline-offset: 2px;
 }
-.btn-text .btn-chevron {
-  transition: transform 0.2s;
-  margin-left: 0.25rem;
+
+.button-bordeaux {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-white);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
-.btn-text:hover .btn-chevron,
-.btn-text:focus .btn-chevron {
-  transform: translateX(2px);
+
+.button-bordeaux:hover {
+  background-color: var(--color-bordeaux-dark);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-0.125rem);
 }
-@media (hover: none) and (pointer: coarse) {
+
+.button-bordeaux:focus {
+  outline: 2px solid var(--color-bordeaux-primary);
+  outline-offset: 2px;
+}
+
+.button-outline-bordeaux {
+  background-color: transparent;
+  color: var(--color-bordeaux-primary);
+  padding: 0.625rem 1.5rem;
+  border: 2px solid var(--color-bordeaux-primary);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button-outline-bordeaux:hover {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-white);
+}
+
+.button-outline-bordeaux:focus {
+  outline: 2px solid var(--color-bordeaux-primary);
+  outline-offset: 2px;
+}
+
+/* Keep your existing working class */
+.bg-bordeaux-custom {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-white);
+}
+
+/* Custom component styles */
+@layer components {
+  /* Footer gradient */
+  .footer-gradient {
+    background: linear-gradient(135deg, var(--color-bordeaux-primary) 0%, var(--color-bordeaux-light) 60%, var(--color-fuchsia-accent) 100%);
+    color: var(--color-white);
+  }
+  
+  .footer-gradient ul li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer-gradient ul li:last-child {
+    margin-bottom: 0;
+  }
+  
+  .footer-gradient a {
+    display: block;
+    width: 100%;
+    color: var(--color-white);
+    transition: color 0.2s ease;
+  }
+  
+  .footer-gradient a:hover {
+    color: var(--color-fuchsia-accent);
+  }
+
+  /* Text button style */
   .btn-text {
+    color: var(--color-fuchsia-accent);
+    font-weight: 600;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 1rem;
     min-height: 44px;
     min-width: 44px;
-    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    outline: none;
+    cursor: pointer;
+    position: relative;
   }
-}
+  
+  .btn-text:focus {
+    box-shadow: 0 0 0 2px var(--color-fuchsia-accent);
+    border-bottom: 1px solid var(--color-fuchsia-accent);
+    background: rgba(255, 64, 129, 0.08);
+  }
+  
+  .btn-text:hover {
+    border-bottom: 1px solid var(--color-fuchsia-accent);
+    transform: translateY(-1px);
+    background: rgba(255, 64, 129, 0.04);
+  }
+  
+  .btn-text .btn-chevron {
+    transition: transform 0.2s;
+    margin-left: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .btn-text:hover .btn-chevron,
+  .btn-text:focus .btn-chevron {
+    transform: translateX(2px);
+  }
+  
+  @media (hover: none) and (pointer: coarse) {
+    .btn-text {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0.5rem 0.75rem;
+    }
+  }
 
+  /* Link button */
   .btn-link {
-    @apply text-[#FF4081] bg-transparent px-4 py-2 font-semibold transition-all duration-200 hover:underline;
+    color: var(--color-fuchsia-accent);
+    background-color: transparent;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-link:hover {
+    text-decoration: underline;
   }
 
+  /* Card styles */
   .card {
-    @apply bg-white rounded-xl shadow-sm p-5 transition-all duration-300 border border-gray-100;
-    transition-property: box-shadow, transform;
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    border: 1px solid #f3f4f6;
   }
+  
   .card:hover {
     transform: translateY(-3px) scale(1.015);
-    box-shadow: 0 4px 12px 0 rgba(128,0,32,0.08), 0 0.75px 3px 0 rgba(255,64,129,0.07);
+    box-shadow: 0 4px 12px 0 rgba(128, 0, 32, 0.08), 0 0.75px 3px 0 rgba(255, 64, 129, 0.07);
   }
 
+  /* Animation utilities */
   .fade-in-section {
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.8s cubic-bezier(.4,0,.2,1), transform 0.8s cubic-bezier(.4,0,.2,1);
+    transition: opacity 0.8s cubic-bezier(.4, 0, .2, 1), transform 0.8s cubic-bezier(.4, 0, .2, 1);
     will-change: opacity, transform;
   }
+  
   .fade-in-section.visible {
     opacity: 1;
     transform: translateY(0);
   }
 
+  /* Mobile menu animations */
   .backdrop-blur-sm {
     transition: opacity 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out;
     opacity: 0;
@@ -154,29 +314,34 @@ html, body {
     }
   }
 
+  /* Footer WhatsApp button */
   .footer-whatsapp-btn {
-    background: #800020;
-    color: #fff;
+    background: var(--color-bordeaux-primary);
+    color: var(--color-white);
     border-radius: 0.5rem;
     padding: 0.5rem 1rem;
     display: inline-flex;
     align-items: center;
     font-weight: 500;
-    box-shadow: 0 1px 3px 0 rgba(128,0,32,0.05);
+    box-shadow: 0 1px 3px 0 rgba(128, 0, 32, 0.05);
     transition: background 0.2s, box-shadow 0.2s;
   }
-  .footer-whatsapp-btn:hover, .footer-whatsapp-btn:focus {
-    background: #B84C63;
-    color: #fff;
-    box-shadow: 0 4px 12px 0 rgba(128,0,32,0.12);
+  
+  .footer-whatsapp-btn:hover,
+  .footer-whatsapp-btn:focus {
+    background: var(--color-bordeaux-light);
+    color: var(--color-white);
+    box-shadow: 0 4px 12px 0 rgba(128, 0, 32, 0.12);
     outline: none;
   }
+  
   .footer-whatsapp-btn svg {
     margin-right: 0.5rem;
     min-width: 20px;
     min-height: 20px;
   }
 
+  /* Other utility classes */
   .footer-copyright {
     color: #F8F9FA;
     font-size: 0.875rem;
@@ -187,26 +352,57 @@ html, body {
   }
 
   .card-header {
-    @apply pb-3 mb-4 border-b border-[#F7E7EA] font-semibold text-[#800020] text-lg;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--color-gray-border);
+    font-weight: 600;
+    color: var(--color-bordeaux-primary);
+    font-size: 1.125rem;
   }
 
   .card-action {
-    @apply text-[#FF4081] font-semibold text-sm mt-2 inline-block;
+    color: var(--color-fuchsia-accent);
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: inline-block;
   }
 
   .loading {
-    @apply inline-block w-6 h-6 border-2 border-[#FFF0F5] rounded-full border-t-[#FF4081] animate-spin;
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--color-gray-soft);
+    border-radius: 50%;
+    border-top-color: var(--color-fuchsia-accent);
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .gradient-header {
-    background: linear-gradient(135deg, #800020, #B84C63);
-    @apply text-white p-6 rounded-xl relative overflow-hidden;
+    background: linear-gradient(135deg, var(--color-bordeaux-primary), var(--color-bordeaux-light));
+    color: var(--color-white);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    position: relative;
+    overflow: hidden;
   }
 
-/* Class pour après l'élément gradient-header */
-.gradient-header::after {
-  content: "";
-  @apply absolute top-0 right-0 w-24 h-24 rounded-full opacity-10 translate-x-1/3 -translate-y-1/3;
-  background: #FF4081;
-}
+  .gradient-header::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    opacity: 0.1;
+    transform: translate(33.333333%, -33.333333%);
+    background: var(--color-fuchsia-accent);
+  }
 }
