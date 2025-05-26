@@ -24,21 +24,21 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="footer-gradient text-white pt-12 pb-8 mt-4">
+    <footer className="footer-gradient text-white pt-12 pb-8 mt-4 dark:bg-gradient-to-br dark:from-[#1a0a0e] dark:via-[#2a0a14] dark:to-[#3a0a1a]">
       <div className="container mx-auto px-4">
-        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[#800020]/70 via-[#B84C63]/70 to-[#FF4081]/70 rounded-full"></div>
+        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[#800020]/70 via-[#B84C63]/70 to-[#FF4081]/70 dark:from-[#FF4081]/50 dark:via-[#B84C63]/50 dark:to-[#800020]/50 rounded-full"></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm sm:text-base">
           {/* Contact Info */}
           <div>
             <h3 className="text-xl font-bold mb-4">{t('contact')}</h3>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <MapPin size={20} className="flex-shrink-0 text-white mt-0.5" />
+                <MapPin size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
                 <span>{t(LAB_ADDRESS)}</span>
               </li>
               <li className="flex flex-col">
                 <div className="flex items-start space-x-3 mb-1">
-                  <Phone size={20} className="flex-shrink-0 text-white mt-0.5" />
+                  <Phone size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
                   <span className="font-semibold">{t('lab_contact')}</span>
                 </div>
                 <div className={`${isRTL ? 'mr-7' : 'ml-7'}`}>
@@ -53,7 +53,7 @@ const Footer = () => {
                 </div>
               </li>
               <li className="flex items-start space-x-3">
-                <Mail size={20} className="flex-shrink-0 text-white mt-0.5" />
+                <Mail size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
                 <div className="flex flex-col">
                   <a href={LAB_CONTACT.EMAIL.url} className="hover:underline">
                     {LAB_CONTACT.EMAIL.display}
@@ -61,7 +61,7 @@ const Footer = () => {
                 </div>
               </li>
               <li className="flex items-start space-x-3">
-                <Clock size={20} className="flex-shrink-0 text-white mt-0.5" />
+                <Clock size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
                 <div>
                   <p>{LAB_HOURS.WEEKDAYS}</p>
                   <p>{LAB_HOURS.SUNDAY}</p>
@@ -75,25 +75,25 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">{t('quick_links')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                <Link href="/" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('home')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#services" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                <Link href="#services" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('our_main_services')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#info" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                <Link href="#info" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('practical_info')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                <Link href="#contact" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('contact')}</span>
                 </Link>

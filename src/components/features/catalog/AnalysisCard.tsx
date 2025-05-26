@@ -15,14 +15,6 @@ export interface Analysis {
   is_active: boolean;
 }
 
-/**
- * Props for the AnalysisCard component
- * @interface AnalysisCardProps
- * @property {Analysis} analysis - The analysis data to display
- * @property {string} lang - The current language code ('fr' or 'ar')
- * @property {boolean} [isSelected] - Whether this analysis is currently selected
- * @property {Function} [onSelect] - Callback function when the analysis is selected/deselected
- */
 interface AnalysisCardProps {
   analysis: Analysis;
   lang: string;
@@ -31,27 +23,6 @@ interface AnalysisCardProps {
 }
 
 export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: AnalysisCardProps) {
-  // Define animation keyframes for the check icon - client side only
-  React.useEffect(() => {
-    if (typeof document !== 'undefined') {
-      const style = document.createElement('style');
-      style.innerHTML = `
-        @keyframes appearAnimation {
-          0% { opacity: 0; transform: scale(0); }
-          50% { opacity: 1; transform: scale(1.2); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-        .animate-appear {
-          animation: appearAnimation 0.3s ease-out forwards;
-        }
-      `;
-      document.head.appendChild(style);
-
-      return () => {
-        document.head.removeChild(style);
-      };
-    }
-  }, []);
   const isArabic = lang === "ar";
   const [showPreparation, setShowPreparation] = useState(false);
   
@@ -60,7 +31,8 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
   const hasPreparation = preparationText && preparationText.trim().length > 0;
   
   // Toggle preparation visibility
-  const togglePreparation = () => {
+  const togglePreparation = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setShowPreparation(prev => !prev);
   };
   
@@ -79,7 +51,7 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
   
   // Handle selection
   const handleSelectClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     if (onSelect) {
       onSelect(analysis);
     }
@@ -87,40 +59,55 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
 
   return (
     <div 
-      className={`shadow-lg rounded-lg p-4 mb-4 border 
+      className={`
+        relative w-full
+        bg-[var(--background-secondary)] dark:bg-[var(--background-secondary)]
+        border-2 rounded-xl p-5 mb-4
+        cursor-pointer
+        transition-all duration-200 ease-in-out
         ${isSelected 
-          ? 'border-[var(--accent-fuchsia)] border border-opacity-80 bg-[var(--bordeaux-pale)] ring-1 ring-[var(--accent-fuchsia)] ring-opacity-40' 
-          : 'border-gray-200 bg-white hover:border-gray-300'} 
-        hover:shadow-xl transition-all duration-300 ease-in-out transform ${isSelected ? 'scale-[1.01]' : ''} relative`}
+          ? 'border-[var(--color-fuchsia-accent)] ring-2 ring-[var(--color-fuchsia-accent)]/30 scale-[1.02]' 
+          : 'border-[var(--border-default)] hover:border-[var(--color-bordeaux-light)] hover:shadow-lg'
+        }
+      `}
       onClick={handleSelectClick}
       role="button"
       tabIndex={0}
       aria-pressed={isSelected}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
           handleSelectClick(e as unknown as React.MouseEvent);
         }
       }}
+      style={{
+        boxShadow: isSelected 
+          ? '0 8px 25px -5px rgba(255, 64, 129, 0.2)' 
+          : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        minHeight: '200px'
+      }}
     >
-      {/* Selection indicator - position based on language direction */}
+      {/* Selection indicator */}
       <div 
-        className={`absolute top-3 ${isArabic ? 'left-3' : 'right-3'} flex items-center z-10`}
+        className={`absolute top-3 ${isArabic ? 'left-3' : 'right-3'} z-10`}
         aria-hidden="true"
       >
         <div 
-          className={`w-6 h-6 rounded-full 
+          className={`
+            w-6 h-6 rounded-full flex items-center justify-center
+            transition-all duration-200
             ${isSelected 
-              ? 'bg-[var(--accent-fuchsia)] shadow-md' 
-              : 'border-2 border-gray-300 bg-white hover:border-[var(--accent-fuchsia)] hover:border-opacity-50'} 
-            flex items-center justify-center transform transition-all duration-300 ease-in-out 
-            ${isSelected ? 'scale-110 rotate-3' : ''}`}
+              ? 'bg-[var(--color-fuchsia-accent)] text-white scale-110' 
+              : 'border-2 border-[var(--border-default)] bg-[var(--background-default)] hover:border-[var(--color-fuchsia-accent)]'
+            }
+          `}
         >
           {isSelected ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white animate-appear" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[var(--text-tertiary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
@@ -129,55 +116,67 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
         <span className="sr-only">{isSelected ? translations.selected : translations.select}</span>
       </div>
       
-      <h3 className={`text-xl font-semibold mb-2 ${isSelected ? 'text-[var(--accent-fuchsia)]' : 'text-[var(--primary-bordeaux)]'} ${isArabic ? 'pl-8' : 'pr-8'} transition-colors duration-300`}>
-        {isArabic ? analysis.name_ar : analysis.name_fr}
-      </h3>
-      
-      <div className="mt-2 space-y-1">
-        <p className="text-gray-600">
-          <span className="font-medium">{translations.categoryLabel} </span>
-          {isArabic ? analysis.category_ar : analysis.category_fr}
-        </p>
+      {/* Card Content */}
+      <div className={`${isArabic ? 'pl-10' : 'pr-10'}`}>
+        <h3 
+          className={`
+            text-xl font-semibold mb-3 transition-colors duration-200
+            ${isSelected 
+              ? 'text-[var(--color-fuchsia-accent)]' 
+              : 'text-[var(--color-bordeaux-primary)]'
+            }
+          `}
+        >
+          {isArabic ? analysis.name_ar : analysis.name_fr}
+        </h3>
         
-        <p className="text-gray-600">
-          <span className="font-medium">{translations.delayLabel} </span>
-          {isArabic ? analysis.delay_ar : analysis.delay_fr}
-        </p>
-        
-        <p className="text-[var(--accent-fuchsia)] font-bold mt-2">
-          {analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {translations.priceCurrency}
-        </p>
-        
-        {/* Preparation toggle button - only show if the analysis has preparation instructions */}
-        {hasPreparation && (
-          <div className="mt-3">
-            <button 
-              onClick={togglePreparation}
-              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors duration-200"
-              aria-expanded={showPreparation}
-            >
-              {showPreparation 
-                ? translations.hidePreparation
-                : translations.showPreparation
-              }
-            </button>
-          </div>
-        )}
-        
-        {/* Preparation details section - conditionally rendered */}
-        {showPreparation && (
-          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
-            <h4 className="font-medium text-sm mb-1 text-gray-700">
-              {translations.preparationLabel}
-            </h4>
-            <p className="text-gray-700 text-sm whitespace-pre-line">
-              {hasPreparation 
-                ? preparationText 
-                : translations.noPreparation
-              }
-            </p>
-          </div>
-        )}
+        <div className="space-y-2">
+          <p className="text-[var(--text-secondary)] text-sm">
+            <span className="font-medium text-[var(--text-primary)]">{translations.categoryLabel} </span>
+            {isArabic ? analysis.category_ar : analysis.category_fr}
+          </p>
+          
+          <p className="text-[var(--text-secondary)] text-sm">
+            <span className="font-medium text-[var(--text-primary)]">{translations.delayLabel} </span>
+            {isArabic ? analysis.delay_ar : analysis.delay_fr}
+          </p>
+          
+          <p className="text-[var(--color-fuchsia-accent)] font-bold mt-3 text-lg">
+            {analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {translations.priceCurrency}
+          </p>
+          
+          {/* Preparation toggle button */}
+          {hasPreparation && (
+            <div className="mt-3">
+              <button 
+                onClick={togglePreparation}
+                className="
+                  px-3 py-2 text-xs rounded-md
+                  bg-[var(--color-gray-soft)] hover:bg-[var(--color-gray-border)]
+                  text-[var(--text-primary)]
+                  border border-[var(--border-default)]
+                  transition-colors duration-200
+                  focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:ring-opacity-50
+                "
+                aria-expanded={showPreparation}
+              >
+                {showPreparation ? translations.hidePreparation : translations.showPreparation}
+              </button>
+            </div>
+          )}
+          
+          {/* Preparation details section */}
+          {showPreparation && (
+            <div className="mt-3 p-3 bg-[var(--color-gray-soft)] border border-[var(--border-default)] rounded-md">
+              <h4 className="font-medium text-xs mb-2 text-[var(--text-primary)]">
+                {translations.preparationLabel}
+              </h4>
+              <p className="text-[var(--text-secondary)] text-xs whitespace-pre-line leading-relaxed">
+                {hasPreparation ? preparationText : translations.noPreparation}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

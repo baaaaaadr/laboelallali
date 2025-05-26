@@ -9,6 +9,7 @@ import TranslationsProvider from '@/components/providers/TranslationsProvider';
 import Header from '@/components/layout/Header'; 
 import Footer from '@/components/layout/Footer';
 import PWAComponents from '@/components/features/pwa/PWAComponents';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 // Font is defined but not used in this layout - if needed, uncomment and apply to elements
 // import { Inter } from 'next/font/google';
@@ -166,38 +167,39 @@ export default async function LangLayout({
   // This component's return value will be injected into the {children} of src/app/layout.tsx
   return (
     <div lang={lang} dir={dirValue} className="h-full">
-      <TranslationsProvider
-        locale={lang}
-        namespaces={[defaultNS, 'appointment', 'glabo', 'catalog']}
-        resources={resources}
-      >
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
-          <PWAComponents />
-          <Script id="pwa-debug" strategy="afterInteractive">
-            {`
-              console.log('PWA Debug: Script loaded');
-              
-              // Check if the browser supports beforeinstallprompt
-              const isPwaSupported = 'BeforeInstallPromptEvent' in window;
-              console.log('PWA Debug: beforeinstallprompt supported?', isPwaSupported);
-              
-              // Check if the app is running in standalone mode
-              const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-              console.log('PWA Debug: Running as standalone?', isStandalone);
-              
-              // Check if the app is running in a PWA
-              const isInPwa = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-              console.log('PWA Debug: Running as PWA?', isInPwa);
-              
-              // Listen for beforeinstallprompt event
-              window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('PWA Debug: beforeinstallprompt event fired', e);
-                e.preventDefault();
+      <ThemeProvider>
+        <TranslationsProvider
+          locale={lang}
+          namespaces={[defaultNS, 'appointment', 'glabo', 'catalog']}
+          resources={resources}
+        >
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+            <PWAComponents />
+            <Script id="pwa-debug" strategy="afterInteractive">
+              {`
+                console.log('PWA Debug: Script loaded');
+                
+                // Check if the browser supports beforeinstallprompt
+                const isPwaSupported = 'BeforeInstallPromptEvent' in window;
+                console.log('PWA Debug: beforeinstallprompt supported?', isPwaSupported);
+                
+                // Check if the app is running in standalone mode
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+                console.log('PWA Debug: Running as standalone?', isStandalone);
+                
+                // Check if the app is running in a PWA
+                const isInPwa = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+                console.log('PWA Debug: Running as PWA?', isInPwa);
+                
+                // Listen for beforeinstallprompt event
+                window.addEventListener('beforeinstallprompt', (e) => {
+                  console.log('PWA Debug: beforeinstallprompt event fired', e);
+                  e.preventDefault();
                 // Store the event for later use
                 window.deferredPrompt = e;
                 // The PWAInstallButton component will handle showing the button
@@ -215,9 +217,10 @@ export default async function LangLayout({
                 });
               }
             `}
-          </Script>
-        </div>
-      </TranslationsProvider>
+            </Script>
+          </div>
+        </TranslationsProvider>
+      </ThemeProvider>
     </div>
   );
 }

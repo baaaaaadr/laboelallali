@@ -2,6 +2,7 @@
 const { colors, typography, spacing, layout } = require('./src/styles/theme');
 
 module.exports = {
+  darkMode: 'class', // Add this line to enable class-based dark mode
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",

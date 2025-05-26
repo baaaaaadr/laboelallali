@@ -157,6 +157,12 @@
   "faq": "الأسئلة الشائعة",
   "rights_reserved": "جميع الحقوق محفوظة",
   
+  "theme": {
+    "toggle": "تغيير المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
+  },
   "pwa": {
     "install_app_title": "تثبيت تطبيق المختبر",
     "install_app_title_labo": "تثبيت تطبيق المختبر",

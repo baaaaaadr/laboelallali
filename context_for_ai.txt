@@ -1,4 +1,4 @@
-﻿# Laboratoire El Allali PWA - AI Context - 05/22/2025 11:54:57
+﻿# Laboratoire El Allali PWA - AI Context - 05/26/2025 17:41:23
 
 ## --- PROJECT OVERVIEW ---
 Laboratoire El Allali - Medical laboratory website in Agadir, Morocco
@@ -889,122 +889,282 @@ export default initServerI18next;
 /* Import Leaflet CSS */
 @import 'leaflet/dist/leaflet.css';
 
-@import "tailwindcss"; /* CORRECT for Tailwind v4 */
+/* Import Tailwind - CORRECT for v4 */
+@import "tailwindcss";
 
-/* Workaround for Tailwind v4 custom brand color */
-.bg-bordeaux-custom {
-  background-color: #800020;
-  color: white;
+/* CSS Custom Properties for consistent color management */
+:root {
+  --color-bordeaux-primary: #800020;
+  --color-bordeaux-dark: #600018;
+  --color-bordeaux-light: #B84C63;
+  --color-fuchsia-accent: #FF4081;
+  --color-fuchsia-bright: #F50057;
+  --color-white: #FFFFFF;
+  --color-gray-soft: #FFF0F5;
+  --color-gray-border: #F7E7EA;
 }
 
+/* Reset default button styles that might interfere with Tailwind v4 */
+button {
+  /* Remove all default button styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
 
-/* Styles de base */
+/* Base styles */
 html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Temporarily removed :root CSS variables for refactoring */
+/* Header-specific button styles to override the global reset */
+header button {
+  background-color: transparent !important;
+  color: inherit;
+}
 
-/* Styles personnalisÃ©s pour les boutons et composants */
-@layer components {
-  .footer-gradient {
-    background: linear-gradient(135deg, #800020 0%, #B84C63 60%, #FF4081 100%);
-    @apply text-white;
-  }
-  .footer-gradient ul li {
-    @apply mb-2;
-  }
-  .footer-gradient ul li:last-child {
-    @apply mb-0;
-  }
-  .footer-gradient a {
-    @apply block w-full text-white hover:text-[#FF4081] transition-colors;
-  }
+/* Language dropdown specific fixes */
+header .relative > button:has(.mr-1\.5) {
+  background-color: transparent !important;
+  color: rgba(255, 255, 255, 0.85);
+}
 
-  .btn-primary {
-    @apply bg-[#FF4081] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-[#F50057] hover:shadow-md hover:-translate-y-0.5;
-  }
+/* Ensure dropdown toggle buttons maintain transparent background */
+header button:has(svg[size="18"]) {
+  background-color: transparent !important;
+}
 
-  .btn-secondary {
-    @apply bg-[#800020] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-[#600018];
-  }
+/* Fix for dropdown menu items inside the white dropdown */
+header .absolute.bg-white button {
+  background-color: transparent;
+  color: var(--color-bordeaux-primary);
+}
 
-  .btn-outline {
-    @apply border-2 border-[#800020] text-[#800020] bg-transparent px-6 py-[10px] rounded-lg font-semibold transition-all duration-200;
-  }
-  .btn-outline:hover {
-    @apply bg-[#800020] text-white border-[#800020];
-  }
+/* Mobile menu action buttons */
+.menu-action-button {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-white);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
 
-  .btn-text {
-  color: #FF4081;
+.menu-action-button:hover {
+  background-color: var(--color-bordeaux-dark);
+}
+
+/* Direct button classes that work reliably in Tailwind v4 */
+.button-fuchsia {
+  background-color: var(--color-fuchsia-accent);
+  color: var(--color-white);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
   font-weight: 600;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid transparent;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 1rem;
-  min-height: 44px;
-  min-width: 44px;
-  border-radius: 0.25rem;
-  outline: none;
-  cursor: pointer;
-  position: relative;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
-.btn-text:focus {
-  box-shadow: 0 0 0 2px #FF4081;
-  border-bottom: 1px solid #FF4081;
-  background: rgba(255,64,129,0.08);
+
+.button-fuchsia:hover {
+  background-color: var(--color-fuchsia-bright);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-0.125rem);
 }
-.btn-text:hover {
-  border-bottom: 1px solid #FF4081;
-  transform: translateY(-1px);
-  background: rgba(255,64,129,0.04);
+
+.button-fuchsia:focus {
+  outline: 2px solid var(--color-fuchsia-accent);
+  outline-offset: 2px;
 }
-.btn-text .btn-chevron {
-  transition: transform 0.2s;
-  margin-left: 0.25rem;
+
+.button-bordeaux {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-white);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
-.btn-text:hover .btn-chevron,
-.btn-text:focus .btn-chevron {
-  transform: translateX(2px);
+
+.button-bordeaux:hover {
+  background-color: var(--color-bordeaux-dark);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-0.125rem);
 }
-@media (hover: none) and (pointer: coarse) {
+
+.button-bordeaux:focus {
+  outline: 2px solid var(--color-bordeaux-primary);
+  outline-offset: 2px;
+}
+
+.button-outline-bordeaux {
+  background-color: transparent;
+  color: var(--color-bordeaux-primary);
+  padding: 0.625rem 1.5rem;
+  border: 2px solid var(--color-bordeaux-primary);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button-outline-bordeaux:hover {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-white);
+}
+
+.button-outline-bordeaux:focus {
+  outline: 2px solid var(--color-bordeaux-primary);
+  outline-offset: 2px;
+}
+
+/* Keep your existing working class */
+.bg-bordeaux-custom {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-white);
+}
+
+/* Custom component styles */
+@layer components {
+  /* Footer gradient */
+  .footer-gradient {
+    background: linear-gradient(135deg, var(--color-bordeaux-primary) 0%, var(--color-bordeaux-light) 60%, var(--color-fuchsia-accent) 100%);
+    color: var(--color-white);
+  }
+  
+  .footer-gradient ul li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer-gradient ul li:last-child {
+    margin-bottom: 0;
+  }
+  
+  .footer-gradient a {
+    display: block;
+    width: 100%;
+    color: var(--color-white);
+    transition: color 0.2s ease;
+  }
+  
+  .footer-gradient a:hover {
+    color: var(--color-fuchsia-accent);
+  }
+
+  /* Text button style */
   .btn-text {
+    color: var(--color-fuchsia-accent);
+    font-weight: 600;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 1rem;
     min-height: 44px;
     min-width: 44px;
-    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    outline: none;
+    cursor: pointer;
+    position: relative;
   }
-}
+  
+  .btn-text:focus {
+    box-shadow: 0 0 0 2px var(--color-fuchsia-accent);
+    border-bottom: 1px solid var(--color-fuchsia-accent);
+    background: rgba(255, 64, 129, 0.08);
+  }
+  
+  .btn-text:hover {
+    border-bottom: 1px solid var(--color-fuchsia-accent);
+    transform: translateY(-1px);
+    background: rgba(255, 64, 129, 0.04);
+  }
+  
+  .btn-text .btn-chevron {
+    transition: transform 0.2s;
+    margin-left: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .btn-text:hover .btn-chevron,
+  .btn-text:focus .btn-chevron {
+    transform: translateX(2px);
+  }
+  
+  @media (hover: none) and (pointer: coarse) {
+    .btn-text {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0.5rem 0.75rem;
+    }
+  }
 
+  /* Link button */
   .btn-link {
-    @apply text-[#FF4081] bg-transparent px-4 py-2 font-semibold transition-all duration-200 hover:underline;
+    color: var(--color-fuchsia-accent);
+    background-color: transparent;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-link:hover {
+    text-decoration: underline;
   }
 
+  /* Card styles */
   .card {
-    @apply bg-white rounded-xl shadow-sm p-5 transition-all duration-300 border border-gray-100;
-    transition-property: box-shadow, transform;
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    border: 1px solid #f3f4f6;
   }
+  
   .card:hover {
     transform: translateY(-3px) scale(1.015);
-    box-shadow: 0 4px 12px 0 rgba(128,0,32,0.08), 0 0.75px 3px 0 rgba(255,64,129,0.07);
+    box-shadow: 0 4px 12px 0 rgba(128, 0, 32, 0.08), 0 0.75px 3px 0 rgba(255, 64, 129, 0.07);
   }
 
+  /* Animation utilities */
   .fade-in-section {
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.8s cubic-bezier(.4,0,.2,1), transform 0.8s cubic-bezier(.4,0,.2,1);
+    transition: opacity 0.8s cubic-bezier(.4, 0, .2, 1), transform 0.8s cubic-bezier(.4, 0, .2, 1);
     will-change: opacity, transform;
   }
+  
   .fade-in-section.visible {
     opacity: 1;
     transform: translateY(0);
   }
 
+  /* Mobile menu animations */
   .backdrop-blur-sm {
     transition: opacity 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out;
     opacity: 0;
@@ -1040,29 +1200,34 @@ html, body {
     }
   }
 
+  /* Footer WhatsApp button */
   .footer-whatsapp-btn {
-    background: #800020;
-    color: #fff;
+    background: var(--color-bordeaux-primary);
+    color: var(--color-white);
     border-radius: 0.5rem;
     padding: 0.5rem 1rem;
     display: inline-flex;
     align-items: center;
     font-weight: 500;
-    box-shadow: 0 1px 3px 0 rgba(128,0,32,0.05);
+    box-shadow: 0 1px 3px 0 rgba(128, 0, 32, 0.05);
     transition: background 0.2s, box-shadow 0.2s;
   }
-  .footer-whatsapp-btn:hover, .footer-whatsapp-btn:focus {
-    background: #B84C63;
-    color: #fff;
-    box-shadow: 0 4px 12px 0 rgba(128,0,32,0.12);
+  
+  .footer-whatsapp-btn:hover,
+  .footer-whatsapp-btn:focus {
+    background: var(--color-bordeaux-light);
+    color: var(--color-white);
+    box-shadow: 0 4px 12px 0 rgba(128, 0, 32, 0.12);
     outline: none;
   }
+  
   .footer-whatsapp-btn svg {
     margin-right: 0.5rem;
     min-width: 20px;
     min-height: 20px;
   }
 
+  /* Other utility classes */
   .footer-copyright {
     color: #F8F9FA;
     font-size: 0.875rem;
@@ -1073,29 +1238,157 @@ html, body {
   }
 
   .card-header {
-    @apply pb-3 mb-4 border-b border-[#F7E7EA] font-semibold text-[#800020] text-lg;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--color-gray-border);
+    font-weight: 600;
+    color: var(--color-bordeaux-primary);
+    font-size: 1.125rem;
   }
 
   .card-action {
-    @apply text-[#FF4081] font-semibold text-sm mt-2 inline-block;
+    color: var(--color-fuchsia-accent);
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: inline-block;
   }
 
   .loading {
-    @apply inline-block w-6 h-6 border-2 border-[#FFF0F5] rounded-full border-t-[#FF4081] animate-spin;
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--color-gray-soft);
+    border-radius: 50%;
+    border-top-color: var(--color-fuchsia-accent);
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .gradient-header {
-    background: linear-gradient(135deg, #800020, #B84C63);
-    @apply text-white p-6 rounded-xl relative overflow-hidden;
+    background: linear-gradient(135deg, var(--color-bordeaux-primary), var(--color-bordeaux-light));
+    color: var(--color-white);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    position: relative;
+    overflow: hidden;
   }
 
-/* Class pour aprÃ¨s l'Ã©lÃ©ment gradient-header */
-.gradient-header::after {
-  content: "";
-  @apply absolute top-0 right-0 w-24 h-24 rounded-full opacity-10 translate-x-1/3 -translate-y-1/3;
-  background: #FF4081;
+  .gradient-header::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    opacity: 0.1;
+    transform: translate(33.333333%, -33.333333%);
+    background: var(--color-fuchsia-accent);
+  }
 }
+```
+
+## FILE: src/app/test-styles/page.tsx
+```typescript
+'use client';
+
+import { Download } from 'lucide-react';
+import PWAInstallButton from '@/components/features/pwa/PWAInstallButton';
+
+export default function TestStylesPage() {
+  return (
+    <main className="min-h-screen bg-white p-8">
+      <div className="max-w-4xl mx-auto space-y-12">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Style Testing Page</h1>
+        
+        <div className="space-y-8">
+          {/* Test Case 1 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">1 - PWAInstallButton (Default - using bg-bordeaux-custom class)</h3>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <PWAInstallButton variant="button" />
+            </div>
+          </div>
+
+          {/* Test Case 2 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">2 - Div with Arbitrary Value Background</h3>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <div className="w-40 h-20 p-4 bg-[#FF4081] text-[#FFFFFF] flex items-center justify-center rounded-lg">
+                Fuchsia Div Arbitrary
+              </div>
+            </div>
+          </div>
+
+          {/* Test Case 3 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">3 - Button with Arbitrary Value Background</h3>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <button className="p-4 bg-[#FF4081] text-[#FFFFFF] rounded-lg">
+                Button Fuchsia Arbitrary
+              </button>
+            </div>
+          </div>
+
+          {/* Test Case 4 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">4 - Button with Global Class: .bg-bordeaux-custom</h3>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <button className="p-4 bg-bordeaux-custom rounded-lg">
+                Button Bordeaux Global
+              </button>
+            </div>
+          </div>
+
+          {/* Test Case 5 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">5 - Button with Global Class: .btn-primary (Plain CSS version)</h3>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <button className="p-4 btn-primary">
+                Button .btn-primary (Plain CSS)
+              </button>
+            </div>
+          </div>
+
+          {/* Test Case 6 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">6 - Button with Global Class: .btn-primary-apply (@apply version)</h3>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <button className="p-4 btn-primary-apply">
+                Button .btn-primary-apply (@apply)
+              </button>
+            </div>
+          </div>
+
+          {/* Test Case 7 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">7 - PWAInstallButton (Styled externally with .btn-primary class)</h3>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <PWAInstallButton variant="button" className="btn-primary" />
+            </div>
+          </div>
+
+          {/* Test Case 8 */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">8 - DEFAULT TAILWIND TEST (Div with bg-red-500)</h3>
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <div className="p-4 bg-red-500 text-yellow-300 rounded-lg">
+                DEFAULT TAILWIND TEST
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
 }
+
 ```
 
 ## FILE:  (NOT FOUND)
@@ -1257,9 +1550,9 @@ export default Footer;
 ```typescript
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle } from 'lucide-react';  
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check } from 'lucide-react';  
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -1282,9 +1575,13 @@ function getLangFromPath(path: string) {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const { t, i18n } = useTranslation('common');
   const router = useRouter();
   const pathname = usePathname();
+  // Create separate refs for desktop and mobile dropdowns
+  const desktopLangDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileLangDropdownRef = useRef<HTMLDivElement>(null);
 
   const lang = i18n.language || getLangFromPath(pathname);
   // Make sure we're using the language from the URL, not potentially a mismatched language from i18n
@@ -1312,32 +1609,54 @@ const Header = () => {
     console.log(`[DEBUG] Header rendered, isMenuOpen: ${isMenuOpen}`);
   }, [isMenuOpen]);
 
-  const handleLanguageChange = () => {
-    // CORRECTION: Utiliser la langue de l'URL comme source de vÃ©ritÃ©, pas i18n.language
-    const currentLang = urlLang; // Utiliser urlLang au lieu de lang
-    const newLocale = currentLang === 'fr' ? 'ar' : 'fr';
-
-    // Extract the path after the language code
-    let pathWithoutLang = pathname;
-    const langPattern = new RegExp(`^/(${supportedLngs.join('|')})`);
-    if (langPattern.test(pathname)) {
-      // Remove the language prefix from the path
-      pathWithoutLang = pathname.replace(langPattern, '');
-      // If the path is empty after removing language code, set it to '/' for homepage
-      if (pathWithoutLang === '') pathWithoutLang = '/';
-    }
-
-    // Construct a new path with the new language code
-    const newPath = pathWithoutLang === '/' 
-      ? `/${newLocale}` 
-      : `/${newLocale}${pathWithoutLang}`;
-
-    console.log(`CORRECTION MAJEURE - Language switch: URL lang=${currentLang} -> ${newLocale}, Path: ${pathname} -> ${newPath}`);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside both dropdown refs
+      const isOutsideDesktop = !desktopLangDropdownRef.current || !desktopLangDropdownRef.current.contains(event.target as Node);
+      const isOutsideMobile = !mobileLangDropdownRef.current || !mobileLangDropdownRef.current.contains(event.target as Node);
+      
+      if (isOutsideDesktop && isOutsideMobile) {
+        setIsLangDropdownOpen(false);
+      }
+    };
     
-    // CORRECTION CRITIQUE: Au lieu d'utiliser router.push qui fait une navigation cÃ´tÃ© client
-    // et ne recharge pas complÃ¨tement le contexte i18n, on utilise window.location.href
-    // pour forcer un rechargement complet de la page et rÃ©initialiser le contexte i18n
-    window.location.href = newPath;
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLanguageChange = (newLocale: string) => {
+    // Only change if it's different from current language
+    if (newLocale !== urlLang) {
+      // Extract the path after the language code
+      let pathWithoutLang = pathname;
+      const langPattern = new RegExp(`^/(${supportedLngs.join('|')})`);
+      if (langPattern.test(pathname)) {
+        // Remove the language prefix from the path
+        pathWithoutLang = pathname.replace(langPattern, '');
+        // If the path is empty after removing language code, set it to '/' for homepage
+        if (pathWithoutLang === '') pathWithoutLang = '/';
+      }
+
+      // Construct a new path with the new language code
+      const newPath = pathWithoutLang === '/' 
+        ? `/${newLocale}` 
+        : `/${newLocale}${pathWithoutLang}`;
+
+      console.log(`Language switch: URL lang=${urlLang} -> ${newLocale}, Path: ${pathname} -> ${newPath}`);
+      
+      // Force a full page reload to reset i18n context
+      window.location.href = newPath;
+    }
+    
+    // Close the dropdown
+    setIsLangDropdownOpen(false);
+  };
+
+  const toggleLangDropdown = () => {
+    setIsLangDropdownOpen(!isLangDropdownOpen);
   };
 
   return (
@@ -1381,14 +1700,39 @@ const Header = () => {
 
           {/* Boutons d'action */}
           <div className="flex items-center space-x-2">
-            <button 
-              onClick={handleLanguageChange} 
-              className="flex items-center text-sm px-3 py-2 min-h-[44px] rounded hover:bg-[#600018] transition-colors"
-              aria-label={t('changeLanguage')}
-            >
-              <Globe size={18} className="mr-1.5" />
-              {t('currentLanguage')}
-            </button>
+            <div className="relative" ref={desktopLangDropdownRef}>
+              <button 
+                onClick={toggleLangDropdown} 
+                className="flex items-center text-sm px-3 py-2 min-h-[44px] rounded hover:bg-[#600018] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
+                aria-label={t('changeLanguage')}
+                aria-haspopup="true"
+                aria-expanded={isLangDropdownOpen}
+              >
+                <Globe size={18} className="mr-1.5" />
+                <span>{urlLang.toUpperCase()}</span>
+                <ChevronDown size={16} className="ml-1" />
+              </button>
+              
+              {/* Language Dropdown Menu */}
+              {isLangDropdownOpen && (
+                <div className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] overflow-hidden">
+                  <button
+                    onClick={() => { handleLanguageChange('fr'); return; }}
+                    className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-t-md"
+                  >
+                    <span className={urlLang === 'fr' ? 'font-bold' : ''}>FranÃ§ais</span>
+                    {urlLang === 'fr' && <Check size={16} />}
+                  </button>
+                  <button
+                    onClick={() => { handleLanguageChange('ar'); return; }}
+                    className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-b-md"
+                  >
+                    <span className={urlLang === 'ar' ? 'font-bold' : ''}>Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</span>
+                    {urlLang === 'ar' && <Check size={16} />}
+                  </button>
+                </div>
+              )}
+            </div>
             <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center">
               <Search size={20} />
             </button>
@@ -1510,40 +1854,61 @@ const Header = () => {
             
           {/* Navigation Footer - Branded Buttons Layout */}
           <div className="mt-auto p-4 border-t border-gray-200 bg-white">
-            <div className="space-y-4">
-              {/* WhatsApp Contact Button - Professional Green Style */}
+            <div className="flex flex-col gap-3">
+              {/* WhatsApp Contact Button - Using custom button class */}
               <a 
                 href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={toggleMenu}
-                className="block w-full text-center py-3.5 px-5 rounded-lg bg-gradient-to-br from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 transition-all duration-200 font-medium shadow-sm"
+                className="menu-action-button"
                 aria-label="Contact via WhatsApp"
               >
-                <span className="flex items-center justify-center">
-                  <MessageCircle size={20} className="mr-2.5" />
-                  {t('contact')} WhatsApp
-                </span>
+                <MessageCircle size={20} className="mr-2.5" />
+                {t('contact')} WhatsApp
               </a>
             
               {/* PWA Install Button - Using consolidated component */}
               <PWAInstallButton 
                 variant="footer"
-                className="block w-full"
-                style={{ marginBottom: '0' }}
+                className="w-full menu-action-button"
+                style={{ margin: 0 }}
               />
 
-              {/* Language button - Elegant Style */}
-              <button
-                onClick={handleLanguageChange}
-                className="block w-full text-center py-3 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors font-medium"
-                aria-label={t('changeLanguage')}
-              >
-                <span className="flex items-center justify-center">
-                  <Globe size={18} className="mr-2 text-gray-500" />
-                  {t('currentLanguage')}
-                </span>
-              </button>
+              {/* Language button - Using custom button class */}
+              <div className="relative" ref={mobileLangDropdownRef}>
+                <button
+                  onClick={toggleLangDropdown}
+                  className="menu-action-button flex items-center"
+                  aria-label={t('changeLanguage')}
+                  aria-haspopup="true"
+                  aria-expanded={isLangDropdownOpen}
+                >
+                  <Globe size={20} className="mr-2.5" />
+                  <span>{urlLang.toUpperCase()}</span>
+                  <ChevronDown size={16} className="ml-1" />
+                </button>
+                
+                {/* Mobile Language Dropdown Menu */}
+                {isLangDropdownOpen && (
+                  <div className="absolute right-0 bottom-full mb-1 w-36 bg-white rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] overflow-hidden">
+                    <button
+                      onClick={() => { handleLanguageChange('fr'); return; }}
+                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-t-md"
+                    >
+                      <span className={urlLang === 'fr' ? 'font-bold' : ''}>FranÃ§ais</span>
+                      {urlLang === 'fr' && <Check size={16} />}
+                    </button>
+                    <button
+                      onClick={() => { handleLanguageChange('ar'); return; }}
+                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-b-md"
+                    >
+                      <span className={urlLang === 'ar' ? 'font-bold' : ''}>Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</span>
+                      {urlLang === 'ar' && <Check size={16} />}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1922,23 +2287,25 @@ const HeroBanner = () => {
           <div className="flex flex-col sm:flex-row flex-wrap gap-4 w-full">
             <a
               href="tel:0528843384"
-              className="flex items-center justify-center min-w-[170px] h-12 px-6 bg-[#FF4081] text-white font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg hover:bg-white hover:text-[#FF4081] focus:bg-white focus:text-[#FF4081] gap-2 w-full sm:w-auto"
+              className="button-fuchsia w-full sm:w-auto min-w-[170px] text-center text-lg"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="mr-2 -ml-1"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a2 2 0 011.94 1.515l.3 1.2a2 2 0 01-.45 1.95l-1.27 1.27a16.001 16.001 0 006.586 6.586l1.27-1.27a2 2 0 011.95-.45l1.2.3A2 2 0 0121 16.72V19a2 2 0 01-2 2h-1C9.163 21 3 14.837 3 7V5z" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a2 2 0 011.94 1.515l.3 1.2a2 2 0 01-.45 1.95l-1.27 1.27a16.001 16.001 0 006.586 6.586l1.27-1.27a2 2 0 011.95-.45l1.2.3A2 2 0 0121 16.72V19a2 2 0 01-2 2h-1C9.163 21 3 14.837 3 7V5z" />
+              </svg>
               {t('call_us')}
             </a>
             <a
               href="https://www.google.com/maps/dir/?api=1&destination=61+Bis+Rue+de+Marrakech+80020+Agadir"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center min-w-[220px] h-12 px-6 bg-[#FF4081] text-white font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg hover:bg-white hover:text-[#FF4081] focus:bg-white focus:text-[#FF4081] gap-2 w-full sm:w-auto"
+              className="button-fuchsia w-full sm:w-auto min-w-[220px] text-center text-lg"
             >
-              <Navigation size={22} className="mr-2 -ml-1" />
+              <Navigation size={22} />
               {t('navigate_to_lab')}
             </a>
             <PWAInstallButton 
               variant="button"
-              className="flex items-center justify-center min-w-[170px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-all duration-200 text-center text-lg hover:bg-white hover:text-[var(--accent-fuchsia)] focus:bg-white focus:text-[var(--accent-fuchsia)] gap-2 w-full sm:w-auto"
+              className="w-full sm:w-auto min-w-[170px] text-center text-lg"
             />
           </div>
         </div>
@@ -2632,4 +2999,4 @@ export const sendAppointmentRequestEmail = onDocumentCreated(
 
 ## --- END OF CONTEXT ---
 
-## Total files included: 27
+## Total files included: 28

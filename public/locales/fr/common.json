@@ -95,6 +95,12 @@
   "faq": "Questions fréquentes",
   "rights_reserved": "Tous droits réservés",
   
+  "theme": {
+    "toggle": "Changer le thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
   "pwa": {
     "install_app_title": "Installer l'application du Labo",
     "install_app_title_labo": "Installer l'application du Labo",

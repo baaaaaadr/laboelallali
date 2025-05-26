@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Analysis } from './AnalysisCard';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
@@ -11,15 +11,9 @@ interface TotalCalculatorProps {
   onReset: () => void;
   currencyLabel: string;
   isRtl?: boolean;
-  // We need access to the selected analyses for WhatsApp sharing
   selectedAnalyses?: Analysis[];
-  // Les traductions sont maintenant gérées à l'intérieur du composant
 }
 
-/**
- * A floating bubble component that displays the running total of selected analyses
- * Appears fixed to the bottom of the viewport
- */
 export default function TotalCalculator({
   totalCost,
   selectedCount,
@@ -28,66 +22,35 @@ export default function TotalCalculator({
   isRtl = false,
   selectedAnalyses = []
 }: TotalCalculatorProps) {
-  // Direct DOM manipulation reference
   const containerRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(selectedCount);
   
-  // Manually flash the calculator when count changes
+  // Simple animation effect when count changes
   useEffect(() => {
-    console.log('[TotalCalculator] Previous count:', prevCountRef.current, 'New count:', selectedCount);
-    
-    // Skip initial render
     if (prevCountRef.current === undefined || containerRef.current === null) {
       prevCountRef.current = selectedCount;
       return;
     }
     
-    // Only animate if count has changed
-    if (prevCountRef.current !== selectedCount) {
-      console.log('[TotalCalculator] Triggering color-only animation');
-      
+    if (prevCountRef.current !== selectedCount && containerRef.current) {
       const div = containerRef.current;
       
-      // Get the original styles
-      const originalBg = window.getComputedStyle(div).backgroundColor;
-      
-      // Create a sequence of colors for a wave effect
-      // All colors are in the bordeaux/burgundy family
-      const colorSequence = [
-        '#8E2042', // Slightly lighter bordeaux
-        '#A02A4D', // Even lighter bordeaux 
-        '#B13558', // Brighter bordeaux
-        '#973048', // Back toward original
-        '#872238', // Almost back to original
-        originalBg   // Back to original
-      ];
-      
-      // Add a transition just for background color
-      div.style.transition = 'background-color 0.25s ease-in-out';
-      
-      // Apply each color in sequence
-      colorSequence.forEach((color, index) => {
-        setTimeout(() => {
-          div.style.backgroundColor = color;
-          
-          // Remove transition after all animations complete
-          if (index === colorSequence.length - 1) {
-            setTimeout(() => {
-              div.style.transition = '';
-            }, 250);
-          }
-        }, index * 150); // 150ms between each color change
-      });
+      // Simple scale animation
+      div.style.transform = 'scale(1.05)';
+      setTimeout(() => {
+        if (div) {
+          div.style.transform = 'scale(1)';
+        }
+      }, 150);
     }
     
     prevCountRef.current = selectedCount;
   }, [selectedCount]);
+
   const { t, i18n } = useTranslation('common');
   
-  // Détermine la direction de la langue actuelle si isRtl n'est pas spécifié explicitement
   const isRtlDirection = isRtl || i18n.language === 'ar';
   
-  // Translations as direct values rather than using useMemo for more stable typing
   const translationsUI = {
     selectedAnalyses: t('analyses_catalog.selection.analyses_selected', 'analyses sélectionnées'),
     total: t('analyses_catalog.selection.total', 'Total'),
@@ -96,7 +59,6 @@ export default function TotalCalculator({
     sendWhatsapp: t('analyses_catalog.selection.send_whatsapp', 'Envoyer via WhatsApp')
   };
   
-  // WhatsApp message translations as direct values
   const whatsappTranslations = {
     greeting: t('analyses_catalog.selection.whatsapp_message.greeting', 'Bonjour Laboratoire El Allali,'),
     intro: t('analyses_catalog.selection.whatsapp_message.intro', 'Je suis intéressé(e) par les analyses suivantes :'),
@@ -107,103 +69,71 @@ export default function TotalCalculator({
     websiteReference: t('analyses_catalog.selection.whatsapp_message.website_reference', 'Sélection faite depuis le site web.')
   };
 
-  // Laboratory WhatsApp number is imported from constants file
-  
-  // Function to generate WhatsApp message
   const generateWhatsAppMessage = () => {
-    // Create message in current language
     let message = `${whatsappTranslations.greeting}\n\n`;
     message += `${whatsappTranslations.intro}\n`;
     
-    // Add list of selected analyses
     selectedAnalyses.forEach(analysis => {
       const analysisName = i18n.language === 'ar' ? analysis.name_ar : analysis.name_fr;
       message += `${whatsappTranslations.analysisItemPrefix}${analysisName}\n`;
     });
     
-    // Add total cost
     message += `\n${whatsappTranslations.totalLabel} ${totalCost.toLocaleString()} ${whatsappTranslations.currency}\n\n`;
-    
-    // Add closing
     message += `${whatsappTranslations.closingRemark}\n\n`;
     message += whatsappTranslations.websiteReference;
     
     return message;
   };
   
-  // Handler for WhatsApp button click
   const handleSendViaWhatsApp = () => {
     const message = generateWhatsAppMessage();
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${LAB_WHATSAPP_NUMBER}?text=${encodedMessage}`;
-    
-    // Open WhatsApp in a new tab
     window.open(whatsappUrl, '_blank');
   };
   
-  // Only render the component if there are selected items
+  // Only render if there are selected items
   if (selectedCount === 0) return null;
 
   return (
     <div 
       ref={containerRef}
-      className="floating-total-calculator"
+      className={`
+        fixed bottom-4 w-64 max-w-[calc(100vw-2rem)]
+        bg-[var(--color-bordeaux-primary)] text-white rounded-xl p-4 shadow-lg
+        transition-all duration-300 ease-out
+        ${isRtlDirection ? 'left-4' : 'right-4'}
+      `}
       dir={isRtlDirection ? 'rtl' : 'ltr'}
-      style={{
-        position: 'fixed',
-        bottom: '1rem',
-        [isRtlDirection ? 'left' : 'right']: '1rem',
-        zIndex: 40,
-        backgroundColor: 'var(--primary-bordeaux)',
-        color: 'white',
-        borderRadius: '1rem',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        padding: '0.75rem 1rem',
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: '230px',
-        maxWidth: '330px',
-        animation: 'fadeIn 0.3s ease-out forwards'
-      }}
       title={translationsUI.tooltip}
       aria-live="polite"
+      data-testid="total-calculator"
+      style={{
+        zIndex: 50,
+        boxShadow: '0 10px 25px -3px rgba(128, 0, 32, 0.3), 0 4px 6px -2px rgba(128, 0, 32, 0.15)'
+      }}
     >
-      {/* Selected count */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.25)',
-            borderRadius: '9999px',
-            padding: '0 0.5rem',
-            marginRight: isRtlDirection ? 0 : '0.5rem',
-            marginLeft: isRtlDirection ? '0.5rem' : 0,
-            animation: 'countPulse 0.5s ease-out'
-          }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>
-              {selectedCount}
-            </span>
+      {/* Header with count and reset button */}
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex items-center">
+          <div 
+            className="bg-white/20 rounded-full px-2 py-1 text-sm font-bold transition-transform duration-200"
+            style={{ marginRight: isRtlDirection ? 0 : '0.5rem', marginLeft: isRtlDirection ? '0.5rem' : 0 }}
+          >
+            {selectedCount}
           </div>
-          <span style={{ fontSize: '0.875rem', fontWeight: '500', marginLeft: '0.5rem' }}>
+          <span className="text-sm font-medium">
             {translationsUI.selectedAnalyses}
           </span>
         </div>
         
-        {/* Reset button */}
         <button 
           onClick={onReset}
-          style={{
-            padding: '0.375rem',
-            borderRadius: '9999px',
-            transition: 'background-color 0.2s',
-            cursor: 'pointer',
-            backgroundColor: 'transparent',
-            border: 'none',
-            color: 'white'
-          }}
+          className="p-1.5 rounded-full hover:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
           aria-label={translationsUI.reset}
           title={translationsUI.reset}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
             <path d="M3 3v5h5" />
           </svg>
@@ -211,98 +141,39 @@ export default function TotalCalculator({
       </div>
       
       {/* Total cost */}
-      <div style={{ fontSize: '1.125rem', fontWeight: 'bold' }}>
-        <span style={{ color: 'white' }}>{translationsUI.total}:</span> 
-        <span style={{ color: 'var(--bordeaux-pale)' }}> {totalCost.toLocaleString()} {currencyLabel}</span>
+      <div className="text-lg font-bold mb-3">
+        <span className="text-white/80">{translationsUI.total}: </span>
+        <span className="text-white">
+          {totalCost.toLocaleString()} {currencyLabel}
+        </span>
       </div>
       
-      {/* Send via WhatsApp button */}
+      {/* WhatsApp button */}
       <button 
         onClick={handleSendViaWhatsApp}
-        style={{
-          marginTop: '0.75rem',
-          padding: '0.5rem',
-          borderRadius: '0.5rem',
-          backgroundColor: 'transparent', // Transparent background
-          color: 'white',
-          border: '1px solid white', // White border
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.2s ease',
-          fontSize: '0.875rem',
-          fontWeight: '500'
-        }}  
+        className="
+          w-full py-2 px-3 rounded-lg
+          bg-green-600 hover:bg-green-700 
+          text-white text-sm font-medium
+          flex items-center justify-center
+          transition-colors duration-200
+          focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-[var(--color-bordeaux-primary)]
+        "
         aria-label={translationsUI.sendWhatsapp}
         title={translationsUI.sendWhatsapp}
       >
-        {/* WhatsApp Icon */}
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
           width="16" 
           height="16" 
           viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
+          fill="currentColor"
           style={{ marginRight: isRtlDirection ? 0 : '0.5rem', marginLeft: isRtlDirection ? '0.5rem' : 0 }}
         >
-          <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" />
-          <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
-          <path d="M14 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
-          <path d="M8.5 13.5a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 0-1H9a.5.5 0 0 0-.5.5Z" />
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.893 3.386"/>
         </svg>
         <span>{translationsUI.sendWhatsapp}</span>
       </button>
-      
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        /* Animation removed - using direct DOM manipulation instead */
-        
-        @keyframes countPulse {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.25); }
-          100% { transform: scale(1); }
-        }
-        
-        @media (min-width: 768px) {
-          .floating-total-calculator {
-            bottom: 2rem !important;
-          }
-          .floating-total-calculator[dir='rtl'] {
-            left: 2rem !important;
-          }
-          .floating-total-calculator[dir='ltr'] {
-            right: 2rem !important;
-          }
-        }
-        
-        /* WhatsApp button hover effect */
-        .floating-total-calculator button:hover {
-          background-color: rgba(255, 255, 255, 0.1);
-          transform: translateY(-1px);
-        }
-        
-        /* Animation spéciale pour le focus des éléments interactifs */
-        .floating-total-calculator button:focus {
-          outline: 2px solid rgba(255, 255, 255, 0.6);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
-          border-radius: 9999px;
-        }
-      `}</style>
     </div>
   );
 }

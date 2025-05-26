@@ -32,8 +32,8 @@ const HeroBanner = () => {
           className="object-cover w-full h-full"
           style={{ position: 'absolute', inset: 0 }}
         />
-        {/* Overlay to ensure text is readable */}
-        <div className="absolute inset-0 bg-[#800020] opacity-60"></div>
+        {/* Overlay to ensure text is readable with dark mode support */}
+        <div className="absolute inset-0 bg-[#800020] dark:bg-[#1E1E1E] opacity-60 dark:opacity-70"></div>
       </div>
       
       {/* Content */}

@@ -8,14 +8,55 @@
 
 /* CSS Custom Properties for consistent color management */
 :root {
+  /* Light mode semantic defaults */
+  --background-default: #FFFFFF;
+  --background-secondary: #FFF0F5; /* Your existing --color-gray-soft */
+  --background-tertiary: #F7E7EA;  /* Your existing --color-gray-border */
+  --text-primary: #111827;         /* Your existing Tailwind gray-900 */
+  --text-secondary: #4B5563;       /* Your existing Tailwind gray-600 */
+  --text-tertiary: #6B7280;       /* Your existing Tailwind gray-500 */
+  --border-default: #E5E7EB;       /* Your existing Tailwind gray-200 */
+  --border-light: #F3F4F6;        /* Your existing Tailwind gray-100 */
+
+  /* Original brand colors (ensure these are your source-of-truth light mode colors) */
   --color-bordeaux-primary: #800020;
   --color-bordeaux-dark: #600018;
   --color-bordeaux-light: #B84C63;
   --color-fuchsia-accent: #FF4081;
   --color-fuchsia-bright: #F50057;
   --color-white: #FFFFFF;
-  --color-gray-soft: #FFF0F5;
-  --color-gray-border: #F7E7EA;
+  --color-gray-soft: #FFF0F5;     /* Original light mode equivalent for pale fuchsia */
+  --color-gray-border: #F7E7EA;   /* Original light mode equivalent for pale bordeaux */
+
+  /* Dark mode specific color variations (defined here for clarity, used in .dark scope) */
+  --color-bordeaux-primary-dark: #E91E63;
+  --color-fuchsia-accent-dark: #FF60A1;
+}
+
+html.dark {
+  /* Background colors - NEW PALETTE */
+  --background-default: #121212;   /* Base page background - dark gray */
+  --background-secondary: #1E1E1E; /* Card/surface backgrounds - slightly lighter gray */
+  --background-tertiary: #2C2C2C;  /* Subtle hover or less prominent surfaces */
+
+  /* Text colors (these seem okay but ensure they work with new BGs) */
+  --text-primary: #E0E0E0;     /* Slightly softer than F3F4F6 for less harshness */
+  --text-secondary: #BDBDBD;
+  --text-tertiary: #9E9E9E;
+
+  /* Border colors (adjust if needed for new BGs) */
+  --border-default: #424242;    /* Was #374151 */
+  --border-light: #212121;      /* Was #1F2937 */
+
+  /* Brand color overrides for dark mode (these seem good) */
+  --color-bordeaux-primary: var(--color-bordeaux-primary-dark); /* existing: #A0002D */
+  --color-fuchsia-accent: var(--color-fuchsia-accent-dark); /* existing: #FF60A1 */
+
+  /* Gray utility colors for dark mode */
+  --color-gray-soft: #2C2C2C; /* was #1F2937, now aligns with bg-tertiary */
+  --color-gray-border: #424242; /* was #374151, now aligns with border-default */
+
+  /* DO NOT redefine --color-white here. It should remain #FFFFFF from :root */
 }
 
 /* Reset default button styles that might interfere with Tailwind v4 */
@@ -32,9 +73,12 @@ button {
   outline: inherit;
 }
 
-/* Base styles */
+/* Define default font and colors using CSS variables */
 html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--background-default);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Header-specific button styles to override the global reset */
@@ -58,6 +102,20 @@ header button:has(svg[size="18"]) {
 header .absolute.bg-white button {
   background-color: transparent;
   color: var(--color-bordeaux-primary);
+}
+
+/* Card styles using semantic color variables */
+.card {
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+/* Dark mode specific card shadow */
+.dark .card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Mobile menu action buttons */
@@ -252,7 +310,9 @@ header .absolute.bg-white button {
 
   /* Card styles */
   .card {
-    background-color: white;
+    background-color: var(--background-secondary);
+    border-color: var(--border-default);
+    color: var(--text-primary);
     border-radius: 0.75rem;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     padding: 1.25rem;
@@ -404,5 +464,171 @@ header .absolute.bg-white button {
     opacity: 0.1;
     transform: translate(33.333333%, -33.333333%);
     background: var(--color-fuchsia-accent);
+  }
+
+  .dark .card {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  }
+  
+  .dark .card:hover {
+    box-shadow: 0 4px 12px 0 rgba(255, 96, 161, 0.15);
+  }
+  
+  /* Update button styles for dark mode */
+  .dark .button-fuchsia {
+    background-color: var(--color-fuchsia-accent);
+    color: #0F0F0F;
+  }
+  
+  .dark .button-bordeaux {
+    background-color: var(--color-bordeaux-primary);
+    color: #F3F4F6;
+  }
+  
+  .dark .button-outline-bordeaux {
+    border-color: var(--color-bordeaux-primary);
+    color: var(--color-bordeaux-primary);
+  }
+  
+  .dark .button-outline-bordeaux:hover {
+    background-color: var(--color-bordeaux-primary);
+    color: #F3F4F6;
+  }
+  
+  /* Update footer gradient for dark mode */
+  .dark .footer-gradient {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d1b2e 30%, #4a1a3c 60%, #691e4a 100%);
+    color: #f3f4f6;
+  }
+
+  /* Force dark mode backgrounds on common containers */
+  .dark body,
+  .dark main,
+  .dark .min-h-screen,
+  .dark [class*="bg-white"] {
+    background-color: var(--background-default) !important;
+  }
+
+  /* Ensure all bg-white classes respect dark mode */
+  .dark .bg-white {
+    background-color: var(--background-secondary) !important;
+  }
+
+  /* Add these styles to your existing globals.css file */
+
+  /* Ensure analysis cards are properly visible and positioned */
+  .analysis-card {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    min-height: 200px;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  /* Analysis grid container to ensure proper layout */
+  .analysis-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 100%;
+    gap: 1.5rem;
+  }
+
+  /* Prevent any backdrop-filter issues that might hide cards */
+  .analysis-card,
+  .analysis-card * {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Ensure floating calculator stays above content */
+  .floating-calculator {
+    position: fixed !important;
+    z-index: 50 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Fix for any potential transform issues causing cards to disappear */
+  .analysis-card:hover {
+    transform: translateY(-2px) !important;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  /* Ensure selection state is clearly visible */
+  .analysis-card[aria-pressed="true"] {
+    border: 2px solid var(--color-fuchsia-accent) !important;
+    box-shadow: 0 0 0 3px rgba(255, 64, 129, 0.1) !important;
+  }
+
+  /* Debug styles - remove after fixing (these will make cards visible if they're hidden) */
+  .debug-analysis-card {
+    background: red !important;
+    border: 3px solid blue !important;
+    min-height: 300px !important;
+    position: relative !important;
+    z-index: 999 !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
+
+  /* Ensure proper stacking context for the entire page */
+  .analyses-page-container {
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+  }
+
+  /* Force hardware acceleration for smooth animations */
+  .analysis-card {
+    will-change: transform, box-shadow;
+    transform: translateZ(0);
+  }
+
+  /* Responsive fixes for analysis cards */
+  @media (max-width: 640px) {
+    .analysis-card {
+      min-height: 180px;
+      margin-bottom: 1rem;
+    }
+  }
+
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .analysis-card {
+      min-height: 190px;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .analysis-card {
+      min-height: 200px;
+    }
+  }
+
+  /* Prevent any CSS conflicts with existing styles */
+  .analysis-card.card {
+    /* Override any conflicting card styles */
+    padding: 1.25rem !important;
+    background-color: var(--background-secondary) !important;
+    border: 2px solid var(--border-default) !important;
+  }
+
+  /* Ensure text is visible in all modes */
+  .analysis-card .analysis-title {
+    color: var(--color-bordeaux-primary) !important;
+    font-weight: 600 !important;
+  }
+
+  .analysis-card .analysis-text {
+    color: var(--text-secondary) !important;
+  }
+
+  .analysis-card .analysis-price {
+    color: var(--color-fuchsia-accent) !important;
+    font-weight: 700 !important;
   }
 }
