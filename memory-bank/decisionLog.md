@@ -148,4 +148,34 @@ This log records key architectural, technical, and design decisions made during 
       - Using CSS Modules or other CSS-in-JS solutions (adds complexity)
 
 ---
+
+**2025-05-27:**
+
+*   **Decision ID:** DL-011
+*   **Decision:** Refined Dark Mode Color Palette for Improved Brand Identity and Readability
+*   **Rationale:** The initial dark mode implementation used harsh, monochromatic colors that didn't align well with the brand identity. The new palette introduces subtle bordeaux undertones to maintain brand consistency while ensuring excellent readability and visual hierarchy.
+*   **Key Changes:**
+      1. **Background Hierarchy:** Replaced pure black backgrounds with warm, bordeaux-tinted darks:
+         - Default: `#1A0F12` (dark with bordeaux hint)
+         - Secondary: `#241418` (elevated surfaces)
+         - Tertiary: `#2E1A1F` (hover states, most elevated)
+      2. **Brand Colors:** Refined bordeaux and fuchsia for better dark mode contrast:
+         - Bordeaux: `#D64669` (brighter, more vibrant)
+         - Fuchsia: `#FF79A8` (softer, more readable)
+      3. **Text Colors:** Warm whites and muted roses for better readability:
+         - Primary: `#F5F5F5` (warm white)
+         - Secondary: `#C8B5BA` (muted rose)
+      4. **Footer Gradient:** Elegant gradient with bordeaux-fuchsia tones instead of harsh blacks
+      5. **Component Refinements:** Updated shadows, hover states, and interactive elements for consistency
+*   **Impact:** 
+      - Improved visual hierarchy and readability in dark mode
+      - Maintained brand identity across light/dark themes
+      - Enhanced user experience with softer, more comfortable dark theme
+      - Better accessibility with improved contrast ratios
+*   **Alternatives Considered:**
+      - Pure gray dark mode (would lose brand identity)
+      - Keeping original harsh black backgrounds (poor user experience)
+      - Using default Material Design dark palette (too generic)
+
+---
 *(Add new decisions below this line as they are made)*

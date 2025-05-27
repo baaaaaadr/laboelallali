@@ -111,16 +111,16 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-[#800020] dark:bg-[var(--color-bordeaux-primary)] text-white shadow-md transition-colors duration-300">
+    <header className="bg-[var(--color-bordeaux-primary)] dark:bg-[var(--background-secondary)] text-white shadow-md transition-colors duration-300">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between p-4 max-w-7xl mx-auto transition-all duration-200">
+        <div className="flex items-center justify-between p-4 max-w-7xl mx-auto transition-all duration-200 text-white dark:text-[var(--text-primary)]">
           {/* Logo and name */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
-              <div className="bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] p-1.5 rounded-md mr-2 transition-colors duration-200">
-                <span className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-bordeaux-primary)] font-bold text-lg">L</span>
+              <div className="bg-white dark:bg-[var(--color-bordeaux-primary-dark)] p-1.5 rounded-md mr-2 transition-colors duration-200">
+                <span className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent-dark)] font-bold text-lg">L</span>
               </div>
-              <h1 className="text-xl font-bold hidden sm:block">
+              <h1 className="text-xl font-bold hidden sm:block dark:text-[var(--text-primary)]">
                 {t('laboName')}
               </h1>
             </Link>
@@ -128,19 +128,19 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href={`${currentLanguagePath}/`} className="hover:text-rose-200 transition-colors duration-200">
+            <Link href={`${currentLanguagePath}/`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200">
               {t('home')}
             </Link>
-            <Link href={`${currentLanguagePath}/rendez-vous`} className="hover:text-rose-200 transition-colors duration-200 font-semibold">
+            <Link href={`${currentLanguagePath}/rendez-vous`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200 font-semibold">
               {t('appointment')}
             </Link>
-            <Link href={`${currentLanguagePath}/glabo`} className="hover:text-rose-200 transition-colors duration-200 font-semibold">
+            <Link href={`${currentLanguagePath}/glabo`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200 font-semibold">
               {t('glabo')}
             </Link>
-            <Link href={`${currentLanguagePath}/analyses`} className="hover:text-rose-200 transition-colors duration-200 font-semibold">
+            <Link href={`${currentLanguagePath}/analyses`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200 font-semibold">
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
-            <Link href={`${currentLanguagePath}/contact`} className="hover:text-rose-200 transition-colors duration-200">
+            <Link href={`${currentLanguagePath}/contact`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200">
               {t('contact')}
             </Link>
           </nav>
@@ -150,48 +150,50 @@ const Header = () => {
             <div className="relative" ref={desktopLangDropdownRef}>
               <button 
                 onClick={toggleLangDropdown} 
-                className="flex items-center text-sm px-3 py-2 min-h-[44px] rounded hover:bg-[#600018] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
+                className="flex items-center text-sm px-3 py-2 min-h-[44px] rounded hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
                 aria-label={t('changeLanguage')}
                 aria-haspopup="true"
                 aria-expanded={isLangDropdownOpen}
               >
-                <Globe size={18} className="mr-1.5" />
-                <span>{urlLang.toUpperCase()}</span>
-                <ChevronDown size={16} className="ml-1" />
+                <Globe size={18} className="mr-1.5 text-white dark:text-[var(--text-primary)]" />
+                <span className="text-white dark:text-[var(--text-primary)]">{urlLang.toUpperCase()}</span>
+                <ChevronDown size={16} className="ml-1 text-white dark:text-[var(--text-primary)]" />
               </button>
               
               {/* Language Dropdown Menu */}
               {isLangDropdownOpen && (
-                <div className="absolute right-0 mt-1 w-36 bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] overflow-hidden">
+                <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)] overflow-hidden transition-colors duration-200">
                   <button
                     onClick={() => { handleLanguageChange('fr'); return; }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-t-md"
+                    className="flex items-center justify-between w-full px-3 py-2 text-[var(--color-bordeaux-primary)] dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-light)] hover:text-white dark:hover:bg-[var(--background-tertiary)] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
                   >
                     <span className={urlLang === 'fr' ? 'font-bold' : ''}>Français</span>
-                    {urlLang === 'fr' && <Check size={16} />}
+                    {urlLang === 'fr' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent-dark)]" />}
                   </button>
+                  <div className="border-t border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)]"></div>
                   <button
                     onClick={() => { handleLanguageChange('ar'); return; }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-b-md"
+                    className="flex items-center justify-between w-full px-3 py-2 text-[var(--color-bordeaux-primary)] dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-light)] hover:text-white dark:hover:bg-[var(--background-tertiary)] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
                   >
                     <span className={urlLang === 'ar' ? 'font-bold' : ''}>العربية</span>
-                    {urlLang === 'ar' && <Check size={16} />}
+                    {urlLang === 'ar' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent-dark)]" />}
                   </button>
                 </div>
               )}
             </div>
             <ThemeSwitcher />
-            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center">
-              <Search size={20} />
+            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+              <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
-            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center">
-              <User size={20} />
+            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+              <User size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
             <button 
-              className="md:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center"
+              className="block md:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
               onClick={toggleMenu}
+              aria-label={t('menu')}
             >
-              <Menu size={24} />
+              <Menu size={24} className="text-white dark:text-[var(--text-primary)]" />
             </button>
           </div>
         </div>
@@ -222,7 +224,7 @@ const Header = () => {
         
         {/* Menu Panel */}
         <div 
-          className="fixed top-0 right-0 h-full w-72 bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] shadow-lg z-50 flex flex-col"
+          className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-[var(--background-default)] shadow-lg z-50 flex flex-col"
           style={{
             transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
             opacity: isMenuOpen ? 1 : 0.7,
@@ -250,115 +252,90 @@ const Header = () => {
             </button>
           </div>
             
-          <nav className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] text-[var(--text-primary)]">
+          <nav className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto bg-white dark:bg-[var(--background-default)] text-[var(--text-primary)]">
             {console.log('[DEBUG] Rendering mobile menu nav content')}
             
-
-            <Link 
-              href={`${currentLanguagePath}/`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <Home size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            {/* Navigation Links */}
+            <Link href={`${currentLanguagePath}/`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <Home size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('home')}
             </Link>
 
-            <Link 
-              href={`${currentLanguagePath}/rendez-vous`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <CalendarDays size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            <Link href={`${currentLanguagePath}/rendez-vous`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <CalendarDays size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('appointment')}
             </Link>
             
-            <Link 
-              href={`${currentLanguagePath}/glabo`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <Truck size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            <Link href={`${currentLanguagePath}/glabo`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <Truck size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('glabo')}
             </Link>
 
-            <Link 
-              href={`${currentLanguagePath}/analyses`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <FlaskConical size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            <Link href={`${currentLanguagePath}/analyses`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <FlaskConical size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
 
-            <Link 
-              href={`${currentLanguagePath}/contact`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <Phone size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            <Link href={`${currentLanguagePath}/contact`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <Phone size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('contact')}
             </Link>
-          </nav>
-            
-          {/* Navigation Footer - Branded Buttons Layout */}
-          <div className="mt-auto p-4 border-t border-[var(--border-default)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)]">
-            <div className="flex flex-col gap-3">
-              {/* WhatsApp Contact Button - Using custom button class */}
+
+            {/* Action Buttons */}
+            <div className="mt-4 pt-4 border-t border-[var(--border-default)]">
               <a 
                 href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={toggleMenu}
-                className="menu-action-button"
+                className="menu-action-button bg-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-bright)] dark:bg-[var(--color-fuchsia-accent)] dark:hover:bg-[var(--color-fuchsia-bright)] text-white dark:text-[#1A0F12] flex items-center justify-center w-full mb-3 transition-colors duration-200 shadow-md"
                 aria-label="Contact via WhatsApp"
               >
-                <MessageCircle size={20} className="mr-2.5" />
+                <MessageCircle size={20} className="mr-2" />
                 {t('contact')} WhatsApp
               </a>
             
-              {/* PWA Install Button - Using consolidated component */}
               <PWAInstallButton 
                 variant="footer"
-                className="w-full menu-action-button"
+                className="w-full mb-3 bg-[var(--color-bordeaux-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:bg-[var(--color-bordeaux-primary)] dark:hover:bg-[var(--color-bordeaux-dark)] text-white"
                 style={{ margin: 0 }}
               />
 
-              {/* Language button - Using custom button class */}
               <div className="relative" ref={mobileLangDropdownRef}>
                 <button
                   onClick={toggleLangDropdown}
-                  className="menu-action-button flex items-center"
+                  className="menu-action-button bg-[var(--color-bordeaux-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:bg-[var(--color-bordeaux-primary)] dark:hover:bg-[var(--color-bordeaux-dark)] text-white flex items-center justify-center w-full transition-colors duration-200 shadow-md"
                   aria-label={t('changeLanguage')}
                   aria-haspopup="true"
                   aria-expanded={isLangDropdownOpen}
                 >
-                  <Globe size={20} className="mr-2.5" />
+                  <Globe size={20} className="mr-2" />
                   <span>{urlLang.toUpperCase()}</span>
                   <ChevronDown size={16} className="ml-1" />
                 </button>
                 
-                {/* Mobile Language Dropdown Menu */}
                 {isLangDropdownOpen && (
-                  <div className="absolute right-0 bottom-full mb-1 w-36 bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] overflow-hidden">
+                  <div className="absolute bottom-full right-0 mb-2 w-full bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)] overflow-hidden">
                     <button
                       onClick={() => { handleLanguageChange('fr'); return; }}
-                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-t-md"
+                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] dark:text-[var(--text-primary)] hover:bg-[#FFF0F5] dark:hover:bg-[var(--background-tertiary)] hover:text-[#FF4081] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
                     >
                       <span className={urlLang === 'fr' ? 'font-bold' : ''}>Français</span>
-                      {urlLang === 'fr' && <Check size={16} />}
+                      {urlLang === 'fr' && <Check size={16} className="text-[#800020] dark:text-[var(--color-fuchsia-accent-dark)]" />}
                     </button>
+                    <div className="border-t border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)]"></div>
                     <button
                       onClick={() => { handleLanguageChange('ar'); return; }}
-                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-b-md"
+                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] dark:text-[var(--text-primary)] hover:bg-[#FFF0F5] dark:hover:bg-[var(--background-tertiary)] hover:text-[#FF4081] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
                     >
                       <span className={urlLang === 'ar' ? 'font-bold' : ''}>العربية</span>
-                      {urlLang === 'ar' && <Check size={16} />}
+                      {urlLang === 'ar' && <Check size={16} className="text-[#800020] dark:text-[var(--color-fuchsia-accent-dark)]" />}
                     </button>
                   </div>
                 )}
               </div>
             </div>
-          </div>
+          </nav>
         </div>
       </div>
     </header>

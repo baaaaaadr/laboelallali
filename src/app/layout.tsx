@@ -20,12 +20,6 @@ export default function RootLayout({
         <RTLStylesProvider />
         <RTLAdditionalStyles />
         
-        {/* Load Tailwind CSS from CDN */}
-        <link
-          href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-          rel="stylesheet"
-        />
-        
         {/* PWA Configuration */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#800020" />
@@ -43,7 +37,7 @@ export default function RootLayout({
         {/* Environment variables are loaded via a client component */}
         <EnvironmentScript />
       </head>
-      <body className="flex flex-col min-h-screen bg-gray-50">
+      <body className="flex flex-col min-h-screen bg-[var(--background-default)] overflow-x-hidden">
         <EnvProvider />
         {children}
       </body>

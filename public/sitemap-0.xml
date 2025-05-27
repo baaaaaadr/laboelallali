@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-<url><loc>https://laboelallali.vercel.app/rendez-vous</loc><lastmod>2025-05-20T10:39:37.846Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/contact</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/ar/contact</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/fr/contact</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/ar/analyses</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/fr/analyses</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/ar</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/fr</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/ar/glabo</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/fr/glabo</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/ar/rendez-vous</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/fr/rendez-vous</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://laboelallali.vercel.app/glabo</loc><lastmod>2025-05-20T10:39:37.850Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/test-styles</loc><lastmod>2025-05-26T20:55:54.273Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/ar/contact</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/fr/contact</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/ar/glabo</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/fr/glabo</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/ar/analyses</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/fr/analyses</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/ar/header-test</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/fr/header-test</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/ar</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/fr</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/ar/test-styles</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/fr/test-styles</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/ar/rendez-vous</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://laboelallali.vercel.app/fr/rendez-vous</loc><lastmod>2025-05-26T20:55:54.275Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
 </urlset>

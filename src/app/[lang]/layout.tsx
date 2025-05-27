@@ -175,8 +175,10 @@ export default async function LangLayout({
         >
           <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="flex-grow">
-              {children}
+            <main className="flex-grow w-full">
+              <div className="max-w-full overflow-x-hidden">
+                {children}
+              </div>
             </main>
             <Footer />
             <PWAComponents />

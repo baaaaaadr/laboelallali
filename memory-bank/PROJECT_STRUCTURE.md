@@ -49,6 +49,12 @@ When creating new files, follow these patterns or suggest updates to this docume
 - `workbox-e43f5367.js`: Workbox library file for the service worker.
 - `404.html`: Custom 404 page (if using static export or specific fallback).
 - *Various .svg files (file.svg, globe.svg, next.svg, vercel.svg, window.svg) - General SVG assets.*
+- **`contexts/`**: React context providers.
+    - `ThemeContext.tsx`: Manages theme state (light/dark mode) and provides theme utilities.
+      - Handles theme persistence in localStorage
+      - Provides `useTheme` hook for theme management
+      - Used by `ThemeSwitcher` component
+    - *(Other context files as needed)*
 - **`images/`**: Application images.
     - `hero-banner.jpg`: Main hero image for the homepage.
     - **`icons/`**: PWA and application icons.
@@ -108,6 +114,7 @@ When creating new files, follow these patterns or suggest updates to this docume
     - **`common/`**: General-purpose, reusable UI components.
         - **`buttons/Button.tsx`**: Generic button component.
         - **`cards/Card.tsx`**: Generic card component.
+        - `ThemeSwitcher.tsx`: Toggle button for switching between light and dark themes.
     - **`features/`**: Components specific to application features.
         - **`catalog/`**: Components for the analysis catalog.
             - `AnalysisCard.tsx`: Displays a single analysis item.

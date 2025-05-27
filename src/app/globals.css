@@ -34,29 +34,38 @@
 }
 
 html.dark {
-  /* Background colors - NEW PALETTE */
-  --background-default: #121212;   /* Base page background - dark gray */
-  --background-secondary: #1E1E1E; /* Card/surface backgrounds - slightly lighter gray */
-  --background-tertiary: #2C2C2C;  /* Subtle hover or less prominent surfaces */
-
-  /* Text colors (these seem okay but ensure they work with new BGs) */
-  --text-primary: #E0E0E0;     /* Slightly softer than F3F4F6 for less harshness */
-  --text-secondary: #BDBDBD;
-  --text-tertiary: #9E9E9E;
-
-  /* Border colors (adjust if needed for new BGs) */
-  --border-default: #424242;    /* Was #374151 */
-  --border-light: #212121;      /* Was #1F2937 */
-
-  /* Brand color overrides for dark mode (these seem good) */
-  --color-bordeaux-primary: var(--color-bordeaux-primary-dark); /* existing: #A0002D */
-  --color-fuchsia-accent: var(--color-fuchsia-accent-dark); /* existing: #FF60A1 */
-
-  /* Gray utility colors for dark mode */
-  --color-gray-soft: #2C2C2C; /* was #1F2937, now aligns with bg-tertiary */
-  --color-gray-border: #424242; /* was #374151, now aligns with border-default */
-
-  /* DO NOT redefine --color-white here. It should remain #FFFFFF from :root */
+  /* REFINED DARK MODE PALETTE - Professional & Brand-Aligned */
+  
+  /* Background hierarchy with subtle bordeaux undertones */
+  --background-default: #1A0F12;     /* Base page - dark with bordeaux hint */
+  --background-secondary: #241418;   /* Cards/surfaces - elevated */
+  --background-tertiary: #2E1A1F;    /* Hover states, modals - most elevated */
+  
+  /* Text hierarchy optimized for contrast */
+  --text-primary: #F5F5F5;           /* Main text - warm white */
+  --text-secondary: #C8B5BA;         /* Secondary text - muted rose */
+  --text-tertiary: #9C8389;          /* Disabled/tertiary - dusty rose */
+  
+  /* Border colors with brand alignment */
+  --border-default: #3A2229;         /* Default borders - subtle bordeaux */
+  --border-light: #2E1A1F;           /* Light borders */
+  
+  /* Refined brand colors for dark mode */
+  --color-bordeaux-primary: #D64669;   /* Brighter, more vibrant bordeaux */
+  --color-bordeaux-dark: #B83A5A;     /* Hover state bordeaux */
+  --color-bordeaux-light: #E87B96;    /* Light bordeaux for accents */
+  --color-fuchsia-accent: #FF79A8;    /* Softer, more readable fuchsia */
+  --color-fuchsia-bright: #FF5C95;    /* Bright fuchsia for CTAs */
+  
+  /* Utility colors for dark mode */
+  --color-gray-soft: #2E1A1F;       /* Soft backgrounds */
+  --color-gray-border: #3A2229;     /* Border color */
+  
+  /* Semantic colors for dark mode */
+  --color-success: #4ADE80;
+  --color-warning: #FBBF24;
+  --color-error: #F87171;
+  --color-info: #60A5FA;
 }
 
 /* Reset default button styles that might interfere with Tailwind v4 */
@@ -466,39 +475,103 @@ header .absolute.bg-white button {
     background: var(--color-fuchsia-accent);
   }
 
+  /* REFINED Card styles for dark mode */
   .dark .card {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    background-color: var(--background-secondary);
+    border-color: var(--border-default);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(214, 70, 105, 0.05);
   }
   
   .dark .card:hover {
-    box-shadow: 0 4px 12px 0 rgba(255, 96, 161, 0.15);
+    border-color: var(--color-bordeaux-primary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(255, 121, 168, 0.1);
+    background-color: var(--background-tertiary);
   }
   
-  /* Update button styles for dark mode */
+  /* Card header in dark mode */
+  .dark .card-header {
+    color: var(--color-bordeaux-light);
+    border-bottom-color: var(--border-default);
+  }
+  
+  /* Card action in dark mode */
+  .dark .card-action {
+    color: var(--color-fuchsia-accent);
+  }
+  
+  .dark .card-action:hover {
+    color: var(--color-fuchsia-bright);
+  }
+  
+  /* REFINED Button styles for dark mode */
   .dark .button-fuchsia {
     background-color: var(--color-fuchsia-accent);
-    color: #0F0F0F;
+    color: #1A0F12;
+    box-shadow: 0 4px 12px rgba(255, 121, 168, 0.2);
+  }
+  
+  .dark .button-fuchsia:hover {
+    background-color: var(--color-fuchsia-bright);
+    box-shadow: 0 6px 20px rgba(255, 92, 149, 0.3);
   }
   
   .dark .button-bordeaux {
     background-color: var(--color-bordeaux-primary);
-    color: #F3F4F6;
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(214, 70, 105, 0.2);
+  }
+  
+  .dark .button-bordeaux:hover {
+    background-color: var(--color-bordeaux-dark);
+    box-shadow: 0 6px 20px rgba(184, 58, 90, 0.3);
   }
   
   .dark .button-outline-bordeaux {
     border-color: var(--color-bordeaux-primary);
     color: var(--color-bordeaux-primary);
+    background-color: rgba(214, 70, 105, 0.05);
   }
   
   .dark .button-outline-bordeaux:hover {
     background-color: var(--color-bordeaux-primary);
-    color: #F3F4F6;
+    color: var(--text-primary);
+    border-color: var(--color-bordeaux-primary);
   }
   
-  /* Update footer gradient for dark mode */
+  /* Nav link hover text shadow for dark mode */
+  .dark .nav-link:hover {
+    text-shadow: 0 0 8px var(--color-fuchsia-accent);
+  }
+
+  /* REFINED Footer gradient for dark mode - elegant with brand colors */
   .dark .footer-gradient {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d1b2e 30%, #4a1a3c 60%, #691e4a 100%);
-    color: #f3f4f6;
+    background: linear-gradient(
+      135deg,
+      #1F1014 0%,        /* Deep bordeaux-black */
+      #2A151A 25%,       /* Richer bordeaux undertone */
+      #3A1A26 50%,       /* Transition to fuchsia tones */
+      #4A1F33 75%,       /* Deeper fuchsia-bordeaux */
+      #552440 100%       /* Rich fuchsia-bordeaux */
+    );
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .dark .footer-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--color-bordeaux-primary) 0%,
+      var(--color-fuchsia-accent) 50%,
+      var(--color-bordeaux-primary) 100%
+    );
+    opacity: 0.3;
   }
 
   /* Force dark mode backgrounds on common containers */
@@ -512,6 +585,67 @@ header .absolute.bg-white button {
   /* Ensure all bg-white classes respect dark mode */
   .dark .bg-white {
     background-color: var(--background-secondary) !important;
+  }
+  
+  /* Form inputs and controls for dark mode */
+  .dark input,
+  .dark textarea,
+  .dark select {
+    background-color: var(--background-default);
+    border-color: var(--border-default);
+    color: var(--text-primary);
+  }
+  
+  .dark input:focus,
+  .dark textarea:focus,
+  .dark select:focus {
+    border-color: var(--color-fuchsia-accent);
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(255, 121, 168, 0.1);
+  }
+  
+  /* Dropdown menus in dark mode */
+  .dark .dropdown-menu {
+    background-color: var(--background-secondary);
+    border-color: var(--border-default);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Loading spinner for dark mode */
+  .dark .loading {
+    border-color: var(--background-tertiary);
+    border-top-color: var(--color-fuchsia-accent);
+  }
+  
+  /* Gradient header for dark mode */
+  .dark .gradient-header {
+    background: linear-gradient(
+      135deg,
+      var(--color-bordeaux-dark) 0%,
+      var(--color-bordeaux-primary) 50%,
+      var(--color-bordeaux-light) 100%
+    );
+  }
+  
+  /* Menu action button for dark mode */
+  .dark .menu-action-button {
+    background-color: var(--color-bordeaux-primary);
+    color: var(--text-primary);
+  }
+  
+  .dark .menu-action-button:hover {
+    background-color: var(--color-bordeaux-dark);
+  }
+  
+  /* Footer WhatsApp button in dark mode */
+  .dark .footer-whatsapp-btn {
+    background: var(--color-bordeaux-primary);
+    color: var(--text-primary);
+  }
+  
+  .dark .footer-whatsapp-btn:hover {
+    background: var(--color-bordeaux-light);
   }
 
   /* Add these styles to your existing globals.css file */

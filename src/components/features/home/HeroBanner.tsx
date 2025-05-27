@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigation } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 // Import useTranslation hook without type issues
 import { useTranslation as useTranslationOriginal } from 'react-i18next';
 
@@ -25,15 +26,14 @@ const HeroBanner = () => {
     <div className="relative overflow-hidden mb-8 -mt-[1px] w-full">
       {/* Banner Image */}
       <div className="absolute inset-0 z-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* Use standard img tag which we know works from the test */}
         <img
           src="/images/hero-banner.jpg"
           alt={t('banner_alt')}
-          className="object-cover w-full h-full"
-          style={{ position: 'absolute', inset: 0 }}
+          className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* Overlay to ensure text is readable with dark mode support */}
-        <div className="absolute inset-0 bg-[#800020] dark:bg-[#1E1E1E] opacity-60 dark:opacity-70"></div>
+        {/* Semi-transparent overlay to ensure text is readable */}
+        <div className="absolute inset-0 bg-[var(--color-bordeaux-primary)] dark:bg-[#1A0F12] bg-opacity-30 dark:bg-opacity-50"></div>
       </div>
       
       {/* Content */}

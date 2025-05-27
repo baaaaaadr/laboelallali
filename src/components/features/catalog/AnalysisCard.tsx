@@ -66,8 +66,8 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
         cursor-pointer
         transition-all duration-200 ease-in-out
         ${isSelected 
-          ? 'border-[var(--color-fuchsia-accent)] ring-2 ring-[var(--color-fuchsia-accent)]/30 scale-[1.02]' 
-          : 'border-[var(--border-default)] hover:border-[var(--color-bordeaux-light)] hover:shadow-lg'
+          ? 'border-[var(--color-fuchsia-accent)] dark:border-[var(--color-fuchsia-accent)] ring-2 ring-[var(--color-fuchsia-accent)]/30 scale-[1.02] bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-tertiary)]' 
+          : 'border-[var(--border-default)] hover:border-[var(--color-bordeaux-light)] dark:hover:border-[var(--color-bordeaux-primary)] hover:shadow-lg dark:hover:bg-[var(--background-tertiary)]'
         }
       `}
       onClick={handleSelectClick}

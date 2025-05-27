@@ -37,7 +37,14 @@ This will automatically read and process the following files in order:
 
 4.  **File Structure Management:**
     *   **Reference `PROJECT_STRUCTURE.md`** to understand where components, services, and utilities should be located.
-    *   **Propose Updates:** When creating, deleting, or moving files, suggest updates to keep `PROJECT_STRUCTURE.md` current.
+    *   **Automatic Updates Required:** Whenever creating, modifying, or deleting files, you MUST:
+        - Immediately update `PROJECT_STRUCTURE.md` to reflect the changes
+        - Place the file in the appropriate section based on its type and purpose
+        - Include a brief description of the file's purpose
+        - If creating a new directory, document its purpose and expected contents
+        - Follow the existing documentation style and formatting
+    *   **Update Example:** When creating a new component in `src/components/features/`, add it under the appropriate feature section in `PROJECT_STRUCTURE.md` with a one-line description.
+    *   **Verification:** After making changes, verify that the file structure documentation remains accurate and complete.
 
 **Developer Commitments:**
 *   Maintain and update context files with AI assistance
