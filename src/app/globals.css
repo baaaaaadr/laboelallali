@@ -403,6 +403,37 @@ button.menu-language-button:focus {
   color: var(--text-primary) !important;
 }
 
+/* Force all header content to be white in light mode with high specificity */
+header.header-main,
+header.header-main *:not(.dropdown-menu):not(.dropdown-menu *) {
+  color: white !important;
+}
+
+header.header-main svg {
+  color: white !important;
+}
+
+/* Dark mode overrides */
+.dark header.header-main,
+.dark header.header-main *:not(.dropdown-menu):not(.dropdown-menu *) {
+  color: var(--text-primary) !important;
+}
+
+.dark header.header-main svg {
+  color: var(--text-primary) !important;
+}
+
+/* Preserve dropdown menu styling */
+header.header-main .dropdown-menu,
+header.header-main .dropdown-menu * {
+  color: var(--color-bordeaux-primary) !important;
+}
+
+.dark header.header-main .dropdown-menu,
+.dark header.header-main .dropdown-menu * {
+  color: var(--text-primary) !important;
+}
+
 .header-logo {
   background-color: white !important;
   color: #800020 !important;
