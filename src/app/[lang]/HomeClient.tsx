@@ -6,9 +6,11 @@ import SimpleMap from '@/components/SimpleMap';
 import Link from 'next/link';
 import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
+import { useLabStatus } from '@/hooks/useLabStatus';
 
 export default function HomeClient({ lang }: { lang: string }) {
   const { t, i18n } = useTranslation(['common', 'glabo']);
+  const labStatus = useLabStatus();
 
   // Ensure i18n language is set based on the lang prop
   useEffect(() => {
@@ -22,17 +24,6 @@ export default function HomeClient({ lang }: { lang: string }) {
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  // Lab opening hours logic
-  const currentHour = new Date().getHours();
-  const currentDay = new Date().getDay();
-  const isWeekday = currentDay > 0 && currentDay < 6;
-  const isSaturday = currentDay === 6;
-  const isSunday = currentDay === 0;
-  
-  const isOpen = (isWeekday && currentHour >= 7.5 && currentHour < 18.5) || 
-                 (isSaturday && currentHour >= 7.5 && currentHour < 18.5) ||
-                 (isSunday && currentHour >= 8 && currentHour < 18);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -62,11 +53,16 @@ export default function HomeClient({ lang }: { lang: string }) {
             </h3>
             <p className="text-sm text-[var(--text-secondary)]">{t('opening_hours_text')}</p>
           </div>
-          <div className="flex items-center justify-center md:ml-8">
-            <div className={`${isOpen ? 'bg-green-700' : 'bg-[#B71C1C]'} text-white px-5 py-2 rounded-full font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
-              <span className={`w-3 h-3 ${isOpen ? 'bg-green-300' : 'bg-red-300'} rounded-full`}></span>
-              {isOpen ? t('open') : t('closed')}
+          <div className="flex flex-col items-center justify-center md:ml-8 gap-2">
+            <div className={`${labStatus.isOpen ? 'bg-green-700' : 'bg-[#B71C1C]'} text-white px-5 py-2 rounded-full font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
+              <span className={`w-3 h-3 ${labStatus.isOpen ? 'bg-green-300' : 'bg-red-300'} rounded-full`}></span>
+              {labStatus.statusText}
             </div>
+            {labStatus.countdownText && (
+              <div className="text-sm font-medium text-[var(--text-secondary)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] px-3 py-1 rounded-full border border-[var(--border-default)]">
+                {labStatus.countdownText}
+              </div>
+            )}
           </div>
         </div>
 

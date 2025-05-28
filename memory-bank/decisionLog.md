@@ -307,5 +307,35 @@ This log records key architectural, technical, and design decisions made during 
       - `src/components/layout/Header.tsx` - Updated button classes and dropdown implementation
       - Fixed corrupted JSX structure in logo section
 
+**2025-05-28:**
+
+*   **Decision ID:** DL-016
+*   **Decision:** Implement dynamic countdown functionality for laboratory opening hours
+*   **Rationale:** Enhance user experience by providing real-time information about when the laboratory will open or close, making it easier for patients to plan their visits.
+*   **Key Implementation Details:**
+      - Created `useLabStatus` custom hook to handle countdown logic
+      - Added real-time updates every minute using `setInterval`
+      - Supports different opening hours for weekdays (7:30-18:30) and Sundays (8:00-18:00)
+      - Calculates time until next opening when closed, or time until closing when open
+      - Added bilingual support with translations for "ouvre dans" (opens in) and "ferme dans" (closes in)
+      - Displays countdown in hours and minutes format (e.g., "2h25min" or "32min")
+      - Integrated seamlessly with existing opening hours widget design
+*   **User Experience Improvements:**
+      - Shows "ouvre dans 2h25" when laboratory is closed
+      - Shows "ferme dans 32min" when laboratory is open
+      - Updates automatically in real-time
+      - Maintains existing status indicator (Ouvert/Fermé with colored badge)
+      - Added secondary countdown badge below status indicator
+*   **Technical Approach:**
+      - Custom hook pattern for reusability and separation of concerns
+      - Precise time calculations using decimal hours (7.5 for 7:30)
+      - Efficient updates with 60-second intervals to balance accuracy and performance
+      - Full internationalization support for French and Arabic
+*   **Impact:** Significantly improves user experience by providing actionable timing information, helping patients better plan their laboratory visits.
+*   **Files Modified:**
+      - Created `src/hooks/useLabStatus.ts`
+      - Updated `src/app/[lang]/HomeClient.tsx`
+      - Added translations to `public/locales/fr/common.json` and `public/locales/ar/common.json`
+
 ---
 *(Add new decisions below this line as they are made)*

@@ -131,6 +131,7 @@ When creating new files, follow these patterns or suggest updates to this docume
         - `Footer.tsx`: Application footer.
         - `Header.tsx`: Application header/navigation bar.
         - `MainLayout.tsx`: Main content area wrapper/layout.
+        - `BottomNav.tsx`: Mobile-only bottom navigation bar with 4 main navigation items (Home, Analyses, RDV, Contact).
     - **`providers/TranslationsProvider.tsx`**: React Context provider for i18next translations.
 - **`config/`**: Configuration files for the application.
     - `firebase.ts`: Firebase SDK initialization and configuration.
@@ -138,6 +139,7 @@ When creating new files, follow these patterns or suggest updates to this docume
     - `contact.ts`: Contact information constants (phone numbers, email, address).
 - **`hooks/`**: Custom React hooks.
     - `useInstallPrompt.ts`: Hook for managing PWA installation prompt logic.
+    - `useLabStatus.ts`: Hook for calculating lab opening/closing status with real-time countdown functionality.
 - **`lib/`**: Utility libraries or external scripts.
     - `sw.js`: (Duplicate of `public/sw.js`? Check which one is active or if this is a source file copied to public).
 - **`styles/`**: Styling-related files.

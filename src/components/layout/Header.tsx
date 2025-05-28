@@ -111,8 +111,8 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-[var(--color-bordeaux-primary)] dark:bg-[var(--background-secondary)] text-white shadow-md transition-colors duration-300 overflow-x-hidden relative z-50">
-      <div className="container mx-auto px-4 max-w-7xl">
+    <header className="bg-[var(--color-bordeaux-primary)] dark:bg-[var(--background-secondary)] text-white shadow-md transition-colors duration-300 relative z-50">
+      <div className="container mx-auto px-4 max-w-7xl relative">
         <div className="flex items-center justify-between py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
           {/* Logo and name */}
           <div className="flex items-center">
@@ -127,7 +127,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-4 xl:space-x-6">
+          <nav className="hidden md:flex items-center space-x-4 xl:space-x-6">
             <Link href={`${currentLanguagePath}/`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 text-sm lg:text-base">
               {t('home')}
             </Link>
@@ -162,21 +162,21 @@ const Header = () => {
               
               {/* Language Dropdown Menu */}
               {isLangDropdownOpen && (
-                <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-[60] border border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)] overflow-hidden transition-colors duration-200">
+                <div className="absolute right-0 top-full mt-2 w-36 bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-lg border border-gray-200 dark:border-[var(--border-default)] overflow-hidden z-[1000]">
                   <button
                     onClick={() => { handleLanguageChange('fr'); return; }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-[var(--color-bordeaux-primary)] dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-light)] hover:text-white dark:hover:bg-[var(--background-tertiary)] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
+                    className="flex items-center justify-between w-full px-4 py-3 text-gray-800 dark:text-[var(--text-primary)] hover:bg-gray-50 dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] transition-colors text-left"
                   >
-                    <span className={urlLang === 'fr' ? 'font-bold' : ''}>Français</span>
-                    {urlLang === 'fr' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent-dark)]" />}
+                    <span className={`${urlLang === 'fr' ? 'font-bold text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]' : 'text-gray-800 dark:text-[var(--text-primary)]'}`}>Français</span>
+                    {urlLang === 'fr' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]" />}
                   </button>
-                  <div className="border-t border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)]"></div>
+                  <div className="border-t border-gray-100 dark:border-[var(--border-default)]"></div>
                   <button
                     onClick={() => { handleLanguageChange('ar'); return; }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-[var(--color-bordeaux-primary)] dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-light)] hover:text-white dark:hover:bg-[var(--background-tertiary)] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
+                    className="flex items-center justify-between w-full px-4 py-3 text-gray-800 dark:text-[var(--text-primary)] hover:bg-gray-50 dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] transition-colors text-left"
                   >
-                    <span className={urlLang === 'ar' ? 'font-bold' : ''}>العربية</span>
-                    {urlLang === 'ar' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent-dark)]" />}
+                    <span className={`${urlLang === 'ar' ? 'font-bold text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]' : 'text-gray-800 dark:text-[var(--text-primary)]'}`}>العربية</span>
+                    {urlLang === 'ar' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]" />}
                   </button>
                 </div>
               )}
@@ -185,11 +185,11 @@ const Header = () => {
             <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
               <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
-            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+            <button className="hidden md:block p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
               <User size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
             <button 
-              className="lg:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
+              className="mobile-menu-toggle md:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
               onClick={toggleMenu}
               aria-label={t('menu')}
             >
@@ -201,7 +201,7 @@ const Header = () => {
 
       {/* Mobile Menu Overlay and Container */}
       <div 
-        className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
           isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         style={{
@@ -281,10 +281,16 @@ const Header = () => {
               <Phone size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('contact')}
             </Link>
+
+            {/* Profile Link - Mobile Only */}
+            <Link href={`${currentLanguagePath}/profile`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <User size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
+              Profil
+            </Link>
           </nav>
           
           {/* Action Buttons Section - Stuck to Bottom */}
-          <div className="bg-white dark:bg-[var(--background-default)] border-t border-[var(--border-default)] p-6 space-y-6">
+          <div className="mobile-menu-actions bg-white dark:bg-[var(--background-default)] border-t border-[var(--border-default)] flex flex-col">
             {/* WhatsApp Contact Button */}
             <a 
               href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}

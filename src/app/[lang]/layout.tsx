@@ -8,6 +8,7 @@ import resourcesToBackend from 'i18next-resources-to-backend';
 import TranslationsProvider from '@/components/providers/TranslationsProvider'; 
 import Header from '@/components/layout/Header'; 
 import Footer from '@/components/layout/Footer';
+import BottomNav from '@/components/layout/BottomNav';
 import PWAComponents from '@/components/features/pwa/PWAComponents';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
@@ -175,12 +176,13 @@ export default async function LangLayout({
         >
           <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="flex-grow w-full">
+            <main className="flex-grow w-full main-content-mobile-padding">
               <div className="max-w-full overflow-x-hidden">
                 {children}
               </div>
             </main>
             <Footer />
+            <BottomNav />
             <PWAComponents />
             <Script id="pwa-debug" strategy="afterInteractive">
               {`

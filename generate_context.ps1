@@ -1,8 +1,15 @@
 # generate_context.ps1 - Scalable Version for Git Repository
 # Get current directory rather than hardcoded path to make it portable across computers
 $projectDir = $PSScriptRoot
-Set-Location -Path $projectDir
-$outputFile = "context_for_ai.txt"
+
+# Use temp directory to ensure write access
+$tempDir = [System.IO.Path]::GetTempPath()
+$outputFileName = "context_for_ai.txt"
+$outputFile = Join-Path -Path $tempDir -ChildPath $outputFileName
+
+# Create a copy in the project directory after completion
+$finalOutputFile = Join-Path -Path $projectDir -ChildPath $outputFileName
+
 $fileSizeLimit = 102400  # 100KB limit for file size
 
 # Counter for tracking total files
@@ -230,5 +237,13 @@ foreach ($filePath in $functionsFiles) {
 "`n## --- END OF CONTEXT ---" | Out-File -FilePath $outputFile -Append -Encoding utf8
 "`n## Total files included: $script:totalFilesIncluded" | Out-File -FilePath $outputFile -Append -Encoding utf8
 
-Write-Host "AI Context file generated at: $outputFile"
-Write-Host "Context includes $script:totalFilesIncluded files (skipping files larger than $($fileSizeLimit / 1024)KB)"
+# Copy the file from temp directory to project directory
+try {
+    Copy-Item -Path $outputFile -Destination $finalOutputFile -Force
+    Write-Host "AI Context file generated at: $finalOutputFile"
+    Write-Host "Context includes $script:totalFilesIncluded files (skipping files larger than $($fileSizeLimit / 1024)KB)"
+} catch {
+    Write-Warning "Could not copy file to project directory: $_"
+    Write-Host "AI Context file is available at: $outputFile"
+    Write-Host "Context includes $script:totalFilesIncluded files (skipping files larger than $($fileSizeLimit / 1024)KB)"
+}

@@ -5,6 +5,10 @@
   "opening_hours_text": "Lun-Sam : 7h30 - 18h30\nDim : 08h00 - 18h00",
   "open": "Ouvert",
   "closed": "Fermé",
+  "opens_in": "ouvre dans",
+  "closes_in": "ferme dans",
+  "hours_short": "h",
+  "minutes_short": "min",
 
   "why_choose_us": "Pourquoi Nous Choisir ?",
   "certified_quality": "Qualité certifiée",
@@ -37,11 +41,11 @@
   "loading_map": "Chargement de la carte",
 
   "home": "Accueil",
-  "appointment": "Prendre RDV",
-  "glabo": "Prélèvement à Domicile",
+  "appointment": "RDV",
+  "glabo": "à Domicile",
   "contact": "Contact",
   "navigation": {
-    "analyses_catalog": "Catalogue Analyses"
+    "analyses_catalog": "Analyses"
   },
   "changeLanguage": "Changer de langue",
   "french": "Français",

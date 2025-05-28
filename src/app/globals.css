@@ -87,7 +87,7 @@ html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--background-default);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.6s ease, color 0.6s ease;
 }
 
 /* Header-specific button styles to override the global reset - but NOT mobile menu buttons */
@@ -111,6 +111,17 @@ header button:has(svg[size="18"]):not(.menu-whatsapp-button):not(.menu-pwa-butto
 header .absolute.bg-white button {
   background-color: transparent;
   color: var(--color-bordeaux-primary);
+}
+
+/* Fix for mobile menu hamburger toggle button visibility */
+.mobile-menu-toggle {
+  display: flex !important;
+}
+
+@media (min-width: 960px) {
+  .mobile-menu-toggle {
+    display: none !important;
+  }
 }
 
 /* Card styles using semantic color variables */
@@ -980,5 +991,182 @@ button.menu-language-button:focus {
   .analysis-card .analysis-price {
     color: var(--color-fuchsia-accent) !important;
     font-weight: 700 !important;
+  }
+  
+  /* Bottom Navigation Styles */
+  .bottom-nav-container {
+    background-color: var(--background-default);
+    border-top: 1px solid var(--border-default);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  
+  .bottom-nav-bar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0.5rem 0;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+  
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    min-height: 64px;
+    min-width: 44px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+  }
+  
+  .bottom-nav-item:hover {
+    background-color: var(--background-secondary);
+    color: var(--color-bordeaux-primary);
+  }
+  
+  .bottom-nav-item.active {
+    color: var(--color-fuchsia-accent);
+  }
+  
+  .bottom-nav-item.active:hover {
+    color: var(--color-fuchsia-bright);
+  }
+  
+  .bottom-nav-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+  }
+  
+  .bottom-nav-icon {
+    transition: all 0.2s ease;
+  }
+  
+  .bottom-nav-item.active .bottom-nav-icon {
+    transform: scale(1.1);
+  }
+  
+  .bottom-nav-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+  }
+  
+  /* Dark mode styles for bottom navigation */
+  .dark .bottom-nav-container {
+    background-color: var(--background-secondary);
+    border-top-color: var(--border-default);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .dark .bottom-nav-item {
+    color: var(--text-secondary);
+  }
+  
+  .dark .bottom-nav-item:hover {
+    background-color: var(--background-tertiary);
+    color: var(--color-bordeaux-primary);
+  }
+  
+  .dark .bottom-nav-item.active {
+    color: var(--color-fuchsia-accent);
+  }
+  
+  .dark .bottom-nav-item.active:hover {
+    color: var(--color-fuchsia-bright);
+  }
+  
+  /* Responsive adjustments for very small screens */
+  @media (max-width: 360px) {
+    .bottom-nav-item {
+      padding: 0.375rem 0.5rem;
+      min-width: 40px;
+    }
+    
+    .bottom-nav-label {
+      font-size: 0.6875rem;
+      max-width: 60px;
+    }
+  }
+  
+  /* Ensure main content has bottom padding on mobile to prevent overlap */
+  @media (max-width: 767px) {
+    .main-content-mobile-padding {
+      padding-bottom: 5rem; /* 80px - height of bottom nav + some extra space */
+    }
+  }
+  
+  /* Language Dropdown Fixes */
+  .language-dropdown-overlay {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem;
+    min-width: 144px;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    z-index: 1000;
+    transform-origin: top right;
+    animation: dropdownFadeIn 0.15s ease-out;
+  }
+  
+  .dark .language-dropdown-overlay {
+    background: var(--background-secondary);
+    border-color: var(--border-default);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+  
+  @keyframes dropdownFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  
+  /* Ensure header doesn't expand when dropdown opens */
+  header {
+    overflow: visible;
+  }
+  
+  header .container {
+    position: relative;
+  }
+  
+  /* Mobile Menu Button Spacing Improvements */
+  .mobile-menu-actions {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .mobile-menu-actions > * {
+    margin-bottom: 0 !important;
+  }
+  
+  .mobile-menu-actions .menu-whatsapp-button,
+  .mobile-menu-actions .menu-pwa-button,
+  .mobile-menu-actions .menu-language-button {
+    min-height: 52px;
+    padding: 0.875rem 1rem;
+    font-size: 0.9rem;
   }
 }

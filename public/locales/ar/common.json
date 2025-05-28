@@ -5,6 +5,10 @@
   "opening_hours_text": "الإثنين-السبت: 7:30 - 18:30\nالأحد: 08:00 - 18:00",
   "open": "مفتوح",
   "closed": "مغلق",
+  "opens_in": "يفتح خلال",
+  "closes_in": "يغلق خلال",
+  "hours_short": "س",
+  "minutes_short": "د",
 
   "why_choose_us": "لماذا تختارنا؟",
   "certified_quality": "جودة معتمدة",
@@ -37,11 +41,11 @@
   "loading_map": "جاري تحميل الخريطة...",
 
   "home": "الرئيسية",
-  "appointment": "حجز موعد",
-  "glabo": "فحص منزلي",
-  "contact": "اتصل بنا",
+  "appointment": "موعد",
+  "glabo": "منزلي",
+  "contact": "اتصل",
   "navigation": {
-    "analyses_catalog": "دليل التحاليل"
+    "analyses_catalog": "التحاليل"
   },
   "changeLanguage": "تغيير اللغة",
   "french": "Français",

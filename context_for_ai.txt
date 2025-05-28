@@ -1,4 +1,4 @@
-﻿# Laboratoire El Allali PWA - AI Context - 05/26/2025 17:41:23
+﻿# Laboratoire El Allali PWA - AI Context - 05/28/2025 21:18:04
 
 ## --- PROJECT OVERVIEW ---
 Laboratoire El Allali - Medical laboratory website in Agadir, Morocco
@@ -207,6 +207,7 @@ module.exports = withPWA(nextConfig);
 const { colors, typography, spacing, layout } = require('./src/styles/theme');
 
 module.exports = {
+  darkMode: 'class', // Add this line to enable class-based dark mode
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -596,12 +597,12 @@ export default initServerI18next;
   "laboratory_address": "61 Bis, Rue de Marrakech, 80020, Agadir, Maroc",
   "loading_map": "Chargement de la carte",
 
-  "home": "Accueil",
-  "appointment": "Prendre RDV",
-  "glabo": "PrÃ©lÃ¨vement Ã  Domicile",
+  "home": "Acceuil",
+  "appointment": "RDV",
+  "glabo": "Ã  Domicile",
   "contact": "Contact",
   "navigation": {
-    "analyses_catalog": "Catalogue Analyses"
+    "analyses_catalog": "Analyses"
   },
   "changeLanguage": "Changer de langue",
   "french": "FranÃ§ais",
@@ -655,6 +656,12 @@ export default initServerI18next;
   "faq": "Questions frÃ©quentes",
   "rights_reserved": "Tous droits rÃ©servÃ©s",
   
+  "theme": {
+    "toggle": "Changer le thÃ¨me",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "SystÃ¨me"
+  },
   "pwa": {
     "install_app_title": "Installer l'application du Labo",
     "install_app_title_labo": "Installer l'application du Labo",
@@ -739,11 +746,11 @@ export default initServerI18next;
   "loading_map": "Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø©...",
 
   "home": "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©",
-  "appointment": "Ø­Ø¬Ø² Ù…ÙˆØ¹Ø¯",
-  "glabo": "ÙØ­Øµ Ù…Ù†Ø²Ù„ÙŠ",
-  "contact": "Ø§ØªØµÙ„ Ø¨Ù†Ø§",
+  "appointment": "Ù…ÙˆØ¹Ø¯",
+  "glabo": "Ù…Ù†Ø²Ù„ÙŠ",
+  "contact": "Ø§ØªØµÙ„",
   "navigation": {
-    "analyses_catalog": "Ø¯Ù„ÙŠÙ„ Ø§Ù„ØªØ­Ø§Ù„ÙŠÙ„"
+    "analyses_catalog": "Ø§Ù„ØªØ­Ø§Ù„ÙŠÙ„"
   },
   "changeLanguage": "ØªØºÙŠÙŠØ± Ø§Ù„Ù„ØºØ©",
   "french": "FranÃ§ais",
@@ -859,6 +866,12 @@ export default initServerI18next;
   "faq": "Ø§Ù„Ø£Ø³Ø¦Ù„Ø© Ø§Ù„Ø´Ø§Ø¦Ø¹Ø©",
   "rights_reserved": "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ‚ Ù…Ø­ÙÙˆØ¸Ø©",
   
+  "theme": {
+    "toggle": "ØªØºÙŠÙŠØ± Ø§Ù„Ù…Ø¸Ù‡Ø±",
+    "light": "ÙØ§ØªØ­",
+    "dark": "Ø¯Ø§ÙƒÙ†",
+    "system": "Ø§Ù„Ù†Ø¸Ø§Ù…"
+  },
   "pwa": {
     "install_app_title": "ØªØ«Ø¨ÙŠØª ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ù…Ø®ØªØ¨Ø±",
     "install_app_title_labo": "ØªØ«Ø¨ÙŠØª ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ù…Ø®ØªØ¨Ø±",
@@ -894,14 +907,64 @@ export default initServerI18next;
 
 /* CSS Custom Properties for consistent color management */
 :root {
+  /* Light mode semantic defaults */
+  --background-default: #FFFFFF;
+  --background-secondary: #FFF0F5; /* Your existing --color-gray-soft */
+  --background-tertiary: #F7E7EA;  /* Your existing --color-gray-border */
+  --text-primary: #111827;         /* Your existing Tailwind gray-900 */
+  --text-secondary: #4B5563;       /* Your existing Tailwind gray-600 */
+  --text-tertiary: #6B7280;       /* Your existing Tailwind gray-500 */
+  --border-default: #E5E7EB;       /* Your existing Tailwind gray-200 */
+  --border-light: #F3F4F6;        /* Your existing Tailwind gray-100 */
+
+  /* Original brand colors (ensure these are your source-of-truth light mode colors) */
   --color-bordeaux-primary: #800020;
   --color-bordeaux-dark: #600018;
   --color-bordeaux-light: #B84C63;
   --color-fuchsia-accent: #FF4081;
   --color-fuchsia-bright: #F50057;
   --color-white: #FFFFFF;
-  --color-gray-soft: #FFF0F5;
-  --color-gray-border: #F7E7EA;
+  --color-gray-soft: #FFF0F5;     /* Original light mode equivalent for pale fuchsia */
+  --color-gray-border: #F7E7EA;   /* Original light mode equivalent for pale bordeaux */
+
+  /* Dark mode specific color variations (defined here for clarity, used in .dark scope) */
+  --color-bordeaux-primary-dark: #E91E63;
+  --color-fuchsia-accent-dark: #FF60A1;
+}
+
+html.dark {
+  /* REFINED DARK MODE PALETTE - Professional & Brand-Aligned */
+  
+  /* Background hierarchy with subtle bordeaux undertones */
+  --background-default: #1A0F12;     /* Base page - dark with bordeaux hint */
+  --background-secondary: #241418;   /* Cards/surfaces - elevated */
+  --background-tertiary: #2E1A1F;    /* Hover states, modals - most elevated */
+  
+  /* Text hierarchy optimized for contrast */
+  --text-primary: #F5F5F5;           /* Main text - warm white */
+  --text-secondary: #C8B5BA;         /* Secondary text - muted rose */
+  --text-tertiary: #9C8389;          /* Disabled/tertiary - dusty rose */
+  
+  /* Border colors with brand alignment */
+  --border-default: #3A2229;         /* Default borders - subtle bordeaux */
+  --border-light: #2E1A1F;           /* Light borders */
+  
+  /* Refined brand colors for dark mode */
+  --color-bordeaux-primary: #D64669;   /* Brighter, more vibrant bordeaux */
+  --color-bordeaux-dark: #B83A5A;     /* Hover state bordeaux */
+  --color-bordeaux-light: #E87B96;    /* Light bordeaux for accents */
+  --color-fuchsia-accent: #FF79A8;    /* Softer, more readable fuchsia */
+  --color-fuchsia-bright: #FF5C95;    /* Bright fuchsia for CTAs */
+  
+  /* Utility colors for dark mode */
+  --color-gray-soft: #2E1A1F;       /* Soft backgrounds */
+  --color-gray-border: #3A2229;     /* Border color */
+  
+  /* Semantic colors for dark mode */
+  --color-success: #4ADE80;
+  --color-warning: #FBBF24;
+  --color-error: #F87171;
+  --color-info: #60A5FA;
 }
 
 /* Reset default button styles that might interfere with Tailwind v4 */
@@ -918,25 +981,28 @@ button {
   outline: inherit;
 }
 
-/* Base styles */
+/* Define default font and colors using CSS variables */
 html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--background-default);
+  color: var(--text-primary);
+  transition: background-color 0.6s ease, color 0.6s ease;
 }
 
-/* Header-specific button styles to override the global reset */
-header button {
+/* Header-specific button styles to override the global reset - but NOT mobile menu buttons */
+header button:not(.menu-whatsapp-button):not(.menu-pwa-button):not(.menu-language-button) {
   background-color: transparent !important;
   color: inherit;
 }
 
-/* Language dropdown specific fixes */
-header .relative > button:has(.mr-1\.5) {
+/* Language dropdown specific fixes - but NOT mobile menu buttons */
+header .relative > button:has(.mr-1\.5):not(.menu-language-button) {
   background-color: transparent !important;
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* Ensure dropdown toggle buttons maintain transparent background */
-header button:has(svg[size="18"]) {
+/* Ensure dropdown toggle buttons maintain transparent background - but NOT mobile menu buttons */
+header button:has(svg[size="18"]):not(.menu-whatsapp-button):not(.menu-pwa-button):not(.menu-language-button) {
   background-color: transparent !important;
 }
 
@@ -946,22 +1012,185 @@ header .absolute.bg-white button {
   color: var(--color-bordeaux-primary);
 }
 
-/* Mobile menu action buttons */
+/* Fix for mobile menu hamburger toggle button visibility */
+.mobile-menu-toggle {
+  display: flex !important;
+}
+
+@media (min-width: 960px) {
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+}
+
+/* Card styles using semantic color variables */
+.card {
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+/* Dark mode specific card shadow */
+.dark .card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile menu action buttons - Unified outline style with high specificity */
 .menu-action-button {
-  background-color: var(--color-bordeaux-primary);
-  color: var(--color-white);
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: 2px solid var(--color-bordeaux-primary) !important;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   font-weight: 500;
   transition: all 0.2s ease;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   width: 100%;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  z-index: 10;
 }
 
 .menu-action-button:hover {
-  background-color: var(--color-bordeaux-dark);
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-fuchsia-accent) !important;
+}
+
+/* Unified button styles for mobile menu - All outline bordeaux with fuchsia hover */
+header .menu-whatsapp-button,
+a.menu-whatsapp-button {
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: 2px solid var(--color-bordeaux-primary) !important;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  z-index: 10;
+  min-height: 48px;
+}
+
+header .menu-whatsapp-button:hover,
+a.menu-whatsapp-button:hover {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-fuchsia-accent) !important;
+}
+
+header .menu-pwa-button,
+button.menu-pwa-button {
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: 2px solid var(--color-bordeaux-primary) !important;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+  min-height: 48px;
+}
+
+header .menu-pwa-button:hover,
+button.menu-pwa-button:hover {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-fuchsia-accent) !important;
+}
+
+header .menu-language-button,
+button.menu-language-button {
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: 2px solid var(--color-bordeaux-primary) !important;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+  min-height: 48px;
+}
+
+header .menu-language-button:hover,
+button.menu-language-button:hover {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-fuchsia-accent) !important;
+}
+
+/* Focus states for all mobile menu buttons - High specificity */
+header .menu-whatsapp-button:focus,
+a.menu-whatsapp-button:focus,
+header .menu-pwa-button:focus,
+button.menu-pwa-button:focus,
+header .menu-language-button:focus,
+button.menu-language-button:focus {
+  outline: 2px solid var(--color-fuchsia-accent) !important;
+  outline-offset: 2px;
+}
+
+/* Mobile menu language dropdown styling - Fix visibility */
+.mobile-language-dropdown {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  background-color: var(--background-secondary) !important;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  border: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.mobile-language-dropdown button {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: none !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.mobile-language-dropdown button:hover {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+}
+
+.mobile-language-dropdown .divider {
+  height: 1px;
+  background-color: var(--border-default);
+  margin: 0;
 }
 
 /* Direct button classes that work reliably in Tailwind v4 */
@@ -1138,7 +1367,9 @@ header .absolute.bg-white button {
 
   /* Card styles */
   .card {
-    background-color: white;
+    background-color: var(--background-secondary);
+    border-color: var(--border-default);
+    color: var(--text-primary);
     border-radius: 0.75rem;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     padding: 1.25rem;
@@ -1291,6 +1522,375 @@ header .absolute.bg-white button {
     transform: translate(33.333333%, -33.333333%);
     background: var(--color-fuchsia-accent);
   }
+
+  /* REFINED Card styles for dark mode */
+  .dark .card {
+    background-color: var(--background-secondary);
+    border-color: var(--border-default);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(214, 70, 105, 0.05);
+  }
+  
+  .dark .card:hover {
+    border-color: var(--color-bordeaux-primary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(255, 121, 168, 0.1);
+    background-color: var(--background-tertiary);
+  }
+  
+  /* Card header in dark mode */
+  .dark .card-header {
+    color: var(--color-bordeaux-light);
+    border-bottom-color: var(--border-default);
+  }
+  
+  /* Card action in dark mode */
+  .dark .card-action {
+    color: var(--color-fuchsia-accent);
+  }
+  
+  .dark .card-action:hover {
+    color: var(--color-fuchsia-bright);
+  }
+  
+  /* REFINED Button styles for dark mode */
+  .dark .button-fuchsia {
+    background-color: var(--color-fuchsia-accent);
+    color: #1A0F12;
+    box-shadow: 0 4px 12px rgba(255, 121, 168, 0.2);
+  }
+  
+  .dark .button-fuchsia:hover {
+    background-color: var(--color-fuchsia-bright);
+    box-shadow: 0 6px 20px rgba(255, 92, 149, 0.3);
+  }
+  
+  .dark .button-bordeaux {
+    background-color: var(--color-bordeaux-primary);
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(214, 70, 105, 0.2);
+  }
+  
+  .dark .button-bordeaux:hover {
+    background-color: var(--color-bordeaux-dark);
+    box-shadow: 0 6px 20px rgba(184, 58, 90, 0.3);
+  }
+  
+  .dark .button-outline-bordeaux {
+    border-color: var(--color-bordeaux-primary);
+    color: var(--color-bordeaux-primary);
+    background-color: rgba(214, 70, 105, 0.05);
+  }
+  
+  .dark .button-outline-bordeaux:hover {
+    background-color: var(--color-bordeaux-primary);
+    color: var(--text-primary);
+    border-color: var(--color-bordeaux-primary);
+  }
+  
+  /* Nav link hover text shadow for dark mode */
+  .dark .nav-link:hover {
+    text-shadow: 0 0 8px var(--color-fuchsia-accent);
+  }
+
+  /* REFINED Footer gradient for dark mode - elegant with brand colors */
+  .dark .footer-gradient {
+    background: linear-gradient(
+      135deg,
+      #1F1014 0%,        /* Deep bordeaux-black */
+      #2A151A 25%,       /* Richer bordeaux undertone */
+      #3A1A26 50%,       /* Transition to fuchsia tones */
+      #4A1F33 75%,       /* Deeper fuchsia-bordeaux */
+      #552440 100%       /* Rich fuchsia-bordeaux */
+    );
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .dark .footer-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--color-bordeaux-primary) 0%,
+      var(--color-fuchsia-accent) 50%,
+      var(--color-bordeaux-primary) 100%
+    );
+    opacity: 0.3;
+  }
+
+  /* Force dark mode backgrounds on common containers */
+  .dark body,
+  .dark main,
+  .dark .min-h-screen,
+  .dark [class*="bg-white"] {
+    background-color: var(--background-default) !important;
+  }
+
+  /* Ensure all bg-white classes respect dark mode */
+  .dark .bg-white {
+    background-color: var(--background-secondary) !important;
+  }
+  
+  /* Form inputs and controls for dark mode */
+  .dark input,
+  .dark textarea,
+  .dark select {
+    background-color: var(--background-default);
+    border-color: var(--border-default);
+    color: var(--text-primary);
+  }
+  
+  .dark input:focus,
+  .dark textarea:focus,
+  .dark select:focus {
+    border-color: var(--color-fuchsia-accent);
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(255, 121, 168, 0.1);
+  }
+  
+  /* Dropdown menus in dark mode */
+  .dark .dropdown-menu {
+    background-color: var(--background-secondary);
+    border-color: var(--border-default);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Loading spinner for dark mode */
+  .dark .loading {
+    border-color: var(--background-tertiary);
+    border-top-color: var(--color-fuchsia-accent);
+  }
+  
+  /* Gradient header for dark mode */
+  .dark .gradient-header {
+    background: linear-gradient(
+      135deg,
+      var(--color-bordeaux-dark) 0%,
+      var(--color-bordeaux-primary) 50%,
+      var(--color-bordeaux-light) 100%
+    );
+  }
+  
+  /* Menu action button for dark mode - Unified outline style */
+  .dark .menu-action-button {
+    background-color: transparent !important;
+    color: var(--color-bordeaux-primary) !important;
+    border: 2px solid var(--color-bordeaux-primary) !important;
+  }
+  
+  .dark .menu-action-button:hover {
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+    border-color: var(--color-fuchsia-accent) !important;
+  }
+  
+  /* Unified mobile menu buttons for dark mode - All outline bordeaux with fuchsia hover */
+  .dark header .menu-whatsapp-button,
+  .dark a.menu-whatsapp-button {
+    background-color: transparent !important;
+    color: var(--color-bordeaux-primary) !important;
+    border: 2px solid var(--color-bordeaux-primary) !important;
+  }
+  
+  .dark header .menu-whatsapp-button:hover,
+  .dark a.menu-whatsapp-button:hover {
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+    border-color: var(--color-fuchsia-accent) !important;
+  }
+  
+  .dark header .menu-pwa-button,
+  .dark button.menu-pwa-button {
+    background-color: transparent !important;
+    color: var(--color-bordeaux-primary) !important;
+    border: 2px solid var(--color-bordeaux-primary) !important;
+  }
+  
+  .dark header .menu-pwa-button:hover,
+  .dark button.menu-pwa-button:hover {
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+    border-color: var(--color-fuchsia-accent) !important;
+  }
+  
+  .dark header .menu-language-button,
+  .dark button.menu-language-button {
+    background-color: transparent !important;
+    color: var(--color-bordeaux-primary) !important;
+    border: 2px solid var(--color-bordeaux-primary) !important;
+  }
+  
+  .dark header .menu-language-button:hover,
+  .dark button.menu-language-button:hover {
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+    border-color: var(--color-fuchsia-accent) !important;
+  }
+  
+  /* Focus states for mobile menu buttons in dark mode - High specificity */
+  .dark header .menu-whatsapp-button:focus,
+  .dark a.menu-whatsapp-button:focus,
+  .dark header .menu-pwa-button:focus,
+  .dark button.menu-pwa-button:focus,
+  .dark header .menu-language-button:focus,
+  .dark button.menu-language-button:focus {
+    outline: 2px solid var(--color-fuchsia-accent) !important;
+    outline-offset: 2px;
+  }
+  
+  /* Mobile menu language dropdown for dark mode */
+  .dark .mobile-language-dropdown {
+    background-color: var(--background-secondary) !important;
+    border-color: var(--border-default) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  }
+  
+  .dark .mobile-language-dropdown button {
+    color: var(--color-bordeaux-primary) !important;
+    background-color: transparent !important;
+  }
+  
+  .dark .mobile-language-dropdown button:hover {
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+  }
+  
+  .dark .mobile-language-dropdown .divider {
+    background-color: var(--border-default);
+  }
+  
+  /* Footer WhatsApp button in dark mode */
+  .dark .footer-whatsapp-btn {
+    background: var(--color-bordeaux-primary);
+    color: var(--text-primary);
+  }
+  
+  .dark .footer-whatsapp-btn:hover {
+    background: var(--color-bordeaux-light);
+  }
+
+  /* Add these styles to your existing globals.css file */
+
+  /* Ensure analysis cards are properly visible and positioned */
+  .analysis-card {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    min-height: 200px;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  /* Analysis grid container to ensure proper layout */
+  .analysis-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 100%;
+    gap: 1.5rem;
+  }
+
+  /* Prevent any backdrop-filter issues that might hide cards */
+  .analysis-card,
+  .analysis-card * {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Ensure floating calculator stays above content */
+  .floating-calculator {
+    position: fixed !important;
+    z-index: 50 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Fix for any potential transform issues causing cards to disappear */
+  .analysis-card:hover {
+    transform: translateY(-2px) !important;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  /* Ensure selection state is clearly visible */
+  .analysis-card[aria-pressed="true"] {
+    border: 2px solid var(--color-fuchsia-accent) !important;
+    box-shadow: 0 0 0 3px rgba(255, 64, 129, 0.1) !important;
+  }
+
+  /* Debug styles - remove after fixing (these will make cards visible if they're hidden) */
+  .debug-analysis-card {
+    background: red !important;
+    border: 3px solid blue !important;
+    min-height: 300px !important;
+    position: relative !important;
+    z-index: 999 !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
+
+  /* Ensure proper stacking context for the entire page */
+  .analyses-page-container {
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+  }
+
+  /* Force hardware acceleration for smooth animations */
+  .analysis-card {
+    will-change: transform, box-shadow;
+    transform: translateZ(0);
+  }
+
+  /* Responsive fixes for analysis cards */
+  @media (max-width: 640px) {
+    .analysis-card {
+      min-height: 180px;
+      margin-bottom: 1rem;
+    }
+  }
+
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .analysis-card {
+      min-height: 190px;
+    }
+  }
+
+  @media (min-width: 1025px) {
+    .analysis-card {
+      min-height: 200px;
+    }
+  }
+
+  /* Prevent any CSS conflicts with existing styles */
+  .analysis-card.card {
+    /* Override any conflicting card styles */
+    padding: 1.25rem !important;
+    background-color: var(--background-secondary) !important;
+    border: 2px solid var(--border-default) !important;
+  }
+
+  /* Ensure text is visible in all modes */
+  .analysis-card .analysis-title {
+    color: var(--color-bordeaux-primary) !important;
+    font-weight: 600 !important;
+  }
+
+  .analysis-card .analysis-text {
+    color: var(--text-secondary) !important;
+  }
+
+  .analysis-card .analysis-price {
+    color: var(--color-fuchsia-accent) !important;
+    font-weight: 700 !important;
+  }
 }
 ```
 
@@ -1303,24 +1903,24 @@ import PWAInstallButton from '@/components/features/pwa/PWAInstallButton';
 
 export default function TestStylesPage() {
   return (
-    <main className="min-h-screen bg-white p-8">
+    <main className="min-h-screen bg-[var(--background-secondary)] p-8">
       <div className="max-w-4xl mx-auto space-y-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Style Testing Page</h1>
+        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-8">Style Testing Page</h1>
         
         <div className="space-y-8">
           {/* Test Case 1 */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">1 - PWAInstallButton (Default - using bg-bordeaux-custom class)</h3>
-            <div className="p-4 border rounded-lg bg-gray-50">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">Test Case 1: Primary Button</h2>
+            <div className="p-4 border border-[var(--border-default)] rounded-lg bg-[var(--background-tertiary)]">
               <PWAInstallButton variant="button" />
             </div>
           </div>
 
           {/* Test Case 2 */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">2 - Div with Arbitrary Value Background</h3>
-            <div className="p-4 border rounded-lg bg-gray-50">
-              <div className="w-40 h-20 p-4 bg-[#FF4081] text-[#FFFFFF] flex items-center justify-center rounded-lg">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">Test Case 2: Typography</h2>
+            <div className="p-4 border border-[var(--border-default)] rounded-lg bg-[var(--background-tertiary)]">
+              <div className="w-40 h-20 p-4 bg-[var(--accent-fuchsia)] text-white flex items-center justify-center rounded-lg">
                 Fuchsia Div Arbitrary
               </div>
             </div>
@@ -1328,9 +1928,9 @@ export default function TestStylesPage() {
 
           {/* Test Case 3 */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">3 - Button with Arbitrary Value Background</h3>
-            <div className="p-4 border rounded-lg bg-gray-50">
-              <button className="p-4 bg-[#FF4081] text-[#FFFFFF] rounded-lg">
+            <p className="text-[var(--text-secondary)] mb-4">This is a primary button with hover and focus states.</p>
+            <div className="p-4 border border-[var(--border-default)] rounded-lg bg-[var(--background-tertiary)]">
+              <button className="p-4 bg-[var(--accent-fuchsia)] text-white rounded-lg hover:bg-[var(--color-bordeaux-primary)] transition-colors">
                 Button Fuchsia Arbitrary
               </button>
             </div>
@@ -1338,9 +1938,9 @@ export default function TestStylesPage() {
 
           {/* Test Case 4 */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">4 - Button with Global Class: .bg-bordeaux-custom</h3>
-            <div className="p-4 border rounded-lg bg-gray-50">
-              <button className="p-4 bg-bordeaux-custom rounded-lg">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">4 - Button with Global Class: .bg-bordeaux-custom</h3>
+            <div className="p-4 border border-[var(--border-default)] rounded-lg bg-[var(--background-tertiary)]">
+              <button className="p-4 bg-[var(--color-bordeaux-primary)] text-white rounded-lg hover:bg-[var(--color-bordeaux-dark)] transition-colors">
                 Button Bordeaux Global
               </button>
             </div>
@@ -1348,19 +1948,21 @@ export default function TestStylesPage() {
 
           {/* Test Case 5 */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">5 - Button with Global Class: .btn-primary (Plain CSS version)</h3>
-            <div className="p-4 border rounded-lg bg-gray-50">
-              <button className="p-4 btn-primary">
-                Button .btn-primary (Plain CSS)
-              </button>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">5 - Button with Global Class: .btn-primary (Plain CSS version)</h3>
+            <div className="p-4 border border-[var(--border-default)] rounded-lg bg-[var(--background-tertiary)]">
+              <label className="flex items-center mt-4 text-[var(--text-secondary)]">
+                <button className="p-4 bg-[var(--color-bordeaux-primary)] text-white rounded-lg hover:bg-[var(--color-bordeaux-dark)] transition-colors">
+                  Button .btn-primary (Plain CSS)
+                </button>
+              </label>
             </div>
           </div>
 
           {/* Test Case 6 */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">6 - Button with Global Class: .btn-primary-apply (@apply version)</h3>
-            <div className="p-4 border rounded-lg bg-gray-50">
-              <button className="p-4 btn-primary-apply">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">6 - Button with Global Class: .btn-primary-apply (@apply version)</h3>
+            <div className="p-4 border border-[var(--border-default)] rounded-lg bg-[var(--background-tertiary)]">
+              <button className="p-4 bg-[var(--color-bordeaux-primary)] text-white rounded-lg hover:bg-[var(--color-bordeaux-dark)] transition-colors">
                 Button .btn-primary-apply (@apply)
               </button>
             </div>
@@ -1368,17 +1970,17 @@ export default function TestStylesPage() {
 
           {/* Test Case 7 */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">7 - PWAInstallButton (Styled externally with .btn-primary class)</h3>
-            <div className="p-4 border rounded-lg bg-gray-50">
+            <p className="text-sm text-[var(--text-tertiary)] mt-2">This is a small text example, often used for captions or secondary information.</p>
+            <div className="p-4 border border-[var(--border-default)] rounded-lg bg-[var(--background-tertiary)]">
               <PWAInstallButton variant="button" className="btn-primary" />
             </div>
           </div>
 
           {/* Test Case 8 */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">8 - DEFAULT TAILWIND TEST (Div with bg-red-500)</h3>
-            <div className="p-4 border rounded-lg bg-gray-50">
-              <div className="p-4 bg-red-500 text-yellow-300 rounded-lg">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">8 - DEFAULT TAILWIND TEST (Div with bg-red-500)</h3>
+            <div className="p-4 border border-[var(--border-default)] rounded-lg bg-[var(--background-tertiary)]">
+              <div className="p-4 bg-[var(--accent-fuchsia)] text-white rounded-lg">
                 DEFAULT TAILWIND TEST
               </div>
             </div>
@@ -1421,21 +2023,21 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="footer-gradient text-white pt-12 pb-8 mt-4">
+    <footer className="footer-gradient text-white pt-12 pb-8 mt-4 dark:bg-gradient-to-br dark:from-[#1a0a0e] dark:via-[#2a0a14] dark:to-[#3a0a1a]">
       <div className="container mx-auto px-4">
-        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[#800020]/70 via-[#B84C63]/70 to-[#FF4081]/70 rounded-full"></div>
+        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[#800020]/70 via-[#B84C63]/70 to-[#FF4081]/70 dark:from-[#FF4081]/50 dark:via-[#B84C63]/50 dark:to-[#800020]/50 rounded-full"></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm sm:text-base">
           {/* Contact Info */}
           <div>
             <h3 className="text-xl font-bold mb-4">{t('contact')}</h3>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <MapPin size={20} className="flex-shrink-0 text-white mt-0.5" />
+                <MapPin size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
                 <span>{t(LAB_ADDRESS)}</span>
               </li>
               <li className="flex flex-col">
                 <div className="flex items-start space-x-3 mb-1">
-                  <Phone size={20} className="flex-shrink-0 text-white mt-0.5" />
+                  <Phone size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
                   <span className="font-semibold">{t('lab_contact')}</span>
                 </div>
                 <div className={`${isRTL ? 'mr-7' : 'ml-7'}`}>
@@ -1450,7 +2052,7 @@ const Footer = () => {
                 </div>
               </li>
               <li className="flex items-start space-x-3">
-                <Mail size={20} className="flex-shrink-0 text-white mt-0.5" />
+                <Mail size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
                 <div className="flex flex-col">
                   <a href={LAB_CONTACT.EMAIL.url} className="hover:underline">
                     {LAB_CONTACT.EMAIL.display}
@@ -1458,7 +2060,7 @@ const Footer = () => {
                 </div>
               </li>
               <li className="flex items-start space-x-3">
-                <Clock size={20} className="flex-shrink-0 text-white mt-0.5" />
+                <Clock size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
                 <div>
                   <p>{LAB_HOURS.WEEKDAYS}</p>
                   <p>{LAB_HOURS.SUNDAY}</p>
@@ -1472,25 +2074,25 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">{t('quick_links')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                <Link href="/" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('home')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#services" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                <Link href="#services" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('our_main_services')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#info" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                <Link href="#info" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('practical_info')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                <Link href="#contact" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('contact')}</span>
                 </Link>
@@ -1552,11 +2154,12 @@ export default Footer;
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check } from 'lucide-react';  
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check, Download } from 'lucide-react';  
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
 import { supportedLngs } from '../../../i18n';
+import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import dynamic from 'next/dynamic';
 
 // Import the PWA install button component with SSR disabled
@@ -1660,90 +2263,89 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-[#800020] text-white shadow-md">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo et nom */}
+    <header className="bg-[var(--color-bordeaux-primary)] dark:bg-[var(--background-secondary)] text-white shadow-md transition-colors duration-300 overflow-x-hidden relative z-50">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="flex items-center justify-between py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
+          {/* Logo and name */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
-              <div className="bg-white p-1.5 rounded-md mr-2">
-                <span className="text-[#800020] font-bold text-lg">L</span>
+              <div className="bg-white dark:bg-[var(--color-bordeaux-primary-dark)] p-1.5 rounded-md mr-2 transition-colors duration-200">
+                <span className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent-dark)] font-bold text-lg">L</span>
               </div>
-              <h1 className="text-xl font-bold hidden sm:block">
+              <h1 className="text-xl font-bold hidden sm:block dark:text-[var(--text-primary)]">
                 {t('laboName')}
               </h1>
             </Link>
           </div>
 
-          {/* Navigation desktop */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href={`${currentLanguagePath}/`} className="hover:text-rose-200 transition-colors">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-4 xl:space-x-6">
+            <Link href={`${currentLanguagePath}/`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 text-sm lg:text-base">
               {t('home')}
             </Link>
-
-            <Link href={`${currentLanguagePath}/rendez-vous`} className="hover:text-rose-200 transition-colors font-semibold">
+            <Link href={`${currentLanguagePath}/rendez-vous`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 font-semibold text-sm lg:text-base">
               {t('appointment')}
             </Link>
-            
-            <Link href={`${currentLanguagePath}/glabo`} className="hover:text-rose-200 transition-colors font-semibold">
+            <Link href={`${currentLanguagePath}/glabo`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 font-semibold text-sm lg:text-base">
               {t('glabo')}
             </Link>
-
-            <Link href={`${currentLanguagePath}/analyses`} className="hover:text-rose-200 transition-colors font-semibold">
+            <Link href={`${currentLanguagePath}/analyses`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 font-semibold text-sm lg:text-base">
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
-
-            <Link href={`${currentLanguagePath}/contact`} className="hover:text-rose-200 transition-colors">
+            <Link href={`${currentLanguagePath}/contact`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 text-sm lg:text-base">
               {t('contact')}
             </Link>
           </nav>
 
-          {/* Boutons d'action */}
-          <div className="flex items-center space-x-2">
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
             <div className="relative" ref={desktopLangDropdownRef}>
               <button 
                 onClick={toggleLangDropdown} 
-                className="flex items-center text-sm px-3 py-2 min-h-[44px] rounded hover:bg-[#600018] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
+                className="flex items-center text-sm px-3 py-2 min-h-[44px] rounded hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
                 aria-label={t('changeLanguage')}
                 aria-haspopup="true"
                 aria-expanded={isLangDropdownOpen}
               >
-                <Globe size={18} className="mr-1.5" />
-                <span>{urlLang.toUpperCase()}</span>
-                <ChevronDown size={16} className="ml-1" />
+                <Globe size={18} className="mr-1.5 text-white dark:text-[var(--text-primary)]" />
+                <span className="text-white dark:text-[var(--text-primary)]">{urlLang.toUpperCase()}</span>
+                <ChevronDown size={16} className="ml-1 text-white dark:text-[var(--text-primary)]" />
               </button>
               
               {/* Language Dropdown Menu */}
               {isLangDropdownOpen && (
-                <div className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] overflow-hidden">
+                <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-[60] border border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)] overflow-hidden transition-colors duration-200">
                   <button
                     onClick={() => { handleLanguageChange('fr'); return; }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-t-md"
+                    className="flex items-center justify-between w-full px-3 py-2 text-[var(--color-bordeaux-primary)] dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-light)] hover:text-white dark:hover:bg-[var(--background-tertiary)] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
                   >
                     <span className={urlLang === 'fr' ? 'font-bold' : ''}>FranÃ§ais</span>
-                    {urlLang === 'fr' && <Check size={16} />}
+                    {urlLang === 'fr' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent-dark)]" />}
                   </button>
+                  <div className="border-t border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)]"></div>
                   <button
                     onClick={() => { handleLanguageChange('ar'); return; }}
-                    className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-b-md"
+                    className="flex items-center justify-between w-full px-3 py-2 text-[var(--color-bordeaux-primary)] dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-light)] hover:text-white dark:hover:bg-[var(--background-tertiary)] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
                   >
                     <span className={urlLang === 'ar' ? 'font-bold' : ''}>Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</span>
-                    {urlLang === 'ar' && <Check size={16} />}
+                    {urlLang === 'ar' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent-dark)]" />}
                   </button>
                 </div>
               )}
             </div>
-            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center">
-              <Search size={20} />
+            <ThemeSwitcher />
+            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+              <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
-            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center">
-              <User size={20} />
+            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+              <User size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
             <button 
-              className="md:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[#600018] flex items-center justify-center"
+              className="mobile-menu-toggle md:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
               onClick={toggleMenu}
+              aria-label={t('menu')}
             >
-              <Menu size={24} />
+              <Menu size={24} className="text-white dark:text-[var(--text-primary)]" />
             </button>
           </div>
         </div>
@@ -1774,7 +2376,7 @@ const Header = () => {
         
         {/* Menu Panel */}
         <div 
-          className="fixed top-0 right-0 h-full w-72 bg-white shadow-lg z-50 flex flex-col"
+          className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-[var(--background-default)] shadow-lg z-50 flex flex-col"
           style={{
             transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
             opacity: isMenuOpen ? 1 : 0.7,
@@ -1789,7 +2391,7 @@ const Header = () => {
           <div className="bg-[#800020] text-white h-16 flex items-center justify-between px-4">
             <div className="flex items-center">
               <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
-                <span className="bg-white text-[var(--primary-bordeaux)] p-1.5 rounded-md text-lg font-bold mr-3">L</span>
+                <span className="bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] text-[var(--color-bordeaux-primary)] p-1.5 rounded-md text-lg font-bold mr-3">L</span>
                 <span className="font-semibold text-lg">{t('laboName')}</span>
               </Link>
             </div>
@@ -1802,113 +2404,100 @@ const Header = () => {
             </button>
           </div>
             
-          <nav className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto bg-white text-black">
+          {/* Navigation Links Section */}
+          <nav className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto bg-white dark:bg-[var(--background-default)] text-[var(--text-primary)]">
             {console.log('[DEBUG] Rendering mobile menu nav content')}
             
-
-            <Link 
-              href={`${currentLanguagePath}/`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <Home size={20} className="mr-3 text-gray-700 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            {/* Navigation Links */}
+            <Link href={`${currentLanguagePath}/`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <Home size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('home')}
             </Link>
 
-            <Link 
-              href={`${currentLanguagePath}/rendez-vous`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <CalendarDays size={20} className="mr-3 text-gray-700 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            <Link href={`${currentLanguagePath}/rendez-vous`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <CalendarDays size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('appointment')}
             </Link>
             
-            <Link 
-              href={`${currentLanguagePath}/glabo`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <Truck size={20} className="mr-3 text-gray-700 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            <Link href={`${currentLanguagePath}/glabo`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <Truck size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('glabo')}
             </Link>
 
-            <Link 
-              href={`${currentLanguagePath}/analyses`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <FlaskConical size={20} className="mr-3 text-gray-700 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            <Link href={`${currentLanguagePath}/analyses`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <FlaskConical size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
 
-            <Link 
-              href={`${currentLanguagePath}/contact`} 
-              className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium group text-black hover:bg-[var(--fuchsia-pale)] hover:text-[var(--accent-fuchsia)] focus:bg-[var(--fuchsia-pale)] focus:text-[var(--accent-fuchsia)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--accent-fuchsia)]"
-              onClick={toggleMenu}
-            >
-              <Phone size={20} className="mr-3 text-gray-700 group-hover:text-[var(--accent-fuchsia)] transition-colors" />
+            <Link href={`${currentLanguagePath}/contact`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
+              <Phone size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('contact')}
             </Link>
           </nav>
+          
+          {/* Action Buttons Section - Stuck to Bottom */}
+          <div className="bg-white dark:bg-[var(--background-default)] border-t border-[var(--border-default)] p-6 space-y-6">
+            {/* WhatsApp Contact Button */}
+            <a 
+              href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={toggleMenu}
+              className="menu-whatsapp-button"
+              aria-label="Contact via WhatsApp"
+            >
+              <MessageCircle size={20} className="mr-2" />
+              {t('contact')} WhatsApp
+            </a>
             
-          {/* Navigation Footer - Branded Buttons Layout */}
-          <div className="mt-auto p-4 border-t border-gray-200 bg-white">
-            <div className="flex flex-col gap-3">
-              {/* WhatsApp Contact Button - Using custom button class */}
-              <a 
-                href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={toggleMenu}
-                className="menu-action-button"
-                aria-label="Contact via WhatsApp"
-              >
-                <MessageCircle size={20} className="mr-2.5" />
-                {t('contact')} WhatsApp
-              </a>
-            
-              {/* PWA Install Button - Using consolidated component */}
-              <PWAInstallButton 
-                variant="footer"
-                className="w-full menu-action-button"
-                style={{ margin: 0 }}
-              />
+            {/* PWA Install Button */}
+            <button
+              onClick={() => {
+                // Get the PWA install button element and trigger its click
+                const pwaButton = document.querySelector('[aria-label*="Install"]') as HTMLButtonElement;
+                if (pwaButton && pwaButton !== event?.currentTarget) {
+                  pwaButton.click();
+                }
+                toggleMenu();
+              }}
+              className="menu-pwa-button"
+              aria-label="Install App"
+            >
+              <Download size={20} className="mr-2" />
+              {t('pwa.install_app_button', 'Installer l\'App')}
+            </button>
 
-              {/* Language button - Using custom button class */}
-              <div className="relative" ref={mobileLangDropdownRef}>
-                <button
-                  onClick={toggleLangDropdown}
-                  className="menu-action-button flex items-center"
-                  aria-label={t('changeLanguage')}
-                  aria-haspopup="true"
-                  aria-expanded={isLangDropdownOpen}
-                >
-                  <Globe size={20} className="mr-2.5" />
-                  <span>{urlLang.toUpperCase()}</span>
-                  <ChevronDown size={16} className="ml-1" />
-                </button>
-                
-                {/* Mobile Language Dropdown Menu */}
-                {isLangDropdownOpen && (
-                  <div className="absolute right-0 bottom-full mb-1 w-36 bg-white rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] overflow-hidden">
-                    <button
-                      onClick={() => { handleLanguageChange('fr'); return; }}
-                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-t-md"
-                    >
-                      <span className={urlLang === 'fr' ? 'font-bold' : ''}>FranÃ§ais</span>
-                      {urlLang === 'fr' && <Check size={16} />}
-                    </button>
-                    <button
-                      onClick={() => { handleLanguageChange('ar'); return; }}
-                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] hover:bg-[#FFF0F5] hover:text-[#FF4081] transition-colors rounded-b-md"
-                    >
-                      <span className={urlLang === 'ar' ? 'font-bold' : ''}>Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</span>
-                      {urlLang === 'ar' && <Check size={16} />}
-                    </button>
-                  </div>
-                )}
-              </div>
+            {/* Language Dropdown Button */}
+            <div className="relative" ref={mobileLangDropdownRef}>
+              <button
+                onClick={toggleLangDropdown}
+                className="menu-language-button"
+                aria-label={t('changeLanguage')}
+                aria-haspopup="true"
+                aria-expanded={isLangDropdownOpen}
+              >
+                <Globe size={20} className="mr-2" />
+                <span>{urlLang.toUpperCase()}</span>
+                <ChevronDown size={16} className="ml-1" />
+              </button>
+              
+              {isLangDropdownOpen && (
+                <div className="mobile-language-dropdown">
+                  <button
+                    onClick={() => { handleLanguageChange('fr'); return; }}
+                  >
+                    <span className={urlLang === 'fr' ? 'font-bold' : ''}>FranÃ§ais</span>
+                    {urlLang === 'fr' && <Check size={16} />}
+                  </button>
+                  <div className="divider"></div>
+                  <button
+                    onClick={() => { handleLanguageChange('ar'); return; }}
+                  >
+                    <span className={urlLang === 'ar' ? 'font-bold' : ''}>Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</span>
+                    {urlLang === 'ar' && <Check size={16} />}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2063,14 +2652,6 @@ export interface Analysis {
   is_active: boolean;
 }
 
-/**
- * Props for the AnalysisCard component
- * @interface AnalysisCardProps
- * @property {Analysis} analysis - The analysis data to display
- * @property {string} lang - The current language code ('fr' or 'ar')
- * @property {boolean} [isSelected] - Whether this analysis is currently selected
- * @property {Function} [onSelect] - Callback function when the analysis is selected/deselected
- */
 interface AnalysisCardProps {
   analysis: Analysis;
   lang: string;
@@ -2079,27 +2660,6 @@ interface AnalysisCardProps {
 }
 
 export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: AnalysisCardProps) {
-  // Define animation keyframes for the check icon - client side only
-  React.useEffect(() => {
-    if (typeof document !== 'undefined') {
-      const style = document.createElement('style');
-      style.innerHTML = `
-        @keyframes appearAnimation {
-          0% { opacity: 0; transform: scale(0); }
-          50% { opacity: 1; transform: scale(1.2); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-        .animate-appear {
-          animation: appearAnimation 0.3s ease-out forwards;
-        }
-      `;
-      document.head.appendChild(style);
-
-      return () => {
-        document.head.removeChild(style);
-      };
-    }
-  }, []);
   const isArabic = lang === "ar";
   const [showPreparation, setShowPreparation] = useState(false);
   
@@ -2108,7 +2668,8 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
   const hasPreparation = preparationText && preparationText.trim().length > 0;
   
   // Toggle preparation visibility
-  const togglePreparation = () => {
+  const togglePreparation = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setShowPreparation(prev => !prev);
   };
   
@@ -2127,7 +2688,7 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
   
   // Handle selection
   const handleSelectClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     if (onSelect) {
       onSelect(analysis);
     }
@@ -2135,40 +2696,55 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
 
   return (
     <div 
-      className={`shadow-lg rounded-lg p-4 mb-4 border 
+      className={`
+        relative w-full
+        bg-[var(--background-secondary)] dark:bg-[var(--background-secondary)]
+        border-2 rounded-xl p-5 mb-4
+        cursor-pointer
+        transition-all duration-200 ease-in-out
         ${isSelected 
-          ? 'border-[var(--accent-fuchsia)] border border-opacity-80 bg-[var(--bordeaux-pale)] ring-1 ring-[var(--accent-fuchsia)] ring-opacity-40' 
-          : 'border-gray-200 bg-white hover:border-gray-300'} 
-        hover:shadow-xl transition-all duration-300 ease-in-out transform ${isSelected ? 'scale-[1.01]' : ''} relative`}
+          ? 'border-[var(--color-fuchsia-accent)] dark:border-[var(--color-fuchsia-accent)] ring-2 ring-[var(--color-fuchsia-accent)]/30 scale-[1.02] bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-tertiary)]' 
+          : 'border-[var(--border-default)] hover:border-[var(--color-bordeaux-light)] dark:hover:border-[var(--color-bordeaux-primary)] hover:shadow-lg dark:hover:bg-[var(--background-tertiary)]'
+        }
+      `}
       onClick={handleSelectClick}
       role="button"
       tabIndex={0}
       aria-pressed={isSelected}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
           handleSelectClick(e as unknown as React.MouseEvent);
         }
       }}
+      style={{
+        boxShadow: isSelected 
+          ? '0 8px 25px -5px rgba(255, 64, 129, 0.2)' 
+          : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        minHeight: '200px'
+      }}
     >
-      {/* Selection indicator - position based on language direction */}
+      {/* Selection indicator */}
       <div 
-        className={`absolute top-3 ${isArabic ? 'left-3' : 'right-3'} flex items-center z-10`}
+        className={`absolute top-3 ${isArabic ? 'left-3' : 'right-3'} z-10`}
         aria-hidden="true"
       >
         <div 
-          className={`w-6 h-6 rounded-full 
+          className={`
+            w-6 h-6 rounded-full flex items-center justify-center
+            transition-all duration-200
             ${isSelected 
-              ? 'bg-[var(--accent-fuchsia)] shadow-md' 
-              : 'border-2 border-gray-300 bg-white hover:border-[var(--accent-fuchsia)] hover:border-opacity-50'} 
-            flex items-center justify-center transform transition-all duration-300 ease-in-out 
-            ${isSelected ? 'scale-110 rotate-3' : ''}`}
+              ? 'bg-[var(--color-fuchsia-accent)] text-white scale-110' 
+              : 'border-2 border-[var(--border-default)] bg-[var(--background-default)] hover:border-[var(--color-fuchsia-accent)]'
+            }
+          `}
         >
           {isSelected ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white animate-appear" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[var(--text-tertiary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
@@ -2177,62 +2753,73 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
         <span className="sr-only">{isSelected ? translations.selected : translations.select}</span>
       </div>
       
-      <h3 className={`text-xl font-semibold mb-2 ${isSelected ? 'text-[var(--accent-fuchsia)]' : 'text-[var(--primary-bordeaux)]'} ${isArabic ? 'pl-8' : 'pr-8'} transition-colors duration-300`}>
-        {isArabic ? analysis.name_ar : analysis.name_fr}
-      </h3>
-      
-      <div className="mt-2 space-y-1">
-        <p className="text-gray-600">
-          <span className="font-medium">{translations.categoryLabel} </span>
-          {isArabic ? analysis.category_ar : analysis.category_fr}
-        </p>
+      {/* Card Content */}
+      <div className={`${isArabic ? 'pl-10' : 'pr-10'}`}>
+        <h3 
+          className={`
+            text-xl font-semibold mb-3 transition-colors duration-200
+            ${isSelected 
+              ? 'text-[var(--color-fuchsia-accent)]' 
+              : 'text-[var(--color-bordeaux-primary)]'
+            }
+          `}
+        >
+          {isArabic ? analysis.name_ar : analysis.name_fr}
+        </h3>
         
-        <p className="text-gray-600">
-          <span className="font-medium">{translations.delayLabel} </span>
-          {isArabic ? analysis.delay_ar : analysis.delay_fr}
-        </p>
-        
-        <p className="text-[var(--accent-fuchsia)] font-bold mt-2">
-          {analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {translations.priceCurrency}
-        </p>
-        
-        {/* Preparation toggle button - only show if the analysis has preparation instructions */}
-        {hasPreparation && (
-          <div className="mt-3">
-            <button 
-              onClick={togglePreparation}
-              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors duration-200"
-              aria-expanded={showPreparation}
-            >
-              {showPreparation 
-                ? translations.hidePreparation
-                : translations.showPreparation
-              }
-            </button>
-          </div>
-        )}
-        
-        {/* Preparation details section - conditionally rendered */}
-        {showPreparation && (
-          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
-            <h4 className="font-medium text-sm mb-1 text-gray-700">
-              {translations.preparationLabel}
-            </h4>
-            <p className="text-gray-700 text-sm whitespace-pre-line">
-              {hasPreparation 
-                ? preparationText 
-                : translations.noPreparation
-              }
-            </p>
-          </div>
-        )}
+        <div className="space-y-2">
+          <p className="text-[var(--text-secondary)] text-sm">
+            <span className="font-medium text-[var(--text-primary)]">{translations.categoryLabel} </span>
+            {isArabic ? analysis.category_ar : analysis.category_fr}
+          </p>
+          
+          <p className="text-[var(--text-secondary)] text-sm">
+            <span className="font-medium text-[var(--text-primary)]">{translations.delayLabel} </span>
+            {isArabic ? analysis.delay_ar : analysis.delay_fr}
+          </p>
+          
+          <p className="text-[var(--color-fuchsia-accent)] font-bold mt-3 text-lg">
+            {analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {translations.priceCurrency}
+          </p>
+          
+          {/* Preparation toggle button */}
+          {hasPreparation && (
+            <div className="mt-3">
+              <button 
+                onClick={togglePreparation}
+                className="
+                  px-3 py-2 text-xs rounded-md
+                  bg-[var(--color-gray-soft)] hover:bg-[var(--color-gray-border)]
+                  text-[var(--text-primary)]
+                  border border-[var(--border-default)]
+                  transition-colors duration-200
+                  focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:ring-opacity-50
+                "
+                aria-expanded={showPreparation}
+              >
+                {showPreparation ? translations.hidePreparation : translations.showPreparation}
+              </button>
+            </div>
+          )}
+          
+          {/* Preparation details section */}
+          {showPreparation && (
+            <div className="mt-3 p-3 bg-[var(--color-gray-soft)] border border-[var(--border-default)] rounded-md">
+              <h4 className="font-medium text-xs mb-2 text-[var(--text-primary)]">
+                {translations.preparationLabel}
+              </h4>
+              <p className="text-[var(--text-secondary)] text-xs whitespace-pre-line leading-relaxed">
+                {hasPreparation ? preparationText : translations.noPreparation}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 export default AnalysisCard;
-
 ```
 
 ## FILE: src/components/features/home/HeroBanner.tsx
@@ -2240,6 +2827,7 @@ export default AnalysisCard;
 import React from 'react';
 import { Navigation } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 // Import useTranslation hook without type issues
 import { useTranslation as useTranslationOriginal } from 'react-i18next';
 
@@ -2264,15 +2852,14 @@ const HeroBanner = () => {
     <div className="relative overflow-hidden mb-8 -mt-[1px] w-full">
       {/* Banner Image */}
       <div className="absolute inset-0 z-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* Use standard img tag which we know works from the test */}
         <img
           src="/images/hero-banner.jpg"
           alt={t('banner_alt')}
-          className="object-cover w-full h-full"
-          style={{ position: 'absolute', inset: 0 }}
+          className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* Overlay to ensure text is readable */}
-        <div className="absolute inset-0 bg-[#800020] opacity-60"></div>
+        {/* Semi-transparent overlay to ensure text is readable */}
+        <div className="absolute inset-0 bg-[#800020] dark:bg-[#1A0F12] opacity-70 dark:opacity-85"></div>
       </div>
       
       {/* Content */}
@@ -2315,6 +2902,86 @@ const HeroBanner = () => {
 };
 
 export default HeroBanner;
+```
+
+## FILE: src/components/features/home/ImageTest.tsx
+```typescript
+"use client";
+
+import React, { useState, useEffect } from 'react';
+
+const ImageTest = () => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  
+  return (
+    <div className="p-8 bg-white dark:bg-[var(--background-default)] rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-4 text-[var(--color-bordeaux-primary)] dark:text-[var(--text-primary)]">
+        Image Test
+      </h2>
+      
+      <div className="space-y-6">
+        <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-md">
+          <h3 className="font-medium mb-2 text-[var(--text-primary)]">1. Direct Image Tag (No Overlay)</h3>
+          <div className="relative h-64 overflow-hidden rounded-md">
+            <img
+              src="/images/hero-banner.jpg"
+              alt="Hero Banner"
+              className="object-cover w-full h-full"
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+            />
+            {imageError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-red-100 text-red-700 p-4">
+                Error loading image
+              </div>
+            )}
+          </div>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Status: {imageLoaded ? "âœ… Image loaded successfully" : imageError ? "âŒ Failed to load" : "â³ Loading..."}
+          </p>
+        </div>
+        
+        <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-md">
+          <h3 className="font-medium mb-2 text-[var(--text-primary)]">2. With Semi-Transparent Overlay</h3>
+          <div className="relative h-64 overflow-hidden rounded-md">
+            <img
+              src="/images/hero-banner.jpg"
+              alt="Hero Banner with Overlay"
+              className="object-cover w-full h-full"
+            />
+            <div className="absolute inset-0 bg-[var(--color-bordeaux-primary)] bg-opacity-50 dark:bg-opacity-60"></div>
+            <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-xl">
+              This text is over a 50% opacity overlay
+            </div>
+          </div>
+        </div>
+        
+        <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-md">
+          <h3 className="font-medium mb-2 text-[var(--text-primary)]">3. Using Next.js Image (if available)</h3>
+          <div className="relative h-64 overflow-hidden rounded-md">
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+              Add Next Image component here if desired
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
+        <h3 className="font-medium mb-2 text-yellow-800 dark:text-yellow-200">Troubleshooting Notes</h3>
+        <ul className="list-disc pl-5 space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
+          <li>Confirm the image exists at: <code>/public/images/hero-banner.jpg</code></li>
+          <li>Check browser console for any errors</li>
+          <li>Verify that public assets are being served correctly</li>
+          <li>Try a different image format (PNG, WEBP) if JPG isn't working</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+export default ImageTest;
+
 ```
 
 ## FILE: src/components/features/pwa/IOSInstallBanner.tsx
@@ -2496,104 +3163,6 @@ export default function PWABanner({ className = '' }: PWABannerProps) {
         {t('pwa.install_button')}
       </button>
     </div>
-  );
-}
-
-```
-
-## FILE: src/components/features/pwa/PWAComponents.tsx
-```typescript
-'use client';
-
-import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import ServiceWorkerRegistration from './ServiceWorkerRegistration';
-
-// Dynamically import PWA components with SSR disabled
-const IOSInstallBanner = dynamic(
-  () => import('@/components/features/pwa/IOSInstallBanner'),
-  { ssr: false }
-);
-
-const PWAInstallButton = dynamic(
-  () => import('./PWAInstallButton'),
-  { ssr: false }
-);
-
-// Use a ref to track if we've already set up the PWA components
-let isPWAInitialized = false;
-
-export default function PWAComponents() {
-  const [isClient, setIsClient] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [showInstallButton, setShowInstallButton] = useState(process.env.NODE_ENV === 'development');
-
-  useEffect(() => {
-    // Only run on client side and only once
-    if (typeof window === 'undefined' || isPWAInitialized) return;
-    
-    console.log('>>> PWA: Initializing PWA components...');
-    isPWAInitialized = true;
-    setIsClient(true);
-    
-    // Check if iOS
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(iOS);
-    
-    // Check if running in standalone mode
-    const standalone = 
-      window.matchMedia('(display-mode: standalone)').matches || 
-      (window.navigator as any).standalone;
-    
-    setIsStandalone(!!standalone);
-    
-    // Debug info
-    console.log('>>> PWA: Platform detection:', {
-      isIOS: iOS,
-      isStandalone: !!standalone,
-      userAgent: navigator.userAgent,
-      isSecure: window.location.protocol === 'https:' || window.location.hostname === 'localhost',
-      isPWA: (window as any).deferredPrompt !== undefined
-    });
-    
-    // Listen for beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      console.log('>>> PWA: beforeinstallprompt event fired');
-      // Store the event for later use
-      (window as any).deferredPrompt = e;
-      setShowInstallButton(true);
-    };
-    
-    // Check if we already have a deferred prompt
-    if ((window as any).deferredPrompt) {
-      console.log('>>> PWA: Found existing deferred prompt');
-      setShowInstallButton(true);
-    }
-    
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  // Only render PWA components on the client side and if not in standalone mode
-  // However, always render in development mode for testing
-  if ((!isClient || isStandalone) && process.env.NODE_ENV !== 'development') {
-    console.log(`>>> PWA: Not rendering PWA components. isClient: ${isClient}, isStandalone: ${isStandalone}`);
-    return null;
-  }
-
-  console.log('>>> PWA: Rendering PWA components');
-  
-  return (
-    <>
-      <ServiceWorkerRegistration />
-      {isIOS && <IOSInstallBanner />}
-      {/* Le bouton flottant a Ã©tÃ© supprimÃ© */}
-    </>
   );
 }
 
