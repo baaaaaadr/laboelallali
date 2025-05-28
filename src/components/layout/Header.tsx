@@ -111,14 +111,14 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-[var(--color-bordeaux-primary)] dark:bg-[var(--background-secondary)] text-white shadow-md transition-colors duration-300 relative z-50">
+    <header className="header-main shadow-md transition-colors duration-300 relative z-50">
       <div className="container mx-auto px-4 max-w-7xl relative">
         <div className="flex items-center justify-between py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
           {/* Logo and name */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
-              <div className="bg-white dark:bg-[var(--color-bordeaux-primary-dark)] p-1.5 rounded-md mr-2 transition-colors duration-200">
-                <span className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent-dark)] font-bold text-lg">L</span>
+              <div className="header-logo">
+                <span className="font-bold text-lg">L</span>
               </div>
               <h1 className="text-xl font-bold hidden sm:block dark:text-[var(--text-primary)]">
                 {t('laboName')}
@@ -236,10 +236,10 @@ const Header = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Menu Header Section - Matches main header height */}
-          <div className="bg-[#800020] text-white h-16 flex items-center justify-between px-4">
+          <div className="mobile-menu-header h-16 flex items-center justify-between px-4">
             <div className="flex items-center">
               <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
-                <span className="bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] text-[var(--color-bordeaux-primary)] p-1.5 rounded-md text-lg font-bold mr-3">L</span>
+                <span className="header-logo text-lg font-bold mr-3">L</span>
                 <span className="font-semibold text-lg">{t('laboName')}</span>
               </Link>
             </div>

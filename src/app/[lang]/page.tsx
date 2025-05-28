@@ -13,7 +13,8 @@ type PageProps = {
   params: { lang: string };
 };
 
-export async function generateMetadata({ params: { lang } }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { lang } = await params;
   // Define metadata based on language
   const metadata = {
     fr: {
@@ -49,7 +50,8 @@ export async function generateMetadata({ params: { lang } }: PageProps): Promise
   };
 }
 
-export default function Home({ params: { lang } }: PageProps) {
+export default async function Home({ params }: PageProps) {
+  const { lang } = await params;
   // Log the language for debugging
   console.log(`Page rendered for language: ${lang}`);
   

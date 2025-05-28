@@ -375,6 +375,58 @@ button.menu-language-button:focus {
   color: var(--color-white);
 }
 
+/* Hero Banner Overlay Styles - Fix for Tailwind v4 arbitrary values */
+.hero-banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #800020;
+  opacity: 0.5;
+  transition: all 0.5s ease-in-out;
+}
+
+.dark .hero-banner-overlay {
+  background-color: #4A0E0E;
+  opacity: 0.6;
+}
+
+/* Header Styles - Fix for production CSS loading issues */
+.header-main {
+  background-color: #800020 !important;
+  color: white !important;
+}
+
+.dark .header-main {
+  background-color: var(--background-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.header-logo {
+  background-color: white !important;
+  color: #800020 !important;
+  padding: 0.375rem !important;
+  border-radius: 0.375rem !important;
+  margin-right: 0.5rem !important;
+  transition: colors 0.2s ease !important;
+}
+
+.dark .header-logo {
+  background-color: var(--color-bordeaux-primary) !important;
+  color: var(--color-fuchsia-accent) !important;
+}
+
+.mobile-menu-header {
+  background-color: #800020 !important;
+  color: white !important;
+}
+
+.dark .mobile-menu-header {
+  background-color: var(--color-bordeaux-primary) !important;
+  color: var(--text-primary) !important;
+}
+
 /* Custom component styles */
 @layer components {
   /* Footer gradient */
