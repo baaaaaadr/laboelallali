@@ -90,20 +90,20 @@ html, body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Header-specific button styles to override the global reset */
-header button {
+/* Header-specific button styles to override the global reset - but NOT mobile menu buttons */
+header button:not(.menu-whatsapp-button):not(.menu-pwa-button):not(.menu-language-button) {
   background-color: transparent !important;
   color: inherit;
 }
 
-/* Language dropdown specific fixes */
-header .relative > button:has(.mr-1\.5) {
+/* Language dropdown specific fixes - but NOT mobile menu buttons */
+header .relative > button:has(.mr-1\.5):not(.menu-language-button) {
   background-color: transparent !important;
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* Ensure dropdown toggle buttons maintain transparent background */
-header button:has(svg[size="18"]) {
+/* Ensure dropdown toggle buttons maintain transparent background - but NOT mobile menu buttons */
+header button:has(svg[size="18"]):not(.menu-whatsapp-button):not(.menu-pwa-button):not(.menu-language-button) {
   background-color: transparent !important;
 }
 
@@ -127,22 +127,160 @@ header .absolute.bg-white button {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
 
-/* Mobile menu action buttons */
+/* Mobile menu action buttons - Unified outline style with high specificity */
 .menu-action-button {
-  background-color: var(--color-bordeaux-primary);
-  color: var(--color-white);
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: 2px solid var(--color-bordeaux-primary) !important;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   font-weight: 500;
   transition: all 0.2s ease;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   width: 100%;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  z-index: 10;
 }
 
 .menu-action-button:hover {
-  background-color: var(--color-bordeaux-dark);
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-fuchsia-accent) !important;
+}
+
+/* Unified button styles for mobile menu - All outline bordeaux with fuchsia hover */
+header .menu-whatsapp-button,
+a.menu-whatsapp-button {
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: 2px solid var(--color-bordeaux-primary) !important;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  z-index: 10;
+  min-height: 48px;
+}
+
+header .menu-whatsapp-button:hover,
+a.menu-whatsapp-button:hover {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-fuchsia-accent) !important;
+}
+
+header .menu-pwa-button,
+button.menu-pwa-button {
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: 2px solid var(--color-bordeaux-primary) !important;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+  min-height: 48px;
+}
+
+header .menu-pwa-button:hover,
+button.menu-pwa-button:hover {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-fuchsia-accent) !important;
+}
+
+header .menu-language-button,
+button.menu-language-button {
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: 2px solid var(--color-bordeaux-primary) !important;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+  min-height: 48px;
+}
+
+header .menu-language-button:hover,
+button.menu-language-button:hover {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-fuchsia-accent) !important;
+}
+
+/* Focus states for all mobile menu buttons - High specificity */
+header .menu-whatsapp-button:focus,
+a.menu-whatsapp-button:focus,
+header .menu-pwa-button:focus,
+button.menu-pwa-button:focus,
+header .menu-language-button:focus,
+button.menu-language-button:focus {
+  outline: 2px solid var(--color-fuchsia-accent) !important;
+  outline-offset: 2px;
+}
+
+/* Mobile menu language dropdown styling - Fix visibility */
+.mobile-language-dropdown {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  background-color: var(--background-secondary) !important;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  border: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.mobile-language-dropdown button {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: none !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.mobile-language-dropdown button:hover {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+}
+
+.mobile-language-dropdown .divider {
+  height: 1px;
+  background-color: var(--border-default);
+  margin: 0;
 }
 
 /* Direct button classes that work reliably in Tailwind v4 */
@@ -628,14 +766,92 @@ header .absolute.bg-white button {
     );
   }
   
-  /* Menu action button for dark mode */
+  /* Menu action button for dark mode - Unified outline style */
   .dark .menu-action-button {
-    background-color: var(--color-bordeaux-primary);
-    color: var(--text-primary);
+    background-color: transparent !important;
+    color: var(--color-bordeaux-primary) !important;
+    border: 2px solid var(--color-bordeaux-primary) !important;
   }
   
   .dark .menu-action-button:hover {
-    background-color: var(--color-bordeaux-dark);
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+    border-color: var(--color-fuchsia-accent) !important;
+  }
+  
+  /* Unified mobile menu buttons for dark mode - All outline bordeaux with fuchsia hover */
+  .dark header .menu-whatsapp-button,
+  .dark a.menu-whatsapp-button {
+    background-color: transparent !important;
+    color: var(--color-bordeaux-primary) !important;
+    border: 2px solid var(--color-bordeaux-primary) !important;
+  }
+  
+  .dark header .menu-whatsapp-button:hover,
+  .dark a.menu-whatsapp-button:hover {
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+    border-color: var(--color-fuchsia-accent) !important;
+  }
+  
+  .dark header .menu-pwa-button,
+  .dark button.menu-pwa-button {
+    background-color: transparent !important;
+    color: var(--color-bordeaux-primary) !important;
+    border: 2px solid var(--color-bordeaux-primary) !important;
+  }
+  
+  .dark header .menu-pwa-button:hover,
+  .dark button.menu-pwa-button:hover {
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+    border-color: var(--color-fuchsia-accent) !important;
+  }
+  
+  .dark header .menu-language-button,
+  .dark button.menu-language-button {
+    background-color: transparent !important;
+    color: var(--color-bordeaux-primary) !important;
+    border: 2px solid var(--color-bordeaux-primary) !important;
+  }
+  
+  .dark header .menu-language-button:hover,
+  .dark button.menu-language-button:hover {
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+    border-color: var(--color-fuchsia-accent) !important;
+  }
+  
+  /* Focus states for mobile menu buttons in dark mode - High specificity */
+  .dark header .menu-whatsapp-button:focus,
+  .dark a.menu-whatsapp-button:focus,
+  .dark header .menu-pwa-button:focus,
+  .dark button.menu-pwa-button:focus,
+  .dark header .menu-language-button:focus,
+  .dark button.menu-language-button:focus {
+    outline: 2px solid var(--color-fuchsia-accent) !important;
+    outline-offset: 2px;
+  }
+  
+  /* Mobile menu language dropdown for dark mode */
+  .dark .mobile-language-dropdown {
+    background-color: var(--background-secondary) !important;
+    border-color: var(--border-default) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  }
+  
+  .dark .mobile-language-dropdown button {
+    color: var(--color-bordeaux-primary) !important;
+    background-color: transparent !important;
+  }
+  
+  .dark .mobile-language-dropdown button:hover {
+    background-color: var(--color-fuchsia-accent) !important;
+    color: #1A0F12 !important;
+  }
+  
+  .dark .mobile-language-dropdown .divider {
+    background-color: var(--border-default);
   }
   
   /* Footer WhatsApp button in dark mode */

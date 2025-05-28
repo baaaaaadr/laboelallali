@@ -1,6 +1,6 @@
 # Project Structure: Laboratoire El Allali PWA
 
-Last Updated: 2025-05-21
+Last Updated: 2025-05-28
 
 This document outlines the file and directory structure of the PWA.
 AI Assistant: Please refer to this for file locations and organizational patterns.
@@ -88,6 +88,7 @@ When creating new files, follow these patterns or suggest updates to this docume
         - Define hover states in CSS, not with Tailwind variants
         - Avoid `@apply` for complex button styles
         - Use Tailwind utilities for layout and spacing only
+        - **Mobile Menu Button Classes:** `.menu-whatsapp-button`, `.menu-pwa-button`, `.menu-language-button` with proper hover and focus states
         - See Decision Log DL-009 for detailed patterns and rationale
     - `layout.tsx`: Root layout for the entire application.
     - `metadata.ts`: Default metadata for the application.

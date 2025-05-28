@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check } from 'lucide-react';  
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check, Download } from 'lucide-react';  
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -111,9 +111,9 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-[var(--color-bordeaux-primary)] dark:bg-[var(--background-secondary)] text-white shadow-md transition-colors duration-300">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between p-4 max-w-7xl mx-auto transition-all duration-200 text-white dark:text-[var(--text-primary)]">
+    <header className="bg-[var(--color-bordeaux-primary)] dark:bg-[var(--background-secondary)] text-white shadow-md transition-colors duration-300 overflow-x-hidden relative z-50">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="flex items-center justify-between py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
           {/* Logo and name */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
@@ -127,26 +127,26 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href={`${currentLanguagePath}/`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200">
+          <nav className="hidden lg:flex items-center space-x-4 xl:space-x-6">
+            <Link href={`${currentLanguagePath}/`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 text-sm lg:text-base">
               {t('home')}
             </Link>
-            <Link href={`${currentLanguagePath}/rendez-vous`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200 font-semibold">
+            <Link href={`${currentLanguagePath}/rendez-vous`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 font-semibold text-sm lg:text-base">
               {t('appointment')}
             </Link>
-            <Link href={`${currentLanguagePath}/glabo`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200 font-semibold">
+            <Link href={`${currentLanguagePath}/glabo`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 font-semibold text-sm lg:text-base">
               {t('glabo')}
             </Link>
-            <Link href={`${currentLanguagePath}/analyses`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200 font-semibold">
+            <Link href={`${currentLanguagePath}/analyses`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 font-semibold text-sm lg:text-base">
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
-            <Link href={`${currentLanguagePath}/contact`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-3 py-2 rounded transition-colors duration-200">
+            <Link href={`${currentLanguagePath}/contact`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 text-sm lg:text-base">
               {t('contact')}
             </Link>
           </nav>
 
           {/* Action Buttons */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
             <div className="relative" ref={desktopLangDropdownRef}>
               <button 
                 onClick={toggleLangDropdown} 
@@ -162,7 +162,7 @@ const Header = () => {
               
               {/* Language Dropdown Menu */}
               {isLangDropdownOpen && (
-                <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)] overflow-hidden transition-colors duration-200">
+                <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-[60] border border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)] overflow-hidden transition-colors duration-200">
                   <button
                     onClick={() => { handleLanguageChange('fr'); return; }}
                     className="flex items-center justify-between w-full px-3 py-2 text-[var(--color-bordeaux-primary)] dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-light)] hover:text-white dark:hover:bg-[var(--background-tertiary)] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
@@ -189,7 +189,7 @@ const Header = () => {
               <User size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
             <button 
-              className="block md:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
+              className="lg:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
               onClick={toggleMenu}
               aria-label={t('menu')}
             >
@@ -201,7 +201,7 @@ const Header = () => {
 
       {/* Mobile Menu Overlay and Container */}
       <div 
-        className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${
           isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         style={{
@@ -252,6 +252,7 @@ const Header = () => {
             </button>
           </div>
             
+          {/* Navigation Links Section */}
           <nav className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto bg-white dark:bg-[var(--background-default)] text-[var(--text-primary)]">
             {console.log('[DEBUG] Rendering mobile menu nav content')}
             
@@ -280,62 +281,73 @@ const Header = () => {
               <Phone size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
               {t('contact')}
             </Link>
-
-            {/* Action Buttons */}
-            <div className="mt-4 pt-4 border-t border-[var(--border-default)]">
-              <a 
-                href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={toggleMenu}
-                className="menu-action-button bg-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-bright)] dark:bg-[var(--color-fuchsia-accent)] dark:hover:bg-[var(--color-fuchsia-bright)] text-white dark:text-[#1A0F12] flex items-center justify-center w-full mb-3 transition-colors duration-200 shadow-md"
-                aria-label="Contact via WhatsApp"
-              >
-                <MessageCircle size={20} className="mr-2" />
-                {t('contact')} WhatsApp
-              </a>
-            
-              <PWAInstallButton 
-                variant="footer"
-                className="w-full mb-3 bg-[var(--color-bordeaux-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:bg-[var(--color-bordeaux-primary)] dark:hover:bg-[var(--color-bordeaux-dark)] text-white"
-                style={{ margin: 0 }}
-              />
-
-              <div className="relative" ref={mobileLangDropdownRef}>
-                <button
-                  onClick={toggleLangDropdown}
-                  className="menu-action-button bg-[var(--color-bordeaux-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:bg-[var(--color-bordeaux-primary)] dark:hover:bg-[var(--color-bordeaux-dark)] text-white flex items-center justify-center w-full transition-colors duration-200 shadow-md"
-                  aria-label={t('changeLanguage')}
-                  aria-haspopup="true"
-                  aria-expanded={isLangDropdownOpen}
-                >
-                  <Globe size={20} className="mr-2" />
-                  <span>{urlLang.toUpperCase()}</span>
-                  <ChevronDown size={16} className="ml-1" />
-                </button>
-                
-                {isLangDropdownOpen && (
-                  <div className="absolute bottom-full right-0 mb-2 w-full bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-50 border border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)] overflow-hidden">
-                    <button
-                      onClick={() => { handleLanguageChange('fr'); return; }}
-                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] dark:text-[var(--text-primary)] hover:bg-[#FFF0F5] dark:hover:bg-[var(--background-tertiary)] hover:text-[#FF4081] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
-                    >
-                      <span className={urlLang === 'fr' ? 'font-bold' : ''}>Français</span>
-                      {urlLang === 'fr' && <Check size={16} className="text-[#800020] dark:text-[var(--color-fuchsia-accent-dark)]" />}
-                    </button>
-                    <div className="border-t border-[var(--color-bordeaux-light)] dark:border-[var(--border-default)]"></div>
-                    <button
-                      onClick={() => { handleLanguageChange('ar'); return; }}
-                      className="flex items-center justify-between w-full px-3 py-2 text-[#800020] dark:text-[var(--text-primary)] hover:bg-[#FFF0F5] dark:hover:bg-[var(--background-tertiary)] hover:text-[#FF4081] dark:hover:text-[var(--color-fuchsia-accent-dark)] transition-colors"
-                    >
-                      <span className={urlLang === 'ar' ? 'font-bold' : ''}>العربية</span>
-                      {urlLang === 'ar' && <Check size={16} className="text-[#800020] dark:text-[var(--color-fuchsia-accent-dark)]" />}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
           </nav>
+          
+          {/* Action Buttons Section - Stuck to Bottom */}
+          <div className="bg-white dark:bg-[var(--background-default)] border-t border-[var(--border-default)] p-6 space-y-6">
+            {/* WhatsApp Contact Button */}
+            <a 
+              href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={toggleMenu}
+              className="menu-whatsapp-button"
+              aria-label="Contact via WhatsApp"
+            >
+              <MessageCircle size={20} className="mr-2" />
+              {t('contact')} WhatsApp
+            </a>
+            
+            {/* PWA Install Button */}
+            <button
+              onClick={() => {
+                // Get the PWA install button element and trigger its click
+                const pwaButton = document.querySelector('[aria-label*="Install"]') as HTMLButtonElement;
+                if (pwaButton && pwaButton !== event?.currentTarget) {
+                  pwaButton.click();
+                }
+                toggleMenu();
+              }}
+              className="menu-pwa-button"
+              aria-label="Install App"
+            >
+              <Download size={20} className="mr-2" />
+              {t('pwa.install_app_button', 'Installer l\'App')}
+            </button>
+
+            {/* Language Dropdown Button */}
+            <div className="relative" ref={mobileLangDropdownRef}>
+              <button
+                onClick={toggleLangDropdown}
+                className="menu-language-button"
+                aria-label={t('changeLanguage')}
+                aria-haspopup="true"
+                aria-expanded={isLangDropdownOpen}
+              >
+                <Globe size={20} className="mr-2" />
+                <span>{urlLang.toUpperCase()}</span>
+                <ChevronDown size={16} className="ml-1" />
+              </button>
+              
+              {isLangDropdownOpen && (
+                <div className="mobile-language-dropdown">
+                  <button
+                    onClick={() => { handleLanguageChange('fr'); return; }}
+                  >
+                    <span className={urlLang === 'fr' ? 'font-bold' : ''}>Français</span>
+                    {urlLang === 'fr' && <Check size={16} />}
+                  </button>
+                  <div className="divider"></div>
+                  <button
+                    onClick={() => { handleLanguageChange('ar'); return; }}
+                  >
+                    <span className={urlLang === 'ar' ? 'font-bold' : ''}>العربية</span>
+                    {urlLang === 'ar' && <Check size={16} />}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </header>

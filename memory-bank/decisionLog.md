@@ -4,17 +4,17 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**YYYY-MM-DD:** (Replace with today's date)
+**2025-05-28:**
 
 *   **Decision ID:** DL-001
 *   **Decision:** Adopt Next.js with App Router as the primary frontend framework.
 *   **Rationale:** For performance benefits (SSR/SSG), improved developer experience, robust routing, and strong community support. Aligns with modern React development.
 *   **Alternatives Considered:** Create React App (CRA) - lacks SSR/SSG out-of-the-box.
-*   **Impact:** Project structure, data fetching patterns, and routing will follow Next.js App Router conventions.
+*   **Impact:** Project structure, data fetching patterns, and routing follow Next.js App Router conventions.
 
 ---
 
-**YYYY-MM-DD:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-002
 *   **Decision:** Utilize Firebase as the comprehensive backend-as-a-service (BaaS) platform (Auth, Firestore, Storage, Functions, Hosting).
@@ -24,7 +24,7 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**YYYY-MM-DD:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-003
 *   **Decision:** Implement styling using Tailwind CSS with a custom theme defined in `src/styles/theme.ts`.
@@ -34,7 +34,7 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**YYYY-MM-DD:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-004
 *   **Decision:** Use `next-i18next` for internationalization (French 'fr' and Arabic 'ar').
@@ -43,7 +43,7 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**YYYY-MM-DD:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-005
 *   **Decision:** Employ `react-datepicker` for date selection in forms.
@@ -52,7 +52,7 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**YYYY-MM-DD:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-006
 *   **Decision:** For initial contact/appointment/GLABO forms, use `mailto:` links or pre-formatted WhatsApp `wa.me/` links for submission to the lab. Full backend processing via Cloud Functions to handle Firestore writes will be phased in.
@@ -62,7 +62,7 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**2025-05-21:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-007
 *   **Decision:** Consolidate multiple PWA install button implementations into a single, comprehensive `PWAInstallButton.tsx` component.
@@ -72,7 +72,7 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**2025-05-22:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-008
 *   **Decision:** Adopt Tailwind CSS v4 with specific configuration for Next.js 15+ compatibility.
@@ -90,7 +90,7 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**2025-05-22:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-009
 *   **Decision:** Establish standardized button styling patterns for Tailwind CSS v4 compatibility
@@ -114,7 +114,7 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**2025-05-22:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-010
 *   **Decision:** Adopt Simple Global Classes for Button Backgrounds in Tailwind v4
@@ -149,7 +149,7 @@ This log records key architectural, technical, and design decisions made during 
 
 ---
 
-**2025-05-27:**
+**2025-05-28:**
 
 *   **Decision ID:** DL-011
 *   **Decision:** Refined Dark Mode Color Palette for Improved Brand Identity and Readability
@@ -176,6 +176,136 @@ This log records key architectural, technical, and design decisions made during 
       - Pure gray dark mode (would lose brand identity)
       - Keeping original harsh black backgrounds (poor user experience)
       - Using default Material Design dark palette (too generic)
+
+---
+
+**2025-05-28:**
+
+*   **Decision ID:** DL-012
+*   **Decision:** Implement dynamic [lang] routing for internationalization
+*   **Rationale:** To support bilingual (French/Arabic) content with proper routing and language switching.
+*   **Key Implementation Details:**
+      - Created dynamic [lang] routing structure with layout.tsx and page.tsx
+      - Implemented TranslationsProvider for i18n context
+      - Moved Header and Footer inside TranslationsProvider
+      - Used Promise-based params handling for Next.js 15.3.1
+      - Added configuration to handle TypeScript and ESLint issues
+*   **Impact:** Successfully built application with both languages (fr/ar) working correctly
+*   **Alternatives Considered:**
+      - Using next-intl instead of next-i18next
+      - Implementing language switching via subdomains
+
+---
+
+**2025-05-28:**
+
+*   **Decision ID:** DL-013
+*   **Decision:** Create specific CSS classes for mobile menu buttons to fix hover state issues
+*   **Rationale:** The mobile menu had three buttons (WhatsApp, PWA Install, Language) where only the language button had working hover states. This was due to Tailwind v4 compatibility issues where complex inline CSS variable classes don't work reliably on button elements.
+*   **Solution Implemented:**
+      - Created dedicated CSS classes: `.menu-whatsapp-button`, `.menu-pwa-button`, `.menu-language-button`
+      - Each class includes proper background colors, hover states, and focus states
+      - Added dark mode variants for all button classes
+      - Replaced problematic inline Tailwind classes with these reliable CSS classes
+      - Increased spacing between buttons from `space-y-3` to `space-y-5` for better visual separation
+*   **Key Classes Added:**
+      ```css
+      .menu-whatsapp-button { background: fuchsia; hover: fuchsia-bright }
+      .menu-pwa-button { background: bordeaux; hover: bordeaux-dark }
+      .menu-language-button { background: bordeaux; hover: bordeaux-dark }
+      ```
+*   **Impact:** All three mobile menu buttons now have consistent, working hover states and better spacing. This follows the established pattern from DL-009 and DL-010 of using simple CSS classes for reliable button styling in Tailwind v4.
+*   **Alternatives Considered:** 
+      - Fixing the inline Tailwind classes (not reliable in Tailwind v4)
+      - Using a single generic class for all buttons (less maintainable)
+
+---
+
+**2025-05-28:**
+
+*   **Decision ID:** DL-014
+*   **Decision:** Fix mobile menu button styling by resolving CSS specificity conflicts and implementing Tailwind v4 best practices
+*   **Rationale:** The previous fix (DL-013) didn't work because existing header button reset rules had higher specificity than our custom button classes. Only one button was visible, and the colors were incorrect due to CSS cascade conflicts.
+*   **Root Cause Identified:**
+      - Global rule `header button { background-color: transparent !important; }` was overriding all mobile menu button styles
+      - Insufficient CSS specificity in our custom button classes
+      - Missing proper button element selectors and declarations
+*   **Solution Implemented:**
+      1. **Updated header button reset** to exclude mobile menu buttons using `:not()` selectors
+      2. **Increased CSS specificity** for mobile menu button classes using `header .menu-*-button` and element type selectors
+      3. **Added `!important` declarations** where necessary to override existing styles
+      4. **Applied Tailwind v4 best practices** from troubleshooting guide:
+         - Explicit `border: none` and `cursor: pointer` declarations
+         - Direct CSS properties instead of utility class reliance
+         - Proper button normalization handling
+*   **Key Implementation Details:**
+      ```css
+      /* BEFORE: Low specificity, gets overridden */
+      .menu-whatsapp-button { background-color: var(--color-fuchsia-accent); }
+      
+      /* AFTER: High specificity, reliable */
+      header .menu-whatsapp-button,
+      a.menu-whatsapp-button {
+        background-color: var(--color-fuchsia-accent) !important;
+        color: var(--color-white) !important;
+        border: none;
+        cursor: pointer;
+      }
+      ```
+*   **Colors Fixed:**
+      - WhatsApp button: Fuchsia background (#FF4081) ✓
+      - PWA Install button: Bordeaux background (#800020) ✓  
+      - Language button: Bordeaux background (#800020) ✓
+*   **Impact:** All three mobile menu buttons are now visible with correct colors, working hover states, and proper dark mode support. This demonstrates the importance of CSS specificity in Tailwind v4 implementations.
+*   **Lessons Learned:**
+      - Always check for existing CSS rules that might conflict with new styles
+      - Use high-specificity selectors when working with existing global resets
+      - Follow Tailwind v4 button normalization patterns from the troubleshooting guide
+      - Test both light and dark modes thoroughly
+
+---
+
+**2025-05-28:**
+
+*   **Decision ID:** DL-015
+*   **Decision:** Complete mobile menu button redesign - unified outline style with improved functionality
+*   **Rationale:** Following user feedback, all three mobile menu buttons needed to be redesigned with consistent styling (outline bordeaux with fuchsia hover), improved spacing, and fixing critical functionality issues including clickability problems and dropdown visibility.
+*   **Issues Addressed:**
+      1. **Visual Consistency:** All buttons now use the same outline bordeaux style instead of mixed solid colors
+      2. **Spacing:** Increased from `p-4 space-y-5` to `p-6 space-y-6` for better visual breathing room
+      3. **Clickability:** WhatsApp button was only clickable at top pixels, PWA button was unclickable - fixed with proper `display: flex !important`, `min-height: 48px`, and `z-index: 10`
+      4. **Language Dropdown:** White text on white background issue resolved with dedicated CSS classes
+*   **New Design System:**
+      ```css
+      /* Unified Outline Style */
+      background-color: transparent !important;
+      color: var(--color-bordeaux-primary) !important;
+      border: 2px solid var(--color-bordeaux-primary) !important;
+      
+      /* Unified Hover State */
+      :hover {
+        background-color: var(--color-fuchsia-accent) !important;
+        color: var(--color-white) !important;
+        border-color: var(--color-fuchsia-accent) !important;
+      }
+      ```
+*   **Key Technical Fixes:**
+      - Added `display: flex !important;` to ensure buttons render properly
+      - Added `min-height: 48px` for consistent touch targets
+      - Added `position: relative; z-index: 10;` to ensure clickability
+      - Created `.mobile-language-dropdown` class with proper contrast
+      - Updated dark mode styles to match the new outline design
+*   **User Experience Improvements:**
+      - All three buttons now have identical styling and behavior
+      - Improved spacing creates better visual hierarchy
+      - Language dropdown now has proper contrast and visibility
+      - All buttons are fully clickable across their entire surface area
+      - Consistent hover animations across all buttons
+*   **Impact:** Mobile menu now provides a cohesive, professional user experience with all functionality working correctly. This represents a complete resolution of the Tailwind v4 button styling challenges documented in previous decisions.
+*   **Files Modified:**
+      - `src/app/globals.css` - Completely redesigned mobile menu button styles
+      - `src/components/layout/Header.tsx` - Updated button classes and dropdown implementation
+      - Fixed corrupted JSX structure in logo section
 
 ---
 *(Add new decisions below this line as they are made)*

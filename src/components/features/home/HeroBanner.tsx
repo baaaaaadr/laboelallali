@@ -33,7 +33,7 @@ const HeroBanner = () => {
           className="absolute inset-0 w-full h-full object-cover"
         />
         {/* Semi-transparent overlay to ensure text is readable */}
-        <div className="absolute inset-0 bg-[var(--color-bordeaux-primary)] dark:bg-[#1A0F12] bg-opacity-30 dark:bg-opacity-50"></div>
+        <div className="absolute inset-0 bg-[#800020] dark:bg-[#1A0F12] opacity-70 dark:opacity-85"></div>
       </div>
       
       {/* Content */}
