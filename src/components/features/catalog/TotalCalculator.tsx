@@ -99,10 +99,12 @@ export default function TotalCalculator({
     <div 
       ref={containerRef}
       className={`
-        fixed bottom-4 w-64 max-w-[calc(100vw-2rem)]
+        fixed w-64 max-w-[calc(100vw-2rem)]
         bg-[var(--color-bordeaux-primary)] text-white rounded-xl p-4 shadow-lg
         transition-all duration-300 ease-out
         ${isRtlDirection ? 'left-4' : 'right-4'}
+        bottom-4 md:bottom-4 
+        max-[959px]:bottom-24
       `}
       dir={isRtlDirection ? 'rtl' : 'ltr'}
       title={translationsUI.tooltip}

@@ -253,44 +253,44 @@ const Header = () => {
           </div>
             
           {/* Navigation Links Section */}
-          <nav className="flex flex-col flex-grow p-4 space-y-2 overflow-y-auto bg-white dark:bg-[var(--background-default)] text-[var(--text-primary)]">
+          <nav className="mobile-menu-nav flex flex-col flex-grow p-4 space-y-2 overflow-y-auto">
             {console.log('[DEBUG] Rendering mobile menu nav content')}
             
             {/* Navigation Links */}
-            <Link href={`${currentLanguagePath}/`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
-              <Home size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
+            <Link href={`${currentLanguagePath}/`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
+              <Home size={20} className="nav-icon mr-3" />
               {t('home')}
             </Link>
 
-            <Link href={`${currentLanguagePath}/rendez-vous`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
-              <CalendarDays size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
+            <Link href={`${currentLanguagePath}/rendez-vous`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
+              <CalendarDays size={20} className="nav-icon mr-3" />
               {t('appointment')}
             </Link>
             
-            <Link href={`${currentLanguagePath}/glabo`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
-              <Truck size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
+            <Link href={`${currentLanguagePath}/glabo`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
+              <Truck size={20} className="nav-icon mr-3" />
               {t('glabo')}
             </Link>
 
-            <Link href={`${currentLanguagePath}/analyses`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
-              <FlaskConical size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
+            <Link href={`${currentLanguagePath}/analyses`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
+              <FlaskConical size={20} className="nav-icon mr-3" />
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
 
-            <Link href={`${currentLanguagePath}/contact`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
-              <Phone size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
+            <Link href={`${currentLanguagePath}/contact`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
+              <Phone size={20} className="nav-icon mr-3" />
               {t('contact')}
             </Link>
 
             {/* Profile Link - Mobile Only */}
-            <Link href={`${currentLanguagePath}/profile`} className="flex items-center py-2.5 px-3 rounded-md transition-colors font-medium text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-pale)] dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] focus:bg-[var(--color-bordeaux-pale)] dark:focus:bg-[var(--background-tertiary)] focus:text-[var(--color-bordeaux-primary)] dark:focus:text-[var(--color-fuchsia-accent)] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--color-bordeaux-primary)]" onClick={toggleMenu}>
-              <User size={20} className="mr-3 text-[var(--text-secondary)] group-hover:text-[var(--color-bordeaux-primary)] dark:group-hover:text-[var(--color-fuchsia-accent)] transition-colors" />
+            <Link href={`${currentLanguagePath}/profile`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
+              <User size={20} className="nav-icon mr-3" />
               Profil
             </Link>
           </nav>
           
           {/* Action Buttons Section - Stuck to Bottom */}
-          <div className="mobile-menu-actions bg-white dark:bg-[var(--background-default)] border-t border-[var(--border-default)] flex flex-col">
+          <div className="mobile-menu-actions bg-white dark:bg-[var(--background-default)] border-t border-[var(--border-default)] p-6 space-y-6">
             {/* WhatsApp Contact Button */}
             <a 
               href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
