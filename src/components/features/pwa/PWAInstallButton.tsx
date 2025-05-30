@@ -191,13 +191,13 @@ export default function PWAInstallButton({
     
     return (
       <div 
-        className="fixed bottom-16 sm:bottom-4 right-4 z-[999] button-fuchsia shadow-xl hover:shadow-2xl"
+        className="fixed bottom-16 sm:bottom-4 right-4 z-[999] bg-[var(--brand-accent)] text-white px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:bg-[var(--brand-accent-hover)] transition-colors"
         style={style}
       >
         <button
           onClick={handleInstallClick}
           disabled={isDisabled}
-          className={`flex items-center gap-2 text-sm font-medium ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`${className || 'menu-pwa-button'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
           aria-disabled={isDisabled}
         >
@@ -215,7 +215,7 @@ export default function PWAInstallButton({
     return (
       <button
         onClick={handleInstallClick}
-        className={`button-bordeaux w-full ${className}`}
+        className="menu-pwa-button w-full"
         aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
         style={style}
         disabled={isDisabled}
@@ -238,7 +238,7 @@ export default function PWAInstallButton({
     <div className="w-full sm:w-auto" style={style}>
       <button
         onClick={handleInstallClick}
-        className={`button-fuchsia ${className}`}
+        className={className || 'button-fuchsia'}
         title={isClientReady ? t('pwa.install_app_title') : 'Install Application'}
         disabled={isDisabled}
         aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}

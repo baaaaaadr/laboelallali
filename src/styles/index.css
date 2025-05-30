@@ -1,17 +1,38 @@
+/**
+ * Main CSS Entry Point
+ * 
+ * This file imports all CSS modules in the correct order
+ * Following the CSS Architecture defined in the refactoring plan
+ */
+
+/* 1. External Dependencies - MUST BE FIRST */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Public+Sans:wght@400;500;700&display=swap');
 @import 'leaflet/dist/leaflet.css';
-@import "tailwindcss";
-@import '../styles/system/variables.css';
 
-/* Base HTML styles using CSS variables */
-html, body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--background-default);
-  color: var(--text-primary);
-  transition: background-color 0.6s ease, color 0.6s ease;
-  margin: 0;
-  padding: 0;
-}
+/* 2. Tailwind CSS – compiled via PostCSS */
+@import "tailwindcss";
+
+/* 3. Design System Variables */
+@import './system/variables.css';
+
+/* 4. Base Styles */
+@import './base/reset.css';
+@import './base/typography.css';
+
+/* 5. Component Styles */
+@import './components/cards.css';
+@import './components/navigation.css';
+@import './components/buttons.css';
+
+/* 6. Utility Classes */
+@import './utilities/animations.css';
+@import './utilities/layout.css';
+@import './utilities/misc.css';
+
+/* 7. Base compatibility styles */
+@import './base.css';
+
+/* === BASE STYLES === */
 
 /* Reset default button styles for Tailwind v4 compatibility */
 button {
@@ -24,6 +45,445 @@ button {
   font: inherit;
   cursor: pointer;
   outline: inherit;
+}
+
+/* Base HTML styles using CSS variables */
+html, body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--background-default);
+  color: var(--text-primary);
+  transition: background-color 0.6s ease, color 0.6s ease;
+  margin: 0;
+  padding: 0;
+}
+
+/* === HEADER STYLES === */
+
+/* FIXED: Header styles and navigation alignment */
+.header-main {
+  background-color: var(--color-bordeaux-primary);
+  color: white;
+}
+
+.dark .header-main {
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+}
+
+/* FIXED: Navigation links visibility and vertical alignment */
+.header-main nav {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.header-main nav a,
+.header-main .nav-link {
+  color: white !important;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.header-main nav a:hover,
+.header-main .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white !important;
+}
+
+.dark .header-main nav a,
+.dark .header-main .nav-link {
+  color: var(--text-primary) !important;
+}
+
+.header-logo {
+  background-color: white;
+  color: var(--color-bordeaux-primary);
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  margin-right: 0.5rem;
+  transition: colors 0.2s ease;
+}
+
+.dark .header-logo {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-fuchsia-accent);
+}
+
+/* === HERO BANNER STYLES === */
+
+/* FIXED: Hero banner text visibility - Enhanced specificity */
+.hero-banner h1,
+.hero-banner p,
+.hero-banner .hero-text,
+.hero-banner .text-white {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Ensure all hero text is white */
+.hero-banner * {
+  color: white !important;
+}
+
+/* Hero banner overlay */
+.hero-banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--brand-primary);
+  opacity: 0.6;
+  transition: all 0.5s ease-in-out;
+}
+
+.dark .hero-banner-overlay {
+  background-color: var(--brand-primary-hover);
+  opacity: 0.7;
+}
+
+/* === BUTTON STYLES === */
+
+/* FIXED: Button utilities with proper sizing and visibility */
+.button-fuchsia {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  padding: 0.875rem 1.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.button-fuchsia:hover {
+  background-color: var(--color-fuchsia-bright) !important;
+  color: var(--color-white) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 64, 129, 0.3);
+}
+
+/* FIXED: Map section button - not all pink */
+.map-directions-btn {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.map-directions-btn:hover {
+  background-color: var(--color-fuchsia-bright) !important;
+}
+
+.map-call-btn {
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-default) !important;
+}
+
+.map-call-btn:hover {
+  background-color: var(--background-tertiary) !important;
+}
+
+.button-bordeaux {
+  background-color: var(--color-bordeaux-primary) !important;
+  color: var(--color-white) !important;
+  padding: 0.875rem 1.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.button-bordeaux:hover {
+  background-color: var(--color-bordeaux-dark) !important;
+  color: var(--color-white) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3);
+}
+
+/* === MOBILE MENU STYLES === */
+
+/* FIXED: Mobile menu action buttons with proper visibility */
+.menu-whatsapp-button,
+.menu-pwa-button, 
+.menu-language-button {
+  background-color: var(--color-bordeaux-primary) !important;
+  color: var(--color-white) !important;
+  border: 2px solid var(--color-bordeaux-primary) !important;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+  text-decoration: none;
+  min-height: 52px;
+  gap: 0.5rem;
+}
+
+.menu-whatsapp-button:hover,
+.menu-pwa-button:hover,
+.menu-language-button:hover {
+  background-color: var(--color-fuchsia-accent) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-fuchsia-accent) !important;
+}
+
+/* FIXED: Mobile menu navigation links visibility */
+.mobile-menu-nav {
+  background-color: var(--background-default) !important;
+}
+
+.mobile-menu-nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-primary) !important;
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  background-color: transparent;
+  margin-bottom: var(--space-2);
+}
+
+.mobile-menu-nav-link:hover {
+  background-color: var(--background-secondary) !important;
+  color: var(--brand-primary) !important;
+}
+
+.mobile-menu-nav-link.active {
+  background-color: var(--color-bordeaux-pale) !important;
+  color: var(--brand-primary) !important;
+}
+
+.mobile-menu-nav-link svg {
+  color: var(--text-secondary) !important;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.mobile-menu-nav-link:hover svg,
+.mobile-menu-nav-link.active svg {
+  color: var(--brand-primary) !important;
+}
+
+/* Mobile menu styles */
+.mobile-menu-actions {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: var(--background-default) !important;
+}
+
+/* Mobile menu language dropdown */
+.mobile-language-dropdown {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  border: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.mobile-language-dropdown button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: transparent;
+  color: var(--color-bordeaux-primary);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.mobile-language-dropdown button:hover {
+  background-color: var(--color-fuchsia-accent);
+  color: var(--color-white);
+}
+
+.mobile-language-dropdown .divider {
+  height: 1px;
+  background-color: var(--border-default);
+  margin: 0;
+}
+
+/* === FOOTER STYLES === */
+
+/* FIXED: Footer gradient with better contrast */
+.footer-gradient {
+  background: linear-gradient(135deg, var(--color-bordeaux-primary) 0%, var(--color-bordeaux-light) 60%, var(--color-fuchsia-accent) 100%);
+  color: var(--color-white);
+}
+
+.footer-gradient h3,
+.footer-gradient h4,
+.footer-gradient p,
+.footer-gradient span,
+.footer-gradient a {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.footer-gradient a:hover {
+  color: var(--color-fuchsia-light) !important;
+  text-decoration: underline;
+}
+
+/* FIXED: Footer PWA button with proper background and NO OUTLINE */
+.footer-gradient .menu-pwa-button,
+.footer-gradient button.menu-pwa-button,
+footer .menu-pwa-button,
+.footer-whatsapp-btn {
+  background-color: var(--color-bordeaux-primary) !important;
+  color: white !important;
+  border: 2px solid white !important;
+  padding: 0.875rem 1.5rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  text-decoration: none !important;
+  min-height: 48px !important;
+  opacity: 1 !important;
+  /* CRITICAL: Remove all outlines */
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+.footer-gradient .menu-pwa-button:hover,
+.footer-gradient button.menu-pwa-button:hover,
+footer .menu-pwa-button:hover,
+.footer-whatsapp-btn:hover {
+  background-color: white !important;
+  color: var(--color-bordeaux-primary) !important;
+  border-color: white !important;
+  transform: translateY(-1px) !important;
+  outline: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* CRITICAL: Remove focus outlines on ALL PWA buttons */
+.menu-pwa-button,
+button.menu-pwa-button,
+.menu-pwa-button:focus,
+button.menu-pwa-button:focus,
+.menu-pwa-button:focus-visible,
+button.menu-pwa-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+/* Disabled state for footer PWA button */
+.footer-gradient .menu-pwa-button:disabled,
+.footer-gradient button.menu-pwa-button:disabled,
+footer .menu-pwa-button:disabled {
+  background-color: rgba(128, 0, 32, 0.6) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Dark mode specific styles */
+.dark .footer-gradient {
+  background: linear-gradient(135deg, #1F1014 0%, #2A151A 25%, #3A1A26 50%, #4A1F33 75%, #552440 100%);
+  color: var(--text-primary);
+}
+
+.dark .footer-gradient h3,
+.dark .footer-gradient h4,
+.dark .footer-gradient p,
+.dark .footer-gradient span,
+.dark .footer-gradient a {
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode footer PWA button */
+.dark .footer-gradient .menu-pwa-button,
+.dark .footer-gradient button.menu-pwa-button,
+.dark footer .menu-pwa-button {
+  background-color: var(--brand-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--text-primary) !important;
+}
+
+.dark .footer-gradient .menu-pwa-button:hover,
+.dark .footer-gradient button.menu-pwa-button:hover,
+.dark footer .menu-pwa-button:hover {
+  background-color: var(--text-primary) !important;
+  color: var(--brand-primary) !important;
+  border-color: var(--text-primary) !important;
+}
+
+/* === UTILITY STYLES === */
+
+/* Legacy compatibility classes */
+.bg-bordeaux-custom {
+  background-color: var(--color-bordeaux-primary);
+  color: var(--color-white);
+}
+
+/* Card styles */
+.card {
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.dark .card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Container and responsive layout */
@@ -67,420 +527,4 @@ button {
   .container {
     max-width: 1536px;
   }
-}
-
-/* FIXED: Header styles and navigation visibility */
-.header-main {
-  background-color: var(--color-bordeaux-primary);
-  color: white;
-}
-
-.dark .header-main {
-  background-color: var(--background-secondary);
-  color: var(--text-primary);
-}
-
-/* FIXED: Navigation links visibility */
-.header-main nav a,
-.header-main .nav-link {
-  color: white !important;
-  text-decoration: none;
-  font-weight: 500;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  transition: all 0.2s ease;
-}
-
-.header-main nav a:hover,
-.header-main .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white !important;
-}
-
-.dark .header-main nav a,
-.dark .header-main .nav-link {
-  color: var(--text-primary) !important;
-}
-
-.header-logo {
-  background-color: white;
-  color: var(--color-bordeaux-primary);
-  padding: 0.375rem;
-  border-radius: 0.375rem;
-  margin-right: 0.5rem;
-  transition: colors 0.2s ease;
-}
-
-.dark .header-logo {
-  background-color: var(--color-bordeaux-primary);
-  color: var(--color-fuchsia-accent);
-}
-
-/* FIXED: Hero banner text visibility */
-.hero-banner h1,
-.hero-banner p,
-.hero-banner .hero-text {
-  color: white !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Hero banner overlay */
-.hero-banner-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--brand-primary);
-  opacity: 0.6;
-  transition: all 0.5s ease-in-out;
-}
-
-.dark .hero-banner-overlay {
-  background-color: var(--brand-primary-hover);
-  opacity: 0.7;
-}
-
-/* FIXED: Button utilities with proper sizing and visibility */
-.button-fuchsia {
-  background-color: var(--color-fuchsia-accent) !important;
-  color: var(--color-white) !important;
-  padding: 0.875rem 1.75rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 1rem;
-  line-height: 1.5;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  min-height: 48px;
-  white-space: nowrap;
-}
-
-.button-fuchsia:hover {
-  background-color: var(--color-fuchsia-bright) !important;
-  color: var(--color-white) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 64, 129, 0.3);
-}
-
-.button-bordeaux {
-  background-color: var(--color-bordeaux-primary) !important;
-  color: var(--color-white) !important;
-  padding: 0.875rem 1.75rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 1rem;
-  line-height: 1.5;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  min-height: 48px;
-  white-space: nowrap;
-}
-
-.button-bordeaux:hover {
-  background-color: var(--color-bordeaux-dark) !important;
-  color: var(--color-white) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3);
-}
-
-/* FIXED: Opening hours widget positioning */
-.opening-hours-widget {
-  position: relative;
-}
-
-@media (min-width: 1024px) {
-  .opening-hours-widget {
-    position: absolute;
-    top: 2rem;
-    right: 2rem;
-    z-index: 10;
-  }
-}
-
-/* FIXED: Mobile menu action buttons with proper visibility */
-.menu-whatsapp-button,
-.menu-pwa-button, 
-.menu-language-button {
-  background-color: var(--color-bordeaux-primary) !important;
-  color: var(--color-white) !important;
-  border: 2px solid var(--color-bordeaux-primary) !important;
-  padding: 0.875rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  cursor: pointer;
-  text-decoration: none;
-  min-height: 52px;
-  gap: 0.5rem;
-}
-
-.menu-whatsapp-button:hover,
-.menu-pwa-button:hover,
-.menu-language-button:hover {
-  background-color: var(--color-fuchsia-accent) !important;
-  color: var(--color-white) !important;
-  border-color: var(--color-fuchsia-accent) !important;
-}
-
-/* Mobile menu styles */
-.mobile-menu-actions {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-/* Mobile menu language dropdown */
-.mobile-language-dropdown {
-  position: absolute;
-  bottom: 100%;
-  right: 0;
-  margin-bottom: 0.5rem;
-  width: 100%;
-  background-color: var(--background-secondary);
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 50;
-  border: 1px solid var(--border-default);
-  overflow: hidden;
-}
-
-.mobile-language-dropdown button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: transparent;
-  color: var(--color-bordeaux-primary);
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
-.mobile-language-dropdown button:hover {
-  background-color: var(--color-fuchsia-accent);
-  color: var(--color-white);
-}
-
-.mobile-language-dropdown .divider {
-  height: 1px;
-  background-color: var(--border-default);
-  margin: 0;
-}
-
-/* FIXED: Footer gradient with better contrast */
-.footer-gradient {
-  background: linear-gradient(135deg, var(--color-bordeaux-primary) 0%, var(--color-bordeaux-light) 60%, var(--color-fuchsia-accent) 100%);
-  color: var(--color-white);
-}
-
-.footer-gradient h3,
-.footer-gradient h4,
-.footer-gradient p,
-.footer-gradient span,
-.footer-gradient a {
-  color: white !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.footer-gradient a:hover {
-  color: var(--color-fuchsia-light) !important;
-  text-decoration: underline;
-}
-
-/* FIXED: Footer PWA button with proper background */
-.footer-gradient .menu-pwa-button,
-.footer-whatsapp-btn {
-  background-color: var(--color-bordeaux-primary) !important;
-  color: white !important;
-  border: 2px solid white !important;
-  padding: 0.875rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  min-height: 48px;
-}
-
-.footer-gradient .menu-pwa-button:hover,
-.footer-whatsapp-btn:hover {
-  background-color: white !important;
-  color: var(--color-bordeaux-primary) !important;
-  border-color: white !important;
-  transform: translateY(-1px);
-}
-
-/* Dark mode specific styles */
-.dark .footer-gradient {
-  background: linear-gradient(135deg, #1F1014 0%, #2A151A 25%, #3A1A26 50%, #4A1F33 75%, #552440 100%);
-  color: var(--text-primary);
-}
-
-.dark .footer-gradient h3,
-.dark .footer-gradient h4,
-.dark .footer-gradient p,
-.dark .footer-gradient span,
-.dark .footer-gradient a {
-  color: var(--text-primary) !important;
-}
-
-/* Legacy compatibility classes */
-.bg-bordeaux-custom {
-  background-color: var(--color-bordeaux-primary);
-  color: var(--color-white);
-}
-
-/* Card styles */
-.card {
-  background-color: var(--background-secondary);
-  border: 1px solid var(--border-default);
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  transition: all 0.2s ease;
-}
-
-.dark .card {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-}
-
-/* Bottom navigation styles */
-.bottom-nav-container {
-  background-color: var(--background-default);
-  border-top: 1px solid var(--border-default);
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 40;
-}
-
-.bottom-nav-item {
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-}
-
-.bottom-nav-item:hover {
-  color: var(--color-bordeaux-primary);
-}
-
-.bottom-nav-item.active {
-  color: var(--color-fuchsia-accent);
-}
-
-.dark .bottom-nav-container {
-  background-color: var(--background-secondary);
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Responsive grid layout */
-.grid {
-  display: grid;
-}
-
-.grid-cols-1 {
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-
-@media (min-width: 768px) {
-  .md\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .md\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1024px) {
-  .lg\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .lg\:grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-/* Responsive spacing */
-.gap-4 {
-  gap: 1rem;
-}
-
-.gap-6 {
-  gap: 1.5rem;
-}
-
-.gap-8 {
-  gap: 2rem;
-}
-
-/* Hero banner responsive styling */
-.hero-banner {
-  padding: 4rem 0;
-}
-
-@media (min-width: 768px) {
-  .hero-banner {
-    padding: 6rem 0;
-  }
-}
-
-@media (min-width: 1024px) {
-  .hero-banner {
-    padding: 8rem 0;
-  }
-}
-
-/* Responsive text sizes */
-@media (min-width: 768px) {
-  .md\:text-xl {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-  }
-  .md\:text-2xl {
-    font-size: 1.5rem;
-    line-height: 2rem;
-  }
-  .md\:text-3xl {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-  }
-  .md\:text-4xl {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-  }
-}
-
-/* Animations */
-.fade-in-section {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.8s cubic-bezier(.4, 0, .2, 1), transform 0.8s cubic-bezier(.4, 0, .2, 1);
-  will-change: opacity, transform;
-}
-
-.fade-in-section.visible {
-  opacity: 1;
-  transform: translateY(0);
 }

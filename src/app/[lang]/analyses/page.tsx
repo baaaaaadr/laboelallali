@@ -339,7 +339,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                 <p className="text-[var(--text-secondary)] text-lg mb-3">{translations.noResults}</p>
                 <button 
                   onClick={() => { setSearchTerm(""); setSelectedCategory(""); }}
-                  className="button-bordeaux"
+                  className="inline-flex items-center justify-center gap-2 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white font-semibold rounded-lg px-6 py-3 transition-colors"
                 >
                   {translations.clearFilters}
                 </button>

@@ -1,0 +1,26 @@
+/* src/styles/base.css
+   Global base styles & compatibility utility classes.
+   TODO: gradually replace these compatibility classes
+   with direct Tailwind classes + CSS variables, then delete. */
+
+/* Base font-family (already set in globals but repeated here as fallback) */
+@layer base {
+  html, body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Compatibility – old custom colour utilities now mapped to CSS variables */
+@layer utilities {
+  .bg-bordeaux-custom {
+    background-color: var(--brand-primary);
+    color: var(--color-white);
+  }
+  .text-bordeaux-custom {
+    color: var(--brand-primary);
+  }
+  .shadow-bordeaux {
+    box-shadow: 0 2px 4px rgba(128, 0, 32, 0.4);
+  }
+  /* Deprecated `.button-outline-bordeaux` removed – use Tailwind + CSS variables instead */
+}

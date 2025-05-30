@@ -1,0 +1,46 @@
+/**
+ * Layout Utilities
+ * Provides spacing helpers and common layout patterns.
+ * Generated as part of CSS refactor – feel free to extend.
+ */
+
+/* Section spacing */
+.section {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-8);
+}
+
+.section-sm {
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+/* Container helper */
+.container-custom {
+  width: 100%;
+  max-width: var(--layout-container-maxWidth, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+/* Simple responsive grid */
+.grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Utility: visually hidden (duplicate of Tailwind's sr-only but available even if Tailwind fails) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

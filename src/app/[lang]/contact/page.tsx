@@ -42,17 +42,17 @@ export default function ContactPage({
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-[#800020] mb-8">{t('contact_title')}</h1>
+      <h1 className="text-3xl font-bold text-[var(--brand-primary)] mb-8">{t('contact_title')}</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Contact Information */}
         <div className="space-y-8">
           <div className="card p-6">
-            <h2 className="text-2xl font-bold text-[#800020] mb-6">{t('lab_coordinates')}</h2>
+            <h2 className="text-2xl font-bold text-[var(--brand-primary)] mb-6">{t('lab_coordinates')}</h2>
             
             <div className="space-y-6">
               <div className="flex items-start">
-                <MapPin size={24} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[#800020]`} />
+                <MapPin size={24} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[var(--brand-primary)]`} />
                 <div>
                   <h3 className="font-semibold text-lg mb-1">{labName}</h3>
                   <p className="text-gray-700">{labAddress}</p>
@@ -60,7 +60,7 @@ export default function ContactPage({
                     href={LAB_COORDINATES.GOOGLE_MAPS_URL} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-[#800020] hover:underline mt-2"
+                    className="inline-flex items-center text-[var(--brand-primary)] hover:underline mt-2"
                   >
                     {t('view_map')}
                     <ChevronRight size={16} className="ml-1" />
@@ -72,32 +72,32 @@ export default function ContactPage({
                 <h3 className="font-semibold text-lg mb-4">{t('contact')}</h3>
                 <ul className="space-y-4">
                   <li className="flex items-start">
-                    <Phone size={20} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[#800020]`} />
+                    <Phone size={20} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[var(--brand-primary)]`} />
                     <div>
                       <p className="font-medium">{t('lab_contact')}</p>
                       <div className={`mt-1 space-y-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <p>{t('landline_label')} <a href={LAB_CONTACT.LANDLINE.url} className="text-[#800020] hover:underline">{LAB_CONTACT.LANDLINE.display}</a></p>
+                        <p>{t('landline_label')} <a href={LAB_CONTACT.LANDLINE.url} className="text-[var(--brand-primary)] hover:underline">{LAB_CONTACT.LANDLINE.display}</a></p>
                         {LAB_CONTACT.WHATSAPP.map((whatsapp, index) => (
                           <p key={index}>
-                            {t('whatsapp_label')} <a href={whatsapp.url} className="text-[#800020] hover:underline">{whatsapp.display}</a>
+                            {t('whatsapp_label')} <a href={whatsapp.url} className="text-[var(--brand-primary)] hover:underline">{whatsapp.display}</a>
                           </p>
                         ))}
-                        <p>{t('companies_label')} <a href={LAB_CONTACT.COMPANIES.url} className="text-[#800020] hover:underline">{LAB_CONTACT.COMPANIES.display}</a></p>
+                        <p>{t('companies_label')} <a href={LAB_CONTACT.COMPANIES.url} className="text-[var(--brand-primary)] hover:underline">{LAB_CONTACT.COMPANIES.display}</a></p>
                         <p>{t('fax_label')} {LAB_CONTACT.FAX}</p>
                       </div>
                     </div>
                   </li>
                   
                   <li className="flex items-start">
-                    <Mail size={20} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[#800020]`} />
+                    <Mail size={20} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[var(--brand-primary)]`} />
                     <div>
                       <p className="font-medium">{t('email_label')}</p>
-                      <a href={LAB_CONTACT.EMAIL.url} className="text-[#800020] hover:underline">{LAB_CONTACT.EMAIL.display}</a>
+                      <a href={LAB_CONTACT.EMAIL.url} className="text-[var(--brand-primary)] hover:underline">{LAB_CONTACT.EMAIL.display}</a>
                     </div>
                   </li>
                   
                   <li className="flex items-start">
-                    <Clock size={20} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[#800020]`} />
+                    <Clock size={20} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[var(--brand-primary)]`} />
                     <div>
                       <p className="font-medium">{t('working_hours_label')}</p>
                       <p>{LAB_HOURS.WEEKDAYS}</p>
@@ -110,8 +110,8 @@ export default function ContactPage({
           </div>
           
           {/* Additional Information Card */}
-          <div className="card p-6 bg-[#F9F5F6]">
-            <h3 className="text-xl font-semibold text-[#800020] mb-4">{t('find_us')}</h3>
+          <div className="card p-6 bg-[var(--background-secondary)]">
+            <h3 className="text-xl font-semibold text-[var(--brand-primary)] mb-4">{t('find_us')}</h3>
             <p className="text-gray-700 mb-4">
               {t('find_us_text')}
             </p>
@@ -142,7 +142,7 @@ export default function ContactPage({
                   href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center min-w-[160px] h-12 px-6 bg-[var(--accent-fuchsia)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[#F50057] focus:bg-[#F50057] gap-2"
+                  className="flex items-center justify-center min-w-[160px] h-12 px-6 bg-[var(--brand-accent)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[var(--brand-accent-hover)] focus:bg-[var(--brand-accent-hover)] gap-2"
                 >
                   <MapPin size={22} className="mr-2 -ml-1" />
                   {t('get_directions')}

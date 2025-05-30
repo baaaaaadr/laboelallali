@@ -1,0 +1,17 @@
+/**
+ * Miscellaneous Utility Classes
+ * Placeholder file to prevent build errors. Extend as needed.
+ */
+
+/* Blur background overlay */
+.backdrop-blur {
+  backdrop-filter: blur(8px);
+}
+
+/* Text truncation */
+.truncate-2-lines {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

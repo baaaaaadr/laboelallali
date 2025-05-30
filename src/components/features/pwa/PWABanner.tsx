@@ -103,7 +103,7 @@ export default function PWABanner({ className = '' }: PWABannerProps) {
   }
   
   return (
-    <div className="fixed bottom-4 right-4 left-4 sm:left-auto bg-bordeaux-custom text-white p-4 rounded-lg shadow-xl z-[999] flex items-center justify-between">
+    <div className="fixed bottom-4 right-4 left-4 sm:left-auto bg-[var(--brand-primary)] text-white p-4 rounded-lg shadow-xl z-[999] flex items-center justify-between">
       <div className="flex items-center">
         <div className="flex-shrink-0 mr-3">
           <Download size={20} className="text-white" />
@@ -115,7 +115,7 @@ export default function PWABanner({ className = '' }: PWABannerProps) {
       </div>
       <button
         onClick={handleInstallClick}
-        className="ml-4 px-4 py-2 bg-white text-bordeaux-custom font-medium rounded-md hover:bg-gray-100 transition-colors whitespace-nowrap"
+        className="ml-4 px-4 py-2 bg-white text-[var(--brand-primary)] font-medium rounded-md hover:bg-gray-100 transition-colors whitespace-nowrap"
       >
         {t('pwa.install_button')}
       </button>

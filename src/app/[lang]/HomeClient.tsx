@@ -1,7 +1,7 @@
 // src/app/[lang]/HomeClient.tsx
 "use client";
 import HeroBanner from '@/components/features/home/HeroBanner';
-import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, Home as HomeIcon, Info, MapPin, ChevronRight } from 'lucide-react';
+import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, Home as HomeIcon, Info, MapPin, ChevronRight, Phone, Navigation } from 'lucide-react';
 import SimpleMap from '@/components/SimpleMap';
 import Link from 'next/link';
 import { useEffect, useState } from "react";
@@ -41,33 +41,40 @@ export default function HomeClient({ lang }: { lang: string }) {
 
   return (
     <>
-      {/* Hero Banner */}
-      <HeroBanner />
-      <div className="container mx-auto px-4 pb-12">
-        {/* Status Widget */}
-        <div className="card flex flex-col md:flex-row items-center justify-between mb-8 gap-4 border-l-4 border-[var(--color-fuchsia-accent)]">
-          <div className="flex-1 w-full md:w-auto">
-            <h3 className="text-lg font-bold text-[var(--color-bordeaux-primary)] mb-1 flex items-center">
-              <Clock size={20} className="mr-2 text-[var(--color-fuchsia-accent)]" />
-              {t('opening_hours')}
-            </h3>
-            <p className="text-sm text-[var(--text-secondary)]">{t('opening_hours_text')}</p>
-          </div>
-          <div className="flex flex-col items-center justify-center md:ml-8 gap-2">
-            <div className={`${labStatus.isOpen ? 'bg-green-700' : 'bg-[#B71C1C]'} text-white px-5 py-2 rounded-full font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
-              <span className={`w-3 h-3 ${labStatus.isOpen ? 'bg-green-300' : 'bg-red-300'} rounded-full`}></span>
-              {labStatus.statusText}
-            </div>
-            {labStatus.countdownText && (
-              <div className="text-sm font-medium text-[var(--text-secondary)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] px-3 py-1 rounded-full border border-[var(--border-default)]">
-                {labStatus.countdownText}
+      {/* Hero Banner with Opening Hours Widget */}
+      <div className="relative">
+        <HeroBanner />
+        {/* Opening Hours Widget - Positioned at top right on large screens, always visible */}
+        <div className="lg:absolute lg:top-4 lg:right-4 lg:z-10 lg:max-w-80 w-full">
+          <div className="card bg-white/95 dark:bg-[var(--background-card)]/95 backdrop-blur-sm shadow-lg border border-[var(--border-default)] mx-4 mt-4 lg:mx-0 lg:mt-0">
+            <div className="flex flex-col md:flex-row lg:flex-col items-center justify-between gap-4">
+              <div className="flex-1 w-full">
+                <h3 className="text-lg font-bold text-[var(--color-bordeaux-primary)] mb-1 flex items-center">
+                  <Clock size={20} className="mr-2 text-[var(--color-fuchsia-accent)]" />
+                  {t('opening_hours')}
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)]">{t('opening_hours_text')}</p>
               </div>
-            )}
+              <div className="flex flex-col items-center justify-center gap-2">
+                <div className={`${labStatus.isOpen ? 'bg-green-700' : 'bg-[#B71C1C]'} text-white px-5 py-2 rounded-full font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
+                  <span className={`w-3 h-3 ${labStatus.isOpen ? 'bg-green-300' : 'bg-red-300'} rounded-full`}></span>
+                  {labStatus.statusText}
+                </div>
+                {/* Only show countdown on client side to prevent hydration mismatch */}
+                {labStatus.isClient && labStatus.countdownText && (
+                  <div className="text-sm font-medium text-[var(--text-secondary)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] px-3 py-1 rounded-full border border-[var(--border-default)]">
+                    {labStatus.countdownText}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-
+      </div>
+      
+      <div className="container mx-auto px-4 pb-12">
         {/* Why Choose Us Section */}
-        <section id="why-us" className="mb-12 fade-in-section">
+        <section id="why-us" className="mb-12 fade-in-section mt-8">
           <h2 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] mb-6">{t('why_choose_us')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="card">
@@ -200,16 +207,16 @@ export default function HomeClient({ lang }: { lang: string }) {
                     href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center min-w-[160px] h-12 px-6 bg-[var(--color-fuchsia-accent)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[var(--color-fuchsia-bright)] focus:bg-[var(--color-fuchsia-bright)] gap-2"
+                    className="map-directions-btn flex items-center justify-center min-w-[160px] h-12 px-6 font-semibold rounded-lg shadow transition-colors text-center text-lg gap-2"
                   >
-                    <MapPin size={22} className="mr-2 -ml-1" />
+                    <Navigation size={22} className="mr-2 -ml-1" />
                     {t('get_directions')}
                   </a>
                   <a
                     href="tel:0528843384"
-                    className="flex items-center justify-center min-w-[160px] h-12 px-6 border border-[var(--border-default)] text-[var(--text-primary)] font-semibold rounded-lg shadow-sm transition-colors text-center text-lg hover:bg-[var(--background-tertiary)] focus:bg-[var(--background-tertiary)] gap-2"
+                    className="map-call-btn flex items-center justify-center min-w-[160px] h-12 px-6 font-semibold rounded-lg shadow-sm transition-colors text-center text-lg gap-2"
                   >
-                    <Info size={22} className="mr-2 -ml-1" />
+                    <Phone size={22} className="mr-2 -ml-1" />
                     {t('call_us')}
                   </a>
                 </div>

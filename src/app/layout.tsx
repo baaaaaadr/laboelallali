@@ -1,8 +1,7 @@
-import './globals.css';
+import '@/styles/index.css';
 import EnvProvider from '@/components/EnvProvider';
 import EnvironmentScript from '@/components/EnvironmentScript';
 import RTLStylesProvider from '@/components/RTLStylesProvider';
-import BaseStyles from '@/components/BaseStyles';
 import RTLAdditionalStyles from '@/components/RTLAdditionalStyles';
 
 // Metadata is now defined in metadata.ts since this is a Server Component
@@ -15,8 +14,7 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning>
       <head>
-        {/* Client components for all styles */}
-        <BaseStyles />
+        {/* Client RTL helpers */}
         <RTLStylesProvider />
         <RTLAdditionalStyles />
         

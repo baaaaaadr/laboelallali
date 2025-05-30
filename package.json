@@ -14,6 +14,7 @@
     "deploy:functions": "firebase deploy --only functions",
     "context": "powershell -ExecutionPolicy Bypass -NoProfile -File ./generate_context.ps1",
     "tailwind:build": "tailwindcss -i ./src/app/globals.css -o ./output.css --content \"./src/**/*.{js,ts,jsx,tsx,mdx}\"",
+    "generate:css-vars": "node scripts/generateCSSVariables.js",
     "git": "git add . && git commit -m \"update\" && git push"
   },
   "dependencies": {
@@ -41,7 +42,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4.1.5",
+    "@tailwindcss/postcss": "^4.1.8",
     "@types/leaflet": "^1.9.18",
     "@types/node": "^20",
     "@types/react": "^19",

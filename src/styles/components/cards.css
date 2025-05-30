@@ -1,0 +1,214 @@
+/**
+ * Card Component Styles
+ * Reusable card patterns with consistent styling
+ */
+
+/* Base Card */
+.card {
+  background-color: var(--background-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Card Hover State */
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px 0 rgba(128, 0, 32, 0.08);
+  border-color: var(--border-accent);
+}
+
+/* Card Header */
+.card-header {
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+  font-weight: var(--font-weight-semibold);
+  color: var(--brand-primary);
+  font-size: var(--font-size-lg);
+}
+
+/* Card Body */
+.card-body {
+  color: var(--text-primary);
+}
+
+/* Card Footer */
+.card-footer {
+  padding-top: var(--space-3);
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
+}
+
+/* Card Action */
+.card-action {
+  color: var(--text-accent);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: all 0.2s ease;
+}
+
+.card-action:hover {
+  color: var(--brand-accent-hover);
+  gap: var(--space-3);
+}
+
+/* Card Variants */
+
+/* Bordered Card */
+.card-bordered {
+  border-width: 2px;
+}
+
+/* Compact Card */
+.card-compact {
+  padding: var(--space-3);
+}
+
+/* Card with Left Accent */
+.card-accent-left {
+  border-left: 4px solid var(--brand-accent);
+  padding-left: var(--space-4);
+}
+
+/* Clickable Card */
+.card-clickable {
+  cursor: pointer;
+}
+
+.card-clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Card States */
+
+/* Active/Selected Card */
+.card-active {
+  border-color: var(--brand-accent);
+  background-color: var(--background-secondary);
+}
+
+/* Disabled Card */
+.card-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Card Layouts */
+
+/* Horizontal Card */
+.card-horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.card-horizontal .card-image {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+.card-horizontal .card-content {
+  flex: 1;
+}
+
+/* Card Grid */
+.card-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* Special Card Types */
+
+/* Medical Result Card */
+.card-result {
+  border-left: 4px solid transparent;
+}
+
+.card-result.result-normal {
+  border-left-color: var(--status-success);
+}
+
+.card-result.result-warning {
+  border-left-color: var(--status-warning);
+  background-color: rgba(217, 119, 6, 0.05);
+}
+
+.card-result.result-alert {
+  border-left-color: var(--status-error);
+  background-color: rgba(185, 28, 28, 0.05);
+}
+
+/* Unread Result Card */
+.card-result.unread {
+  border-left-color: var(--brand-accent);
+  background-color: var(--color-fuchsia-pale);
+}
+
+/* Package Card */
+.card-package {
+  border: 2px solid var(--border-default);
+  padding: var(--space-6);
+  text-align: center;
+  position: relative;
+}
+
+.card-package:hover {
+  border-color: var(--brand-accent);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(255, 64, 129, 0.15);
+}
+
+.card-package-popular {
+  border-color: var(--brand-accent);
+}
+
+.card-package-popular::before {
+  content: "Plus populaire";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--brand-accent);
+  color: white;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Dark Mode Adjustments */
+.dark .card {
+  background-color: var(--background-secondary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background-color: var(--background-tertiary);
+}
+
+.dark .card-result.warning {
+  background-color: rgba(217, 119, 6, 0.1);
+}
+
+.dark .card-result.alert {
+  background-color: rgba(185, 28, 28, 0.1);
+}
+
+.dark .card-result.unread {
+  background-color: rgba(255, 121, 168, 0.1);
+}

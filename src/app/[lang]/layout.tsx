@@ -1,4 +1,4 @@
-import '../globals.css';
+import '@/styles/index.css';
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import i18nConfig, { defaultNS, supportedLngs } from '../../../i18n'; 

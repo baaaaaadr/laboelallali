@@ -1,6 +1,8 @@
 # Project Structure: Laboratoire El Allali PWA
 
-Last Updated: 2025-05-28
+Last Updated: 2025-05-30
+
+> **Note:** This document is automatically generated. Please run `node scripts/update-structure.js` after making structural changes.
 
 This document outlines the file and directory structure of the PWA.
 AI Assistant: Please refer to this for file locations and organizational patterns.
@@ -22,14 +24,23 @@ When creating new files, follow these patterns or suggest updates to this docume
 - `next.config.js`: Next.js project configuration (PWA, webpack, etc.).
 - `package-lock.json`, `package.json`: Project dependencies, scripts, and versions.
 - `PLANNING.md`: Project planning document.
-- `postcss.config.js`, `postcss.config.mjs`: PostCSS configuration files.
+- `postcss.config.js`: PostCSS configuration.
 - `README.md`: Project overview and setup instructions.
-- `tailwind.config.js`: Tailwind CSS configuration.
+- `tailwind.config.js`: Tailwind CSS configuration with theme extensions.
 - `TASK.md`: Project task tracking.
 - `tsconfig.json`: TypeScript compiler configuration.
 - `WORKFLOW.md`: Development workflow guidelines.
 - `generate_context.ps1`: Script for generating context files.
-- *Various .txt, .js test/draft files (e.g., allcode.txt, simple-map-test.js) - Developer utility/scratch files.*
+- `clear-cache.ps1`: Script to clear Next.js cache and node_modules.
+- *Test files (to be cleaned up):*
+  - `simple-map-test.js`
+  - `test-map-fixed.js`
+  - `test-map.js`
+  - `test-server.js`
+- *Documentation:*
+  - `docs/CSS_ARCHITECTURE_GUIDE.md`
+  - `docs/CSS_REFACTORING_PROMPT.md`
+  - `docs/STYLE_GUIDE.md` (if exists)
 
 ---
 ## `memory-bank/`
@@ -95,9 +106,12 @@ When creating new files, follow these patterns or suggest updates to this docume
     - **`(lang)/`**: Dynamic segment for language-specific routes (e.g., `/fr/...`, `/ar/...`).
         - `layout.tsx`: Root layout for the language segment (applies to all pages within this language).
         - `page.tsx`: Homepage component for the specific language.
-        - `HomeClient.tsx`: Client component likely used within the homepage.
+        - `HomeClient.tsx`: Client component used within the homepage.
         - `metadata.ts`: Metadata specific to the language segment or homepage.
-        - *`page.new.tsx`, `page.tsx.new` - Likely draft/backup files.*
+        - **Test directories (development only):**
+          - `test-styles/`: Styling tests and experiments
+          - `header-test/`: Header component testing
+          - `image-test/`: Image optimization and testing
         - **`analyses/`**: Analysis catalog feature.
             - `page.tsx`: Page component for displaying the analysis catalog.
         - **`contact/`**: Contact feature.
@@ -111,7 +125,7 @@ When creating new files, follow these patterns or suggest updates to this docume
     - `EnvironmentScript.tsx`, `EnvProvider.tsx`: Components related to environment variable handling/providing.
     - `RTLAdditionalStyles.tsx`, `RTLStylesProvider.tsx`: Components/Providers for handling RTL-specific styling.
     - `SimpleMap.tsx`: A basic map component (likely Leaflet).
-    - *`PWAInstallButton.tsx.new` - Likely a draft/backup file.*
+    - *`PWAInstallButton.tsx.new` - Draft/backup file (to be reviewed for cleanup)*
     - **`common/`**: General-purpose, reusable UI components.
         - **`buttons/Button.tsx`**: Generic button component.
         - **`cards/Card.tsx`**: Generic card component.
@@ -162,12 +176,26 @@ When creating new files, follow these patterns or suggest updates to this docume
 - **`node_modules/`**: (Exists, content not detailed) - Dependencies for Cloud Functions.
 
 ---
-## Other Top-Level Directories (Existence Check Only)
+## Other Top-Level Directories
 - `.firebase/`: Firebase CLI local cache and configuration.
-- `.next/`: Next.js build output and cache. (Content not detailed)
-- `.vscode/`: VS Code editor specific settings. (Content not detailed)
-- `node_modules/`: Project root dependencies. (Content not detailed)
-- `scripts/`: Utility scripts for development (e.g., `generate_context.ps1`, `copy-sw.js`).
+- `.next/`: Next.js build output and cache.
+- `.vscode/`: VS Code editor specific settings.
+- `docs/`: Project documentation and guidelines.
+- `node_modules/`: Project dependencies (automatically generated).
+- `scripts/`: Development utility scripts.
+  - `generate_context.ps1`: Generates context files for AI assistance.
+  - `update-structure.js`: Updates this structure document.
+
+## Cleanup Recommendations
+1. Remove backup files:
+   - `src/app/[lang]/page.new.tsx`
+   - Any `*.new.*` files
+2. Review and potentially remove test files:
+   - `simple-map-test.js`
+   - `test-map-fixed.js`
+   - `test-map.js`
+   - `test-server.js`
+3. Organize test directories under `__tests__/` if keeping them.
 
 ---
 *(This structure is a snapshot and will evolve. AI: Please suggest updates when files are added/moved/deleted.)*

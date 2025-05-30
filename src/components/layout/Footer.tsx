@@ -24,9 +24,9 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="footer-gradient text-white pt-12 pb-8 mt-4 dark:bg-gradient-to-br dark:from-[#1a0a0e] dark:via-[#2a0a14] dark:to-[#3a0a1a]">
+    <footer className="footer-gradient text-white pt-12 pb-8 mt-4 dark:bg-gradient-to-br dark:from-[var(--brand-primary)] dark:via-[var(--color-bordeaux-light)] dark:to-[var(--brand-accent)]">
       <div className="container mx-auto px-4">
-        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[#800020]/70 via-[#B84C63]/70 to-[#FF4081]/70 dark:from-[#FF4081]/50 dark:via-[#B84C63]/50 dark:to-[#800020]/50 rounded-full"></div>
+        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[var(--brand-primary)]/70 via-[var(--color-bordeaux-light)]/70 to-[var(--brand-accent)]/70 dark:from-[var(--brand-accent)]/50 dark:via-[var(--color-bordeaux-light)]/50 dark:to-[var(--brand-primary)]/50 rounded-full"></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm sm:text-base">
           {/* Contact Info */}
           <div>
@@ -75,31 +75,31 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">{t('quick_links')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
+                <Link href="/" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('home')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#services" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
+                <Link href="#services" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('our_main_services')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#info" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
+                <Link href="#info" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('practical_info')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="flex items-center space-x-2 hover:text-[#FF4081] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
+                <Link href="#contact" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('contact')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#faq" className="flex items-center space-x-2 hover:text-[#FF4081] transition-colors min-h-[44px] py-2">
+                <Link href="#faq" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] transition-colors min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('faq')}</span>
                 </Link>
@@ -119,7 +119,7 @@ const Footer = () => {
                   href={LAB_CONTACT.WHATSAPP[0].url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="bg-[#800020] hover:bg-[#B84C63] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center space-x-2 transition-colors shadow-sm hover:shadow-md w-full"
+                  className="bg-[var(--brand-primary)] hover:bg-[var(--color-bordeaux-light)] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center space-x-2 transition-colors shadow-sm hover:shadow-md w-full"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16" className="flex-shrink-0">
                     <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
@@ -138,7 +138,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <div className="border-t border-gray-700 mt-8 pt-6 text-center">
-          <p className="footer-copyright">© {currentYear} {t('laboratory_name')}. {t('rights_reserved')}</p>
+          <p className="footer-copyright"> {currentYear} {t('laboratory_name')}. {t('rights_reserved')}</p>
         </div>
       </div>
     </footer>

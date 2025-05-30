@@ -79,37 +79,11 @@ const nextConfig = {
       };
     }
 
-    // Handle CSS modules
-    const cssRules = [
-      {
-        // Apply to both .module.css and regular .css files
-        test: /\.css$/i,
-        use: [
-          'style-loader',
-          {
-            loader: 'css-loader',
-            options: {
-              importLoaders: 1,
-              modules: {
-                auto: true, // Auto-enable CSS modules for files ending in .module.css
-                localIdentName: dev 
-                  ? '[path][name]__[local]--[hash:base64:5]' 
-                  : '[hash:base64]',
-              },
-            },
-          },
-          'postcss-loader',
-        ],
-      },
-      // Fix for Leaflet marker icons
-      {
-        test: /\.(png|jpg|jpeg|gif|svg)$/i,
-        type: 'asset/resource',
-      },
-    ];
-
-    // Add the rules to the config
-    config.module.rules.push(...cssRules);
+    // Extra rule for Leaflet images
+    config.module.rules.push({
+      test: /\.(png|jpg|jpeg|gif|svg)$/i,
+      type: 'asset/resource',
+    });
 
     // Important: return the modified config
     return config;
