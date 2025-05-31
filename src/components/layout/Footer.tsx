@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
@@ -138,7 +139,16 @@ const Footer = () => {
 
         {/* Copyright */}
         <div className="border-t border-gray-700 mt-8 pt-6 text-center">
-          <p className="footer-copyright"> {currentYear} {t('laboratory_name')}. {t('rights_reserved')}</p>
+          <p className="footer-copyright">
+            <Image
+              src="/images/icons/logo-footer.png"
+              alt="Company Logo"
+              width={24} // w-auto will be handled by Tailwind, but width/height are required by Next/Image
+              height={24} // h-6
+              className="inline mr-2 h-6 w-auto align-middle"
+            />
+            {currentYear} {t('laboratory_name')}. {t('rights_reserved')}
+          </p>
         </div>
       </div>
     </footer>
