@@ -117,9 +117,7 @@ const Header = () => {
           {/* Logo and name */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
-              <div className="header-logo">
-                <span className="font-bold text-lg">L</span>
-              </div>
+              <img src="/images/icons/logo-header.png" alt="LaboName Logo" className="header-logo h-8 w-auto" />
               <h1 className="text-xl font-bold hidden sm:block dark:text-[var(--text-primary)]">
                 {t('laboName')}
               </h1>
@@ -239,7 +237,7 @@ const Header = () => {
           <div className="mobile-menu-header h-16 flex items-center justify-between px-4">
             <div className="flex items-center">
               <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
-                <span className="header-logo text-lg font-bold mr-3">L</span>
+                <img src="/images/icons/logo-header.png" alt="LaboName Logo" className="header-logo h-6 w-auto mr-3" />
                 <span className="font-semibold text-lg">{t('laboName')}</span>
               </Link>
             </div>
