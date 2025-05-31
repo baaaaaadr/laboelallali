@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check, Download } from 'lucide-react';  
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
@@ -235,6 +236,13 @@ const Header = () => {
           }}
           onClick={(e) => e.stopPropagation()}
         >
+          <Image
+            src="/images/icons/logo-header.png"
+            alt="Company Logo"
+            width={150} // Placeholder width, w-auto will adjust
+            height={48}  // Corresponds to h-12 (12 * 4px = 48px)
+            className="p-4 mx-auto h-12 w-auto mb-4" // p-4, h-12, mb-4
+          />
           {/* Menu Header Section - Matches main header height */}
           <div className="mobile-menu-header h-16 flex items-center justify-between px-4">
             <div className="flex items-center">
