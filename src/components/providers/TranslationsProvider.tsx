@@ -53,25 +53,22 @@ export default function TranslationsProvider({
   const i18nRef = useRef(createI18nInstance(locale, namespaces, resources));
 
   useEffect(() => {
-    // CORRECTION: Pour éviter les erreurs d'hydratation, toujours mettre à jour 
-    // la langue côté client immédiatement après le premier rendu
+    // Update language on client side after first render to avoid hydration errors
     const updateLanguage = async () => {
       if (i18nRef.current.language !== locale) {
-        console.log(`[TranslationsProvider] Changing language from ${i18nRef.current.language} to ${locale}`);
         await i18nRef.current.changeLanguage(locale);
       }
-      
+
       // Add new resource bundles if needed
       if (resources && resources[locale]) {
         Object.keys(resources[locale]).forEach(ns => {
           if (!i18nRef.current.hasResourceBundle(locale, ns)) {
-            console.log(`[TranslationsProvider] Adding resource bundle for ${locale}/${ns}`);
             i18nRef.current.addResourceBundle(locale, ns, resources[locale][ns], true, true);
           }
         });
       }
     };
-    
+
     updateLanguage();
   }, [locale, resources]);
 

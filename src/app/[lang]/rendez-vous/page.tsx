@@ -11,6 +11,8 @@ import { useForm } from "react-hook-form";
 import { db, storage } from "../../../config/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { LAB_CONTACT } from "../../../constants/contact";
+import { generateTimeSlots } from "../../../utils/timeSlots";
 
 interface RendezVousParams {
   lang: string;
@@ -27,21 +29,18 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
     const loadParams = async () => {
       try {
         const resolvedParams = await params;
-        const urlLang = resolvedParams.lang;
-        console.log(`[RendezVous] Params resolved, language from URL: ${urlLang}`);
-        setLang(urlLang);
+        setLang(resolvedParams.lang);
       } catch (error) {
-        console.error("[RendezVous] Error resolving params:", error);
+        // Silently handle param resolution errors
       }
     };
-    
+
     loadParams();
   }, [params]);
-  
+
   // Synchroniser le langage i18n avec le paramètre de l'URL quand il change
   useEffect(() => {
     if (i18n.language !== lang) {
-      console.log(`[RendezVous] Syncing language from URL param: ${lang}, current: ${i18n.language}`);
       i18n.changeLanguage(lang);
     }
   }, [lang, i18n]);
@@ -63,36 +62,9 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Génère les créneaux horaires disponibles en fonction du jour sélectionné
-  function generateTimeSlots(date: Date | null): string[] {
-    if (!date) return [];
-    const day = date.getDay(); // 0=dimanche, 6=samedi
-    const startHour = 7, startMinute = 30;
-    let endHour, endMinute;
-    if (day === 6) { // samedi
-      endHour = 12;
-      endMinute = 0;
-    } else {
-      endHour = 18;
-      endMinute = 30;
-    }
-    const slots: string[] = [];
-    let h = startHour, m = startMinute;
-    while (h < endHour || (h === endHour && m <= endMinute - 15)) {
-      const hh = h.toString().padStart(2, '0');
-      const mm = m.toString().padStart(2, '0');
-      slots.push(`${hh}:${mm}`);
-      m += 15;
-      if (m === 60) {
-        m = 0;
-        h++;
-      }
-    }
-    return slots;
-  }
-
   const timeSlots = generateTimeSlots(selectedDate);
-  const laboWhatsapp = "212654079592"; // Numéro en format international sans +
+  // Get WhatsApp number from constants (remove leading 0 and add country code)
+  const laboWhatsapp = LAB_CONTACT.WHATSAPP[0].url.replace('https://wa.me/', '');
 
   // Gère le téléchargement de fichier d'ordonnance
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,55 +173,13 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       if (fileInputRef.current) fileInputRef.current.value = '';
       
     } catch (error) {
-      console.error("Error submitting appointment request:", error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error submitting appointment request:", error);
+      }
       setSubmitError(t('appointment_request_error', { ns: 'appointment' }));
     } finally {
       setIsLoading(false);
     }
-    // Formatage de la date
-    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
-    const laboEmail = "laboelallali@gmail.com";
-    const sujet = `${t('emailSubject', { ns: 'appointment' })} - ${nom}`;
-    
-    // Créer le texte du message non-encodé (lisible)
-    const messageText = t('emailBody', {
-      name: nom,
-      phone: telephone,
-      email: email ? `\nEmail : ${email}` : '',
-      date: formattedDate,
-      time: selectedTime,
-      comments: commentaires ? `\n${t('comments', { ns: 'appointment' })} : ${commentaires}` : '',
-      prescription: prescriptionFile ? `\n${t('withPrescription', { ns: 'appointment' })}` : `\n${t('withoutPrescription', { ns: 'appointment' })}`
-    });
-    
-    // Fonction pour afficher l'alerte avec les instructions et le bouton de copie
-    function showEmailAlert() {
-      // Essayer de copier le texte dans le presse-papier
-      const copyToClipboard = () => {
-        try {
-          navigator.clipboard.writeText(messageText).then(() => {
-            alert(t('messageCopied', { ns: 'appointment' }));
-          }).catch(() => {
-            // Fallback si le navigateur n'autorise pas clipboard API
-            showCopyInstructions();
-          });
-        } catch {
-          // Fallback pour les navigateurs sans support de l'API clipboard
-          showCopyInstructions();
-        }
-      };
-      
-      // Afficher les instructions pour la sélection manuelle
-      const showCopyInstructions = () => {
-        alert(`${t('emailInstructions', { ns: 'appointment' })} : ${laboEmail}\n\n${t('emailSubject', { ns: 'appointment' })} : ${sujet}\n\n${messageText}`);
-      };
-
-      // Demander si l'utilisateur souhaite copier le message automatiquement
-      copyToClipboard();
-    }
-    
-    // Maintenant géré par le téléchargement Firebase et l'enregistrement Firestore
-    // Remarque : Le code ci-dessus est conservé comme référence pour le moment mais n'est plus exécuté
   };
 
   // Génère le lien WhatsApp avec message prérempli

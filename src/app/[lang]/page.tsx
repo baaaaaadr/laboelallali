@@ -52,9 +52,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function Home({ params }: PageProps) {
   const { lang } = await params;
-  // Log the language for debugging
-  console.log(`Page rendered for language: ${lang}`);
-  
-  // Return the client component with the language prop
   return <HomeClient lang={lang} />;
 }

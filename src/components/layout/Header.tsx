@@ -45,20 +45,10 @@ const Header = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlLang]);
   const currentLanguagePath = `/${urlLang}`;
-  
-  // Debug log to help identify language issues
-  console.log(`Header: i18n.language=${lang}, URL language=${urlLang}, pathname=${pathname}`)
 
   const toggleMenu = () => {
-    const newMenuState = !isMenuOpen;
-    console.log(`[DEBUG] Mobile menu toggled: ${newMenuState ? 'OPENED' : 'CLOSED'}`);
-    setIsMenuOpen(newMenuState);
+    setIsMenuOpen(!isMenuOpen);
   };
-  
-  // Debug log when component renders
-  useEffect(() => {
-    console.log(`[DEBUG] Header rendered, isMenuOpen: ${isMenuOpen}`);
-  }, [isMenuOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -96,8 +86,6 @@ const Header = () => {
         ? `/${newLocale}` 
         : `/${newLocale}${pathWithoutLang}`;
 
-      console.log(`Language switch: URL lang=${urlLang} -> ${newLocale}, Path: ${pathname} -> ${newPath}`);
-      
       // Force a full page reload to reset i18n context
       window.location.href = newPath;
     }
@@ -209,7 +197,6 @@ const Header = () => {
         }}
         id="mobile-menu-container"
       >
-        {console.log('[DEBUG] Rendering mobile menu container, isMenuOpen:', isMenuOpen)}
         {/* Backdrop with blur effect */}
         <div 
           className="fixed inset-0 bg-black/40 backdrop-blur-sm"
@@ -254,8 +241,6 @@ const Header = () => {
             
           {/* Navigation Links Section */}
           <nav className="mobile-menu-nav flex flex-col flex-grow p-4 space-y-2 overflow-y-auto">
-            {console.log('[DEBUG] Rendering mobile menu nav content')}
-            
             {/* Navigation Links */}
             <Link href={`${currentLanguagePath}/`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
               <Home size={20} className="nav-icon mr-3" />

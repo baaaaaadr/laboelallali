@@ -21,12 +21,8 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Note: TypeScript and ESLint errors are now checked during build
+  // Fix any errors before deploying
   experimental: {
     optimizeCss: true,
     scrollRestoration: true,

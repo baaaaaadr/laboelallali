@@ -6,8 +6,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { fr, ar } from "date-fns/locale";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-// Import directement depuis la source sans alias
-import { supportedLngs } from "../../../../i18n";
+import { LAB_CONTACT } from "../../../constants/contact";
+import { generateTimeSlots } from "../../../utils/timeSlots";
 
 // Dans Next.js 15.3.1, les params sont une Promise qu'il faut attendre
 interface GlaboParams {
@@ -25,21 +25,18 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
     const loadParams = async () => {
       try {
         const resolvedParams = await params;
-        const urlLang = resolvedParams.lang;
-        console.log(`[Glabo] Params resolved, language from URL: ${urlLang}`);
-        setLang(urlLang);
+        setLang(resolvedParams.lang);
       } catch (error) {
-        console.error("[Glabo] Error resolving params:", error);
+        // Silently handle param resolution errors
       }
     };
-    
+
     loadParams();
   }, [params]);
-  
+
   // Force la langue i18n à correspondre à la langue de l'URL
   useEffect(() => {
     if (i18n.language !== lang) {
-      console.log(`[Glabo] Syncing language from URL param: ${lang}, current: ${i18n.language}`);
       i18n.changeLanguage(lang);
     }
   }, [lang, i18n]);
@@ -58,39 +55,9 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
   const [hasOrdonnance, setHasOrdonnance] = useState('non'); // 'oui' ou 'non'
   const [commentaires, setCommentaires] = useState('');
 
-    // --- TITRE DE LA PAGE ---
-  // À placer dans le JSX, juste avant le formulaire :
-  // <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 text-center">{t('glabo_title', { ns: 'glabo' })}</h1>
-// Génère les créneaux horaires disponibles en fonction du jour sélectionné
-  function generateTimeSlots(date: Date | null): string[] {
-    if (!date) return [];
-    const day = date.getDay(); // 0=dimanche, 6=samedi
-    const startHour = 7, startMinute = 30;
-    let endHour, endMinute;
-    if (day === 6) { // samedi
-      endHour = 12;
-      endMinute = 0;
-    } else {
-      endHour = 18;
-      endMinute = 30;
-    }
-    const slots: string[] = [];
-    let h = startHour, m = startMinute;
-    while (h < endHour || (h === endHour && m <= endMinute - 15)) {
-      const hh = h.toString().padStart(2, '0');
-      const mm = m.toString().padStart(2, '0');
-      slots.push(`${hh}:${mm}`);
-      m += 15;
-      if (m === 60) {
-        m = 0;
-        h++;
-      }
-    }
-    return slots;
-  }
-
   const timeSlots = generateTimeSlots(selectedDate);
-  const laboWhatsapp = "212654079592"; // Numéro en format international sans +
+  // Get WhatsApp number from constants
+  const laboWhatsapp = LAB_CONTACT.WHATSAPP[0].url.replace('https://wa.me/', '');
 
   // Soumission du formulaire
   const handleSubmit = (event: React.FormEvent) => {
@@ -102,7 +69,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
     }
     // Formatage de la date
     const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
-    const laboEmail = "laboelallali@gmail.com";
+    const laboEmail = LAB_CONTACT.EMAIL.display;
     const sujet = `${t('home_service')} - ${nom}`;
     
     // Créer le texte du message

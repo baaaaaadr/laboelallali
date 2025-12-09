@@ -120,45 +120,17 @@ export default async function LangLayout({
   const resolvedParams = await params;
   const { lang } = resolvedParams;
   
-  // PROBLÈME IDENTIFIÉ: Inversion entre l'URL et la langue affichée
-  // On utilise la langue de l'URL comme source de vérité absolue
-  console.log(`Layout for language: URL lang=${lang}`);
-  
   // Set the document direction based on language from URL
   const dirValue = lang === 'ar' ? 'rtl' : 'ltr';
   
-  // CORRECTION: Debug complet pour détecter la source du problème
-  console.log(`[DEBUG] Rendering layout for URL language: ${lang}, applying dir=${dirValue}`);
-  
   // Initialize i18next for server-side rendering within this layout
-  // CRITIQUE: S'assurer d'utiliser EXACTEMENT la langue de l'URL
   let i18nInstance;
   let resources;
-  
+
   try {
     i18nInstance = await initServerI18next(lang, [defaultNS, 'appointment', 'glabo']);
     resources = i18nInstance.services.resourceStore.data;
-    
-    // Vérification complète des ressources chargées
-    console.log(`[DEBUG] Loaded resources for languages: ${Object.keys(resources).join(', ')}`);
-    
-    if (resources && resources[lang]) {
-      // Vérifier les clés de traduction pour confirmer que nous avons chargé la bonne langue
-      const keys = Object.keys(resources[lang][defaultNS] || {}).slice(0, 5);
-      console.log(`[DEBUG] Resources for ${lang} contain keys: ${keys.join(', ')}...`);
-      
-      // Vérifier si certaines valeurs ont été chargées - en accédant de manière sécurisée
-      const currentLangValue = resources[lang][defaultNS] && 
-                              typeof resources[lang][defaultNS] === 'object' && 
-                              'currentLanguage' in resources[lang][defaultNS] ? 
-                              resources[lang][defaultNS].currentLanguage : 'unknown';
-      
-      console.log(`[DEBUG] Value of 'currentLanguage' for ${lang}: "${currentLangValue}"`);
-    } else {
-      console.error(`[ERROR] No resources found for language: ${lang}. Available resources: ${Object.keys(resources).join(', ')}`);
-    }
   } catch (error) {
-    console.error(`[ERROR] Failed to initialize i18next for language ${lang}:`, error);
     // Fallback to create a minimal instance
     i18nInstance = createInstance();
     await i18nInstance.init({ lng: lang });
@@ -184,43 +156,15 @@ export default async function LangLayout({
             <Footer />
             <BottomNav />
             <PWAComponents />
-            <Script id="pwa-debug" strategy="afterInteractive">
+            <Script id="pwa-init" strategy="afterInteractive">
               {`
-                console.log('PWA Debug: Script loaded');
-                
-                // Check if the browser supports beforeinstallprompt
-                const isPwaSupported = 'BeforeInstallPromptEvent' in window;
-                console.log('PWA Debug: beforeinstallprompt supported?', isPwaSupported);
-                
-                // Check if the app is running in standalone mode
-                const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-                console.log('PWA Debug: Running as standalone?', isStandalone);
-                
-                // Check if the app is running in a PWA
-                const isInPwa = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-                console.log('PWA Debug: Running as PWA?', isInPwa);
-                
                 // Listen for beforeinstallprompt event
                 window.addEventListener('beforeinstallprompt', (e) => {
-                  console.log('PWA Debug: beforeinstallprompt event fired', e);
                   e.preventDefault();
-                // Store the event for later use
-                window.deferredPrompt = e;
-                // The PWAInstallButton component will handle showing the button
-              });
-              
-              // Check if the app was just installed
-              window.addEventListener('appinstalled', () => {
-                console.log('PWA Debug: App was installed');
-              });
-              
-              // Check service worker registration
-              if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                  console.log('PWA Debug: Service Worker registrations:', registrations);
+                  // Store the event for later use
+                  window.deferredPrompt = e;
                 });
-              }
-            `}
+              `}
             </Script>
           </div>
         </TranslationsProvider>

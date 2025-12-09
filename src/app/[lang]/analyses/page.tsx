@@ -62,8 +62,7 @@ const AnalysesCatalogDataFetcher = ({
         onDataFetched(fetchedAnalyses);
       } catch (err) {
         if (!isMounted) return;
-        
-        console.error("Error fetching analyses:", err);
+
         let specificErrorMessage = translations.errorFetchingBase;
         
         if (err instanceof Error) {
@@ -135,8 +134,8 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
           }
         }
       }
-    } catch (error) {
-      console.error('Error restoring selections from localStorage:', error);
+    } catch {
+      // Silently ignore localStorage errors
     }
   }, []);
   
@@ -145,8 +144,8 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     try {
       const serializedData = JSON.stringify(selections);
       localStorage.setItem(STORAGE_KEY, serializedData);
-    } catch (error) {
-      console.error('Error saving selections to localStorage:', error);
+    } catch {
+      // Silently ignore localStorage errors
     }
   }, []);
   
