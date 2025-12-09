@@ -11,6 +11,7 @@ import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
 import PWAComponents from '@/components/features/pwa/PWAComponents';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import ToastProvider from '@/components/providers/ToastProvider';
 
 // Font is defined but not used in this layout - if needed, uncomment and apply to elements
 // import { Inter } from 'next/font/google';
@@ -156,6 +157,7 @@ export default async function LangLayout({
             <Footer />
             <BottomNav />
             <PWAComponents />
+            <ToastProvider />
             <Script id="pwa-init" strategy="afterInteractive">
               {`
                 // Listen for beforeinstallprompt event

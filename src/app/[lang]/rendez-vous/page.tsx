@@ -13,6 +13,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { LAB_CONTACT } from "../../../constants/contact";
 import { generateTimeSlots } from "../../../utils/timeSlots";
+import toast from 'react-hot-toast';
 
 interface RendezVousParams {
   lang: string;
@@ -115,7 +116,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
     
     // Validation simple
     if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
-      alert(t('requiredFields', { ns: 'appointment' }));
+      toast.error(t('requiredFields', { ns: 'appointment' }));
       return;
     }
     
@@ -160,7 +161,8 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       
       // 5. Show success message
       setSubmitSuccess(true);
-      
+      toast.success(t('appointment_request_success', { ns: 'appointment' }));
+
       // 6. Reset the form
       setNom('');
       setTelephone('');
@@ -185,7 +187,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   // Génère le lien WhatsApp avec message prérempli
   const handleWhatsapp = () => {
     if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
-      alert(t('requiredFields', { ns: 'appointment' }));
+      toast.error(t('requiredFields', { ns: 'appointment' }));
       return;
     }
     const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";

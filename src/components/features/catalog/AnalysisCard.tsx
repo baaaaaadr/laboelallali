@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 // Define Analysis interface for type safety
 export interface Analysis {
@@ -23,30 +24,18 @@ interface AnalysisCardProps {
 }
 
 export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: AnalysisCardProps) {
+  const { t } = useTranslation('catalog');
   const isArabic = lang === "ar";
   const [showPreparation, setShowPreparation] = useState(false);
-  
+
   // Get the preparation text based on the current language
   const preparationText = isArabic ? analysis.preparation_ar : analysis.preparation_fr;
   const hasPreparation = preparationText && preparationText.trim().length > 0;
-  
+
   // Toggle preparation visibility
   const togglePreparation = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowPreparation(prev => !prev);
-  };
-  
-  // Manual translations based on language
-  const translations = {
-    categoryLabel: isArabic ? "التصنيف:" : "Catégorie:",
-    delayLabel: isArabic ? "المدة:" : "Délai:",
-    priceCurrency: isArabic ? "درهم" : "MAD",
-    showPreparation: isArabic ? "عرض التحضير" : "Voir Préparation",
-    hidePreparation: isArabic ? "إخفاء التحضير" : "Masquer Préparation",
-    preparationLabel: isArabic ? "تعليمات التحضير:" : "Instructions de préparation:",
-    noPreparation: isArabic ? "لا توجد تعليمات تحضير محددة." : "Aucune préparation spécifique.",
-    select: isArabic ? "اختيار" : "Sélectionner",
-    selected: isArabic ? "تم الاختيار" : "Sélectionné"
   };
   
   // Handle selection
@@ -113,7 +102,7 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
             </svg>
           )}
         </div>
-        <span className="sr-only">{isSelected ? translations.selected : translations.select}</span>
+        <span className="sr-only">{isSelected ? t('card.selected') : t('card.select')}</span>
       </div>
       
       {/* Card Content */}
@@ -132,17 +121,17 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
         
         <div className="space-y-2">
           <p className="text-[var(--text-secondary)] text-sm">
-            <span className="font-medium text-[var(--text-primary)]">{translations.categoryLabel} </span>
+            <span className="font-medium text-[var(--text-primary)]">{t('card.category_label')} </span>
             {isArabic ? analysis.category_ar : analysis.category_fr}
           </p>
           
           <p className="text-[var(--text-secondary)] text-sm">
-            <span className="font-medium text-[var(--text-primary)]">{translations.delayLabel} </span>
+            <span className="font-medium text-[var(--text-primary)]">{t('card.delay_label')} </span>
             {isArabic ? analysis.delay_ar : analysis.delay_fr}
           </p>
           
           <p className="text-[var(--color-fuchsia-accent)] font-bold mt-3 text-lg">
-            {analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {translations.priceCurrency}
+            {analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {t('card.price_currency')}
           </p>
           
           {/* Preparation toggle button */}
@@ -160,7 +149,7 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
                 "
                 aria-expanded={showPreparation}
               >
-                {showPreparation ? translations.hidePreparation : translations.showPreparation}
+                {showPreparation ? t('card.hide_preparation') : t('card.show_preparation')}
               </button>
             </div>
           )}
@@ -169,10 +158,10 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
           {showPreparation && (
             <div className="mt-3 p-3 bg-[var(--color-gray-soft)] border border-[var(--border-default)] rounded-md">
               <h4 className="font-medium text-xs mb-2 text-[var(--text-primary)]">
-                {translations.preparationLabel}
+                {t('card.preparation_label')}
               </h4>
               <p className="text-[var(--text-secondary)] text-xs whitespace-pre-line leading-relaxed">
-                {hasPreparation ? preparationText : translations.noPreparation}
+                {hasPreparation ? preparationText : t('card.no_preparation')}
               </p>
             </div>
           )}

@@ -17,6 +17,8 @@
     "show_preparation": "Voir Préparation",
     "hide_preparation": "Masquer Préparation",
     "preparation_label": "Instructions de préparation:",
-    "no_preparation": "Aucune préparation spécifique."
+    "no_preparation": "Aucune préparation spécifique.",
+    "select": "Sélectionner",
+    "selected": "Sélectionné"
   }
 }

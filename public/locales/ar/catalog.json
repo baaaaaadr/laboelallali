@@ -17,6 +17,8 @@
     "show_preparation": "عرض التحضير",
     "hide_preparation": "إخفاء التحضير",
     "preparation_label": "تعليمات التحضير:",
-    "no_preparation": "لا توجد تعليمات تحضير محددة."
+    "no_preparation": "لا توجد تعليمات تحضير محددة.",
+    "select": "اختيار",
+    "selected": "تم الاختيار"
   }
 }

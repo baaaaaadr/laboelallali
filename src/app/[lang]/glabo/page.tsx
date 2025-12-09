@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { LAB_CONTACT } from "../../../constants/contact";
 import { generateTimeSlots } from "../../../utils/timeSlots";
+import toast from 'react-hot-toast';
 
 // Dans Next.js 15.3.1, les params sont une Promise qu'il faut attendre
 interface GlaboParams {
@@ -64,7 +65,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
     event.preventDefault();
     // Validation simple
     if (!nom.trim() || !telephone.trim() || !adresse.trim() || !selectedDate || !selectedTime) {
-      alert(t('requiredFields', { ns: 'appointment' }));
+      toast.error(t('requiredFields', { ns: 'appointment' }));
       return;
     }
     // Formatage de la date
@@ -82,14 +83,14 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
       const mailtoLink = `mailto:${laboEmail}?subject=${encodedSubject}&body=${encodedBody}`;
       window.location.href = mailtoLink;
     } catch (error) {
-      alert(t('email_error'));      
+      toast.error(t('email_error'));
     }
   };
 
   // Génère le lien WhatsApp
   const handleWhatsapp = () => {
     if (!nom.trim() || !telephone.trim() || !adresse.trim() || !selectedDate || !selectedTime) {
-      alert(t('requiredFields', { ns: 'appointment' }));
+      toast.error(t('requiredFields', { ns: 'appointment' }));
       return;
     }
     const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
