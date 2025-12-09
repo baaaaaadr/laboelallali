@@ -1,11 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nMajor code cleanup and refactoring\n\nSecurity & Best Practices:\n- Remove hardcoded Firebase API keys (use env vars only)\n- Enable TypeScript and ESLint error checking in builds\n- Delete test pages and backup files\n\nCode Quality:\n- Extract duplicate generateTimeSlots into shared utility\n- Centralize contact info usage from constants\n- Remove 45 lines of dead/unreachable code in rendez-vous\n- Clean up console.log statements across codebase\n\nFiles Changed:\n- Created src/utils/timeSlots.ts for shared time slot logic\n- Updated firebase.ts to remove hardcoded fallback config\n- Cleaned up layout, pages, Header, TranslationsProvider\n- Deleted: test-styles, image-test, header-test, backup files\n- Fixed: rendez-vous, glabo pages to use shared utilities\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git merge:*)",
-      "Bash(git checkout:*)",
-      "Bash(npm install:*)"
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
