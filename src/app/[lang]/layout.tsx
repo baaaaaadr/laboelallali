@@ -129,7 +129,7 @@ export default async function LangLayout({
   let resources;
 
   try {
-    i18nInstance = await initServerI18next(lang, [defaultNS, 'appointment', 'glabo']);
+    i18nInstance = await initServerI18next(lang, [defaultNS, 'appointment', 'glabo', 'catalog']);
     resources = i18nInstance.services.resourceStore.data;
   } catch (error) {
     // Fallback to create a minimal instance
