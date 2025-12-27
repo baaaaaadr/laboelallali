@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check, Download } from 'lucide-react';  
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check, Download } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -10,10 +10,13 @@ import { supportedLngs } from '../../../i18n';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import dynamic from 'next/dynamic';
 
+// Debug version - update this to verify deployment
+const HEADER_VERSION = 'v2.0.1-fix-menu-colors-2024-12-27';
+
 // Import the PWA install button component with SSR disabled
 const PWAInstallButton = dynamic(
   () => import('@/components/features/pwa/PWAInstallButton').then(mod => mod.default),
-  { 
+  {
     ssr: false,
     loading: () => <div className="w-full h-3"></div> // Minimal loading placeholder
   }
@@ -24,9 +27,46 @@ function getLangFromPath(path: string) {
   return match ? match[1] : 'fr'; // fallback on 'fr'
 }
 
+// Inline styles for mobile menu - ensures visibility regardless of CSS
+const menuStyles = {
+  navLink: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '12px 16px',
+    color: '#1f2937',
+    textDecoration: 'none',
+    fontWeight: 500,
+    borderRadius: '8px',
+    transition: 'all 0.2s ease',
+    width: '100%',
+    backgroundColor: 'transparent',
+  } as React.CSSProperties,
+  navLinkDark: {
+    color: '#e5e5e5',
+  } as React.CSSProperties,
+  navIcon: {
+    color: '#800020',
+    flexShrink: 0,
+    width: '24px',
+    marginRight: '12px',
+  } as React.CSSProperties,
+  navIconDark: {
+    color: '#ff80ab',
+  } as React.CSSProperties,
+  navText: {
+    color: '#1f2937',
+    fontSize: '15px',
+    fontWeight: 500,
+  } as React.CSSProperties,
+  navTextDark: {
+    color: '#e5e5e5',
+  } as React.CSSProperties,
+};
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const { t, i18n } = useTranslation('common');
   const router = useRouter();
   const pathname = usePathname();
@@ -44,6 +84,30 @@ const Header = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlLang]);
+
+  // Dark mode detection and debug logging
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setIsDarkMode(isDark);
+    };
+
+    // Debug logging
+    console.log('🔧 Header Debug:', {
+      version: HEADER_VERSION,
+      timestamp: new Date().toISOString(),
+      isDarkMode: document.documentElement.classList.contains('dark'),
+    });
+
+    checkDarkMode();
+
+    // Watch for dark mode changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => observer.disconnect();
+  }, []);
+
   const currentLanguagePath = `/${urlLang}`;
 
   const toggleMenu = () => {
@@ -245,99 +309,242 @@ const Header = () => {
           </div>
             
           {/* Navigation Links Section */}
-          <nav className="mobile-menu-nav flex flex-col flex-grow p-4 space-y-2 overflow-y-auto">
-            {/* Navigation Links */}
-            <Link href={`${currentLanguagePath}/`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
-              <Home size={20} className="nav-icon mr-3" />
-              {t('home')}
+          <nav
+            className="flex flex-col flex-grow p-4 space-y-1 overflow-y-auto"
+            style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#ffffff' }}
+          >
+            {/* Navigation Links with inline styles for guaranteed visibility */}
+            <Link
+              href={`${currentLanguagePath}/`}
+              style={{
+                ...menuStyles.navLink,
+                ...(isDarkMode ? menuStyles.navLinkDark : {}),
+              }}
+              onClick={toggleMenu}
+            >
+              <Home size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                {t('home')}
+              </span>
             </Link>
 
-            <Link href={`${currentLanguagePath}/rendez-vous`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
-              <CalendarDays size={20} className="nav-icon mr-3" />
-              {t('appointment')}
-            </Link>
-            
-            <Link href={`${currentLanguagePath}/glabo`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
-              <Truck size={20} className="nav-icon mr-3" />
-              {t('glabo')}
+            <Link
+              href={`${currentLanguagePath}/rendez-vous`}
+              style={{
+                ...menuStyles.navLink,
+                ...(isDarkMode ? menuStyles.navLinkDark : {}),
+              }}
+              onClick={toggleMenu}
+            >
+              <CalendarDays size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                {t('appointment')}
+              </span>
             </Link>
 
-            <Link href={`${currentLanguagePath}/analyses`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
-              <FlaskConical size={20} className="nav-icon mr-3" />
-              {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
+            <Link
+              href={`${currentLanguagePath}/glabo`}
+              style={{
+                ...menuStyles.navLink,
+                ...(isDarkMode ? menuStyles.navLinkDark : {}),
+              }}
+              onClick={toggleMenu}
+            >
+              <Truck size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                {t('glabo')}
+              </span>
             </Link>
 
-            <Link href={`${currentLanguagePath}/contact`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
-              <Phone size={20} className="nav-icon mr-3" />
-              {t('contact')}
+            <Link
+              href={`${currentLanguagePath}/analyses`}
+              style={{
+                ...menuStyles.navLink,
+                ...(isDarkMode ? menuStyles.navLinkDark : {}),
+              }}
+              onClick={toggleMenu}
+            >
+              <FlaskConical size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                {t('navigation.analyses_catalog', { ns: 'common', defaultValue: 'Analyses' })}
+              </span>
+            </Link>
+
+            <Link
+              href={`${currentLanguagePath}/contact`}
+              style={{
+                ...menuStyles.navLink,
+                ...(isDarkMode ? menuStyles.navLinkDark : {}),
+              }}
+              onClick={toggleMenu}
+            >
+              <Phone size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                {t('contact')}
+              </span>
             </Link>
 
             {/* Profile Link - Mobile Only */}
-            <Link href={`${currentLanguagePath}/profile`} className="mobile-menu-nav-link flex items-center py-2.5 px-3 rounded-md font-medium" onClick={toggleMenu}>
-              <User size={20} className="nav-icon mr-3" />
-              Profil
+            <Link
+              href={`${currentLanguagePath}/profile`}
+              style={{
+                ...menuStyles.navLink,
+                ...(isDarkMode ? menuStyles.navLinkDark : {}),
+              }}
+              onClick={toggleMenu}
+            >
+              <User size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                Profil
+              </span>
             </Link>
           </nav>
           
           {/* Action Buttons Section - Stuck to Bottom */}
-          <div className="mobile-menu-actions bg-white dark:bg-[var(--background-default)] border-t border-[var(--border-default)] p-6 space-y-6">
+          <div
+            className="p-6 space-y-4"
+            style={{
+              backgroundColor: isDarkMode ? '#1a1a2e' : '#ffffff',
+              borderTop: `1px solid ${isDarkMode ? '#3d3d5c' : '#e5e7eb'}`,
+            }}
+          >
             {/* WhatsApp Contact Button */}
-            <a 
+            <a
               href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={toggleMenu}
-              className="menu-whatsapp-button"
               aria-label="Contact via WhatsApp"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontWeight: 500,
+                minHeight: '48px',
+                border: `2px solid ${isDarkMode ? '#ff80ab' : '#800020'}`,
+                backgroundColor: 'transparent',
+                color: isDarkMode ? '#ff80ab' : '#800020',
+                textDecoration: 'none',
+                transition: 'all 0.2s ease',
+              }}
             >
-              <MessageCircle size={20} className="mr-2" />
+              <MessageCircle size={20} style={{ marginRight: '8px' }} />
               {t('contact')} WhatsApp
             </a>
-            
+
             {/* PWA Install Button */}
             <button
               onClick={() => {
-                // Get the PWA install button element and trigger its click
                 const pwaButton = document.querySelector('[aria-label*="Install"]') as HTMLButtonElement;
                 if (pwaButton && pwaButton !== event?.currentTarget) {
                   pwaButton.click();
                 }
                 toggleMenu();
               }}
-              className="menu-pwa-button"
               aria-label="Install App"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontWeight: 500,
+                minHeight: '48px',
+                border: '2px solid #c2185b',
+                backgroundColor: '#c2185b',
+                color: '#ffffff',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
             >
-              <Download size={20} className="mr-2" />
-              {t('pwa.install_app_button', 'Installer l\'App')}
+              <Download size={20} style={{ marginRight: '8px' }} />
+              {t('pwa.install_app_button', "Installer l'App")}
             </button>
 
             {/* Language Dropdown Button */}
             <div className="relative" ref={mobileLangDropdownRef}>
               <button
                 onClick={toggleLangDropdown}
-                className="menu-language-button"
                 aria-label={t('changeLanguage')}
                 aria-haspopup="true"
                 aria-expanded={isLangDropdownOpen}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  fontWeight: 500,
+                  minHeight: '48px',
+                  border: `2px solid ${isDarkMode ? '#ff80ab' : '#800020'}`,
+                  backgroundColor: isDarkMode ? '#ff80ab' : '#800020',
+                  color: isDarkMode ? '#1a1a2e' : '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
               >
-                <Globe size={20} className="mr-2" />
+                <Globe size={20} style={{ marginRight: '8px' }} />
                 <span>{urlLang.toUpperCase()}</span>
-                <ChevronDown size={16} className="ml-1" />
+                <ChevronDown size={16} style={{ marginLeft: '4px' }} />
               </button>
-              
+
               {isLangDropdownOpen && (
-                <div className="mobile-language-dropdown">
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '100%',
+                    left: 0,
+                    right: 0,
+                    marginBottom: '8px',
+                    backgroundColor: isDarkMode ? '#2d2d44' : '#ffffff',
+                    borderRadius: '8px',
+                    boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.15)',
+                    border: `1px solid ${isDarkMode ? '#3d3d5c' : '#e5e7eb'}`,
+                    overflow: 'hidden',
+                    zIndex: 100,
+                  }}
+                >
                   <button
-                    onClick={() => { handleLanguageChange('fr'); return; }}
+                    onClick={() => handleLanguageChange('fr')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '12px 16px',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      color: urlLang === 'fr' ? (isDarkMode ? '#ff80ab' : '#800020') : (isDarkMode ? '#e5e5e5' : '#1f2937'),
+                      fontWeight: urlLang === 'fr' ? 600 : 400,
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                    }}
                   >
-                    <span className={urlLang === 'fr' ? 'font-bold' : ''}>Français</span>
+                    <span>Français</span>
                     {urlLang === 'fr' && <Check size={16} />}
                   </button>
-                  <div className="divider"></div>
+                  <div style={{ height: '1px', backgroundColor: isDarkMode ? '#3d3d5c' : '#e5e7eb' }} />
                   <button
-                    onClick={() => { handleLanguageChange('ar'); return; }}
+                    onClick={() => handleLanguageChange('ar')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '12px 16px',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      color: urlLang === 'ar' ? (isDarkMode ? '#ff80ab' : '#800020') : (isDarkMode ? '#e5e5e5' : '#1f2937'),
+                      fontWeight: urlLang === 'ar' ? 600 : 400,
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                    }}
                   >
-                    <span className={urlLang === 'ar' ? 'font-bold' : ''}>العربية</span>
+                    <span>العربية</span>
                     {urlLang === 'ar' && <Check size={16} />}
                   </button>
                 </div>
