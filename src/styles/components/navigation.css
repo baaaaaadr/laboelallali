@@ -150,7 +150,7 @@
   flex: 1;
   padding: var(--space-4);
   overflow-y: auto;
-  background-color: var(--background-default) !important;
+  background-color: #ffffff !important;
 }
 
 .mobile-menu-nav-link {
@@ -158,9 +158,9 @@
   align-items: center !important;
   gap: var(--space-3) !important;
   padding: var(--space-3) var(--space-4) !important;
-  color: var(--text-primary) !important;
+  color: #1f2937 !important; /* Dark gray for readability */
   text-decoration: none !important;
-  font-weight: var(--font-weight-medium) !important;
+  font-weight: 500 !important;
   border-radius: var(--radius-md) !important;
   transition: all 0.2s ease !important;
   margin-bottom: var(--space-2) !important;
@@ -170,44 +170,95 @@
 }
 
 .mobile-menu-nav-link:hover {
-  background-color: var(--background-secondary) !important;
-  color: var(--brand-primary) !important;
+  background-color: #fce4ec !important; /* Light pink hover */
+  color: #800020 !important; /* Bordeaux on hover */
 }
 
 .mobile-menu-nav-link.active {
-  background-color: var(--color-bordeaux-pale) !important;
-  color: var(--brand-primary) !important;
+  background-color: #fce4ec !important;
+  color: #800020 !important;
 }
 
-.mobile-menu-nav-link svg {
-  color: var(--text-secondary) !important;
+.mobile-menu-nav-link svg,
+.mobile-menu-nav-link .nav-icon {
+  color: #800020 !important; /* Bordeaux icons */
   transition: color 0.2s ease;
   flex-shrink: 0;
 }
 
 .mobile-menu-nav-link:hover svg,
-.mobile-menu-nav-link.active svg {
-  color: var(--brand-primary) !important;
+.mobile-menu-nav-link:hover .nav-icon,
+.mobile-menu-nav-link.active svg,
+.mobile-menu-nav-link.active .nav-icon {
+  color: #c2185b !important; /* Fuchsia accent on hover/active */
 }
 
 /* FIXED: Mobile Menu Actions - Enhanced Visibility */
 .mobile-menu-actions {
   padding: var(--space-6) !important;
-  border-top: 1px solid var(--border-default) !important;
+  border-top: 1px solid #e5e7eb !important;
   display: flex !important;
   flex-direction: column !important;
   gap: var(--space-4) !important;
-  background-color: var(--background-default) !important;
+  background-color: #ffffff !important;
+}
+
+/* WhatsApp Button in Mobile Menu */
+.menu-whatsapp-button {
+  background-color: transparent !important;
+  color: #800020 !important;
+  border: 2px solid #800020 !important;
+  padding: var(--space-3) var(--space-4) !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--space-2) !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  min-height: 48px !important;
+}
+
+.menu-whatsapp-button:hover {
+  background-color: #800020 !important;
+  color: #ffffff !important;
+}
+
+/* PWA Install Button in Mobile Menu */
+.menu-pwa-button {
+  background-color: #c2185b !important;
+  color: #ffffff !important;
+  border: 2px solid #c2185b !important;
+  padding: var(--space-3) var(--space-4) !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--space-2) !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  min-height: 48px !important;
+}
+
+.menu-pwa-button:hover {
+  background-color: #ad1457 !important;
+  border-color: #ad1457 !important;
 }
 
 /* ENHANCED: Mobile Menu Action Buttons */
 .menu-action-button {
   background-color: transparent !important;
-  color: var(--brand-primary) !important;
-  border: 2px solid var(--brand-primary) !important;
+  color: #800020 !important;
+  border: 2px solid #800020 !important;
   padding: var(--space-3) var(--space-4) !important;
   border-radius: var(--radius-md) !important;
-  font-weight: var(--font-weight-medium) !important;
+  font-weight: 500 !important;
   transition: all 0.2s ease !important;
   display: flex !important;
   align-items: center !important;
@@ -220,19 +271,19 @@
 }
 
 .menu-action-button:hover {
-  background-color: var(--brand-accent) !important;
-  color: var(--color-white) !important;
-  border-color: var(--brand-accent) !important;
+  background-color: #c2185b !important;
+  color: #ffffff !important;
+  border-color: #c2185b !important;
 }
 
 /* ENHANCED: Language Button in Mobile Menu */
 .menu-language-button {
-  background-color: var(--color-bordeaux-primary) !important;
-  color: var(--color-white) !important;
-  border: 2px solid var(--color-bordeaux-primary) !important;
+  background-color: #800020 !important;
+  color: #ffffff !important;
+  border: 2px solid #800020 !important;
   padding: var(--space-3) var(--space-4) !important;
   border-radius: var(--radius-md) !important;
-  font-weight: var(--font-weight-medium) !important;
+  font-weight: 500 !important;
   transition: all 0.2s ease !important;
   display: flex !important;
   align-items: center !important;
@@ -249,9 +300,53 @@
 }
 
 .menu-language-button:hover {
-  background-color: var(--color-fuchsia-accent) !important;
-  color: var(--color-white) !important;
-  border-color: var(--color-fuchsia-accent) !important;
+  background-color: #c2185b !important;
+  color: #ffffff !important;
+  border-color: #c2185b !important;
+}
+
+/* Mobile Language Dropdown */
+.mobile-language-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 8px;
+  background-color: #ffffff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.mobile-language-dropdown button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background-color: transparent;
+  border: none;
+  color: #1f2937;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-language-dropdown button:hover {
+  background-color: #fce4ec;
+  color: #800020;
+}
+
+.mobile-language-dropdown button span.font-bold {
+  color: #800020;
+  font-weight: 600;
+}
+
+.mobile-language-dropdown .divider {
+  height: 1px;
+  background-color: #e5e7eb;
 }
 
 /* Bottom Navigation */
@@ -351,44 +446,105 @@
 }
 
 .dark .mobile-menu {
-  background-color: var(--background-default);
-  box-shadow: -4px 0 10px rgba(0, 0, 0, 0.3);
+  background-color: #1a1a2e;
+  box-shadow: -4px 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .dark .mobile-menu-header {
-  background-color: var(--brand-primary);
-  color: var(--text-primary);
+  background-color: #800020;
+  color: #ffffff;
 }
 
 .dark .mobile-menu-nav {
-  background-color: var(--background-default) !important;
+  background-color: #1a1a2e !important;
 }
 
 .dark .mobile-menu-nav-link {
-  color: var(--text-primary) !important;
+  color: #e5e5e5 !important; /* Light gray text for dark mode */
 }
 
 .dark .mobile-menu-nav-link:hover {
-  background-color: var(--background-tertiary) !important;
-  color: var(--brand-accent) !important;
+  background-color: #2d2d44 !important;
+  color: #ff80ab !important; /* Light pink accent */
 }
 
 .dark .mobile-menu-nav-link.active {
-  background-color: var(--background-tertiary) !important;
-  color: var(--brand-accent) !important;
+  background-color: #2d2d44 !important;
+  color: #ff80ab !important;
 }
 
-.dark .mobile-menu-nav-link svg {
-  color: var(--text-secondary) !important;
+.dark .mobile-menu-nav-link svg,
+.dark .mobile-menu-nav-link .nav-icon {
+  color: #ff80ab !important; /* Pink icons in dark mode */
 }
 
 .dark .mobile-menu-nav-link:hover svg,
-.dark .mobile-menu-nav-link.active svg {
-  color: var(--brand-accent) !important;
+.dark .mobile-menu-nav-link:hover .nav-icon,
+.dark .mobile-menu-nav-link.active svg,
+.dark .mobile-menu-nav-link.active .nav-icon {
+  color: #ff4081 !important; /* Brighter pink on hover */
 }
 
 .dark .mobile-menu-actions {
-  background-color: var(--background-default) !important;
+  background-color: #1a1a2e !important;
+  border-top-color: #3d3d5c !important;
+}
+
+/* Dark mode action buttons */
+.dark .menu-whatsapp-button {
+  background-color: transparent !important;
+  color: #ff80ab !important;
+  border-color: #ff80ab !important;
+}
+
+.dark .menu-whatsapp-button:hover {
+  background-color: #ff80ab !important;
+  color: #1a1a2e !important;
+}
+
+.dark .menu-pwa-button {
+  background-color: #c2185b !important;
+  color: #ffffff !important;
+  border-color: #c2185b !important;
+}
+
+.dark .menu-pwa-button:hover {
+  background-color: #e91e63 !important;
+  border-color: #e91e63 !important;
+}
+
+.dark .menu-language-button {
+  background-color: #ff80ab !important;
+  color: #1a1a2e !important;
+  border-color: #ff80ab !important;
+}
+
+.dark .menu-language-button:hover {
+  background-color: #ff4081 !important;
+  border-color: #ff4081 !important;
+  color: #ffffff !important;
+}
+
+.dark .mobile-language-dropdown {
+  background-color: #2d2d44;
+  border-color: #3d3d5c;
+}
+
+.dark .mobile-language-dropdown button {
+  color: #e5e5e5;
+}
+
+.dark .mobile-language-dropdown button:hover {
+  background-color: #3d3d5c;
+  color: #ff80ab;
+}
+
+.dark .mobile-language-dropdown button span.font-bold {
+  color: #ff80ab;
+}
+
+.dark .mobile-language-dropdown .divider {
+  background-color: #3d3d5c;
 }
 
 .dark .bottom-nav-container {
