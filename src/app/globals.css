@@ -380,7 +380,7 @@ button {
 
 @media (max-width: 959px) {
   .main-content-mobile-padding {
-    padding-bottom: 80px; /* Height of bottom nav + some spacing */
+    padding-bottom: 200px !important; /* Space for bottom nav (64px) + calculator widget (120px) + spacing (16px) */
   }
 }
 
