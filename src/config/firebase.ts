@@ -17,6 +17,16 @@ const firebaseConfig: FirebaseOptions = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+// Debug logging for production
+if (typeof window !== 'undefined') {
+  console.log('[Firebase Debug] Config validation:', {
+    hasApiKey: !!firebaseConfig.apiKey,
+    hasProjectId: !!firebaseConfig.projectId,
+    hasAppId: !!firebaseConfig.appId,
+    projectId: firebaseConfig.projectId,
+  });
+}
+
 // Validate that required config is present
 const isConfigValid = firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId;
 
