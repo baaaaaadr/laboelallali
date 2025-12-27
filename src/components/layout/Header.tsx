@@ -100,8 +100,8 @@ const Header = () => {
 
   return (
     <header className="header-main shadow-md transition-colors duration-300 relative z-50 w-full">
-      <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
-        <div className="flex items-center justify-between py-3 sm:py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
+      <div className="w-full mx-auto px-1 sm:px-4 lg:px-6 lg:max-w-7xl relative">
+        <div className="flex items-center justify-between py-2 sm:py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
           {/* Logo and name */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
@@ -134,18 +134,19 @@ const Header = () => {
           </nav>
 
           {/* Action Buttons */}
-          <div className="flex items-center space-x-0.5 sm:space-x-2 flex-shrink-0">
-            <div className="relative" ref={desktopLangDropdownRef}>
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            {/* Language Selector - Hidden on mobile, shown on tablet+ */}
+            <div className="relative hidden sm:block" ref={desktopLangDropdownRef}>
               <button
                 onClick={toggleLangDropdown}
-                className="flex items-center text-sm px-2 sm:px-3 py-2 min-h-[44px] rounded hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
+                className="flex items-center text-sm px-2 lg:px-3 py-2 min-h-[44px] rounded hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
                 aria-label={t('changeLanguage')}
                 aria-haspopup="true"
                 aria-expanded={isLangDropdownOpen}
               >
-                <Globe size={18} className="mr-1 sm:mr-1.5 text-white dark:text-[var(--text-primary)]" />
+                <Globe size={18} className="mr-1 lg:mr-1.5 text-white dark:text-[var(--text-primary)]" />
                 <span className="text-white dark:text-[var(--text-primary)]">{urlLang.toUpperCase()}</span>
-                <ChevronDown size={16} className="ml-0.5 sm:ml-1 text-white dark:text-[var(--text-primary)]" />
+                <ChevronDown size={16} className="ml-0.5 lg:ml-1 text-white dark:text-[var(--text-primary)]" />
               </button>
               
               {/* Language Dropdown Menu */}
@@ -169,19 +170,23 @@ const Header = () => {
                 </div>
               )}
             </div>
+            {/* Theme Switcher - Always visible but minimal */}
             <ThemeSwitcher />
-            <button className="p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+            {/* Search - Hidden on mobile */}
+            <button className="hidden sm:flex p-2 lg:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors">
               <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
-            <button className="hidden lg:block p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+            {/* User Icon - Desktop only */}
+            <button className="hidden lg:flex p-2 lg:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors">
               <User size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
+            {/* Hamburger Menu - Mobile/Tablet only */}
             <button
-              className="mobile-menu-toggle lg:hidden p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
+              className="mobile-menu-toggle lg:hidden p-1.5 sm:p-2 lg:p-3 rounded-full min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
               onClick={toggleMenu}
               aria-label={t('menu')}
             >
-              <Menu size={24} className="text-white dark:text-[var(--text-primary)]" />
+              <Menu size={22} className="text-white dark:text-[var(--text-primary)]" />
             </button>
           </div>
         </div>
