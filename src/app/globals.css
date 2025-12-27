@@ -419,7 +419,7 @@ button {
 
 @media (max-width: 959px) {
   .total-calculator-mobile {
-    bottom: 6rem; /* Position above bottom nav on mobile (64px nav height + 32px spacing) */
+    bottom: 5.5rem !important; /* Position above bottom nav on mobile (88px = 64px nav + 24px spacing) */
   }
 }
 
