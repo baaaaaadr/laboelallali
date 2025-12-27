@@ -64,8 +64,8 @@ const BottomNav = () => {
   ];
 
   return (
-    <nav 
-      className="bottom-nav-container md:hidden fixed bottom-0 left-0 right-0 z-40"
+    <nav
+      className="bottom-nav-container lg:hidden fixed bottom-0 left-0 right-0 z-40"
       role="navigation"
       aria-label="Navigation principale"
     >
