@@ -93,12 +93,6 @@
   border-radius: var(--radius-md);
 }
 
-@media (min-width: 1024px) {
-  .mobile-menu-toggle {
-    display: none !important;
-  }
-}
-
 /* Mobile Menu Overlay */
 .mobile-menu-overlay {
   position: fixed;
@@ -411,15 +405,39 @@
   color: var(--brand-accent);
 }
 
-/* Responsive Design */
-@media (max-width: 1023px) {
-  .desktop-nav {
-    display: none;
-  }
+/* ===========================================
+   RESPONSIVE DESIGN - UNIFIED BREAKPOINTS
+
+   Mobile: 0 - 639px (sm)
+   Tablet: 640px - 1023px (md)
+   Desktop: 1024px+ (lg)
+
+   Navigation Behavior:
+   - Mobile/Tablet (< 1024px): Bottom nav + Hamburger menu
+   - Desktop (>= 1024px): Desktop horizontal nav
+   =========================================== */
+
+/* Desktop Navigation - HIDDEN below 1024px */
+.desktop-nav {
+  display: none !important;
 }
 
 @media (min-width: 1024px) {
+  .desktop-nav {
+    display: flex !important;
+  }
+}
+
+/* Bottom Navigation - VISIBLE below 1024px, HIDDEN at 1024px+ */
+@media (min-width: 1024px) {
   .bottom-nav-container {
-    display: none;
+    display: none !important;
+  }
+}
+
+/* Mobile Menu Toggle - VISIBLE below 1024px, HIDDEN at 1024px+ */
+@media (min-width: 1024px) {
+  .mobile-menu-toggle {
+    display: none !important;
   }
 }

@@ -99,9 +99,9 @@ const Header = () => {
   };
 
   return (
-    <header className="header-main shadow-md transition-colors duration-300 relative z-50 w-full">
-      <div className="w-full mx-auto px-1 sm:px-4 lg:px-6 lg:max-w-7xl relative">
-        <div className="flex items-center justify-between py-2 sm:py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
+    <header className="header-main shadow-md transition-colors duration-300 relative z-50 w-full overflow-hidden">
+      <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
+        <div className="flex items-center justify-between py-2 sm:py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)] min-h-[56px] sm:min-h-[64px]">
           {/* Logo and name */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
@@ -114,8 +114,8 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-4 xl:space-x-6">
+          {/* Desktop Navigation - Only visible at lg (1024px) and above */}
+          <nav className="desktop-nav hidden lg:flex items-center space-x-4 xl:space-x-6">
             <Link href={`${currentLanguagePath}/`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 text-sm lg:text-base">
               {t('home')}
             </Link>
