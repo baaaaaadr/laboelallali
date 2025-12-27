@@ -99,8 +99,8 @@ const Header = () => {
   };
 
   return (
-    <header className="header-main shadow-md transition-colors duration-300 relative z-50">
-      <div className="container mx-auto px-2 sm:px-4 max-w-7xl relative">
+    <header className="header-main shadow-md transition-colors duration-300 relative z-50 w-full">
+      <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
         <div className="flex items-center justify-between py-3 sm:py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
           {/* Logo and name */}
           <div className="flex items-center">
@@ -115,7 +115,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-4 xl:space-x-6">
+          <nav className="hidden lg:flex items-center space-x-4 xl:space-x-6">
             <Link href={`${currentLanguagePath}/`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 text-sm lg:text-base">
               {t('home')}
             </Link>
@@ -173,11 +173,11 @@ const Header = () => {
             <button className="p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
               <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
-            <button className="hidden md:block p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+            <button className="hidden lg:block p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
               <User size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
             <button
-              className="mobile-menu-toggle md:hidden p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
+              className="mobile-menu-toggle lg:hidden p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
               onClick={toggleMenu}
               aria-label={t('menu')}
             >
@@ -188,8 +188,8 @@ const Header = () => {
       </div>
 
       {/* Mobile Menu Overlay and Container */}
-      <div 
-        className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
+      <div
+        className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${
           isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         style={{

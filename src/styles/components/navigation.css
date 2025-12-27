@@ -93,7 +93,7 @@
   border-radius: var(--radius-md);
 }
 
-@media (min-width: 960px) {
+@media (min-width: 1024px) {
   .mobile-menu-toggle {
     display: none !important;
   }
@@ -412,13 +412,13 @@
 }
 
 /* Responsive Design */
-@media (max-width: 959px) {
+@media (max-width: 1023px) {
   .desktop-nav {
     display: none;
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 1024px) {
   .bottom-nav-container {
     display: none;
   }
