@@ -100,8 +100,8 @@ const Header = () => {
 
   return (
     <header className="header-main shadow-md transition-colors duration-300 relative z-50">
-      <div className="container mx-auto px-4 max-w-7xl relative">
-        <div className="flex items-center justify-between py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
+      <div className="container mx-auto px-2 sm:px-4 max-w-7xl relative">
+        <div className="flex items-center justify-between py-3 sm:py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)]">
           {/* Logo and name */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
@@ -134,18 +134,18 @@ const Header = () => {
           </nav>
 
           {/* Action Buttons */}
-          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+          <div className="flex items-center space-x-0.5 sm:space-x-2 flex-shrink-0">
             <div className="relative" ref={desktopLangDropdownRef}>
-              <button 
-                onClick={toggleLangDropdown} 
-                className="flex items-center text-sm px-3 py-2 min-h-[44px] rounded hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
+              <button
+                onClick={toggleLangDropdown}
+                className="flex items-center text-sm px-2 sm:px-3 py-2 min-h-[44px] rounded hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
                 aria-label={t('changeLanguage')}
                 aria-haspopup="true"
                 aria-expanded={isLangDropdownOpen}
               >
-                <Globe size={18} className="mr-1.5 text-white dark:text-[var(--text-primary)]" />
+                <Globe size={18} className="mr-1 sm:mr-1.5 text-white dark:text-[var(--text-primary)]" />
                 <span className="text-white dark:text-[var(--text-primary)]">{urlLang.toUpperCase()}</span>
-                <ChevronDown size={16} className="ml-1 text-white dark:text-[var(--text-primary)]" />
+                <ChevronDown size={16} className="ml-0.5 sm:ml-1 text-white dark:text-[var(--text-primary)]" />
               </button>
               
               {/* Language Dropdown Menu */}
@@ -170,14 +170,14 @@ const Header = () => {
               )}
             </div>
             <ThemeSwitcher />
-            <button className="p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+            <button className="p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
               <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
-            <button className="hidden md:block p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
+            <button className="hidden md:block p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors">
               <User size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
-            <button 
-              className="mobile-menu-toggle md:hidden p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
+            <button
+              className="mobile-menu-toggle md:hidden p-2 sm:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
               onClick={toggleMenu}
               aria-label={t('menu')}
             >
