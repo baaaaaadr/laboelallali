@@ -378,7 +378,7 @@ button {
   padding-bottom: 0;
 }
 
-@media (max-width: 959px) {
+@media (max-width: 1023px) {
   .main-content-mobile-padding {
     padding-bottom: 200px !important; /* Space for bottom nav (64px) + calculator widget (120px) + spacing (16px) */
   }
@@ -417,7 +417,7 @@ button {
   bottom: 1rem; /* Default for desktop */
 }
 
-@media (max-width: 959px) {
+@media (max-width: 1023px) {
   .total-calculator-mobile {
     bottom: 5.5rem !important; /* Position above bottom nav on mobile (88px = 64px nav + 24px spacing) */
   }
