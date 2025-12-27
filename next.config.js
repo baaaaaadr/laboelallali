@@ -26,13 +26,11 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   experimental: {
     optimizeCss: true,
     scrollRestoration: true,
   },
+  turbopack: {},
   env: {
     NEXT_PUBLIC_ENABLE_PWA_DEV: process.env.NEXT_PUBLIC_ENABLE_PWA_DEV,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
@@ -47,7 +45,16 @@ const nextConfig = {
     NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   },
   images: {
-    domains: ['firebasestorage.googleapis.com', 'labo-el-allali-pwa.firebasestorage.app'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'labo-el-allali-pwa.firebasestorage.app',
+      },
+    ],
     minimumCacheTTL: 60,
     formats: ['image/avif', 'image/webp'],
   },
