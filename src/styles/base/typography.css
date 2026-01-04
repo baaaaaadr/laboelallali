@@ -3,8 +3,7 @@
  * Text-related styles and utilities
  */
 
-/* Font imports */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap');
+/* Font imports are in index.css to comply with @import order rules */
 
 /* Typography utilities */
 .text-xs {

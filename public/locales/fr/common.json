@@ -45,7 +45,8 @@
   "glabo": "à Domicile",
   "contact": "Contact",
   "navigation": {
-    "analyses_catalog": "Analyses"
+    "analyses_catalog": "Analyses",
+    "medecins": "Médecins"
   },
   "changeLanguage": "Changer de langue",
   "french": "Français",

@@ -45,7 +45,8 @@
   "glabo": "منزلي",
   "contact": "اتصل",
   "navigation": {
-    "analyses_catalog": "التحاليل"
+    "analyses_catalog": "التحاليل",
+    "medecins": "الأطباء"
   },
   "changeLanguage": "تغيير اللغة",
   "french": "Français",

@@ -53,6 +53,7 @@
     "css-loader": "^7.1.2",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
+    "firebase-tools": "^15.1.0",
     "fs-extra": "^11.3.3",
     "next-sitemap": "^4.2.3",
     "playwright": "^1.52.0",

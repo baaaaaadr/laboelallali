@@ -1,0 +1,30 @@
+{
+  "date": "2026-01-03T17:01:02.401Z",
+  "statistics": {
+    "totalRecords": 1391,
+    "publicRecords": 645,
+    "priveRecords": 746,
+    "errors": [],
+    "warnings": [
+      "Numéro invalide ignoré: 028/83/23/62",
+      "Numéro invalide ignoré: 061/10/63/38",
+      "Numéro invalide ignoré: 028/84/58/41",
+      "Numéro invalide ignoré: 061/28/63/03",
+      "Numéro invalide ignoré: 028/22/88/21",
+      "Numéro invalide ignoré: 076/36/17/85",
+      "Numéro invalide ignoré: 028/84/30/29",
+      "Doublon détecté: ABDELILAH LAKBIRI (Médecine légale)",
+      "Doublon détecté: Karim AIT JAJA (Médecine générale)"
+    ],
+    "phoneFormatted": 2491,
+    "emailsFixed": 0,
+    "duplicates": 2
+  },
+  "summary": {
+    "totalRecords": 1391,
+    "publicRecords": 645,
+    "priveRecords": 746,
+    "errors": 0,
+    "warnings": 9
+  }
+}

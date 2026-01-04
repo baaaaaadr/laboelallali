@@ -14,6 +14,12 @@ service cloud.firestore {
       allow read, update, delete: if false; // Only admin can read/modify
     }
 
+    // Allow public read access to the medecins collection
+    match /medecins/{medecinId} {
+      allow read: if true; // Anyone can read the doctors directory
+      allow write: if false; // Only admin/script can modify via Google Sheets sync
+    }
+
     // Default deny for anything not explicitly allowed
     match /{document=**} {
       allow read, write: if false;

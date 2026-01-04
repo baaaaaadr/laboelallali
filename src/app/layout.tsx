@@ -35,7 +35,7 @@ export default function RootLayout({
         {/* Environment variables are loaded via a client component */}
         <EnvironmentScript />
       </head>
-      <body className="flex flex-col min-h-screen bg-[var(--background-default)] overflow-x-hidden">
+      <body className="flex flex-col min-h-screen bg-[var(--background-default)] overflow-x-hidden" suppressHydrationWarning>
         <EnvProvider />
         {children}
       </body>

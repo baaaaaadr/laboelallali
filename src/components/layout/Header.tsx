@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check, Download } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check, Download, Stethoscope } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -122,6 +122,11 @@ const Header = () => {
       const isOutsideMobile = !mobileLangDropdownRef.current || !mobileLangDropdownRef.current.contains(event.target as Node);
       
       if (isOutsideDesktop && isOutsideMobile) {
+        console.log('🌍 [Click Outside] Closing dropdown', {
+          targetElement: (event.target as HTMLElement)?.tagName,
+          targetClass: (event.target as HTMLElement)?.className,
+          timestamp: new Date().toISOString()
+        });
         setIsLangDropdownOpen(false);
       }
     };
@@ -133,8 +138,20 @@ const Header = () => {
   }, []);
 
   const handleLanguageChange = (newLocale: string) => {
+    console.log('🌍 [Language Change] Handler called', {
+      requestedLocale: newLocale,
+      currentUrlLang: urlLang,
+      currentPathname: pathname,
+      timestamp: new Date().toISOString()
+    });
+
     // Only change if it's different from current language
     if (newLocale !== urlLang) {
+      console.log('🌍 [Language Change] Guard passed - different locale', {
+        newLocale,
+        urlLang,
+        willNavigate: true
+      });
       // Extract the path after the language code
       let pathWithoutLang = pathname;
       const langPattern = new RegExp(`^/(${supportedLngs.join('|')})`);
@@ -146,19 +163,36 @@ const Header = () => {
       }
 
       // Construct a new path with the new language code
-      const newPath = pathWithoutLang === '/' 
-        ? `/${newLocale}` 
+      const newPath = pathWithoutLang === '/'
+        ? `/${newLocale}`
         : `/${newLocale}${pathWithoutLang}`;
+
+      console.log('🌍 [Language Change] Navigating', {
+        oldPath: pathname,
+        newPath: newPath,
+        method: 'window.location.href'
+      });
 
       // Force a full page reload to reset i18n context
       window.location.href = newPath;
+    } else {
+      console.log('🌍 [Language Change] Guard blocked - same locale', {
+        newLocale,
+        urlLang,
+        skipped: true
+      });
     }
-    
+
     // Close the dropdown
     setIsLangDropdownOpen(false);
   };
 
   const toggleLangDropdown = () => {
+    console.log('🌍 [Language Dropdown] Toggle clicked', {
+      currentState: isLangDropdownOpen,
+      willBecome: !isLangDropdownOpen,
+      timestamp: new Date().toISOString()
+    });
     setIsLangDropdownOpen(!isLangDropdownOpen);
   };
 
@@ -192,6 +226,9 @@ const Header = () => {
             <Link href={`${currentLanguagePath}/analyses`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 font-semibold text-sm lg:text-base">
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
+            <Link href={`${currentLanguagePath}/medecins`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 font-semibold text-sm lg:text-base">
+              {t('navigation.medecins', { ns: 'common', defaultValue: "Médecins" })}
+            </Link>
             <Link href={`${currentLanguagePath}/contact`} className="nav-link text-white dark:text-[var(--text-primary)] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded transition-colors duration-200 text-sm lg:text-base">
               {t('contact')}
             </Link>
@@ -215,9 +252,13 @@ const Header = () => {
               
               {/* Language Dropdown Menu */}
               {isLangDropdownOpen && (
-                <div className="dropdown-menu absolute right-0 top-full mt-2 w-36 bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-lg border border-gray-200 dark:border-[var(--border-default)] overflow-hidden z-[1000]">
+                <div className="dropdown-menu absolute right-0 top-full mt-2 w-36 bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-lg border border-gray-200 dark:border-[var(--border-default)] overflow-hidden z-[9999] pointer-events-auto" style={{ display: 'block', visibility: 'visible', opacity: 1 }}>
                   <button
-                    onClick={() => { handleLanguageChange('fr'); return; }}
+                    onClick={(e) => {
+                      console.log('🌍 [Desktop Button] FR clicked', { urlLang, timestamp: new Date().toISOString() });
+                      handleLanguageChange('fr');
+                      return;
+                    }}
                     className="flex items-center justify-between w-full px-4 py-3 text-gray-800 dark:text-[var(--text-primary)] hover:bg-gray-50 dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] transition-colors text-left"
                   >
                     <span className={`${urlLang === 'fr' ? 'font-bold text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]' : 'text-gray-800 dark:text-[var(--text-primary)]'}`}>Français</span>
@@ -225,7 +266,11 @@ const Header = () => {
                   </button>
                   <div className="border-t border-gray-100 dark:border-[var(--border-default)]"></div>
                   <button
-                    onClick={() => { handleLanguageChange('ar'); return; }}
+                    onClick={(e) => {
+                      console.log('🌍 [Desktop Button] AR clicked', { urlLang, timestamp: new Date().toISOString() });
+                      handleLanguageChange('ar');
+                      return;
+                    }}
                     className="flex items-center justify-between w-full px-4 py-3 text-gray-800 dark:text-[var(--text-primary)] hover:bg-gray-50 dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] transition-colors text-left"
                   >
                     <span className={`${urlLang === 'ar' ? 'font-bold text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]' : 'text-gray-800 dark:text-[var(--text-primary)]'}`}>العربية</span>
@@ -236,6 +281,25 @@ const Header = () => {
             </div>
             {/* Theme Switcher - Always visible but minimal */}
             <ThemeSwitcher />
+            {/* Mobile Language Toggle - Visible only on mobile */}
+            <button
+              onClick={() => {
+                const newLang = urlLang === 'fr' ? 'ar' : 'fr';
+                console.log('🌍 [Mobile Toggle] Switching language', {
+                  from: urlLang,
+                  to: newLang,
+                  timestamp: new Date().toISOString()
+                });
+                handleLanguageChange(newLang);
+              }}
+              className="sm:hidden p-1.5 sm:p-2 rounded-full min-h-[40px] min-w-[40px] hover:bg-[#600018] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
+              aria-label={t('changeLanguage')}
+            >
+              <Globe size={18} className="text-white dark:text-[var(--text-primary)]" />
+              <span className="text-xs ml-0.5 text-white dark:text-[var(--text-primary)] font-medium">
+                {urlLang.toUpperCase()}
+              </span>
+            </button>
             {/* Search - Hidden on mobile */}
             <button className="hidden sm:flex p-2 lg:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors">
               <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
@@ -367,6 +431,20 @@ const Header = () => {
               <FlaskConical size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
               <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
                 {t('navigation.analyses_catalog', { ns: 'common', defaultValue: 'Analyses' })}
+              </span>
+            </Link>
+
+            <Link
+              href={`${currentLanguagePath}/medecins`}
+              style={{
+                ...menuStyles.navLink,
+                ...(isDarkMode ? menuStyles.navLinkDark : {}),
+              }}
+              onClick={toggleMenu}
+            >
+              <Stethoscope size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                {t('navigation.medecins', { ns: 'common', defaultValue: 'Médecins' })}
               </span>
             </Link>
 
@@ -509,7 +587,10 @@ const Header = () => {
                   }}
                 >
                   <button
-                    onClick={() => handleLanguageChange('fr')}
+                    onClick={() => {
+                      console.log('🌍 [Mobile Menu Button] FR clicked', { urlLang, timestamp: new Date().toISOString() });
+                      handleLanguageChange('fr');
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -529,7 +610,10 @@ const Header = () => {
                   </button>
                   <div style={{ height: '1px', backgroundColor: isDarkMode ? '#3d3d5c' : '#e5e7eb' }} />
                   <button
-                    onClick={() => handleLanguageChange('ar')}
+                    onClick={() => {
+                      console.log('🌍 [Mobile Menu Button] AR clicked', { urlLang, timestamp: new Date().toISOString() });
+                      handleLanguageChange('ar');
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
