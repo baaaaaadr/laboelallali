@@ -27,5 +27,8 @@
   "invalid_file_type": "Type de fichier non supporté (JPG, PNG, PDF uniquement)",
   "appointment_request_success": "Votre demande de rendez-vous a été envoyée avec succès. Nous vous contacterons bientôt.",
   "appointment_request_error": "Une erreur s'est produite lors de l'envoi de votre demande. Veuillez réessayer ou nous contacter par téléphone.",
-  "submitting": "Envoi en cours..."
+  "submitting": "Envoi en cours...",
+  "prescriptionLink": "Ordonnance",
+  "whatsapp_redirect_success": "Redirection vers WhatsApp en cours...",
+  "whatsapp_error": "Erreur lors de la préparation de la demande WhatsApp. Veuillez réessayer."
 }

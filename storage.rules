@@ -1,10 +1,22 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
+    // Rules for prescription uploads (ordonnances)
+    match /ordonnances/{fileName} {
+      // Allow public read access (URLs are shared via WhatsApp/Email)
+      allow read: if true;
+
+      // Allow write only if:
+      // 1. File size is under 5MB
+      // 2. File type is JPEG, PNG, or PDF
+      allow write: if request.resource.size < 5 * 1024 * 1024
+                   && (request.resource.contentType.matches('image/jpeg')
+                       || request.resource.contentType.matches('image/png')
+                       || request.resource.contentType.matches('application/pdf'));
+    }
+
+    // Default deny for all other paths
     match /{allPaths=**} {
       allow read, write: if false;
     }

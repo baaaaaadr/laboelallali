@@ -152,6 +152,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         comments: commentaires || "",
         prescriptionImageUrl: downloadURL,
         submittedAt: serverTimestamp(),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         status: "new_appointment_request",
         type: "lab_appointment"
       };
@@ -184,29 +185,50 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
     }
   };
 
-  // Génère le lien WhatsApp avec message prérempli
-  const handleWhatsapp = () => {
+  // Génère le lien WhatsApp avec message prérempli et upload de l'ordonnance
+  const handleWhatsapp = async () => {
     if (!nom.trim() || !telephone.trim() || !selectedDate || !selectedTime) {
       toast.error(t('requiredFields', { ns: 'appointment' }));
       return;
     }
-    const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
-    const message = t('emailBody', {
-      name: nom,
-      phone: telephone,
-      email: email ? `\nEmail : ${email}` : '',
-      date: formattedDate,
-      time: selectedTime,
-      comments: commentaires ? `\n${t('comments', { ns: 'appointment' })} : ${commentaires}` : '',
-      prescription: prescriptionFile ? `\n${t('withPrescription', { ns: 'appointment' })}` : `\n${t('withoutPrescription', { ns: 'appointment' })}`
-    });
-    const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappLink, '_blank');
-    
-    // Également enregistrer dans Firebase pour le suivi
+
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
-      
+      let downloadURL = null;
+
+      // Upload prescription file if exists
+      if (prescriptionFile) {
+        const timestamp = Date.now();
+        const fileName = prescriptionFile.name;
+        const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
+
+        // Upload the file
+        await uploadBytes(storageRef, prescriptionFile);
+
+        // Get download URL
+        downloadURL = await getDownloadURL(storageRef);
+      }
+
+      const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
+
+      // Build message with prescription URL if available
+      const message = t('emailBody', {
+        name: nom,
+        phone: telephone,
+        email: email ? `\nEmail : ${email}` : '',
+        date: formattedDate,
+        time: selectedTime,
+        comments: commentaires ? `\n${t('comments', { ns: 'appointment' })} : ${commentaires}` : '',
+        prescription: downloadURL
+          ? `\n📎 ${t('prescriptionLink', { ns: 'appointment' })}: ${downloadURL}`
+          : `\n${t('withoutPrescription', { ns: 'appointment' })}`
+      });
+
+      const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappLink, '_blank');
+
+      // Save to Firestore for tracking
       const appointmentData = {
         name: nom,
         phone: telephone,
@@ -214,17 +236,34 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         desiredDate: formattedDate,
         desiredTime: selectedTime,
         comments: commentaires || "",
-        prescriptionImageUrl: null, // Pas de fichier pour WhatsApp - il sera envoyé directement
+        prescriptionImageUrl: downloadURL,
         submittedAt: serverTimestamp(),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         status: "whatsapp_appointment_request",
         type: "lab_appointment"
       };
-      
-      addDoc(collection(db, "appointmentRequests"), appointmentData)
-        .catch(error => console.error("Error saving WhatsApp request to Firestore:", error))
-        .finally(() => setIsLoading(false));
+
+      await addDoc(collection(db, "appointmentRequests"), appointmentData);
+
+      toast.success(t('whatsapp_redirect_success', { ns: 'appointment' }));
+
+      // Reset form
+      setNom('');
+      setTelephone('');
+      setEmail('');
+      setSelectedDate(new Date());
+      setSelectedTime('');
+      setPrescriptionFile(null);
+      setFilePreview(null);
+      setCommentaires('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+
     } catch (error) {
-      console.error("Error saving WhatsApp request:", error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error in WhatsApp handler:", error);
+      }
+      toast.error(t('whatsapp_error', { ns: 'appointment' }));
+    } finally {
       setIsLoading(false);
     }
   };

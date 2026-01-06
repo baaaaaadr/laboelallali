@@ -2,14 +2,12 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
 import { getAllMedecins } from '@/services/medecinsService';
 import type { Medecin, MedecinFilters } from '@/types/medecin';
-const theme = require('@/styles/theme');
+import theme from '@/styles/theme';
 
 export default function MedecinsPage() {
   const { lang } = useParams();
-  const { t } = useTranslation('common');
 
   const [allMedecins, setAllMedecins] = useState<Medecin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +28,7 @@ export default function MedecinsPage() {
         const medecinsData = await getAllMedecins();
         setAllMedecins(medecinsData);
       } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
+        console.error('Erreur lors du chargement des médecins:', error);
       } finally {
         setLoading(false);
       }
@@ -40,48 +38,69 @@ export default function MedecinsPage() {
 
   // Extraire les spécialités uniques (côté client, instantané)
   const specialites = useMemo(() => {
-    const uniqueSpecialites = new Set(allMedecins.map(m => m.specialite).filter(Boolean));
+    const uniqueSpecialites = new Set<string>();
+    allMedecins.forEach((m) => {
+      if (m?.specialite) {
+        const spec = String(m.specialite).trim();
+        if (spec) {
+          uniqueSpecialites.add(spec);
+        }
+      }
+    });
     return Array.from(uniqueSpecialites).sort();
   }, [allMedecins]);
 
   // Extraire les communes uniques (côté client, instantané)
   const communes = useMemo(() => {
-    const uniqueCommunes = new Set(allMedecins.map(m => m.commune).filter(Boolean));
+    const uniqueCommunes = new Set<string>();
+    allMedecins.forEach((m) => {
+      if (m?.commune) {
+        const comm = String(m.commune).trim();
+        if (comm) {
+          uniqueCommunes.add(comm);
+        }
+      }
+    });
     return Array.from(uniqueCommunes).sort();
   }, [allMedecins]);
 
   // Filtrer les médecins côté client (instantané, pas de requête Firebase)
   const filteredMedecins = useMemo(() => {
-    let filtered = [...allMedecins];
+    let filtered = allMedecins.slice();
 
     // Filtre par secteur
     if (filters.secteur && filters.secteur !== 'tous') {
-      filtered = filtered.filter(m => m.secteur === filters.secteur);
+      filtered = filtered.filter(m => m?.secteur === filters.secteur);
     }
 
     // Filtre par spécialité
     if (filters.specialite) {
       filtered = filtered.filter(m =>
-        m.specialite.toLowerCase() === filters.specialite!.toLowerCase()
+        m?.specialite && String(m.specialite).toLowerCase() === filters.specialite!.toLowerCase()
       );
     }
 
     // Filtre par commune
     if (filters.commune) {
       filtered = filtered.filter(m =>
-        m.commune.toLowerCase() === filters.commune!.toLowerCase()
+        m?.commune && String(m.commune).toLowerCase() === filters.commune!.toLowerCase()
       );
     }
 
     // Recherche textuelle (nom, prénom, spécialité, commune)
     if (filters.searchQuery && filters.searchQuery.trim() !== '') {
       const searchTerm = filters.searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(m =>
-        m.nom.toLowerCase().includes(searchTerm) ||
-        m.prenom.toLowerCase().includes(searchTerm) ||
-        m.specialite.toLowerCase().includes(searchTerm) ||
-        m.commune.toLowerCase().includes(searchTerm)
-      );
+      filtered = filtered.filter(m => {
+        if (!m) return false;
+        const nom = m.nom ? String(m.nom).toLowerCase() : '';
+        const prenom = m.prenom ? String(m.prenom).toLowerCase() : '';
+        const specialite = m.specialite ? String(m.specialite).toLowerCase() : '';
+        const commune = m.commune ? String(m.commune).toLowerCase() : '';
+        return nom.includes(searchTerm) ||
+          prenom.includes(searchTerm) ||
+          specialite.includes(searchTerm) ||
+          commune.includes(searchTerm);
+      });
     }
 
     return filtered;
@@ -101,20 +120,19 @@ export default function MedecinsPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: theme.colors.gray[100], paddingTop: '80px' }}>
+    <div className="min-h-screen" style={{ background: 'var(--background-secondary)', paddingTop: '80px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '15px' }}>
 
         {/* En-tête */}
         <div style={{ marginBottom: '20px', textAlign: 'center', padding: '0 10px' }}>
-          <h1 style={{
+          <h1 className="text-[var(--color-bordeaux-primary)]" style={{
             fontSize: 'clamp(1.5rem, 5vw, 2.5rem)',
-            color: theme.colors.bordeaux.primary,
             marginBottom: '10px',
             fontWeight: 700
           }}>
             {lang === 'ar' ? 'دليل الأطباء' : 'Annuaire des Médecins'}
           </h1>
-          <p style={{ fontSize: 'clamp(0.9rem, 3vw, 1.1rem)', color: theme.colors.gray[800] }}>
+          <p className="text-[var(--text-secondary)]" style={{ fontSize: 'clamp(0.9rem, 3vw, 1.1rem)' }}>
             {lang === 'ar'
               ? 'ابحث عن طبيب في أكادير والمنطقة'
               : 'Trouvez un médecin à Agadir et sa région'}
@@ -123,7 +141,7 @@ export default function MedecinsPage() {
 
         {/* Filtres de recherche */}
         <div style={{
-          background: 'white',
+          background: 'var(--background-tertiary)',
           padding: 'clamp(12px, 3vw, 25px)',
           borderRadius: '12px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -143,8 +161,10 @@ export default function MedecinsPage() {
               value={filters.searchQuery || ''}
               onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
               style={{
+                background: 'var(--background-default)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-default)',
                 padding: '10px 12px',
-                border: `1px solid ${theme.colors.gray[300]}`,
                 borderRadius: '8px',
                 fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                 width: '100%',
@@ -157,11 +177,12 @@ export default function MedecinsPage() {
               value={filters.secteur || 'tous'}
               onChange={(e) => handleFilterChange('secteur', e.target.value)}
               style={{
+                background: 'var(--background-default)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-default)',
                 padding: '10px 12px',
-                border: `1px solid ${theme.colors.gray[300]}`,
                 borderRadius: '8px',
                 fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
-                background: 'white',
                 width: '100%',
                 boxSizing: 'border-box'
               }}
@@ -176,11 +197,12 @@ export default function MedecinsPage() {
               value={filters.specialite || ''}
               onChange={(e) => handleFilterChange('specialite', e.target.value)}
               style={{
+                background: 'var(--background-default)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-default)',
                 padding: '10px 12px',
-                border: `1px solid ${theme.colors.gray[300]}`,
                 borderRadius: '8px',
                 fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
-                background: 'white',
                 width: '100%',
                 boxSizing: 'border-box'
               }}
@@ -196,11 +218,12 @@ export default function MedecinsPage() {
               value={filters.commune || ''}
               onChange={(e) => handleFilterChange('commune', e.target.value)}
               style={{
+                background: 'var(--background-default)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-default)',
                 padding: '10px 12px',
-                border: `1px solid ${theme.colors.gray[300]}`,
                 borderRadius: '8px',
                 fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
-                background: 'white',
                 width: '100%',
                 boxSizing: 'border-box'
               }}
@@ -232,7 +255,7 @@ export default function MedecinsPage() {
 
         {/* Résultats */}
         <div style={{ marginBottom: '20px', padding: '0 5px' }}>
-          <p style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)', color: theme.colors.gray[800] }}>
+          <p className="text-[var(--text-secondary)]" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
             {loading
               ? (lang === 'ar' ? 'جاري التحميل...' : 'Chargement...')
               : `${filteredMedecins.length} ${lang === 'ar' ? 'طبيب' : 'médecin(s) trouvé(s)'}`
@@ -252,7 +275,7 @@ export default function MedecinsPage() {
             </div>
           ) : filteredMedecins.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px', gridColumn: '1 / -1' }}>
-              <p style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)', color: theme.colors.gray[800] }}>
+              <p className="text-[var(--text-secondary)]" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
                 {lang === 'ar'
                   ? 'لم يتم العثور على أطباء'
                   : 'Aucun médecin trouvé'}
@@ -263,7 +286,7 @@ export default function MedecinsPage() {
               <div
                 key={medecin.id}
                 style={{
-                  background: 'white',
+                  background: 'var(--background-tertiary)',
                   padding: 'clamp(12px, 3vw, 20px)',
                   borderRadius: '12px',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -277,7 +300,7 @@ export default function MedecinsPage() {
                   <div style={{ flex: '1 1 auto', minWidth: '0' }}>
                     <h3 style={{
                       fontSize: 'clamp(1.1rem, 3.5vw, 1.3rem)',
-                      color: theme.colors.bordeaux.primary,
+                      color: theme.colors.fuchsia.accent,
                       marginBottom: '5px',
                       fontWeight: 700,
                       wordBreak: 'break-word'
@@ -286,7 +309,7 @@ export default function MedecinsPage() {
                     </h3>
                     <p style={{
                       fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
-                      color: theme.colors.fuchsia.accent,
+                      color: theme.colors.bordeaux.primary,
                       marginBottom: '0',
                       fontWeight: 600,
                       wordBreak: 'break-word'
@@ -298,8 +321,10 @@ export default function MedecinsPage() {
                   <span style={{
                     display: 'inline-block',
                     padding: '6px 12px',
-                    background: medecin.secteur === 'public' ? '#D1FAE5' : '#DBEAFE',
-                    color: medecin.secteur === 'public' ? theme.colors.functional.success : theme.colors.functional.info,
+                    background: medecin.secteur === 'public'
+                      ? 'color-mix(in srgb, var(--status-success) 20%, var(--background-default))'
+                      : 'color-mix(in srgb, var(--status-info) 20%, var(--background-default))',
+                    color: medecin.secteur === 'public' ? 'var(--status-success)' : 'var(--status-info)',
                     borderRadius: '20px',
                     fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
                     fontWeight: 600,
@@ -315,9 +340,8 @@ export default function MedecinsPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   {medecin.adresse && (
-                    <p style={{
+                    <p className="text-[var(--text-primary)]" style={{
                       fontSize: 'clamp(0.85rem, 2.2vw, 0.95rem)',
-                      color: theme.colors.gray[900],
                       margin: '0',
                       wordBreak: 'break-word',
                       overflowWrap: 'break-word'
@@ -325,18 +349,16 @@ export default function MedecinsPage() {
                       📍 {medecin.adresse}
                     </p>
                   )}
-                  <p style={{
+                  <p className="text-[var(--text-secondary)]" style={{
                     fontSize: 'clamp(0.85rem, 2.2vw, 0.95rem)',
-                    color: theme.colors.gray[800],
                     margin: '0',
                     wordBreak: 'break-word'
                   }}>
                     🏙️ {medecin.commune}, {medecin.province}
                   </p>
                   {medecin.tel_professionnel && (
-                    <p style={{
+                    <p className="text-[var(--text-primary)]" style={{
                       fontSize: 'clamp(0.85rem, 2.2vw, 0.95rem)',
-                      color: theme.colors.gray[900],
                       margin: '0'
                     }}>
                       📞 <a
@@ -352,9 +374,8 @@ export default function MedecinsPage() {
                     </p>
                   )}
                   {medecin.email && (
-                    <p style={{
+                    <p className="text-[var(--text-primary)]" style={{
                       fontSize: 'clamp(0.85rem, 2.2vw, 0.95rem)',
-                      color: theme.colors.gray[900],
                       margin: '0'
                     }}>
                       ✉️ <a

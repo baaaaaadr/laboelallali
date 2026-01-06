@@ -30,6 +30,8 @@ const nextConfig = {
     optimizeCss: true,
     scrollRestoration: true,
   },
+  // Note: Turbopack has a module caching bug with language switching on the medecins page in dev mode.
+  // Production builds work fine. Empty config allows webpack config to coexist with Turbopack.
   turbopack: {},
   env: {
     NEXT_PUBLIC_ENABLE_PWA_DEV: process.env.NEXT_PUBLIC_ENABLE_PWA_DEV,

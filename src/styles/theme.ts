@@ -467,8 +467,8 @@ const uxPrinciples = {
   },
 };
 
-// Export as CommonJS module
-module.exports = {
+// Export as ES6 module
+const theme = {
   colors,
   typography,
   spacing,
@@ -476,3 +476,10 @@ module.exports = {
   components,
   uxPrinciples
 };
+
+export default theme;
+
+// Also export as CommonJS for compatibility
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = theme;
+}

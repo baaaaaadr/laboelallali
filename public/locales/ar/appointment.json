@@ -27,5 +27,8 @@
   "invalid_file_type": "نوع الملف غير مدعوم (يسمح فقط بـ JPG, PNG, PDF)",
   "appointment_request_success": "تم إرسال طلب الموعد بنجاح. سنتصل بك قريباً.",
   "appointment_request_error": "حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى أو الاتصال بنا عبر الهاتف.",
-  "submitting": "جاري الإرسال..."
+  "submitting": "جاري الإرسال...",
+  "prescriptionLink": "الوصفة الطبية",
+  "whatsapp_redirect_success": "جاري التوجيه إلى واتساب...",
+  "whatsapp_error": "حدث خطأ أثناء تحضير طلب واتساب. يرجى المحاولة مرة أخرى."
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, ChevronDown, Check, Download, Stethoscope } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -70,8 +70,6 @@ const Header = () => {
   const { t, i18n } = useTranslation('common');
   const router = useRouter();
   const pathname = usePathname();
-  // Create separate refs for desktop and mobile dropdowns
-  const desktopLangDropdownRef = useRef<HTMLDivElement>(null);
   const mobileLangDropdownRef = useRef<HTMLDivElement>(null);
 
   const lang = i18n.language || getLangFromPath(pathname);
@@ -114,28 +112,23 @@ const Header = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Close dropdown when clicking outside
+  // Close mobile menu dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Check if click is outside both dropdown refs
-      const isOutsideDesktop = !desktopLangDropdownRef.current || !desktopLangDropdownRef.current.contains(event.target as Node);
       const isOutsideMobile = !mobileLangDropdownRef.current || !mobileLangDropdownRef.current.contains(event.target as Node);
-      
-      if (isOutsideDesktop && isOutsideMobile) {
-        console.log('🌍 [Click Outside] Closing dropdown', {
-          targetElement: (event.target as HTMLElement)?.tagName,
-          targetClass: (event.target as HTMLElement)?.className,
-          timestamp: new Date().toISOString()
-        });
+
+      if (isOutsideMobile) {
         setIsLangDropdownOpen(false);
       }
     };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+
+    if (isLangDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isLangDropdownOpen]);
 
   const handleLanguageChange = (newLocale: string) => {
     console.log('🌍 [Language Change] Handler called', {
@@ -236,70 +229,34 @@ const Header = () => {
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            {/* Language Selector - Hidden on mobile, shown on tablet+ */}
-            <div className="relative hidden sm:block" ref={desktopLangDropdownRef}>
-              <button
-                onClick={toggleLangDropdown}
-                className="flex items-center text-sm px-2 lg:px-3 py-2 min-h-[44px] rounded hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] transition-colors text-[rgba(255,255,255,0.85)] hover:text-white hover:shadow-[0_0_8px_var(--color-fuchsia-light)]"
-                aria-label={t('changeLanguage')}
-                aria-haspopup="true"
-                aria-expanded={isLangDropdownOpen}
-              >
-                <Globe size={18} className="mr-1 lg:mr-1.5 text-white dark:text-[var(--text-primary)]" />
-                <span className="text-white dark:text-[var(--text-primary)]">{urlLang.toUpperCase()}</span>
-                <ChevronDown size={16} className="ml-0.5 lg:ml-1 text-white dark:text-[var(--text-primary)]" />
-              </button>
-              
-              {/* Language Dropdown Menu */}
-              {isLangDropdownOpen && (
-                <div className="dropdown-menu absolute right-0 top-full mt-2 w-36 bg-white dark:bg-[var(--background-secondary)] rounded-md shadow-lg border border-gray-200 dark:border-[var(--border-default)] overflow-hidden z-[9999] pointer-events-auto" style={{ display: 'block', visibility: 'visible', opacity: 1 }}>
-                  <button
-                    onClick={(e) => {
-                      console.log('🌍 [Desktop Button] FR clicked', { urlLang, timestamp: new Date().toISOString() });
-                      handleLanguageChange('fr');
-                      return;
-                    }}
-                    className="flex items-center justify-between w-full px-4 py-3 text-gray-800 dark:text-[var(--text-primary)] hover:bg-gray-50 dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] transition-colors text-left"
-                  >
-                    <span className={`${urlLang === 'fr' ? 'font-bold text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]' : 'text-gray-800 dark:text-[var(--text-primary)]'}`}>Français</span>
-                    {urlLang === 'fr' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]" />}
-                  </button>
-                  <div className="border-t border-gray-100 dark:border-[var(--border-default)]"></div>
-                  <button
-                    onClick={(e) => {
-                      console.log('🌍 [Desktop Button] AR clicked', { urlLang, timestamp: new Date().toISOString() });
-                      handleLanguageChange('ar');
-                      return;
-                    }}
-                    className="flex items-center justify-between w-full px-4 py-3 text-gray-800 dark:text-[var(--text-primary)] hover:bg-gray-50 dark:hover:bg-[var(--background-tertiary)] hover:text-[var(--color-bordeaux-primary)] dark:hover:text-[var(--color-fuchsia-accent)] transition-colors text-left"
-                  >
-                    <span className={`${urlLang === 'ar' ? 'font-bold text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]' : 'text-gray-800 dark:text-[var(--text-primary)]'}`}>العربية</span>
-                    {urlLang === 'ar' && <Check size={16} className="text-[var(--color-bordeaux-primary)] dark:text-[var(--color-fuchsia-accent)]" />}
-                  </button>
-                </div>
-              )}
-            </div>
-            {/* Theme Switcher - Always visible but minimal */}
-            <ThemeSwitcher />
-            {/* Mobile Language Toggle - Visible only on mobile */}
+            {/* Language Switch Button - Simple toggle for both mobile and desktop */}
             <button
               onClick={() => {
                 const newLang = urlLang === 'fr' ? 'ar' : 'fr';
-                console.log('🌍 [Mobile Toggle] Switching language', {
+                console.log('🌍 [Language Switch] Toggling', {
                   from: urlLang,
                   to: newLang,
                   timestamp: new Date().toISOString()
                 });
                 handleLanguageChange(newLang);
               }}
-              className="sm:hidden p-1.5 sm:p-2 rounded-full min-h-[40px] min-w-[40px] hover:bg-[#600018] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
+              className="flex items-center gap-1 px-2 lg:px-3 py-2 min-h-[40px] sm:min-h-[44px] rounded-lg hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] transition-all duration-200 hover:shadow-[0_0_8px_var(--color-fuchsia-light)] group"
               aria-label={t('changeLanguage')}
+              title={urlLang === 'fr' ? 'Switch to العربية' : 'Passer au Français'}
             >
-              <Globe size={18} className="text-white dark:text-[var(--text-primary)]" />
-              <span className="text-xs ml-0.5 text-white dark:text-[var(--text-primary)] font-medium">
-                {urlLang.toUpperCase()}
-              </span>
+              <Globe size={18} className="text-white dark:text-[var(--text-primary)] group-hover:scale-110 transition-transform" />
+              <div className="flex items-center gap-0.5 text-xs lg:text-sm font-semibold">
+                <span className={`transition-all ${urlLang === 'fr' ? 'text-white dark:text-[var(--color-fuchsia-accent)] scale-110' : 'text-white/60 dark:text-[var(--text-primary)]/60'}`}>
+                  FR
+                </span>
+                <span className="text-white/40 dark:text-[var(--text-primary)]/40">|</span>
+                <span className={`transition-all ${urlLang === 'ar' ? 'text-white dark:text-[var(--color-fuchsia-accent)] scale-110' : 'text-white/60 dark:text-[var(--text-primary)]/60'}`}>
+                  AR
+                </span>
+              </div>
             </button>
+            {/* Theme Switcher - Always visible but minimal */}
+            <ThemeSwitcher />
             {/* Search - Hidden on mobile */}
             <button className="hidden sm:flex p-2 lg:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors">
               <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
@@ -542,98 +499,42 @@ const Header = () => {
               {t('pwa.install_app_button', "Installer l'App")}
             </button>
 
-            {/* Language Dropdown Button */}
-            <div className="relative" ref={mobileLangDropdownRef}>
-              <button
-                onClick={toggleLangDropdown}
-                aria-label={t('changeLanguage')}
-                aria-haspopup="true"
-                aria-expanded={isLangDropdownOpen}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  fontWeight: 500,
-                  minHeight: '48px',
-                  border: `2px solid ${isDarkMode ? '#ff80ab' : '#800020'}`,
-                  backgroundColor: isDarkMode ? '#ff80ab' : '#800020',
-                  color: isDarkMode ? '#1a1a2e' : '#ffffff',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <Globe size={20} style={{ marginRight: '8px' }} />
-                <span>{urlLang.toUpperCase()}</span>
-                <ChevronDown size={16} style={{ marginLeft: '4px' }} />
-              </button>
-
-              {isLangDropdownOpen && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '100%',
-                    left: 0,
-                    right: 0,
-                    marginBottom: '8px',
-                    backgroundColor: isDarkMode ? '#2d2d44' : '#ffffff',
-                    borderRadius: '8px',
-                    boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.15)',
-                    border: `1px solid ${isDarkMode ? '#3d3d5c' : '#e5e7eb'}`,
-                    overflow: 'hidden',
-                    zIndex: 100,
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      console.log('🌍 [Mobile Menu Button] FR clicked', { urlLang, timestamp: new Date().toISOString() });
-                      handleLanguageChange('fr');
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      padding: '12px 16px',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      color: urlLang === 'fr' ? (isDarkMode ? '#ff80ab' : '#800020') : (isDarkMode ? '#e5e5e5' : '#1f2937'),
-                      fontWeight: urlLang === 'fr' ? 600 : 400,
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <span>Français</span>
-                    {urlLang === 'fr' && <Check size={16} />}
-                  </button>
-                  <div style={{ height: '1px', backgroundColor: isDarkMode ? '#3d3d5c' : '#e5e7eb' }} />
-                  <button
-                    onClick={() => {
-                      console.log('🌍 [Mobile Menu Button] AR clicked', { urlLang, timestamp: new Date().toISOString() });
-                      handleLanguageChange('ar');
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      padding: '12px 16px',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      color: urlLang === 'ar' ? (isDarkMode ? '#ff80ab' : '#800020') : (isDarkMode ? '#e5e5e5' : '#1f2937'),
-                      fontWeight: urlLang === 'ar' ? 600 : 400,
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <span>العربية</span>
-                    {urlLang === 'ar' && <Check size={16} />}
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Language Switch Button - Mobile Menu */}
+            <button
+              onClick={() => {
+                const newLang = urlLang === 'fr' ? 'ar' : 'fr';
+                console.log('🌍 [Mobile Menu Switch] Toggling', {
+                  from: urlLang,
+                  to: newLang,
+                  timestamp: new Date().toISOString()
+                });
+                handleLanguageChange(newLang);
+              }}
+              aria-label={t('changeLanguage')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontWeight: 500,
+                minHeight: '48px',
+                border: `2px solid ${isDarkMode ? '#ff80ab' : '#800020'}`,
+                backgroundColor: isDarkMode ? '#ff80ab' : '#800020',
+                color: isDarkMode ? '#1a1a2e' : '#ffffff',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                gap: '8px',
+              }}
+            >
+              <Globe size={20} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                <span style={{ opacity: urlLang === 'fr' ? 1 : 0.6 }}>FR</span>
+                <span style={{ opacity: 0.5 }}>|</span>
+                <span style={{ opacity: urlLang === 'ar' ? 1 : 0.6 }}>AR</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>

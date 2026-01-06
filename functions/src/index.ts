@@ -9,6 +9,7 @@
 
 import { onRequest } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineString } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
@@ -174,12 +175,87 @@ export const sendAppointmentRequestEmail = onDocumentCreated(
           await db.collection("appointmentRequests").doc(event.data.id).update({
             status: "email_failed",
             emailErrorAt: FieldValue.serverTimestamp(),
-            emailErrorMessage: error.message || "Unknown error"
+            emailErrorMessage: (error as Error).message || "Unknown error"
           });
         } catch (updateError) {
           logger.error("Error updating appointment status after email failure:", updateError);
         }
       }
+    }
+  }
+);
+
+/**
+ * Scheduled Cloud Function to clean up expired prescription files
+ * Runs daily at 2:00 AM to delete prescriptions older than 30 days
+ */
+export const cleanupExpiredPrescriptions = onSchedule(
+  {
+    schedule: "0 2 * * *", // Every day at 2:00 AM (cron format)
+    timeZone: "Europe/Paris",
+    region: "europe-southwest1",
+    memory: "512MiB",
+  },
+  async () => {
+    logger.info("Starting cleanup of expired prescriptions", { structuredData: true });
+
+    try {
+      const db = admin.firestore();
+      const storage = getStorage();
+      const bucket = storage.bucket();
+      const now = new Date();
+
+      // Query all appointment requests with expired prescriptions
+      const expiredAppointments = await db.collection("appointmentRequests")
+        .where("expiresAt", "<=", now)
+        .where("prescriptionImageUrl", "!=", null)
+        .get();
+
+      logger.info(`Found ${expiredAppointments.size} expired prescriptions to clean up`, { structuredData: true });
+
+      let deletedCount = 0;
+      let errorCount = 0;
+
+      // Process each expired appointment
+      for (const doc of expiredAppointments.docs) {
+        try {
+          const data = doc.data();
+          const prescriptionUrl = data.prescriptionImageUrl;
+
+          if (prescriptionUrl) {
+            // Extract file path from URL
+            // URL format: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media...
+            const urlParts = prescriptionUrl.split('/o/');
+            if (urlParts.length > 1) {
+              const pathPart = urlParts[1].split('?')[0];
+              const filePath = decodeURIComponent(pathPart);
+
+              // Delete the file from Storage
+              const fileRef = bucket.file(filePath);
+              await fileRef.delete();
+
+              logger.info(`Deleted prescription file: ${filePath}`, { structuredData: true });
+
+              // Update the document to mark prescription as deleted
+              await doc.ref.update({
+                prescriptionImageUrl: null,
+                prescriptionDeletedAt: FieldValue.serverTimestamp(),
+                prescriptionDeletedReason: "expired_30_days"
+              });
+
+              deletedCount++;
+            }
+          }
+        } catch (fileError) {
+          logger.error(`Error deleting prescription for document ${doc.id}:`, fileError);
+          errorCount++;
+        }
+      }
+
+      logger.info(`Cleanup completed. Deleted: ${deletedCount}, Errors: ${errorCount}`, { structuredData: true });
+
+    } catch (error) {
+      logger.error("Error during prescription cleanup:", error);
     }
   }
 );

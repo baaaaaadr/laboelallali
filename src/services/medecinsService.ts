@@ -15,7 +15,6 @@ export async function getAllMedecins(): Promise<Medecin[]> {
   try {
     const medecinsRef = collection(db, MEDECINS_COLLECTION);
     const q = query(medecinsRef, orderBy('nom'), orderBy('prenom'));
-
     const querySnapshot = await getDocs(q);
 
     const medecins: Medecin[] = [];
