@@ -23,7 +23,7 @@ const HeroBanner = () => {
   // Use a simpler approach without type assertions
   const { t } = useTranslation('common');
   return (
-    <div className="relative overflow-hidden mb-8 -mt-[1px] w-full hero-banner">
+    <div className="relative overflow-hidden -mt-[1px] w-full min-h-screen flex items-center justify-center hero-banner">
       {/* Banner Image */}
       <div className="absolute inset-0 z-0">
         {/* Use standard img tag which we know works from the test */}
@@ -35,17 +35,17 @@ const HeroBanner = () => {
         {/* Semi-transparent overlay to ensure text is readable */}
         <div className="hero-banner-overlay"></div>
       </div>
-      
+
       {/* Content */}
-      <div className="container mx-auto px-4 py-16 sm:py-20 md:py-32 relative z-10">
-        <div className="max-w-2xl">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 break-words hero-text" style={{ color: 'white !important' }}>
+      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10 py-8">
+        <div className="max-w-2xl mx-auto text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight break-words hero-text" style={{ color: 'white !important' }}>
             {t('welcome_banner')}
           </h1>
-          <p className="text-base sm:text-lg md:text-xl mb-8 opacity-90 break-words hero-text" style={{ color: 'white !important' }}>
+          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 opacity-90 break-words hero-text" style={{ color: 'white !important' }}>
             {t('welcome_description')}
           </p>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-4 w-full">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
             <a
               href="tel:0528843384"
               className="button-fuchsia min-w-[170px] text-lg"

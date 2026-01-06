@@ -45,7 +45,7 @@ export default function HomeClient({ lang }: { lang: string }) {
       <div className="relative">
         <HeroBanner />
         {/* Opening Hours Widget - Positioned at top right on large screens, always visible */}
-        <div className="lg:absolute lg:top-4 lg:right-4 lg:z-10 lg:max-w-80 w-full">
+        <div className="lg:absolute lg:top-4 lg:right-4 lg:z-20 lg:max-w-80 w-full">
           <div className="card bg-white/95 dark:bg-[var(--background-card)]/95 backdrop-blur-sm shadow-lg border border-[var(--border-default)] mx-4 mt-4 lg:mx-0 lg:mt-0">
             <div className="flex flex-col md:flex-row lg:flex-col items-center justify-between gap-4">
               <div className="flex-1 w-full">
