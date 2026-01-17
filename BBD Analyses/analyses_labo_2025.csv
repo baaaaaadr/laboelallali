@@ -1,0 +1,251 @@
+Code_Interne,Nom_Patient,Nom_Technique,Categorie,Prix_Dhs,Pre_Analytique,Description_Patient,Nombre_Demandes
+C  HBA1,Hémoglobine Glyquée (HbA1c),HEMOGLOBINE GLYQUEE HBA1,Diabète,110,Jeûne non obligatoire.,Moyenne du sucre sur 3 mois. Suivi diabète.,6433
+H  NFS,NFS (Numération Sanguine),NUMERATION FORMULE-PLAQUE,Hématologie,88,Jeûne non obligatoire (éviter repas gras).,"Anémie, infection, plaquettes.",5824
+C  GLY,Glycémie à jeun,GLYCEMIE A JEUN,Diabète,33,Strictement à jeun (8h min).,Dépistage du diabète.,4800
+C  CR,Créatinine (Reins),CREATININE,Bilan Rénal,33,Jeûne préférable.,Bilan de la fonction rénale.,4191
+C  U,Urée Sanguine,UREE,Bilan Rénal,33,Jeûne préférable.,Fonction rénale et hydratation.,2750
+N  TSH,TSH (Thyroïde),TSH us,Hormonologie,275,De préférence le matin.,"Dépistage thyroïde (Fatigue, poids).",2727
+C  CHOL,Cholestérol Total,CHOLESTEROL,Cardiologie,33,Strictement à jeun (12h).,Bilan lipidique de base.,2041
+EZ ALAT,ALAT (Foie),TGP (ALAT),Bilan Hépatique,55,Jeûne préférable.,Enzyme du foie.,1844
+EZ ASAT,ASAT (Foie),TGO (ASAT),Bilan Hépatique,55,Jeûne préférable.,Enzyme du foie et muscles.,1822
+C  CRP,CRP (Inflammation),CRP,Inflammation,110,Non à jeun.,Indicateur d'infection ou inflammation.,1801
+C  TRIG,Triglycérides,TRIGLYCERIDES,Cardiologie,66,"Strictement à jeun (12h). Alcool interdit 24h avant.","Graisses dans le sang (Risque cardiaque).",1699
+I  FERR,Ferritine (Réserve de Fer),FERRITINE,Anémie/Fer,275,À jeun de préférence.,"Dépistage carence en fer (Chute cheveux, fatigue).",1482
+C  HDL,Cholestérol HDL (Bon),CHOLESTEROL HDL,Cardiologie,55,Strictement à jeun (12h).,Le 'Bon' cholestérol protecteur.,1263
+C  ACU,Acide Urique (Goutte),ACIDE URIQUE,Rhumatologie,33,Jeûne préférable.,Dépistage de la Goutte.,1255
+HS TP,TP (Coagulation),TAUX DE PROTHROMBINE,Coagulation,44,Non à jeun. Préciser traitement anticoagulant.,Surveillance fluidité du sang (Sintrom).,1173
+C  LDL,Cholestérol LDL (Mauvais),CHOLESTEROL LDL,Cardiologie,55,Calculé ou Dosé. À jeun.,Le 'Mauvais' cholestérol (Risque artères).,1160
+V  VITD,Vitamine D,Vitamine 25 (OH) D2 et 25,Vitamines,495,Non à jeun.,"Santé des os, immunité, fatigue.",877
+T  GRS,Groupe Sanguin,GROUPE SANGUIN RHESUS,Immuno-Hémato,66,Non à jeun. Carte d'identité nécessaire.,"Détermine le groupe (A, B, O) et Rhésus.",869
+H  VS,Vitesse de Sédimentation (VS),VITESSE DE SEDIMENTATION,Inflammation,33,Non à jeun.,Marqueur d'inflammation lent.,854
+EZ GGT,Gamma GT,GAMMA G.T.,Bilan Hépatique,55,Jeûne préférable.,"Marqueur foie (Alcool, médicaments).",781
+MT PSA,PSA Total (Prostate),PSA (PROSTATIC SPECIFIC A,Cancer/Homme,330,Éviter vélo/rapports 48h avant.,"Dépistage prostate (Hommes >50 ans).",762
+B  CBU,ECBU (Examen Urines),ECBU,Bactériologie,99,"Urines du matin, flacon stérile, toilette intime.",Recherche infection urinaire.,737
+N  T4L,T4 Libre,T4 LIBRE (FT4),Hormonologie,220,"Le matin, avant prise de Levothyrox.",Bilan thyroïdien approfondi.,579
+C  K,Potassium,POTASSIUM,Bilan Général,33,"Jeûne préférable, éviter hémolyse.",Important pour le coeur.,557
+C  IONO,Ionogramme Sanguin,IONOGRAMME,Bilan Général,110,Jeûne préférable.,"Sels minéraux (Sodium, Potassium, Chlore).",501
+SE VDRL,VDRL (Syphilis),VDRL SANGUIN,MST,22,Non à jeun.,Dépistage Syphilis.,412
+B  CPR1,Coproparasitologie,COPROPARASITOLOGIE,Autre,110,,,396
+EU MIA,Microalbuminurie,MICROALBUMINURIE,Autre,132,,,386
+SE TPHA,TPHA (Syphilis),TPHA SANGUIN,MST,55,Non à jeun.,Confirmation Syphilis.,381
+C  CA,Calcium,CALCIUM,Autre,33,,,373
+C  LDLD,Cholestérol Ldl,CHOLESTEROL LDL,Cardiologie,55,Calculé ou Dosé. À jeun.,Le 'Mauvais' cholestérol (Risque artères).,369
+C  NA,Sodium,SODIUM,Autre,33,,,364
+EZ PAL,Phosph Alcalines,PHOSPH ALCALINES,Autre,55,,,350
+S  HBV,Hépatite B (Ag HBs),HEPATITE B,Sérologie Viral,132,Non à jeun.,Dépistage virus Hépatite B.,340
+S  HVC,Hépatite C (Ac VHC),HEPATITE C,Sérologie Viral,330,Non à jeun.,Dépistage virus Hépatite C.,322
+HS TPIN,Taux De Prothrombine,TAUX DE PROTHROMBINE,Autre,44,,,308
+C  BILI,Bilirubine,BILIRUBINE,Autre,77,,,261
+H  COM1,Commentaire Hémato,Commentaire hémato,Autre,0,,,257
+S  HIV,Anticorps Anti Hiv,ANTICORPS ANTI HIV,Autre,220,,,230
+I  TROP,Troponine Ic,TROPONINE Ic,Autre,275,,,219
+EZ LIPA,Lipases,LIPASES,Autre,0,,,204
+SE TOXO,Sero Toxoplasmose,SERO TOXOPLASMOSE,Autre,110,,,183
+EU RAAC,Rapport Microalbuminurie,Rapport Microalbuminurie,Autre,165,,,181
+S  HVAM,Sero Hepatite A (Igm),SERO HEPATITE A (IGM),Autre,275,,,146
+M  DROG,Recherche Des Drogues Uri,RECHERCHE DES DROGUES URI,Autre,0,,,142
+EU A24H,Albumine 24 H,ALBUMINE 24 H,Autre,0,,,142
+C  ALBS,Albumine,ALBUMINE,Autre,66,,,134
+B  HELE,Hélicobacter Pylori (Selles),HELICOBACTER PYLORI  DANS,Bactériologie,330,Pas d'antibiotiques/IPP récents.,Recherche bactérie de l'estomac.,134
+T  GRSG,Groupe Sanguin Rhesus  (G,GROUPE SANGUIN RHESUS  (g,Autre,66,,,130
+C  P,Phosphore,PHOSPHORE,Autre,44,,,125
+EU CLCR,Clairance A La Creatinine,CLAIRANCE A LA CREATININE,Autre,55,,,123
+SE RUB,Rubeole Igg,RUBEOLE IgG,Autre,0,,,123
+ST TG,Bêta-HCG (Grossesse),TEST DE GROSSESSE,Grossesse,110,Non à jeun.,Diagnostic précis de grossesse (date).,120
+S  HIVM,Anticorps Anti Hiv (Msc),ANTICORPS ANTI HIV (MSC),Autre,234.3,,,119
+AI TRES,Test Respiratoire A L'Ure,TEST RESPIRATOIRE A L'URE,Autre,599.5,,,118
+I  TRAA,Ac Anti Transglutaminase A,AC ANTI TRANSGLUTAMINASE A,Autre,291.5,,,114
+B  ATBB,Antibiogramme B-,ANTIBIOGRAMME B-,Autre,0,,,112
+ZB ATB,Antibiogramme,ANTIBIOGRAMME,Autre,0,,,109
+C  LATX,Test Au Latex,TEST AU LATEX,Autre,55,,,107
+C  WR,Waaler Rose,WAALER ROSE,Autre,55,,,107
+HS DDIM,D Dimere,D DIMERE,Autre,242,,,106
+EU RALB,Recherche Albumine,RECHERCHE ALBUMINE,Autre,22,,,98
+MT ACE,Ace,ACE,Autre,275,,,98
+EU RSUC,Recherche Sucre,RECHERCHE SUCRE,Autre,11,,,94
+N  INS,Insuline,INSULINE,Autre,330,,,94
+EU ACT,Acetone Urines,ACETONE URINES,Autre,11,,,93
+B  RSU,Recherche De Sang Dans Le,RECHERCHE DE SANG DANS LE,Autre,33,,,93
+S  HELI,Anticorps Anti-Helicobact,ANTICORPS ANTI-HELICOBACT,Autre,198,,,90
+B  CALP,Calprotectine Dans Les Se,CALPROTECTINE DANS LES SE,Autre,599.5,,,90
+EU RLEU,Recherche Des  Leucocytes,RECHERCHE DES  LEUCOCYTES,Autre,11,,,89
+EU NITR,Nitrites Urines,NITRITES URINES,Autre,33,,,89
+V  VB12,Vitamine B12,VITAMINE B12,Autre,440,,,87
+B  CBO,Examen Cytobacteriologiqu,EXAMEN CYTOBACTERIOLOGIQU,Autre,154,,,82
+N  T3L,T3Libre (Ft3),T3LIBRE (FT3),Autre,330,,,81
+SP SPRG,Spermogramme,SPERMOGRAMME,Fertilité,135.3,Abstinence 3 à 5 jours obligatoire. Au labo.,Bilan de fertilité masculine.,81
+N  HOMA,Homa Test,HOMA TEST,Autre,0,,,81
+B  BK,Recherche De Bk,RECHERCHE DE BK,Autre,71.5,,,75
+C  CL,Chlore,CHLORE,Autre,33,,,75
+B  PARA,Examen Parasitologique,EXAMEN PARASITOLOGIQUE,Autre,44,,,72
+MT CA15,Antigene Ca 15-3,ANTIGENE CA 15-3,Autre,440,,,71
+B  RCHL,Recherche Direct De Chlam,RECHERCHE DIRECT DE CHLAM,Autre,220,,,71
+B  RMYC,Recherche Direct De Mycop,RECHERCHE DIRECT DE MYCOP,Autre,22,,,70
+I  ANC,Ac Anti-Nucleaires,AC ANTI-NUCLEAIRES,Autre,165,,,68
+I  PCAL,Procalcitonine,PROCALCITONINE,Autre,440,,,66
+C  ASLO,Aslo,ASLO,Autre,0,,,65
+C  GLYP,Glycémie Post Prandiale,Glycémie post prandiale,Autre,0,,,65
+MT CA19,Antigene Ca 19-9,ANTIGENE CA 19-9,Autre,0,,,62
+N  PROL,Prolactine,PROLACTINE,Autre,0,,,61
+N  TPO,Anticorps Anti -Thyropero,ANTICORPS ANTI -THYROPERO,Autre,0,,,60
+C  MG,Magnesium Serique,MAGNESIUM SERIQUE,Autre,0,,,60
+U  BILU,Bilirubine Urinaire,BILIRUBINE URINAIRE,Autre,0,,,58
+N  TEST,Testosterone Serique,TESTOSTERONE SERIQUE,Autre,0,,,57
+C  EPP,Electrophorese Des Protei,ELECTROPHORESE DES PROTEI,Autre,0,,,55
+I  TRAG,Ac  Anit Transglutaminase,AC  ANIT TRANSGLUTAMINASE,Autre,0,,,52
+I  CCP,Ac Anti Ccp,AC ANTI CCP,Autre,0,,,52
+EZ LDH,Ldh,LDH,Autre,0,,,50
+EU RAPC,Rapport Proteinurie Créat,rapport proteinurie créat,Autre,0,,,50
+C  ASP,Aspect Du Serum,ASPECT DU SERUM,Autre,0,,,49
+N  COR8,Cortisol 8H,CORTISOL 8H,Autre,0,,,49
+N  FSH,Fsh Plasmatique,FSH PLASMATIQUE,Autre,0,,,47
+B  PV,Prelevement Vaginal,PRELEVEMENT VAGINAL,Autre,0,,,47
+I  BNP,Brain Natriuretic Peptide,BRAIN NATRIURETIC PEPTIDE,Autre,0,,,47
+N  HCG,Dosage D'Hcg,DOSAGE D'HCG,Autre,0,,,46
+V  VB9,Vitamine B9,VITAMINE B9,Autre,0,,,46
+B  ATBC,Antibiogramme C+,ANTIBIOGRAMME C+,Autre,0,,,45
+N  PTH,Parathormone,PARATHORMONE,Autre,0,,,43
+B  SPC,Spermoculture,SPERMOCULTURE,Autre,0,,,43
+H  VS1,Vitesse De Sedimentation,VITESSE DE SEDIMENTATION,Autre,0,,,41
+C  RA,Reserve Alcaline,RESERVE ALCALINE,Autre,0,,,40
+N  ATG,Ac. Antithyroglobuline,AC. ANTITHYROGLOBULINE,Autre,0,,,40
+B  RSS,Sang Ds Les Selles,SANG DS LES SELLES,Autre,0,,,39
+T  RAI,Recherche D'Agglutinines,RECHERCHE D'AGGLUTININES,Autre,0,,,38
+EZ CPK,Créatinine Kinase (Cpk),Créatinine kinase (CPK),Autre,0,,,37
+B  CBUM,Ecbu Msc ( Ifaero),ECBU MSC ( IFAERO),Autre,0,,,35
+C  CALI,Calcul Urinaire Infraroug,CALCUL URINAIRE INFRAROUG,Autre,0,,,33
+N  AMH,Hormone Anti Mullerienne,HORMONE ANTI MULLERIENNE,Autre,0,,,32
+B  BK3,Bk *3,BK *3,Autre,0,,,32
+EU RBIL,Bilirubine Urines,BILIRUBINE URINES,Autre,0,,,30
+S  DPD,Uracilemie (Phenotypage D,URACILEMIE (phenotypage d,Autre,0,,,29
+N  LH,Lh Plasmatique,LH PLASMATIQUE,Autre,0,,,28
+C  HGPO,Hyperglycemie Provoquee P,HYPERGLYCEMIE PROVOQUEE P,Autre,0,,,27
+C  FER,Fer,FER,Autre,0,,,26
+B  CBP3,Ecb D'Un Prelevement De P,ECB D'UN PRELEVEMENT DE P,Autre,0,,,25
+S  AHBC,Anticorps Hbc,ANTICORPS HBC,Autre,0,,,24
+BM HLAB,Hla B 27,HLA B 27,Autre,0,,,24
+H  RETI,Reticulocytes,RETICULOCYTES,Autre,0,,,23
+C  PROT,Proteines,PROTEINES,Autre,0,,,23
+S  AHBS,Anticorps Hbs,ANTICORPS HBS,Autre,0,,,23
+MT CA12,Ca125,CA125,Autre,0,,,22
+0  INFO,Informations Sur Ce Dossi,Informations sur ce dossi,Autre,0,,,22
+EZ AMY,Amylase,AMYLASE,Autre,0,,,20
+BM QF,Quantiferon Tbgold It,QUANTIFERON TBGOLD IT,Autre,0,,,18
+I  ADNA,Anticorps Anti Dna,ANTICORPS ANTI DNA,Autre,0,,,17
+Y  MUG,(Etiquette Dossier),(ETIQUETTE DOSSIER),Autre,0,,,16
+N  E2,Oestradiol,OESTRADIOL,Autre,0,,,16
+B  IDR,Idr,IDR,Autre,0,,,16
+B  MYCO,Mycologie D'Un Prelevemen,MYCOLOGIE D'UN PRELEVEMEN,Autre,0,,,15
+N  THYG,Thyroglobuline,THYROGLOBULINE,Autre,0,,,15
+SP SPRC,Spermocytogramme,SPERMOCYTOGRAMME,Autre,0,,,13
+B  LCR,Liquide Cephalo-Rachidien,LIQUIDE CEPHALO-RACHIDIEN,Autre,0,,,13
+N  ARTS,Ac Anti Recepteur De La T,Ac Anti Recepteur de la T,Autre,0,,,12
+S  HSV,Infections À Herpes Simpl,Infections à Herpes Simpl,Autre,0,,,11
+MT PSAL,Antigene Prostatique (Lib,ANTIGENE PROSTATIQUE (LIB,Autre,0,,,11
+I  IGA,Immunoglobulines A,IMMUNOGLOBULINES A,Autre,0,,,11
+BM ADNB,Qlfcat Adn Du Vhb,QLFCAT ADN DU VHB,Autre,0,,,11
+EU CRU,Creatinine Urinaire,CREATININE URINAIRE,Autre,0,,,10
+MT AFP,Alpha Foeto-Proteine.,ALPHA FOETO-PROTEINE.,Autre,0,,,10
+BM ARN2,Pcrhvc,PCRHVC,Autre,0,,,9
+EZ CONV,Enzyme De Conversion,ENZYME DE CONVERSION,Autre,0,,,9
+HS FIB,Fibrinogene,FIBRINOGENE,Autre,0,,,9
+B  ATBT,Antibiogramme,ANTIBIOGRAMME,Autre,0,,,9
+B  BKC,Recherche De Bk + Culture,RECHERCHE DE BK + CULTURE,Autre,0,,,9
+B  ASCI,Liquide D'Ascite,LIQUIDE D'ASCITE,Autre,0,,,8
+A  CLAT,Bmd-Cla Trophallergenes,BMD-CLA TROPHALLERGENES,Autre,0,,,8
+N  COR,Cortisol 10H,CORTISOL 10H,Autre,0,,,8
+C  ZINC,Zinc,ZINC,Autre,0,,,8
+MT PSTL,Psa Libre/Totale,PSA LIBRE/TOTALE,Autre,0,,,8
+C  IEP,Immuno Electrophorese,IMMUNO ELECTROPHORESE,Autre,0,,,8
+N  D4AD,Delta 4 Androstenedione,DELTA 4 ANDROSTENEDIONE,Autre,0,,,7
+BM NOW,Coronavirus Sars Cov2 (Co,CORONAVIRUS SARS COV2 (CO,Autre,0,,,7
+U  PH,Ph,PH,Autre,0,,,7
+I  MITO,Ac Anti Mitochondries Dep,AC ANTI MITOCHONDRIES DEP,Autre,0,,,7
+I  TAN,Test Antigénique Covid 19,Test Antigénique Covid 19,Autre,0,,,7
+B  PURE,Prelevement Uretral,PRELEVEMENT URETRAL,Autre,0,,,7
+EU CAU,Calcium Urinaire,CALCIUM URINAIRE,Autre,0,,,7
+N  DHA,Dehydroepiandrosterone Su,DEHYDROEPIANDROSTERONE SU,Autre,0,,,6
+I  ECT,Ect Depistage + Titrage,ECT DEPISTAGE + TITRAGE,Autre,0,,,6
+C  COEF,Coefficients De Saturatio,Coefficients de saturatio,Autre,0,,,6
+B  PARP,Parasitologie Des Selles*,Parasitologie des selles*,Autre,0,,,6
+N  IGF1,Igf1,IGF1,Autre,0,,,6
+BM HIVP,Pcr Hiv,PCR HIV,Autre,0,,,6
+I  ACPH,Ac Antiphospholipides,AC ANTIPHOSPHOLIPIDES,Autre,0,,,6
+A  IGET,Ige T,IGE T,Autre,0,,,6
+I  ECTD,Ect Depistage,ECT DEPISTAGE,Autre,0,,,6
+C  CACO,Calcium Corrige,CALCIUM CORRIGE,Autre,0,,,5
+T  T4T8,Marqueurs Lymphocytaires,MARQUEURS LYMPHOCYTAIRES,Autre,0,,,5
+A  CLAP,Bmd-Cla Pneumallergenes,BMD-CLA PNEUMALLERGENES,Autre,0,,,5
+V  VB9E,Vitamine B9 Erythrocytair,VITAMINE B9 ERYTHROCYTAIR,Autre,0,,,5
+C  ALCO,Alcoolemie,ALCOOLEMIE,Autre,0,,,5
+B  HLM,Hlm (Compte D'Addis),HLM (COMPTE D'ADDIS),Autre,0,,,5
+B  RCH1,Recherche Direct De Chlam,RECHERCHE DIRECT DE CHLAM,Autre,0,,,5
+B  PUS,Ecb D'Un Prelevement De P,ECB D'UN PRELEVEMENT DE P,Autre,0,,,5
+B  RMY1,Recherche Direct De Mycop,RECHERCHE DIRECT DE MYCOP,Autre,0,,,5
+EU PU,Phosphore Urinaire,PHOSPHORE URINAIRE,Autre,0,,,5
+MT CALC,Calcitonine,CALCITONINE,Autre,0,,,5
+C  SELE,Selenium Serique,SELENIUM SERIQUE,Autre,0,,,4
+EZ ADA,Adenosine Desaminase,ADENOSINE DESAMINASE,Autre,0,,,4
+I  IGG,Immunoglobulines G,IMMUNOGLOBULINES G,Autre,0,,,4
+C  CTF,Capacite Totale De Fixati,CAPACITE TOTALE DE FIXATI,Autre,0,,,4
+N  17HP,17 Hydroxy Progesterone,17 HYDROXY PROGESTERONE,Autre,0,,,4
+N  CO16,Cortisol 16H,CORTISOL 16h,Autre,0,,,4
+I  C3,Complement C3,COMPLEMENT C3,Autre,0,,,4
+I  EDMA,Ac Anti Endomysuim Iga,AC ANTI ENDOMYSUIM IGA,Autre,0,,,4
+N  COR9,Cortisol 9H,CORTISOL 9H,Autre,0,,,4
+I  ANCA,Ac Anti Cytoplasme Des Pn,AC ANTI CYTOPLASME DES PN,Autre,0,,,4
+B  BKU,Recherche De Bk Urinaire,RECHERCHE DE BK URINAIRE,Autre,0,,,4
+EU PH,Ph,PH,Autre,0,,,4
+N  CORU,Cortisol Urinaire,CORTISOL URINAIRE,Autre,0,,,4
+O  F8,Facteur Viiic,FACTEUR VIIIc,Autre,0,,,4
+S  CMV,Infections Cytomégalo Vir,Infections Cytomégalo Vir,Autre,0,,,4
+C  IEFP,Isoelectrofocalisation Lc,ISOELECTROFOCALISATION LC,Autre,0,,,4
+S  HYDA,Sero Hydatidose Depistage,SERO HYDATIDOSE depistage,Autre,0,,,4
+TO LITH,Lithum,LITHUM,Autre,0,,,3
+T  CHLK,Chaines Legeres Libres Ka,CHAINES LEGERES LIBRES KA,Autre,0,,,3
+EZ LDHP,Ldh Dans Liquide Pleural,LDH DANS LIQUIDE PLEURAL,Autre,0,,,3
+EZ B2GI,Anti-Bêta 2 Glycoprotéine,Anti-bêta 2 glycoprotéine,Autre,0,,,3
+O  PRC,Proteine C,PROTEINE C,Autre,0,,,3
+I  MULI,Ac Anti Muscle Lisse,AC ANTI MUSCLE LISSE,Autre,0,,,3
+C  TRAF,Transferrine,TRANSFERRINE,Autre,0,,,3
+V  VITE,Vitamine E,VITAMINE E,Autre,0,,,3
+I  ACAG,Ac Anti Cardiolipine Igg,AC ANTI CARDIOLIPINE IGG,Autre,0,,,3
+O  PRS,Proteine S,PROTEINE S,Autre,0,,,3
+I  C4,Complement C4,COMPLEMENT C4,Autre,0,,,3
+S  EBV,Serologie  Ebv Igg - Igm,SEROLOGIE  EBV IGG - IGM,Autre,0,,,3
+I  GAD,Anticorps Anti Gad,Anticorps Anti GAD,Autre,0,,,3
+N  PROG,Progesterone,PROGESTERONE,Autre,0,,,3
+ZB ATB2,Atb 2Eme,ATB 2EME,Autre,0,,,3
+EU NAU,Sodium Urinaire,SODIUM URINAIRE,Autre,0,,,3
+B  PVU,Prelevement Vulvaire,PRELEVEMENT VULVAIRE,Autre,0,,,3
+I  ACAR,Ac Anti Cardiolipine Igm,AC ANTI CARDIOLIPINE IGM,Autre,0,,,3
+B  ATB-,Antibiogramme B-,ANTIBIOGRAMME B-,Autre,0,,,3
+B  ATBD,Antibiogramme,ANTIBIOGRAMME,Autre,0,,,3
+B  CPR3,Coproparasitologie 3 X,COPROPARASITOLOGIE 3 X,Autre,0,,,3
+B  PLEU,Examen D'Un Liquide Pleur,EXAMEN D'UN LIQUIDE PLEUR,Autre,0,,,3
+C  APOA,Apolipoproteine A1,APOLIPOPROTEINE A1,Autre,0,,,3
+I  EDMG,Anticorps Anti-Endomysium,Anticorps Anti-Endomysium,Autre,0,,,3
+BS ACTH,Acth,ACTH,Autre,0,,,3
+S  GHBE,Antigene Hbe,ANTIGENE HBE,Autre,0,,,3
+T  CHLL,Chaines Legeres Libres La,CHAINES LEGERES LIBRES LA,Autre,0,,,3
+HS AT3,Anti Thrombine Iii,ANTI THROMBINE III,Autre,0,,,3
+C  FRUC,Fructosamines,FRUCTOSAMINES,Autre,0,,,3
+I  SP10,Anticorps Anti-Sp100 - Ig,Anticorps anti-SP100 - Ig,Autre,0,,,2
+N  PEPC,C Peptide,C PEPTIDE,Autre,0,,,2
+V  VB6,Vitamine B6,VITAMINE B6,Autre,0,,,2
+MT HCGP,Beta Hcg Homme,BETA HCG HOMME,Autre,0,,,2
+EU LABS,Labstix Urinaire,LABSTIX URINAIRE,Autre,0,,,2
+EZ B2GM,Anti-Bêta 2 Glycoprotéine,Anti-bêta 2 glycoprotéine,Autre,0,,,2
+EU UU,Uree Urinaire,UREE URINAIRE,Autre,0,,,2
+B  ATB1,Antibiogramme 1,ANTIBIOGRAMME 1,Autre,0,,,2
+HS ATCL,Anticoagulant Circulant D,ANTICOAGULANT CIRCULANT D,Autre,0,,,2
+O  F9,Facteur Ix (Antihemophili,FACTEUR IX (ANTIHEMOPHILI,Autre,0,,,2
+C  IMEL,Immuno Electrophorese Dan,IMMUNO ELECTROPHORESE DAN,Autre,0,,,2
+C  MGE,Magnésium Erytrocytaire,Magnésium Erytrocytaire,Autre,0,,,2
+B  PARE,Parasitologie Des Selles,PARASITOLOGIE DES SELLES,Autre,0,,,2
+M  PHEC,Recherche De Phencyclidin,Recherche de PHENCYCLIDIN,Autre,0,,,2
+I  IGGS,Sous Classes Igg4,SOUS CLASSES IGG4,Autre,0,,,2
+B  LART,Liquide Articulaire,LIQUIDE ARTICULAIRE,Autre,0,,,2
+I  GLIA,Auto Ac Antigliadine Iga,AUTO AC ANTIGLIADINE IGA,Autre,0,,,2
+I  GLIG,Anticorps Anti Gliadine I,ANTICORPS ANTI GLIADINE I,Autre,0,,,2
+I  GP21

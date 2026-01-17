@@ -150,7 +150,7 @@ export default async function LangLayout({
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow w-full main-content-mobile-padding">
-              <div className="max-w-full overflow-x-hidden">
+              <div className="max-w-full">
                 {children}
               </div>
             </main>

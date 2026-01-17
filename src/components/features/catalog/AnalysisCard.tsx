@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTranslation } from 'react-i18next';
 
-// Define Analysis interface for type safety
+// Legacy interface - kept for backward compatibility
 export interface Analysis {
   id: string;
   name_fr: string;
@@ -16,29 +16,63 @@ export interface Analysis {
   is_active: boolean;
 }
 
+// New interface for individual analyses from the 'analyses' collection
+export interface AnalyseItem {
+  id: string; // Code_Interne (e.g., "C HBA1", "H NFS")
+  Nom_Patient_FR: string;
+  Nom_Patient_AR: string;
+  Prix_Dhs: number;
+  Categorie_FR: string;
+  Categorie_AR: string;
+  Pre_Analytique_FR: string;
+  Pre_Analytique_AR: string;
+  Tags_FR: string[];
+  Tags_AR: string[];
+  Description_Patient_FR?: string;
+  Description_Patient_AR?: string;
+  Nom_Technique?: string;
+  Nombre_Demandes?: number;
+}
+
+// New interface for test packs/bilans from the 'bilans' collection
+export interface BilanItem {
+  id: string;
+  Nom_Bilan_FR: string;
+  Nom_Bilan_AR: string;
+  Prix_Affiche_Dhs: number;
+  Description_FR: string;
+  Description_AR: string;
+  Composition_Codes: string[]; // Array of analysis IDs (e.g., ["C HBA1", "C GLY"])
+  Is_Featured: boolean;
+  Icone: string; // Icon name (e.g., "heart_pulse", "battery_charging")
+  Categorie: string;
+}
+
+// Union type for cart items (supports both analyses and bilans)
+export type CartItem =
+  | { type: 'analyse'; item: AnalyseItem }
+  | { type: 'bilan'; item: BilanItem };
+
 interface AnalysisCardProps {
   analysis: Analysis;
   lang: string;
   isSelected?: boolean;
   onSelect?: (analysis: Analysis) => void;
+  onShowDetails?: (analysis: Analysis) => void;
 }
 
-export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: AnalysisCardProps) {
+export function AnalysisCard({ analysis, lang, isSelected = false, onSelect, onShowDetails }: AnalysisCardProps) {
   const { t } = useTranslation('catalog');
   const isArabic = lang === "ar";
-  const [showPreparation, setShowPreparation] = useState(false);
 
-  // Get the preparation text based on the current language
-  const preparationText = isArabic ? analysis.preparation_ar : analysis.preparation_fr;
-  const hasPreparation = preparationText && preparationText.trim().length > 0;
-
-  // Toggle preparation visibility
-  const togglePreparation = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowPreparation(prev => !prev);
+  // Handle card click to show details modal
+  const handleCardClick = () => {
+    if (onShowDetails) {
+      onShowDetails(analysis);
+    }
   };
-  
-  // Handle selection
+
+  // Handle selection (circular button)
   const handleSelectClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onSelect) {
@@ -47,126 +81,59 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect }: A
   };
 
   return (
-    <div 
-      className={`
-        relative w-full
-        bg-[var(--background-secondary)] dark:bg-[var(--background-secondary)]
-        border-2 rounded-xl p-5 mb-4
-        cursor-pointer
-        transition-all duration-200 ease-in-out
-        ${isSelected 
-          ? 'border-[var(--color-fuchsia-accent)] dark:border-[var(--color-fuchsia-accent)] ring-2 ring-[var(--color-fuchsia-accent)]/30 scale-[1.02] bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-tertiary)]' 
-          : 'border-[var(--border-default)] hover:border-[var(--color-bordeaux-light)] dark:hover:border-[var(--color-bordeaux-primary)] hover:shadow-lg dark:hover:bg-[var(--background-tertiary)]'
-        }
-      `}
-      onClick={handleSelectClick}
+    <div
+      className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
       role="button"
       tabIndex={0}
-      aria-pressed={isSelected}
+      onClick={handleCardClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          handleSelectClick(e as unknown as React.MouseEvent);
+          handleCardClick();
         }
       }}
-      style={{
-        boxShadow: isSelected 
-          ? '0 8px 25px -5px rgba(255, 64, 129, 0.2)' 
-          : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-        minHeight: '200px'
-      }}
     >
-      {/* Selection indicator */}
-      <div 
-        className={`absolute top-3 ${isArabic ? 'left-3' : 'right-3'} z-10`}
-        aria-hidden="true"
-      >
-        <div 
-          className={`
-            w-6 h-6 rounded-full flex items-center justify-center
-            transition-all duration-200
-            ${isSelected 
-              ? 'bg-[var(--color-fuchsia-accent)] text-white scale-110' 
-              : 'border-2 border-[var(--border-default)] bg-[var(--background-default)] hover:border-[var(--color-fuchsia-accent)]'
-            }
-          `}
-        >
-          {isSelected ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[var(--text-tertiary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-          )}
-        </div>
-        <span className="sr-only">{isSelected ? t('card.selected') : t('card.select')}</span>
-      </div>
-      
-      {/* Card Content */}
-      <div className={`${isArabic ? 'pl-10' : 'pr-10'}`}>
-        <h3 
-          className={`
-            text-xl font-semibold mb-3 transition-colors duration-200
-            ${isSelected 
-              ? 'text-[var(--color-fuchsia-accent)]' 
-              : 'text-[var(--color-bordeaux-primary)]'
-            }
-          `}
-        >
+      {/* Left: Name + Category */}
+      <div className="flex-1 min-w-0">
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-1 truncate">
           {isArabic ? analysis.name_ar : analysis.name_fr}
-        </h3>
-        
-        <div className="space-y-2">
-          <p className="text-[var(--text-secondary)] text-sm">
-            <span className="font-medium text-[var(--text-primary)]">{t('card.category_label')} </span>
-            {isArabic ? analysis.category_ar : analysis.category_fr}
-          </p>
-          
-          <p className="text-[var(--text-secondary)] text-sm">
-            <span className="font-medium text-[var(--text-primary)]">{t('card.delay_label')} </span>
-            {isArabic ? analysis.delay_ar : analysis.delay_fr}
-          </p>
-          
-          <p className="text-[var(--color-fuchsia-accent)] font-bold mt-3 text-lg">
-            {analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {t('card.price_currency')}
-          </p>
-          
-          {/* Preparation toggle button */}
-          {hasPreparation && (
-            <div className="mt-3">
-              <button 
-                onClick={togglePreparation}
-                className="
-                  px-3 py-2 text-xs rounded-md
-                  bg-[var(--color-gray-soft)] hover:bg-[var(--color-gray-border)]
-                  text-[var(--text-primary)]
-                  border border-[var(--border-default)]
-                  transition-colors duration-200
-                  focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:ring-opacity-50
-                "
-                aria-expanded={showPreparation}
-              >
-                {showPreparation ? t('card.hide_preparation') : t('card.show_preparation')}
-              </button>
-            </div>
-          )}
-          
-          {/* Preparation details section */}
-          {showPreparation && (
-            <div className="mt-3 p-3 bg-[var(--color-gray-soft)] border border-[var(--border-default)] rounded-md">
-              <h4 className="font-medium text-xs mb-2 text-[var(--text-primary)]">
-                {t('card.preparation_label')}
-              </h4>
-              <p className="text-[var(--text-secondary)] text-xs whitespace-pre-line leading-relaxed">
-                {hasPreparation ? preparationText : t('card.no_preparation')}
-              </p>
-            </div>
-          )}
-        </div>
+        </h4>
+        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          {isArabic ? analysis.category_ar : analysis.category_fr}
+        </p>
       </div>
+
+      {/* Right: Price + Circular Button */}
+      <div className={`flex items-center gap-3 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
+        {/* Price or "Sur Devis" Badge */}
+        {analysis.price === 0 ? (
+          <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full whitespace-nowrap">
+            {t('on_quote', 'Sur Devis')}
+          </span>
+        ) : (
+          <span className="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">
+            {analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {t('card.price_currency', 'DH')}
+          </span>
+        )}
+
+        {/* Circular Add Button */}
+        <button
+          onClick={handleSelectClick}
+          className={`
+            h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0
+            transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-[#FF4081] focus:ring-offset-2
+            ${isSelected
+              ? 'bg-[#FF4081] text-white scale-110'
+              : 'bg-[#FF4081] text-white hover:scale-110 hover:bg-[#F50057]'
+            }
+          `}
+          aria-label={isSelected ? t('card.selected', 'Retirer du panier') : t('card.select', 'Ajouter au panier')}
+        >
+          {isSelected ? '✓' : '+'}
+        </button>
+      </div>
+
     </div>
   );
 }

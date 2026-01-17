@@ -2,6 +2,7 @@
   "title": "دليل التحاليل",
   "search_label": "البحث عن تحليل",
   "search_placeholder": "اكتب اسم التحليل...",
+  "search_in_tags": "البحث بالاسم، التصنيف أو الكلمات المفتاحية...",
   "category_label": "التصنيف",
   "all_categories": "جميع التصنيفات",
   "no_results": "لا توجد نتائج مطابقة لمعايير البحث.",
@@ -9,7 +10,27 @@
   "no_analyses": "لا توجد تحاليل متاحة حاليًا.",
   "loading": "جاري التحميل...",
   "error_fetching": "فشل في تحميل التحاليل",
-  
+
+  "bilans_vedettes_title": "الباقات المميزة",
+  "bilans_vedettes_subtitle": "أكثر باقات التحاليل طلباً",
+  "bilans_section_title": "الباقات",
+  "analyses_section_title": "دليل التحاليل",
+  "bilan_details_title": "تفاصيل الباقة",
+  "bilan_composition_label": "تحتوي هذه الباقة على:",
+  "bilan_includes": "متضمن في هذه الباقة",
+  "bilan_price_label": "سعر الباقة",
+  "individual_total": "مجموع التحاليل المنفصلة",
+  "show_details": "عرض التفاصيل",
+  "add_to_cart": "إضافة إلى السلة",
+  "close": "إغلاق",
+  "individual_analyses": "تحاليل منفردة",
+  "test_packs": "الباقات",
+  "bilans": "الباقات",
+  "analyses": "التحاليل",
+  "item_count": "{count} عنصر",
+  "no_bilans_found": "لم يتم العثور على باقات.",
+  "featured_badge": "مميزة",
+
   "card": {
     "category_label": "التصنيف:",
     "delay_label": "المدة:",
@@ -20,5 +41,13 @@
     "no_preparation": "لا توجد تعليمات تحضير محددة.",
     "select": "اختيار",
     "selected": "تم الاختيار"
+  },
+  "on_quote": "عند الطلب",
+  "tabs": {
+    "our_bilans": "باقاتنا",
+    "full_catalog": "الدليل الكامل",
+    "sort_by": "ترتيب حسب",
+    "popularity": "الشعبية",
+    "alphabetical": "أ-ي"
   }
 }

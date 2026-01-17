@@ -2,369 +2,749 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense, useCallback } from "react";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { collection, query, getDocs } from "firebase/firestore";
 import { db } from "@/config/firebase";
-import AnalysisCard, { Analysis } from "@/components/features/catalog/AnalysisCard";
+import { AnalyseItem, BilanItem, CartItem } from "@/components/features/catalog/AnalysisCard";
+import BilanCard from "@/components/features/catalog/BilanCard";
+import AnalysisMiniCard from "@/components/features/catalog/AnalysisMiniCard";
+import TabsNavigation, { TabItem } from "@/components/features/catalog/TabsNavigation";
+import SortToolbar, { SortOption } from "@/components/features/catalog/SortToolbar";
+import BilanDetailsModal from "@/components/features/catalog/BilanDetailsModal";
+import AnalysisDetailsModal from "@/components/features/catalog/AnalysisDetailsModal";
 import TotalCalculator from "@/components/features/catalog/TotalCalculator";
+import CartDetailsModal from "@/components/features/catalog/CartDetailsModal";
+import { getCategoryIcon } from '@/utils/iconMapper';
 import { useTranslation } from 'react-i18next';
+import { Search, Star, BookOpen } from 'lucide-react';
 
-// Simplified data fetcher with stable implementation
-const AnalysesCatalogDataFetcher = ({ 
-  lang, 
-  onDataFetched, 
-  onErrorOccurred, 
-  onLoadingStateChange 
+// Data fetcher component
+const CatalogDataFetcher = ({
+  lang,
+  onDataFetched,
+  onErrorOccurred,
+  onLoadingStateChange
 }: {
   lang: string;
-  onDataFetched: (data: Analysis[]) => void;
+  onDataFetched: (analyses: AnalyseItem[], bilans: BilanItem[]) => void;
   onErrorOccurred: (errorMsg: string | null) => void;
   onLoadingStateChange: (isLoading: boolean) => void;
 }) => {
-  const { t } = useTranslation(['common', 'catalog']);
-
-  const translations = useMemo(() => ({
-    errorFetchingBase: t('catalog.error_fetching', 'Échec du chargement des analyses'),
-    errorDbNotInitialized: t('firebase.db_not_initialized', 'Database connection error'),
-    errorPermissions: t('catalog.error_permissions', 'Access denied'),
-    errorOffline: t('catalog.error_offline', 'Cannot connect to database')
-  }), [t]);
+  const { t } = useTranslation(['catalog']);
 
   useEffect(() => {
     let isMounted = true;
-    
-    const fetchAnalyses = async () => {
+
+    const fetchData = async () => {
       if (!isMounted) return;
-      
+
       onLoadingStateChange(true);
       onErrorOccurred(null);
-      
+
       try {
         if (!db) {
           throw new Error("Firestore is not initialized");
         }
-        
-        const analysesCollectionRef = collection(db, "analysisCatalog");
-        const analysesQuery = query(
-          analysesCollectionRef,
-          where("is_active", "==", true),
-          orderBy(lang === "ar" ? "name_ar" : "name_fr")
-        );
 
-        const querySnapshot = await getDocs(analysesQuery);
-        
+        // Fetch both collections in parallel
+        const [analysesSnapshot, bilansSnapshot] = await Promise.all([
+          getDocs(collection(db, "analyses")),
+          getDocs(collection(db, "bilans"))
+        ]);
+
         if (!isMounted) return;
-        
-        const fetchedAnalyses: Analysis[] = querySnapshot.docs.map((doc) => ({
+
+        const fetchedAnalyses: AnalyseItem[] = analysesSnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...(doc.data() as Omit<Analysis, "id">)
+          ...(doc.data() as Omit<AnalyseItem, "id">)
         }));
-        
-        onDataFetched(fetchedAnalyses);
+
+        const fetchedBilans: BilanItem[] = bilansSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<BilanItem, "id">)
+        }));
+
+        onDataFetched(fetchedAnalyses, fetchedBilans);
       } catch (err) {
         if (!isMounted) return;
 
-        let specificErrorMessage = translations.errorFetchingBase;
-        
+        let errorMessage = t('error_fetching', 'Échec du chargement des données');
+
         if (err instanceof Error) {
           if (err.message.includes("Missing or insufficient permissions")) {
-            specificErrorMessage = translations.errorPermissions;
+            errorMessage = t('error_permissions', 'Accès refusé');
           } else if (err.message.includes("offline") || err.message.includes("Failed to fetch")) {
-            specificErrorMessage = translations.errorOffline;
-          } else if (err.message.toLowerCase().includes("firestore is not initialized")) {
-            specificErrorMessage = translations.errorDbNotInitialized;
+            errorMessage = t('error_offline', 'Impossible de se connecter à la base de données');
           }
         }
-        onErrorOccurred(specificErrorMessage);
+        onErrorOccurred(errorMessage);
       } finally {
         if (isMounted) {
           onLoadingStateChange(false);
         }
       }
     };
-    
-    fetchAnalyses();
-    
+
+    fetchData();
+
     return () => {
       isMounted = false;
     };
-
-  }, [lang, translations, onDataFetched, onErrorOccurred, onLoadingStateChange]);
+  }, [lang, t, onDataFetched, onErrorOccurred, onLoadingStateChange]);
 
   return null;
 };
 
 // Main page component
 export function AnalysesCatalogPageContents({ params: langParams }: { params: { lang: string } }) {
-  const STORAGE_KEY = 'laboElAllali_selectedAnalyses';
-  const { t } = useTranslation(['common', 'catalog']);
+  const STORAGE_KEY = 'laboElAllali_selectedItems_v2';
+  const { t } = useTranslation(['catalog']);
   const lang = langParams.lang;
   const isArabic = lang === "ar";
-  const dir = isArabic ? "rtl" : "ltr";
-  
+
   // State variables
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
+  const [analyses, setAnalyses] = useState<AnalyseItem[]>([]);
+  const [bilans, setBilans] = useState<BilanItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedAnalyses, setSelectedAnalyses] = useState<Analysis[]>([]);
-  
-  // Stable callbacks to prevent unnecessary re-renders
-  const handleDataFetched = useCallback((data: Analysis[]) => {
-    setAnalyses(data);
+  const [selectedItems, setSelectedItems] = useState<CartItem[]>([]);
+  const [bilanModalOpen, setBilanModalOpen] = useState(false);
+  const [selectedBilanForDetails, setSelectedBilanForDetails] = useState<BilanItem | null>(null);
+  const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
+  const [selectedAnalysisForDetails, setSelectedAnalysisForDetails] = useState<AnalyseItem | null>(null);
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false); // NOUVEAU - State pour cart modal
+
+  // NEW: Tabs state
+  const [activeTab, setActiveTab] = useState<string>('bilans');
+  const [sortBy, setSortBy] = useState<SortOption>('name');
+
+  // Create analyses map for fast lookups
+  const analysesMap = useMemo(() => {
+    const map = new Map<string, AnalyseItem>();
+    analyses.forEach(analyse => map.set(analyse.id, analyse));
+    return map;
+  }, [analyses]);
+
+  // Stable callbacks
+  const handleDataFetched = useCallback((fetchedAnalyses: AnalyseItem[], fetchedBilans: BilanItem[]) => {
+    setAnalyses(fetchedAnalyses);
+    setBilans(fetchedBilans);
   }, []);
-  
+
   const handleErrorOccurred = useCallback((errorMsg: string | null) => {
     setError(errorMsg);
   }, []);
-  
+
   const handleLoadingStateChange = useCallback((isLoading: boolean) => {
     setLoading(isLoading);
   }, []);
-  
-  // Load selected analyses from localStorage on component mount
+
+  // Load from localStorage
   useEffect(() => {
     try {
       const savedSelections = localStorage.getItem(STORAGE_KEY);
       if (savedSelections) {
         const parsedSelections = JSON.parse(savedSelections);
-        if (Array.isArray(parsedSelections) && parsedSelections.length > 0) {
-          if (parsedSelections.every(item => item && typeof item === 'object' && 'id' in item)) {
-            setSelectedAnalyses(parsedSelections);
-          }
+        if (Array.isArray(parsedSelections)) {
+          setSelectedItems(parsedSelections);
         }
       }
     } catch {
-      // Silently ignore localStorage errors
+      // Silently ignore errors
     }
   }, []);
-  
-  // Save selections to localStorage
-  const saveSelectionsToStorage = useCallback((selections: Analysis[]) => {
+
+  // Save to localStorage
+  const saveSelectionsToStorage = useCallback((selections: CartItem[]) => {
     try {
-      const serializedData = JSON.stringify(selections);
-      localStorage.setItem(STORAGE_KEY, serializedData);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(selections));
     } catch {
-      // Silently ignore localStorage errors
+      // Silently ignore errors
     }
   }, []);
-  
-  // Save selected analyses to localStorage when they change
+
   useEffect(() => {
-    saveSelectionsToStorage(selectedAnalyses);
-  }, [selectedAnalyses, saveSelectionsToStorage]);
-  
-  // Calculate total cost
-  const getTotalCost = useCallback((): number => {
-    return selectedAnalyses.reduce((total, analysis) => total + analysis.price, 0);
-  }, [selectedAnalyses]);
+    saveSelectionsToStorage(selectedItems);
+  }, [selectedItems, saveSelectionsToStorage]);
 
-  const translations = useMemo(() => ({
-    title: t('common:navigation.analyses_catalog', isArabic ? 'دليل التحاليل' : 'Catalogue des Analyses'),
-    searchLabel: t('catalog:search_label', isArabic ? 'البحث عن تحليل' : 'Rechercher une analyse'),
-    searchPlaceholder: t('catalog:search_placeholder', isArabic ? 'اكتب اسم التحليل...' : "Tapez le nom d'une analyse..."),
-    categoryLabel: t('catalog:category_label', isArabic ? 'التصنيف' : 'Catégorie'),
-    allCategories: t('catalog:all_categories', isArabic ? 'جميع التصنيفات' : 'Toutes les catégories'),
-    noResults: t('catalog:no_results', isArabic ? 'لا توجد نتائج مطابقة لمعايير البحث.' : 'Aucun résultat trouvé.'),
-    clearFilters: t('catalog:clear_filters', isArabic ? 'مسح عوامل التصفية' : 'Effacer les filtres'),
-    noAnalyses: t('catalog:no_analyses', isArabic ? 'لا توجد تحاليل متاحة حاليًا.' : 'Aucune analyse disponible.'),
-    loadingText: t('catalog:loading', isArabic ? 'جاري التحميل...' : 'Chargement des analyses...'),
-    errorTitle: t('common:error.title', isArabic ? 'خطأ' : 'Erreur'),
-    costUnit: isArabic ? 'درهم' : 'MAD'
-  }), [t, isArabic]);
+  // Search function
+  const searchInItem = useCallback((item: AnalyseItem | BilanItem, term: string): boolean => {
+    const searchLower = term.toLowerCase();
 
-  const categories = useMemo(() => {
-    const categoryField = lang === "ar" ? "category_ar" : "category_fr";
-    const uniqueCategories = new Set<string>();
-    analyses.forEach((analysis) => {
-      const category = analysis[categoryField as keyof Analysis] as string;
-      if (category && category.trim()) uniqueCategories.add(category.trim());
+    if ('Nom_Patient_FR' in item) {
+      // AnalyseItem
+      const name = isArabic ? item.Nom_Patient_AR : item.Nom_Patient_FR;
+      const tags = isArabic ? item.Tags_AR : item.Tags_FR;
+      const category = isArabic ? item.Categorie_AR : item.Categorie_FR;
+      const description = isArabic ? item.Description_Patient_AR : item.Description_Patient_FR;
+
+      return name.toLowerCase().includes(searchLower) ||
+        tags.some(tag => tag.toLowerCase().includes(searchLower)) ||
+        category.toLowerCase().includes(searchLower) ||
+        (description?.toLowerCase().includes(searchLower) || false);
+    } else {
+      // BilanItem
+      const name = isArabic ? item.Nom_Bilan_AR : item.Nom_Bilan_FR;
+      const description = isArabic ? item.Description_AR : item.Description_FR;
+
+      return name.toLowerCase().includes(searchLower) ||
+        description.toLowerCase().includes(searchLower) ||
+        item.Categorie.toLowerCase().includes(searchLower);
+    }
+  }, [isArabic]);
+
+  // Filtered data
+  const filteredAnalyses = useMemo(() => {
+    if (!searchTerm.trim()) return analyses;
+    return analyses.filter(analyse => searchInItem(analyse, searchTerm));
+  }, [analyses, searchTerm, searchInItem]);
+
+  const filteredBilans = useMemo(() => {
+    if (!searchTerm.trim()) return bilans;
+    return bilans.filter(bilan => searchInItem(bilan, searchTerm));
+  }, [bilans, searchTerm, searchInItem]);
+
+  // Sorted bilans (featured first, then alphabetically)
+  const sortedBilans = useMemo(() => {
+    return [...filteredBilans].sort((a, b) => {
+      // Featured first
+      if (a.Is_Featured && !b.Is_Featured) return -1;
+      if (!a.Is_Featured && b.Is_Featured) return 1;
+
+      // Then alphabetically
+      const nameA = isArabic ? a.Nom_Bilan_AR : a.Nom_Bilan_FR;
+      const nameB = isArabic ? b.Nom_Bilan_AR : b.Nom_Bilan_FR;
+      return nameA.localeCompare(nameB, lang);
     });
-    return Array.from(uniqueCategories).sort();
-  }, [analyses, lang]);
+  }, [filteredBilans, isArabic, lang]);
 
-  // Toggle selection status of an analysis
-  const handleToggleSelection = useCallback((analysis: Analysis) => {
-    setSelectedAnalyses(prev => {
-      const isSelected = prev.some(item => item.id === analysis.id);
-      
-      if (isSelected) {
-        return prev.filter(item => item.id !== analysis.id);
+  // Sorted analyses based on sortBy
+  const sortedAnalyses = useMemo(() => {
+    const sorted = [...filteredAnalyses];
+
+    if (sortBy === 'name') {
+      sorted.sort((a, b) => {
+        const nameA = isArabic ? a.Nom_Patient_AR : a.Nom_Patient_FR;
+        const nameB = isArabic ? b.Nom_Patient_AR : b.Nom_Patient_FR;
+        return nameA.localeCompare(nameB, lang);
+      });
+    } else if (sortBy === 'popularity') {
+      sorted.sort((a, b) => (b.Nombre_Demandes || 0) - (a.Nombre_Demandes || 0));
+    }
+
+    return sorted;
+  }, [filteredAnalyses, sortBy, isArabic, lang]);
+
+  // Categories with analyses
+  const categoriesWithAnalyses = useMemo(() => {
+    const categoryMap = new Map<string, AnalyseItem[]>();
+
+    filteredAnalyses.forEach(analyse => {
+      const category = isArabic ? analyse.Categorie_AR : analyse.Categorie_FR;
+      if (!categoryMap.has(category)) {
+        categoryMap.set(category, []);
+      }
+      categoryMap.get(category)!.push(analyse);
+    });
+
+    return Array.from(categoryMap.entries())
+      .map(([name, analyses]) => ({ name, analyses }))
+      .sort((a, b) => a.name.localeCompare(b.name, lang))
+      .filter(cat => cat.analyses.length > 0); // Only non-empty categories
+  }, [filteredAnalyses, isArabic, lang]);
+
+  // NEW: Build tabs list dynamically
+  const tabs: TabItem[] = useMemo(() => {
+    const tabsList: TabItem[] = [];
+
+    // 1. Nos Bilans tab (always visible)
+    tabsList.push({
+      id: 'bilans',
+      label: t('tabs.our_bilans', 'Nos Bilans'),
+      icon: Star,
+      count: sortedBilans.length
+    });
+
+    // 2. Catalogue Complet tab
+    tabsList.push({
+      id: 'all',
+      label: t('tabs.full_catalog', 'Catalogue Complet'),
+      icon: BookOpen,
+      count: sortedAnalyses.length
+    });
+
+    // 3. Category tabs (only non-empty)
+    categoriesWithAnalyses.forEach(({ name, analyses }) => {
+      tabsList.push({
+        id: name, // Category name as ID
+        label: name,
+        icon: getCategoryIcon(name),
+        count: analyses.length
+      });
+    });
+
+    return tabsList;
+  }, [sortedBilans, sortedAnalyses, categoriesWithAnalyses, t]);
+
+  // NEW: Auto-switch to "all" tab when searching
+  useEffect(() => {
+    if (searchTerm.trim() && activeTab !== 'all') {
+      setActiveTab('all');
+    }
+  }, [searchTerm, activeTab]);
+
+  // Cart operations
+  const isAnalyseInCart = useCallback((analyse: AnalyseItem) => {
+    return selectedItems.some(item => item.type === 'analyse' && item.item.id === analyse.id);
+  }, [selectedItems]);
+
+  const isBilanInCart = useCallback((bilan: BilanItem) => {
+    return selectedItems.some(item => item.type === 'bilan' && item.item.id === bilan.id);
+  }, [selectedItems]);
+
+  const toggleAnalyseInCart = useCallback((analyse: AnalyseItem) => {
+    setSelectedItems(prev => {
+      const inCart = prev.some(item => item.type === 'analyse' && item.item.id === analyse.id);
+      if (inCart) {
+        return prev.filter(item => !(item.type === 'analyse' && item.item.id === analyse.id));
       } else {
-        return [...prev, analysis];
+        return [...prev, { type: 'analyse' as const, item: analyse }];
       }
     });
   }, []);
 
-  // Check if an analysis is selected - using useCallback for stability
-  const isAnalysisSelected = useCallback((analysisId: string): boolean => {
-    return selectedAnalyses.some(analysis => analysis.id === analysisId);
-  }, [selectedAnalyses]);
-
-  // Clear all selections
-  const clearAllSelections = useCallback(() => {
-    setSelectedAnalyses([]);
+  const toggleBilanInCart = useCallback((bilan: BilanItem) => {
+    setSelectedItems(prev => {
+      const inCart = prev.some(item => item.type === 'bilan' && item.item.id === bilan.id);
+      if (inCart) {
+        return prev.filter(item => !(item.type === 'bilan' && item.item.id === bilan.id));
+      } else {
+        return [...prev, { type: 'bilan' as const, item: bilan }];
+      }
+    });
   }, []);
 
-  const filteredAnalyses = useMemo(() => {
-    return analyses.filter((analysis) => {
-      const nameField = lang === "ar" ? "name_ar" : "name_fr";
-      const categoryField = lang === "ar" ? "category_ar" : "category_fr";
-      const nameMatches = !searchTerm || (analysis[nameField as keyof Analysis] as string).toLowerCase().includes(searchTerm.toLowerCase());
-      const categoryMatches = !selectedCategory || (analysis[categoryField as keyof Analysis] as string) === selectedCategory;
-      return nameMatches && categoryMatches;
+  // NOUVEAU - Fonction pour retirer un item individuel du panier
+  const removeItemFromCart = useCallback((itemToRemove: CartItem) => {
+    setSelectedItems(prev => {
+      const updated = prev.filter(item => {
+        if (item.type === 'analyse' && itemToRemove.type === 'analyse') {
+          return item.item.id !== itemToRemove.item.id;
+        } else if (item.type === 'bilan' && itemToRemove.type === 'bilan') {
+          return item.item.id !== itemToRemove.item.id;
+        }
+        return true;
+      });
+
+      // Sauvegarder dans localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
     });
-  }, [analyses, searchTerm, selectedCategory, lang]);
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setSelectedItems([]);
+    localStorage.removeItem(STORAGE_KEY);
+    setIsCartModalOpen(false); // Fermer la modale
+  }, []);
+
+  // Calculate total cost
+  const totalCost = useMemo(() => {
+    return selectedItems.reduce((sum, item) => {
+      if (item.type === 'analyse') {
+        return sum + item.item.Prix_Dhs;
+      } else {
+        return sum + item.item.Prix_Affiche_Dhs;
+      }
+    }, 0);
+  }, [selectedItems]);
+
+  // NOUVEAU - Auto-close cart modal si panier devient vide
+  useEffect(() => {
+    if (selectedItems.length === 0 && isCartModalOpen) {
+      setIsCartModalOpen(false);
+    }
+  }, [selectedItems.length, isCartModalOpen]);
+
+  // Modal handlers
+  const handleShowBilanDetails = useCallback((bilan: BilanItem) => {
+    setSelectedBilanForDetails(bilan);
+    setBilanModalOpen(true);
+  }, []);
+
+  const handleCloseBilanModal = useCallback(() => {
+    setBilanModalOpen(false);
+    setSelectedBilanForDetails(null);
+  }, []);
+
+  const handleShowAnalysisDetails = useCallback((analyse: AnalyseItem) => {
+    setSelectedAnalysisForDetails(analyse);
+    setAnalysisModalOpen(true);
+  }, []);
+
+  const handleCloseAnalysisModal = useCallback(() => {
+    setAnalysisModalOpen(false);
+    setSelectedAnalysisForDetails(null);
+  }, []);
+
+  // Get selected analyses for accordion
+  const selectedAnalyses = useMemo(() => {
+    return selectedItems
+      .filter(item => item.type === 'analyse')
+      .map(item => item.item);
+  }, [selectedItems]);
+
+  // Get selected bilans for carousel
+  const selectedBilans = useMemo(() => {
+    return selectedItems
+      .filter(item => item.type === 'bilan')
+      .map(item => item.item);
+  }, [selectedItems]);
+
+  // Get displayed analyses for current category tab
+  const displayedAnalyses = useMemo(() => {
+    if (activeTab === 'all') {
+      return sortedAnalyses;
+    } else if (activeTab === 'bilans') {
+      return [];
+    } else {
+      // Category-specific
+      return filteredAnalyses.filter(a =>
+        (isArabic ? a.Categorie_AR : a.Categorie_FR) === activeTab
+      );
+    }
+  }, [activeTab, sortedAnalyses, filteredAnalyses, isArabic]);
 
   return (
-    <div className="min-h-screen bg-[var(--background-default)] transition-colors duration-200">
-      <div className={`container mx-auto px-4 py-8 ${isArabic ? 'rtl-content' : ''}`} dir={dir}>
-        <AnalysesCatalogDataFetcher 
-          lang={lang}
-          onDataFetched={handleDataFetched}
-          onErrorOccurred={handleErrorOccurred}
-          onLoadingStateChange={handleLoadingStateChange}
-        />
-        
-        <h1 className="text-3xl font-bold text-[var(--color-bordeaux-primary)] mb-6 text-center">
-          {translations.title}
-        </h1>
-        
-        {/* Filter section */}
-        {!loading && analyses.length > 0 && (
-          <div className="mb-6">
-            <div className={`p-4 bg-[var(--background-secondary)] rounded-lg border border-[var(--border-default)] shadow-sm ${isArabic ? 'rtl-filter-section' : ''}`}>
-              <div className={`flex flex-col md:flex-row gap-4 ${isArabic ? 'md:flex-row-reverse' : ''}`}>
-                <div className={`flex-1 ${isArabic ? 'text-right' : ''}`}>
-                  <label htmlFor="search" className={`block text-sm font-medium text-[var(--text-primary)] mb-1 ${isArabic ? 'text-right' : ''}`}>
-                    {translations.searchLabel}
-                  </label>
-                  <input
-                    type="text"
-                    id="search"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={translations.searchPlaceholder}
-                    style={isArabic ? {textAlign: 'right', direction: 'rtl'} : {}}
-                    className={`
-                      w-full p-2 border border-[var(--border-default)] rounded-md 
-                      focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent 
-                      bg-[var(--background-default)] text-[var(--text-primary)]
-                      placeholder:text-[var(--text-tertiary)]
-                      ${isArabic ? 'text-right' : ''}
-                    `}
-                  />
-                </div>
-                <div className={`md:w-1/3 ${isArabic ? 'text-right' : ''}`}>
-                  <label htmlFor="category" className={`block text-sm font-medium text-[var(--text-primary)] mb-1 ${isArabic ? 'text-right' : ''}`}>
-                    {translations.categoryLabel}
-                  </label>
-                  <select
-                    id="category"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    style={isArabic ? {textAlign: 'right', direction: 'rtl'} : {}}
-                    className={`
-                      w-full p-2 border border-[var(--border-default)] rounded-md 
-                      focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent 
-                      bg-[var(--background-default)] text-[var(--text-primary)]
-                      ${isArabic ? 'text-right' : ''}
-                    `}
-                  >
-                    <option value="">{translations.allCategories}</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
+    <>
+      <CatalogDataFetcher
+        lang={lang}
+        onDataFetched={handleDataFetched}
+        onErrorOccurred={handleErrorOccurred}
+        onLoadingStateChange={handleLoadingStateChange}
+      />
+
+      <div className="min-h-screen bg-[#f8f9fc] dark:bg-gray-900 pb-32">
+        {/* Title - Normal flow, NOT STICKY */}
+        <div className="bg-[#f8f9fc] dark:bg-gray-900 pt-6 pb-4">
+          <div className="container mx-auto px-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-900 dark:text-white">
+              {t('title', 'Catalogue des Analyses')}
+            </h1>
+          </div>
+        </div>
+
+        {/* Sticky Container - Search + Tabs Together */}
+        <div
+          className="sticky top-0 z-50 bg-[#f8f9fc] dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800"
+          style={{ willChange: 'transform' }}
+        >
+          <div className="container mx-auto px-4">
+            {/* Search bar */}
+            <div className="py-3">
+              <div className="relative max-w-2xl mx-auto">
+                <Search className={`absolute ${isArabic ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400`} />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={t('search_in_tags', 'Rechercher par nom, catégorie ou mots-clés...')}
+                  className={`
+                    w-full ${isArabic ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-2.5 rounded-full
+                    bg-white dark:bg-gray-800
+                    border border-gray-200 dark:border-gray-700
+                    text-gray-900 dark:text-white text-sm
+                    focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:border-transparent
+                    shadow-sm
+                    transition-all duration-200
+                  `}
+                  dir={isArabic ? 'rtl' : 'ltr'}
+                />
               </div>
             </div>
+
+            {/* Tabs - Directly below search */}
+            <div className="pb-2">
+              <TabsNavigation
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                isRtl={isArabic}
+              />
+            </div>
           </div>
-        )}
+        </div>
 
-        {/* Loading indicator */}
-        {loading && (
-          <div className="flex justify-center items-center py-12">
-            <div className="loading"></div>
-            <span className="ml-3 text-[var(--text-secondary)]">{translations.loadingText}</span>
-          </div>
-        )}
+        <div className="container mx-auto px-4 mt-8">
 
-        {/* Error display */}
-        {error && (
-          <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg mb-6 shadow-md" role="alert">
-            <strong className="font-bold">{translations.errorTitle}: </strong>
-            <span className="block sm:inline">{error}</span>
-          </div>
-        )}
+          {/* Loading state */}
+          {loading && (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading', 'Chargement en cours...')}</p>
+            </div>
+          )}
 
-        {/* Empty state */}
-        {!loading && !error && analyses.length === 0 && (
-          <div className="text-center py-8 text-[var(--text-secondary)]">
-            <p>{translations.noAnalyses}</p>
-          </div>
-        )}
+          {/* Error state */}
+          {error && (
+            <div className="max-w-2xl mx-auto mb-8 p-6 rounded-xl bg-red-100 dark:bg-red-900/30 border-2 border-red-400 dark:border-red-700">
+              <p className="text-red-800 dark:text-red-200 text-center">{error}</p>
+            </div>
+          )}
 
-        {/* Floating Total Calculator */}
-        <TotalCalculator
-          totalCost={getTotalCost()}
-          selectedCount={selectedAnalyses.length}
-          onReset={clearAllSelections}
-          currencyLabel={translations.costUnit}
-          isRtl={isArabic}
-          selectedAnalyses={selectedAnalyses}
-        />
+          {/* Content - Conditional based on active tab */}
+          {!loading && !error && (
+            <>
+              {/* TAB: Nos Bilans */}
+              {activeTab === 'bilans' && (
+                <section>
+                  {sortedBilans.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {sortedBilans.map((bilan) => (
+                        <BilanCard
+                          key={bilan.id}
+                          bilan={bilan}
+                          lang={lang}
+                          isSelected={isBilanInCart(bilan)}
+                          onSelect={toggleBilanInCart}
+                          onShowDetails={handleShowBilanDetails}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600 dark:text-gray-400 text-lg">
+                        {t('no_bilans_found', 'Aucun bilan trouvé.')}
+                      </p>
+                    </div>
+                  )}
+                </section>
+              )}
 
-        {/* Analysis cards - FIXED GRID with proper z-index */}
-        {!loading && !error && analyses.length > 0 && (
-          <>
-            {filteredAnalyses.length > 0 ? (
-              <div 
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative"
-                style={{ zIndex: 1 }}
-              >
-                {filteredAnalyses.map((analysis: Analysis) => (
-                  <AnalysisCard 
-                    key={`analysis-card-${analysis.id}`}
-                    analysis={analysis} 
-                    lang={lang} 
-                    isSelected={isAnalysisSelected(analysis.id)}
-                    onSelect={handleToggleSelection}
+              {/* TAB: Catalogue Complet */}
+              {activeTab === 'all' && (
+                <section>
+                  {/* Sort toolbar */}
+                  <SortToolbar
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
+                    isRtl={isArabic}
                   />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-[var(--background-secondary)] rounded-lg border border-[var(--border-default)]">
-                <p className="text-[var(--text-secondary)] text-lg mb-3">{translations.noResults}</p>
-                <button 
-                  onClick={() => { setSearchTerm(""); setSelectedCategory(""); }}
-                  className="inline-flex items-center justify-center gap-2 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white font-semibold rounded-lg px-6 py-3 transition-colors"
-                >
-                  {translations.clearFilters}
-                </button>
-              </div>
-            )}
-          </>
-        )}
+
+                  {/* Analyses list */}
+                  {displayedAnalyses.length > 0 ? (
+                    <div className="space-y-3">
+                      {displayedAnalyses.map((analyse) => (
+                        <AnalysisMiniCard
+                          key={analyse.id}
+                          analysis={analyse}
+                          lang={lang}
+                          isSelected={isAnalyseInCart(analyse)}
+                          onSelect={() => toggleAnalyseInCart(analyse)}
+                          onShowDetails={() => handleShowAnalysisDetails(analyse)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600 dark:text-gray-400 text-lg">
+                        {t('no_results', 'Aucun résultat trouvé.')}
+                      </p>
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="mt-4 px-6 py-2 rounded-lg bg-[#E3004F] text-white hover:bg-[#C20042] transition-colors duration-200"
+                        >
+                          {t('clear_filters', 'Effacer les filtres')}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* TAB: Category-specific */}
+              {activeTab !== 'bilans' && activeTab !== 'all' && (
+                <section>
+                  {/* Category header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    {(() => {
+                      const CategoryIcon = getCategoryIcon(activeTab);
+                      return <CategoryIcon className="h-8 w-8 text-[#E3004F]" />;
+                    })()}
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {activeTab}
+                      <span className="ml-2 text-gray-500 dark:text-gray-400 text-lg">
+                        ({displayedAnalyses.length})
+                      </span>
+                    </h2>
+                  </div>
+
+                  {/* Analyses list */}
+                  {displayedAnalyses.length > 0 ? (
+                    <div className="space-y-3">
+                      {displayedAnalyses.map((analyse) => (
+                        <AnalysisMiniCard
+                          key={analyse.id}
+                          analysis={analyse}
+                          lang={lang}
+                          isSelected={isAnalyseInCart(analyse)}
+                          onSelect={() => toggleAnalyseInCart(analyse)}
+                          onShowDetails={() => handleShowAnalysisDetails(analyse)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600 dark:text-gray-400 text-lg">
+                        {t('no_results', 'Aucun résultat trouvé.')}
+                      </p>
+                    </div>
+                  )}
+                </section>
+              )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Floating Cart */}
+      {selectedItems.length > 0 && (
+        <TotalCalculator
+          totalCost={totalCost}
+          selectedCount={selectedItems.length}
+          onReset={clearCart}
+          currencyLabel={isArabic ? 'درهم' : 'MAD'}
+          isRtl={isArabic}
+          selectedItems={selectedItems}
+          onOpenCartDetails={() => setIsCartModalOpen(true)}
+        />
+      )}
+
+      {/* Bilan Details Modal */}
+      <BilanDetailsModal
+        bilan={selectedBilanForDetails}
+        isOpen={bilanModalOpen}
+        onClose={handleCloseBilanModal}
+        analysesMap={analysesMap}
+        lang={lang}
+        onAddToCart={toggleBilanInCart}
+        isInCart={selectedBilanForDetails ? isBilanInCart(selectedBilanForDetails) : false}
+      />
+
+      {/* Analysis Details Modal */}
+      {selectedAnalysisForDetails && (
+        <AnalysisDetailsModal
+          analysis={{
+            id: selectedAnalysisForDetails.id,
+            name_fr: selectedAnalysisForDetails.Nom_Patient_FR,
+            name_ar: selectedAnalysisForDetails.Nom_Patient_AR,
+            price: selectedAnalysisForDetails.Prix_Dhs,
+            category_fr: selectedAnalysisForDetails.Categorie_FR,
+            category_ar: selectedAnalysisForDetails.Categorie_AR,
+            preparation_fr: selectedAnalysisForDetails.Pre_Analytique_FR,
+            preparation_ar: selectedAnalysisForDetails.Pre_Analytique_AR,
+            delay_fr: '',
+            delay_ar: '',
+            is_active: true
+          }}
+          isOpen={analysisModalOpen}
+          onClose={handleCloseAnalysisModal}
+          lang={lang}
+        />
+      )}
+
+      {/* Cart Details Modal */}
+      <CartDetailsModal
+        isOpen={isCartModalOpen}
+        onClose={() => setIsCartModalOpen(false)}
+        selectedItems={selectedItems}
+        totalCost={totalCost}
+        onRemoveItem={removeItemFromCart}
+        onClearCart={clearCart}
+        onWhatsAppSend={() => {
+          // Generate WhatsApp message
+          const whatsappTranslations = {
+            greeting: t('analyses_catalog.selection.whatsapp_message.greeting', 'Bonjour Laboratoire El Allali,'),
+            intro: t('analyses_catalog.selection.whatsapp_message.intro', 'Je suis intéressé(e) par les analyses suivantes :'),
+            analysisItemPrefix: t('analyses_catalog.selection.whatsapp_message.analysis_item_prefix', '- '),
+            totalLabel: t('analyses_catalog.selection.whatsapp_message.total_label', 'Total estimé :'),
+            currency: t('analyses_catalog.selection.whatsapp_message.currency', 'MAD'),
+            closingRemark: t('analyses_catalog.selection.whatsapp_message.closing_remark', 'Pouvez-vous me donner plus d\'informations ?'),
+            websiteReference: t('analyses_catalog.selection.whatsapp_message.website_reference', 'Sélection faite depuis le site web.')
+          };
+
+          let message = `${whatsappTranslations.greeting}\n\n`;
+          message += `${whatsappTranslations.intro}\n`;
+
+          const bilans = selectedItems.filter(item => item.type === 'bilan');
+          const analyses = selectedItems.filter(item => item.type === 'analyse');
+
+          if (bilans.length > 0) {
+            message += `\n📦 ${t('catalog:bilans', 'Bilans')} :\n`;
+            bilans.forEach(cartItem => {
+              const name = isArabic ? cartItem.item.Nom_Bilan_AR : cartItem.item.Nom_Bilan_FR;
+              message += `${whatsappTranslations.analysisItemPrefix}${name}\n`;
+            });
+          }
+
+          if (analyses.length > 0) {
+            message += `\n🔬 ${t('catalog:analyses', 'Analyses')} :\n`;
+            analyses.forEach(cartItem => {
+              const name = isArabic ? cartItem.item.Nom_Patient_AR : cartItem.item.Nom_Patient_FR;
+              message += `${whatsappTranslations.analysisItemPrefix}${name}\n`;
+            });
+          }
+
+          const locale = isArabic ? 'ar-MA' : 'fr-MA';
+          message += `\n${whatsappTranslations.totalLabel} ${totalCost.toLocaleString(locale)} ${whatsappTranslations.currency}\n\n`;
+          message += `${whatsappTranslations.closingRemark}\n\n`;
+          message += whatsappTranslations.websiteReference;
+
+          const encodedMessage = encodeURIComponent(message);
+          const LAB_WHATSAPP_NUMBER = '212661661661'; // From constants
+          const whatsappUrl = `https://wa.me/${LAB_WHATSAPP_NUMBER}?text=${encodedMessage}`;
+          window.open(whatsappUrl, '_blank');
+          setIsCartModalOpen(false);
+        }}
+        currencyLabel={isArabic ? 'درهم' : 'MAD'}
+        isRtl={isArabic}
+        onViewAnalysisDetails={(analysis) => {
+          setSelectedAnalysisForDetails(analysis);
+          setAnalysisModalOpen(true);
+        }}
+        onViewBilanDetails={(bilan) => {
+          setSelectedBilanForDetails(bilan);
+          setBilanModalOpen(true);
+        }}
+      />
+    </>
   );
 }
 
-// Suspense Boundary for Client Component
-const AnalysesCatalogPageWithSuspense: React.FC<{ params: { lang: string } | Promise<{ lang: string }> }> = ({params}) => {
-  const resolvedParams = 'then' in params ? React.use(params) : params;
+// Wrapper with Suspense
+export default function Page({ params }: { params: Promise<{ lang: string }> }) {
+  const [resolvedParams, setResolvedParams] = React.useState<{ lang: string } | null>(null);
+
+  React.useEffect(() => {
+    params.then(setResolvedParams);
+  }, [params]);
+
+  if (!resolvedParams) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <Suspense fallback={
-      <div className="flex justify-center items-center h-screen bg-[var(--background-default)]">
-        <div className="loading"></div>
-        <span className="ml-2 text-[var(--text-secondary)]">Loading Catalog...</span>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
       </div>
     }>
       <AnalysesCatalogPageContents params={resolvedParams} />
     </Suspense>
   );
-};
-
-export default AnalysesCatalogPageWithSuspense;
+}

@@ -53,16 +53,10 @@ export default function PWABanner({ className = '' }: PWABannerProps) {
     
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      
+
       // Store the event for later use
-      const event = e as unknown as { prompt: () => Promise<{ outcome: string }> };
-      if (event.prompt && typeof event.prompt === 'function') {
-        window.deferredPrompt = {
-          prompt: () => event.prompt(),
-          userChoice: Promise.resolve({ outcome: 'dismissed' })
-        } as PWAPrompt;
-        setShowBanner(true);
-      }
+      window.deferredPrompt = e as BeforeInstallPromptEvent;
+      setShowBanner(true);
     };
 
     const handleAppInstalled = () => {

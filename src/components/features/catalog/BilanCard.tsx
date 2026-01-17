@@ -1,0 +1,140 @@
+"use client";
+
+import React from "react";
+import { useTranslation } from 'react-i18next';
+import { BilanItem } from './AnalysisCard';
+import { getIconComponent } from '@/utils/iconMapper';
+import { Plus, Check } from 'lucide-react';
+
+interface BilanCardProps {
+  bilan: BilanItem;
+  lang: string;
+  isSelected: boolean;
+  onSelect: (bilan: BilanItem) => void;
+  onShowDetails: (bilan: BilanItem) => void;
+}
+
+export function BilanCard({
+  bilan,
+  lang,
+  isSelected,
+  onSelect,
+  onShowDetails
+}: BilanCardProps) {
+  const { t } = useTranslation('catalog');
+  const isArabic = lang === "ar";
+
+  // Get icon component
+  const IconComponent = getIconComponent(bilan.Icone);
+
+  // Get localized name and description
+  const bilanName = isArabic ? bilan.Nom_Bilan_AR : bilan.Nom_Bilan_FR;
+  const bilanDescription = isArabic ? bilan.Description_AR : bilan.Description_FR;
+
+  // Handle selection
+  const handleSelectClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelect(bilan);
+  };
+
+  // Handle show details
+  const handleShowDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onShowDetails(bilan);
+  };
+
+  return (
+    <div
+      className={`
+        relative w-full rounded-xl overflow-hidden
+        bg-white dark:bg-gray-800
+        transition-all duration-300
+        ${bilan.Is_Featured
+          ? 'shadow-lg shadow-pink-500/10 border-2 border-pink-100 dark:border-pink-900/30'
+          : 'shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-2px_rgba(0,0,0,0.1)]'
+        }
+      `}
+      style={{ minHeight: '320px' }}
+    >
+      {/* Featured Badge */}
+      {bilan.Is_Featured && (
+        <div className={`absolute top-3 ${isArabic ? 'left-3' : 'right-3'} z-10`}>
+          <span className="bg-gradient-to-r from-[#E3004F] to-[#FF4081] text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+            ⭐ {t('featured_badge', 'Vedette')}
+          </span>
+        </div>
+      )}
+
+      {/* Icon - Centered at top */}
+      <div className="flex justify-center pt-6 pb-4">
+        <IconComponent
+          className="h-12 w-12 text-[#E3004F]"
+        />
+      </div>
+
+      {/* Content */}
+      <div className="px-6 pb-6 flex flex-col h-full">
+        <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+          {bilanName}
+        </h3>
+
+        <p className="text-sm mb-4 line-clamp-2 text-gray-600 dark:text-gray-400">
+          {bilanDescription}
+        </p>
+
+        {/* Price and Circular Button Row */}
+        <div className={`flex items-center justify-between gap-4 mb-4 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
+          <p className="text-2xl font-bold text-[#E3004F]">
+            {bilan.Prix_Affiche_Dhs.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {t('card.price_currency', 'MAD')}
+          </p>
+
+          {/* Circular Add Button - Like AnalysisMiniCard */}
+          <button
+            onClick={(e) => {
+              console.log(`🔍 BILAN BUTTON DEBUG: "${bilanName}"`, {
+                isSelected: isSelected,
+                buttonColor: '#E3004F (ROSE BRAND)',
+                borderColor: 'white',
+                iconType: isSelected ? 'Check' : 'Plus'
+              });
+              handleSelectClick(e);
+            }}
+            className={`
+              w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0
+              transition-all duration-200
+              shadow-lg
+              border-2 border-white
+              focus:outline-none focus:ring-2 focus:ring-[#E3004F]
+              ${isSelected
+                ? 'bg-[#E3004F] text-white scale-110 shadow-xl'
+                : 'bg-[#E3004F] text-white hover:bg-[#c20042] hover:scale-105'
+              }
+            `}
+            style={{ backgroundColor: '#E3004F', color: 'white', borderColor: 'white' }}
+            aria-label={isSelected ? t('card.selected', 'Retirer du panier') : t('card.select', 'Ajouter au panier')}
+          >
+            {isSelected ? <Check className="h-6 w-6" strokeWidth={2.5} /> : <Plus className="h-6 w-6" strokeWidth={2.5} />}
+          </button>
+        </div>
+
+        {/* Button to show details */}
+        <div className="mt-auto">
+          <button
+            onClick={handleShowDetails}
+            className="
+              w-full py-2 px-4 rounded-lg font-medium transition-all
+              border border-gray-300 dark:border-gray-600
+              text-gray-700 dark:text-gray-300
+              hover:bg-gray-50 dark:hover:bg-gray-700
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#E3004F]
+            "
+          >
+            {t('show_details', 'Voir Détails')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default BilanCard;

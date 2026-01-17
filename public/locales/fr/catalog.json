@@ -2,6 +2,7 @@
   "title": "Catalogue des Analyses",
   "search_label": "Rechercher une analyse",
   "search_placeholder": "Tapez le nom d'une analyse...",
+  "search_in_tags": "Rechercher par nom, catégorie ou mots-clés...",
   "category_label": "Catégorie",
   "all_categories": "Toutes les catégories",
   "no_results": "Aucun résultat trouvé pour ces critères de recherche.",
@@ -9,7 +10,27 @@
   "no_analyses": "Aucune analyse disponible pour le moment.",
   "loading": "Chargement en cours...",
   "error_fetching": "Échec du chargement des analyses",
-  
+
+  "bilans_vedettes_title": "Bilans Vedettes",
+  "bilans_vedettes_subtitle": "Nos packs d'analyses les plus demandés",
+  "bilans_section_title": "Bilans",
+  "analyses_section_title": "Catalogue des Analyses",
+  "bilan_details_title": "Détails du Bilan",
+  "bilan_composition_label": "Ce bilan contient :",
+  "bilan_includes": "Inclus dans ce bilan",
+  "bilan_price_label": "Prix du bilan",
+  "individual_total": "Total analyses séparées",
+  "show_details": "Voir Détails",
+  "add_to_cart": "Ajouter au panier",
+  "close": "Fermer",
+  "individual_analyses": "Analyses individuelles",
+  "test_packs": "Bilans",
+  "bilans": "Bilans",
+  "analyses": "Analyses",
+  "item_count": "{count} élément(s)",
+  "no_bilans_found": "Aucun bilan trouvé.",
+  "featured_badge": "Vedette",
+
   "card": {
     "category_label": "Catégorie:",
     "delay_label": "Délai:",
@@ -20,5 +41,13 @@
     "no_preparation": "Aucune préparation spécifique.",
     "select": "Sélectionner",
     "selected": "Sélectionné"
+  },
+  "on_quote": "Sur Devis",
+  "tabs": {
+    "our_bilans": "Nos Bilans",
+    "full_catalog": "Catalogue Complet",
+    "sort_by": "Trier par",
+    "popularity": "Popularité",
+    "alphabetical": "A-Z"
   }
 }

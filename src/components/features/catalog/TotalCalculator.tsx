@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Analysis } from './AnalysisCard';
+import { Analysis, CartItem } from './AnalysisCard';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
+import { ChevronUp } from 'lucide-react';
 
 interface TotalCalculatorProps {
   totalCost: number;
@@ -11,7 +12,9 @@ interface TotalCalculatorProps {
   onReset: () => void;
   currencyLabel: string;
   isRtl?: boolean;
-  selectedAnalyses?: Analysis[];
+  selectedAnalyses?: Analysis[]; // Legacy support
+  selectedItems?: CartItem[]; // New mixed cart support
+  onOpenCartDetails?: () => void; // NOUVEAU - Callback pour ouvrir la modale panier
 }
 
 export default function TotalCalculator({
@@ -20,7 +23,9 @@ export default function TotalCalculator({
   onReset,
   currencyLabel,
   isRtl = false,
-  selectedAnalyses = []
+  selectedAnalyses = [],
+  selectedItems = [],
+  onOpenCartDetails
 }: TotalCalculatorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(selectedCount);
@@ -73,12 +78,41 @@ export default function TotalCalculator({
     let message = `${whatsappTranslations.greeting}\n\n`;
     message += `${whatsappTranslations.intro}\n`;
 
-    selectedAnalyses.forEach(analysis => {
-      const analysisName = i18n.language === 'ar' ? analysis.name_ar : analysis.name_fr;
-      message += `${whatsappTranslations.analysisItemPrefix}${analysisName}\n`;
-    });
+    // Support both legacy and new cart formats
+    const items = selectedItems.length > 0 ? selectedItems : selectedAnalyses.map(a => ({ type: 'analyse' as const, item: a }));
 
-    message += `\n${whatsappTranslations.totalLabel} ${totalCost.toLocaleString()} ${whatsappTranslations.currency}\n\n`;
+    // Group by type
+    const analyses = items.filter(item =>
+      item.type === 'analyse' || 'name_fr' in item || 'Nom_Patient_FR' in item
+    );
+    const bilans = items.filter(item =>
+      item.type === 'bilan' || 'Nom_Bilan_FR' in item
+    );
+
+    // List bilans first (if any)
+    if (bilans.length > 0) {
+      message += `\n📦 ${t('catalog:bilans', 'Bilans')} :\n`;
+      bilans.forEach(cartItem => {
+        const item: any = 'item' in cartItem ? cartItem.item : cartItem;
+        const name = i18n.language === 'ar' ? item.Nom_Bilan_AR : item.Nom_Bilan_FR;
+        message += `${whatsappTranslations.analysisItemPrefix}${name}\n`;
+      });
+    }
+
+    // Then individual analyses
+    if (analyses.length > 0) {
+      message += `\n🔬 ${t('catalog:analyses', 'Analyses')} :\n`;
+      analyses.forEach(cartItem => {
+        const item: any = 'item' in cartItem ? cartItem.item : cartItem;
+        const name = i18n.language === 'ar'
+          ? (item.Nom_Patient_AR || item.name_ar)
+          : (item.Nom_Patient_FR || item.name_fr);
+        message += `${whatsappTranslations.analysisItemPrefix}${name}\n`;
+      });
+    }
+
+    const locale = i18n.language === 'ar' ? 'ar-MA' : 'fr-MA';
+    message += `\n${whatsappTranslations.totalLabel} ${totalCost.toLocaleString(locale)} ${whatsappTranslations.currency}\n\n`;
     message += `${whatsappTranslations.closingRemark}\n\n`;
     message += whatsappTranslations.websiteReference;
 
@@ -103,8 +137,7 @@ export default function TotalCalculator({
           lg:hidden
           fixed left-0 right-0 z-50
           bg-[#800020] text-white
-          border-t border-white/10
-          shadow-lg backdrop-blur-sm
+          shadow-[0_-4px_20px_-2px_rgba(0,0,0,0.1)]
           px-4 py-3
           flex items-center justify-between
           ${isRtlDirection ? 'flex-row-reverse' : 'flex-row'}
@@ -113,20 +146,23 @@ export default function TotalCalculator({
         aria-live="polite"
         data-testid="total-calculator-mobile"
         style={{
-          bottom: '70px',
-          backgroundColor: '#800020',
-          opacity: 1
+          bottom: '70px'
         }}
       >
-        {/* Left section - Count badge + Total */}
-        <div className="flex items-center gap-2">
+        {/* Left section - Count badge + Total (CLIQUABLE) */}
+        <button
+          onClick={onOpenCartDetails}
+          className="flex items-center gap-2 flex-1 cursor-pointer hover:opacity-90 transition-opacity"
+          aria-label={t('analyses_catalog.selection.view_cart', 'Voir le panier')}
+        >
           <div className="bg-white/20 rounded-full px-2 py-1 text-sm font-bold">
             {selectedCount}
           </div>
           <span className="text-sm font-semibold whitespace-nowrap">
             {translationsUI.total}: {totalCost.toLocaleString()} {currencyLabel}
           </span>
-        </div>
+          <ChevronUp className="h-4 w-4 text-white/70 ml-1" />
+        </button>
 
         {/* Right section - Reset button + WhatsApp button */}
         <div className="flex items-center gap-2">
@@ -180,7 +216,8 @@ export default function TotalCalculator({
         className={`
           hidden lg:block
           fixed w-64 max-w-[calc(100vw-2rem)] z-50
-          bg-[#800020] text-white rounded-xl p-4 shadow-lg
+          bg-[#800020] text-white rounded-2xl p-6 min-w-[280px]
+          shadow-[0_8px_30px_-2px_rgba(0,0,0,0.15)]
           transition-all duration-300 ease-out
           ${isRtlDirection ? 'lg:left-6' : 'lg:right-6'}
         `}
@@ -189,8 +226,7 @@ export default function TotalCalculator({
         aria-live="polite"
         data-testid="total-calculator-desktop"
         style={{
-          bottom: '1.5rem',
-          boxShadow: '0 10px 25px -3px rgba(128, 0, 32, 0.3), 0 4px 6px -2px rgba(128, 0, 32, 0.15)'
+          bottom: '1.5rem'
         }}
       >
         {/* Header with count and reset button */}
@@ -220,13 +256,23 @@ export default function TotalCalculator({
           </button>
         </div>
 
-        {/* Total cost */}
-        <div className="text-lg font-bold mb-3">
-          <span className="text-white/80">{translationsUI.total}: </span>
-          <span className="text-white">
-            {totalCost.toLocaleString()} {currencyLabel}
-          </span>
-        </div>
+        {/* Total cost (CLIQUABLE) */}
+        <button
+          onClick={onOpenCartDetails}
+          className="w-full text-left mb-3 p-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer group"
+          aria-label={t('analyses_catalog.selection.view_cart', 'Voir le panier')}
+        >
+          <div className="text-lg font-bold">
+            <span className="text-white/80">{translationsUI.total}: </span>
+            <span className="text-white">
+              {totalCost.toLocaleString()} {currencyLabel}
+            </span>
+          </div>
+          <div className="text-xs text-white/60 flex items-center gap-1 mt-1 group-hover:text-white/90 transition-colors">
+            <span>{t('analyses_catalog.selection.view_cart', 'Voir le panier')}</span>
+            <ChevronUp className="h-3 w-3" />
+          </div>
+        </button>
 
         {/* WhatsApp button */}
         <button

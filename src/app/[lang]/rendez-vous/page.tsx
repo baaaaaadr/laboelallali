@@ -123,25 +123,35 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
     setIsLoading(true);
     
     try {
+      // Ensure Firestore is initialized
+      if (!db) {
+        throw new Error(t('appointment:errors.db_not_initialized', 'Le service de base de données n\'est pas disponible. Veuillez réessayer.'));
+      }
+
       // 1. Upload prescription file if exists
       let downloadURL = null;
-      
+
       if (prescriptionFile) {
+        // Ensure storage is initialized
+        if (!storage) {
+          throw new Error(t('appointment:errors.storage_not_initialized', 'Le service de stockage n\'est pas disponible. Veuillez réessayer.'));
+        }
+
         // Create a storage reference with a timestamp and original filename
         const timestamp = Date.now();
         const fileName = prescriptionFile.name;
         const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
-        
+
         // Upload the file
         await uploadBytes(storageRef, prescriptionFile);
-        
+
         // Get download URL
         downloadURL = await getDownloadURL(storageRef);
       }
-      
+
       // 2. Format date for Firestore
       const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
-      
+
       // 3. Prepare data for Firestore
       const appointmentData = {
         name: nom,
@@ -156,7 +166,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         status: "new_appointment_request",
         type: "lab_appointment"
       };
-      
+
       // 4. Save to Firestore
       await addDoc(collection(db, "appointmentRequests"), appointmentData);
       
@@ -195,10 +205,20 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
     setIsLoading(true);
 
     try {
+      // Ensure Firestore is initialized
+      if (!db) {
+        throw new Error(t('appointment:errors.db_not_initialized', 'Le service de base de données n\'est pas disponible. Veuillez réessayer.'));
+      }
+
       let downloadURL = null;
 
       // Upload prescription file if exists
       if (prescriptionFile) {
+        // Ensure storage is initialized
+        if (!storage) {
+          throw new Error(t('appointment:errors.storage_not_initialized', 'Le service de stockage n\'est pas disponible. Veuillez réessayer.'));
+        }
+
         const timestamp = Date.now();
         const fileName = prescriptionFile.name;
         const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);

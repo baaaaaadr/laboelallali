@@ -2,10 +2,22 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read access to the analysisCatalog collection
+    // Legacy analysisCatalog collection (kept for backward compatibility)
     match /analysisCatalog/{analysisId} {
       allow read: if true; // Anyone can read the catalog
       allow write: if false; // Only admin can modify via Firebase Console
+    }
+
+    // New analyses collection (individual medical tests)
+    match /analyses/{analyseId} {
+      allow read: if true; // Anyone can read the analyses catalog
+      allow write: if false; // Only admin/script can modify via Google Sheets sync
+    }
+
+    // New bilans collection (test packs/bundles)
+    match /bilans/{bilanId} {
+      allow read: if true; // Anyone can read the bilans catalog
+      allow write: if false; // Only admin/script can modify via Google Sheets sync
     }
 
     // Allow users to submit appointment requests

@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Laboratoire El Allali PWA - A Progressive Web Application for a medical laboratory in Morocco, built with Next.js 14+ App Router. The application provides appointment booking, home service requests (GLABO), test catalog browsing, and result access for patients.
+Laboratoire El Allali PWA - A Progressive Web Application for a medical laboratory in Morocco, built with Next.js 16+ App Router. The application provides appointment booking, home service requests (GLABO), test catalog browsing, doctors directory, and result access for patients.
 
-**Tech Stack:** Next.js 14+ (App Router), TypeScript, Tailwind CSS, Firebase (Firestore, Auth, Storage), next-i18next
+**Tech Stack:** Next.js 16.1.1 (App Router), React 19, TypeScript, Tailwind CSS 4.1.5, Firebase (Firestore, Auth, Storage, Cloud Functions), next-i18next
 
-**Environment:** Windows development environment (use PowerShell commands)
+**Environment:** Windows development environment (requires PowerShell - all commands must use PowerShell syntax)
 
 ## Common Commands
 
@@ -31,7 +31,8 @@ npm run deploy:functions       # Deploy Cloud Functions only
 ```bash
 npm run context                # Generate context file (PowerShell script)
 npm run tailwind:build         # Build Tailwind CSS
-npm run generate:css-vars      # Generate CSS variables from theme.ts
+npm run generate:css-vars      # Generate CSS variables from theme.ts to src/styles/system/variables.css
+npm run git                    # Convenience: add, commit, and push (auto-commit message)
 ```
 
 ## Architecture
@@ -49,6 +50,7 @@ The app uses Next.js App Router with internationalization built into the routing
 - `/[lang]/rendez-vous` - Lab appointment booking
 - `/[lang]/glabo` - Home service (GLABO) requests
 - `/[lang]/analyses` - Test catalog browser
+- `/[lang]/medecins` - Doctors directory (with client-side filtering)
 - `/[lang]/contact` - Contact page
 
 ### Firebase Integration
@@ -60,12 +62,19 @@ The app uses Next.js App Router with internationalization built into the routing
 
 **Firestore Collections:**
 - `analysisCatalog` - Test catalog (public read, admin write)
-- `appointmentRequests` - Appointment submissions (public create only)
+- `appointmentRequests` - Appointment submissions (public create only, admin read)
+- `medecins` - Doctors directory (public read, synced from Google Sheets)
 - Other collections exist but not exposed in current security rules
 
 **Firebase Hosting:** Deployed via `firebase deploy`, configured in `firebase.json`
 
-**Cloud Functions:** Located in `/functions` directory, separate Node.js project
+**Cloud Functions:** Located in `/functions` directory, separate Node.js 20 project
+- Runtime: Node.js 20, Region: europe-southwest1 (Bilbao)
+- Key Functions:
+  - `sendAppointmentRequestEmail` - Sends email on new appointment (triggered by Firestore)
+  - `cleanupExpiredPrescriptions` - Daily cleanup of 30-day-old prescription files (scheduled 2 AM)
+  - `nextServer` - Wraps Next.js app for Firebase hosting
+- Dependencies: SendGrid (email), firebase-admin, firebase-functions
 
 ### Design System & Styling
 
@@ -76,6 +85,11 @@ This file defines ALL design tokens:
 - Typography: Font sizes, weights, families
 - Spacing: Consistent spacing scale
 - Components: Pre-defined component styles (buttons, cards, navigation, etc.)
+
+**CSS Variables:** Auto-generated from `theme.ts` via `npm run generate:css-vars`
+- Output: `src/styles/system/variables.css`
+- Includes color tokens, typography, spacing, border radius, semantic tokens
+- Dark mode overrides in `html.dark` selector
 
 **CRITICAL STYLING RULES:**
 1. **NEVER hardcode colors, spacing, or typography** - always import from `theme.ts`
@@ -176,6 +190,8 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 ```
 
 **File Uploads:** Use `react-dropzone` for prescription/document uploads
+- Prescriptions stored in Firebase Storage (`ordonnances/` folder)
+- Automatic 30-day expiration with Cloud Function cleanup
 
 ### Performance Optimizations
 
