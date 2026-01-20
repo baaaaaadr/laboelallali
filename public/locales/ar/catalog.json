@@ -40,7 +40,9 @@
     "preparation_label": "تعليمات التحضير:",
     "no_preparation": "لا توجد تعليمات تحضير محددة.",
     "select": "اختيار",
-    "selected": "تم الاختيار"
+    "selected": "تم الاختيار",
+    "description_label": "الوصف",
+    "technical_name_label": "الاسم التقني"
   },
   "on_quote": "عند الطلب",
   "tabs": {
@@ -49,5 +51,13 @@
     "sort_by": "ترتيب حسب",
     "popularity": "الشعبية",
     "alphabetical": "أ-ي"
+  },
+  "bilan": {
+    "total_selected": "مجموع التحاليل المحددة",
+    "analysis": "تحليل",
+    "analyses": "تحاليل",
+    "select_at_least_one": "يرجى اختيار تحليل واحد على الأقل",
+    "added_to_cart": "تم إضافة التحاليل إلى السلة",
+    "add_selected": "إضافة {count} تحليل"
   }
 }

@@ -3,7 +3,7 @@
 import React from "react";
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { X, AlertCircle, Clock } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Analysis } from './AnalysisCard';
 
@@ -28,7 +28,8 @@ export function AnalysisDetailsModal({
   const name = isArabic ? analysis.name_ar : analysis.name_fr;
   const category = isArabic ? analysis.category_ar : analysis.category_fr;
   const preparation = isArabic ? analysis.preparation_ar : analysis.preparation_fr;
-  const delay = isArabic ? analysis.delay_ar : analysis.delay_fr;
+  const description = isArabic ? analysis.description_ar : analysis.description_fr;
+  const technicalName = analysis.technical_name;
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -97,18 +98,27 @@ export function AnalysisDetailsModal({
                   </div>
                 </div>
 
-                {/* Delay */}
-                {delay && delay.trim() && (
-                  <div className="mb-6 flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
-                    <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                        {t('card.delay_label', 'Délai')}
-                      </h4>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                        {delay}
-                      </p>
-                    </div>
+                {/* Description */}
+                {description && description.trim() && (
+                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                      {t('card.description_label', 'Description')}
+                    </h4>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Technical Name */}
+                {technicalName && technicalName.trim() && (
+                  <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                    <h4 className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1 uppercase tracking-wide">
+                      {t('card.technical_name_label', 'Nom Technique')}
+                    </h4>
+                    <p className="text-sm text-gray-900 dark:text-white font-mono">
+                      {technicalName}
+                    </p>
                   </div>
                 )}
 

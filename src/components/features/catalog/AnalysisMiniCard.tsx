@@ -26,6 +26,7 @@ export function AnalysisMiniCard({
   // Get localized values
   const analysisName = isArabic ? analysis.Nom_Patient_AR : analysis.Nom_Patient_FR;
   const category = isArabic ? analysis.Categorie_AR : analysis.Categorie_FR;
+  const description = isArabic ? analysis.Description_Patient_AR : analysis.Description_Patient_FR;
 
   // Handle card click to show details modal
   const handleCardClick = () => {
@@ -58,13 +59,13 @@ export function AnalysisMiniCard({
         }
       }}
     >
-      {/* Left: Name + Delay/Category */}
+      {/* Left: Name + Description */}
       <div className="flex-1 min-w-0">
         <h4 className="font-bold text-gray-900 dark:text-white mb-0.5 truncate">
           {analysisName}
         </h4>
-        <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
-          {category}
+        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+          {description || category}
         </p>
       </div>
 
@@ -96,14 +97,16 @@ export function AnalysisMiniCard({
             w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0
             transition-all duration-200
             shadow-lg
-            border-2 border-white
-            focus:outline-none focus:ring-2 focus:ring-[#E3004F]
+            focus:outline-none focus:ring-2 focus:ring-offset-1
             ${isSelected
-              ? 'bg-[#E3004F] text-white scale-110 shadow-xl'
-              : 'bg-[#E3004F] text-white hover:bg-[#c20042] hover:scale-105'
+              ? 'bg-white text-[#E3004F] border-[3px] border-[#E3004F] scale-110 shadow-xl focus:ring-[#E3004F]'
+              : 'bg-[#E3004F] text-white border-2 border-white hover:bg-[#c20042] hover:scale-105 focus:ring-[#E3004F]'
             }
           `}
-          style={{ backgroundColor: '#E3004F', color: 'white', borderColor: 'white' }}
+          style={isSelected
+            ? { backgroundColor: '#FFFFFF', color: '#E3004F', borderColor: '#E3004F', borderWidth: '3px' }
+            : { backgroundColor: '#E3004F', color: 'white', borderColor: 'white' }
+          }
           aria-label={isSelected ? t('card.selected', 'Retirer du panier') : t('card.select', 'Ajouter au panier')}
         >
           {isSelected ? <Check className="h-6 w-6" strokeWidth={2.5} /> : <Plus className="h-6 w-6" strokeWidth={2.5} />}

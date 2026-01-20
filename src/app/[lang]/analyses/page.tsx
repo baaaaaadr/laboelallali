@@ -118,10 +118,22 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   const [activeTab, setActiveTab] = useState<string>('bilans');
   const [sortBy, setSortBy] = useState<SortOption>('name');
 
+  // Normalize ID helper - removes all spaces and converts to uppercase
+  const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
+
   // Create analyses map for fast lookups
   const analysesMap = useMemo(() => {
     const map = new Map<string, AnalyseItem>();
     analyses.forEach(analyse => map.set(analyse.id, analyse));
+    return map;
+  }, [analyses]);
+
+  // Create normalized map for matching (handles inconsistent spacing)
+  const normalizedAnalysesMap = useMemo(() => {
+    const map = new Map<string, AnalyseItem>();
+    analyses.forEach(analyse => {
+      map.set(normalizeId(analyse.id), analyse);
+    });
     return map;
   }, [analyses]);
 
@@ -273,15 +285,15 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
       count: sortedAnalyses.length
     });
 
-    // 3. Category tabs (only non-empty)
-    categoriesWithAnalyses.forEach(({ name, analyses }) => {
-      tabsList.push({
-        id: name, // Category name as ID
-        label: name,
-        icon: getCategoryIcon(name),
-        count: analyses.length
-      });
-    });
+    // 3. Category tabs (only non-empty) - HIDDEN FOR NOW
+    // categoriesWithAnalyses.forEach(({ name, analyses }) => {
+    //   tabsList.push({
+    //     id: name, // Category name as ID
+    //     label: name,
+    //     icon: getCategoryIcon(name),
+    //     count: analyses.length
+    //   });
+    // });
 
     return tabsList;
   }, [sortedBilans, sortedAnalyses, categoriesWithAnalyses, t]);
@@ -321,6 +333,25 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
       } else {
         return [...prev, { type: 'bilan' as const, item: bilan }];
       }
+    });
+  }, []);
+
+  // Add multiple analyses to cart (used by BilanDetailsModal)
+  const addAnalysesToCart = useCallback((analyses: AnalyseItem[]) => {
+    setSelectedItems(prev => {
+      const newItems = [...prev];
+
+      analyses.forEach(analyse => {
+        const alreadyInCart = newItems.some(
+          item => item.type === 'analyse' && item.item.id === analyse.id
+        );
+
+        if (!alreadyInCart) {
+          newItems.push({ type: 'analyse' as const, item: analyse });
+        }
+      });
+
+      return newItems;
     });
   }, []);
 
@@ -392,6 +423,15 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     return selectedItems
       .filter(item => item.type === 'analyse')
       .map(item => item.item);
+  }, [selectedItems]);
+
+  // Get selected analyses IDs for BilanDetailsModal
+  const selectedAnalysisIds = useMemo(() => {
+    return new Set(
+      selectedItems
+        .filter(item => item.type === 'analyse')
+        .map(item => item.item.id)
+    );
   }, [selectedItems]);
 
   // Get selected bilans for carousel
@@ -533,7 +573,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
 
                   {/* Analyses list */}
                   {displayedAnalyses.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {displayedAnalyses.map((analyse) => (
                         <AnalysisMiniCard
                           key={analyse.id}
@@ -582,7 +622,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
 
                   {/* Analyses list */}
                   {displayedAnalyses.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {displayedAnalyses.map((analyse) => (
                         <AnalysisMiniCard
                           key={analyse.id}
@@ -627,9 +667,10 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         isOpen={bilanModalOpen}
         onClose={handleCloseBilanModal}
         analysesMap={analysesMap}
+        normalizedAnalysesMap={normalizedAnalysesMap}
         lang={lang}
-        onAddToCart={toggleBilanInCart}
-        isInCart={selectedBilanForDetails ? isBilanInCart(selectedBilanForDetails) : false}
+        onAddAnalysesToCart={addAnalysesToCart}
+        selectedAnalysesInCart={selectedAnalysisIds}
       />
 
       {/* Analysis Details Modal */}
@@ -644,8 +685,9 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
             category_ar: selectedAnalysisForDetails.Categorie_AR,
             preparation_fr: selectedAnalysisForDetails.Pre_Analytique_FR,
             preparation_ar: selectedAnalysisForDetails.Pre_Analytique_AR,
-            delay_fr: '',
-            delay_ar: '',
+            description_fr: selectedAnalysisForDetails.Description_Patient_FR,
+            description_ar: selectedAnalysisForDetails.Description_Patient_AR,
+            technical_name: selectedAnalysisForDetails.Nom_Technique,
             is_active: true
           }}
           isOpen={analysisModalOpen}

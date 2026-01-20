@@ -85,7 +85,11 @@
       "Bash(taskkill //F //PID 370148)",
       "Bash(taskkill //F //PID 363216)",
       "Bash(Remove-Item -Force nul)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(taskkill //F //PID 370720)",
+      "Bash(taskkill //F //PID 386052)",
+      "Bash(Where-Object {$_Path -like \"*laboelallali*\"})",
+      "Bash(Remove-Item -Recurse -Force .next)"
     ],
     "deny": [],
     "ask": []

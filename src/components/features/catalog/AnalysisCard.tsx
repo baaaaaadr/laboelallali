@@ -11,8 +11,9 @@ export interface Analysis {
   category_ar: string;
   preparation_fr: string;
   preparation_ar: string;
-  delay_fr: string;
-  delay_ar: string;
+  description_fr?: string;
+  description_ar?: string;
+  technical_name?: string;
   is_active: boolean;
 }
 

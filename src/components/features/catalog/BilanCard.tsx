@@ -45,10 +45,18 @@ export function BilanCard({
 
   return (
     <div
+      onClick={(e) => {
+        // Only trigger if not clicking on buttons
+        const target = e.target as HTMLElement;
+        if (!target.closest('button')) {
+          onShowDetails(bilan);
+        }
+      }}
       className={`
         relative w-full rounded-xl overflow-hidden
         bg-white dark:bg-gray-800
         transition-all duration-300
+        cursor-pointer
         ${bilan.Is_Featured
           ? 'shadow-lg shadow-pink-500/10 border-2 border-pink-100 dark:border-pink-900/30'
           : 'shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-2px_rgba(0,0,0,0.1)]'
@@ -103,14 +111,16 @@ export function BilanCard({
               w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0
               transition-all duration-200
               shadow-lg
-              border-2 border-white
-              focus:outline-none focus:ring-2 focus:ring-[#E3004F]
+              focus:outline-none focus:ring-2 focus:ring-offset-1
               ${isSelected
-                ? 'bg-[#E3004F] text-white scale-110 shadow-xl'
-                : 'bg-[#E3004F] text-white hover:bg-[#c20042] hover:scale-105'
+                ? 'bg-white text-[#E3004F] border-[3px] border-[#E3004F] scale-110 shadow-xl focus:ring-[#E3004F]'
+                : 'bg-[#E3004F] text-white border-2 border-white hover:bg-[#c20042] hover:scale-105 focus:ring-[#E3004F]'
               }
             `}
-            style={{ backgroundColor: '#E3004F', color: 'white', borderColor: 'white' }}
+            style={isSelected
+              ? { backgroundColor: '#FFFFFF', color: '#E3004F', borderColor: '#E3004F', borderWidth: '3px' }
+              : { backgroundColor: '#E3004F', color: 'white', borderColor: 'white' }
+            }
             aria-label={isSelected ? t('card.selected', 'Retirer du panier') : t('card.select', 'Ajouter au panier')}
           >
             {isSelected ? <Check className="h-6 w-6" strokeWidth={2.5} /> : <Plus className="h-6 w-6" strokeWidth={2.5} />}

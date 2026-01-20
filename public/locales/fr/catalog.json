@@ -40,7 +40,9 @@
     "preparation_label": "Instructions de préparation:",
     "no_preparation": "Aucune préparation spécifique.",
     "select": "Sélectionner",
-    "selected": "Sélectionné"
+    "selected": "Sélectionné",
+    "description_label": "Description",
+    "technical_name_label": "Nom Technique"
   },
   "on_quote": "Sur Devis",
   "tabs": {
@@ -49,5 +51,13 @@
     "sort_by": "Trier par",
     "popularity": "Popularité",
     "alphabetical": "A-Z"
+  },
+  "bilan": {
+    "total_selected": "Total des analyses sélectionnées",
+    "analysis": "analyse",
+    "analyses": "analyses",
+    "select_at_least_one": "Veuillez sélectionner au moins une analyse",
+    "added_to_cart": "analyse(s) ajoutée(s) au panier",
+    "add_selected": "Ajouter {count} analyse(s)"
   }
 }
