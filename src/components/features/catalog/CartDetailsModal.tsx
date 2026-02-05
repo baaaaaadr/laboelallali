@@ -49,7 +49,18 @@ export function CartDetailsModal({
 
   const getItemName = (item: CartItem) => {
     if (item.type === 'analyse') {
-      return isRtl ? item.item.Nom_Analyse_AR : item.item.Nom_Analyse_FR;
+      const name = isRtl ? item.item.Nom_Patient_AR : item.item.Nom_Patient_FR;
+      console.log('🔍 DEBUG getItemName - analyse:', {
+        type: item.type,
+        id: item.item.id,
+        Nom_Patient_FR: item.item.Nom_Patient_FR,
+        Nom_Patient_AR: item.item.Nom_Patient_AR,
+        Categorie_FR: item.item.Categorie_FR,
+        Categorie_AR: item.item.Categorie_AR,
+        returnedName: name,
+        isRtl
+      });
+      return name;
     } else {
       return isRtl ? item.item.Nom_Bilan_AR : item.item.Nom_Bilan_FR;
     }
