@@ -89,7 +89,8 @@
       "Bash(taskkill //F //PID 370720)",
       "Bash(taskkill //F //PID 386052)",
       "Bash(Where-Object {$_Path -like \"*laboelallali*\"})",
-      "Bash(Remove-Item -Recurse -Force .next)"
+      "Bash(Remove-Item -Recurse -Force .next)",
+      "Bash(wc -l src/**/*.tsx src/**/**/*.tsx src/**/**/**/*.tsx)"
     ],
     "deny": [],
     "ask": []
