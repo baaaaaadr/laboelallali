@@ -289,18 +289,18 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   };
 
   return (
-    <main className="p-4 md:p-8 font-sans">
-      <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 font-['Inter','Public Sans',sans-serif]">
+    <main className="p-4 md:p-8 font-sans bg-[var(--background-default)] min-h-screen">
+      <h1 className="text-3xl font-bold text-[var(--color-bordeaux-primary)] mb-6 font-['Inter','Public Sans',sans-serif]">
         {t('appointment', { ns: 'appointment' })}
       </h1>
       {submitSuccess && (
-        <div className="max-w-lg mx-auto mb-6 p-4 bg-green-100 border border-green-200 text-green-800 rounded-md">
+        <div className="max-w-lg mx-auto mb-6 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 rounded-md">
           {t('appointment_request_success', { ns: 'appointment' })}
         </div>
       )}
       
       {submitError && (
-        <div className="max-w-lg mx-auto mb-6 p-4 bg-red-100 border border-red-200 text-red-800 rounded-md">
+        <div className="max-w-lg mx-auto mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 rounded-md">
           {submitError}
         </div>
       )}
@@ -308,14 +308,14 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       <form className="max-w-lg mx-auto" onSubmit={handleSubmit}>
         {/* Nom complet */}
         <div className="mb-4">
-          <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('fullName', { ns: 'appointment' })}
           </label>
           <input
             type="text"
             id="nomComplet"
             name="nomComplet"
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             autoComplete="name"
             value={nom}
             onChange={e => setNom(e.target.value)}
@@ -324,14 +324,14 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         </div>
         {/* Numéro de téléphone */}
         <div className="mb-4">
-          <label htmlFor="telephone" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="telephone" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('phoneNumber', { ns: 'appointment' })}
           </label>
           <input
             type="tel"
             id="telephone"
             name="telephone"
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             autoComplete="tel"
             inputMode="tel"
             value={telephone}
@@ -341,14 +341,14 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         </div>
         {/* Email (optionnel) */}
         <div className="mb-4">
-          <label htmlFor="email" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="email" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('email', { ns: 'appointment' })}
           </label>
           <input
             type="email"
             id="email"
             name="email"
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -356,7 +356,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         </div>
         {/* Date souhaitée */}
         <div className="mb-4">
-          <label htmlFor="date" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="date" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('desiredDate', { ns: 'appointment' })}
           </label>
           <DatePicker
@@ -367,13 +367,13 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
             minDate={new Date()}
             locale={dateLocale}
             placeholderText="Sélectionnez une date"
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             required
           />
         </div>
         {/* Heure souhaitée */}
         <div className="mb-4">
-          <label htmlFor="heure" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="heure" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('desiredTime', { ns: 'appointment' })}
           </label>
           <select
@@ -381,7 +381,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
             name="heure"
             value={selectedTime}
             onChange={(e) => setSelectedTime(e.target.value)}
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             required
           >
             <option value="">{t('chooseTime', { ns: 'appointment' })}</option>
@@ -393,7 +393,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
 
         {/* Téléchargement d'ordonnance */}
         <div className="mb-4">
-          <label htmlFor="prescriptionFile" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="prescriptionFile" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('prescription_upload_label', { ns: 'appointment' })}
           </label>
           <input
@@ -403,23 +403,23 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
             ref={fileInputRef}
             onChange={handleFileChange}
             accept=".jpg,.jpeg,.png,.pdf"
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+            className="block w-full text-sm text-[var(--text-secondary)] file:mr-4 file:py-2 file:px-4
               file:rounded-md file:border-0 file:text-sm file:font-semibold
-              file:bg-[var(--accent-fuchsia)] file:text-white hover:file:bg-[var(--fuchsia-bright)]
+              file:bg-[var(--color-fuchsia-accent)] file:text-white hover:file:bg-[var(--color-fuchsia-bright)]
               file:cursor-pointer file:transition-colors"
           />
           {fileError && (
-            <p className="mt-1 text-sm text-red-600">{fileError}</p>
+            <p className="mt-1 text-sm text-[var(--color-functional-error)]">{fileError}</p>
           )}
           {prescriptionFile && !fileError && (
             <div className="mt-2">
-              <p className="text-sm text-gray-600">{t('file_selected', { ns: 'appointment' })} {prescriptionFile.name}</p>
+              <p className="text-sm text-[var(--text-secondary)]">{t('file_selected', { ns: 'appointment' })} {prescriptionFile.name}</p>
               {filePreview && (
                 <div className="mt-2 max-w-xs">
                   <img 
                     src={filePreview} 
                     alt="Aperçu"
-                    className="h-24 object-contain border border-gray-200 rounded-md" 
+                    className="h-24 object-contain border border-[var(--border-default)] rounded-md" 
                   />
                 </div>
               )}
@@ -429,14 +429,14 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         
         {/* Commentaires (optionnel) */}
         <div className="mb-4">
-          <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('comments', { ns: 'appointment' })}
           </label>
           <textarea
             id="commentaires"
             name="commentaires"
             rows={3}
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             value={commentaires}
             onChange={e => setCommentaires(e.target.value)}
           />
@@ -446,7 +446,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
           <button
             type="submit"
             disabled={isLoading}
-            className={`bg-[var(--accent-fuchsia)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`bg-[var(--color-fuchsia-accent)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--color-fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {isLoading ? (
               <>

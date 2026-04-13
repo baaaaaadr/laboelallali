@@ -101,21 +101,21 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
   };
 
   return (
-    <main className="p-4 md:p-8 font-sans">
-      <h1 className="text-3xl font-bold text-[var(--primary-bordeaux)] mb-6 font-['Inter','Public Sans',sans-serif] text-center">
+    <main className="p-4 md:p-8 font-sans bg-[var(--background-default)] min-h-screen">
+      <h1 className="text-3xl font-bold text-[var(--color-bordeaux-primary)] mb-6 font-['Inter','Public Sans',sans-serif] text-center">
         {t('glabo_title', { ns: 'common' })}
       </h1>
       <form className="max-w-lg mx-auto" onSubmit={handleSubmit}>
         {/* Nom complet */}
         <div className="mb-4">
-          <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('fullName', { ns: 'glabo' })}
           </label>
           <input
             type="text"
             id="nomComplet"
             name="nomComplet"
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             autoComplete="name"
             value={nom}
             onChange={e => setNom(e.target.value)}
@@ -125,14 +125,14 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         
         {/* Numéro de téléphone */}
         <div className="mb-4">
-          <label htmlFor="telephone" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="telephone" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('phoneNumber', { ns: 'glabo' })}
           </label>
           <input
             type="tel"
             id="telephone"
             name="telephone"
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             autoComplete="tel"
             inputMode="tel"
             value={telephone}
@@ -143,14 +143,14 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         
         {/* Email (optionnel) */}
         <div className="mb-4">
-          <label htmlFor="email" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="email" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('email', { ns: 'glabo' })}
           </label>
           <input
             type="email"
             id="email"
             name="email"
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -159,14 +159,14 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         
         {/* Adresse de prélèvement */}
         <div className="mb-4">
-          <label htmlFor="adresse" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="adresse" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('address', { ns: 'glabo' })}
           </label>
           <input
             type="text"
             id="adresse"
             name="adresse"
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             autoComplete="street-address"
             value={adresse}
             onChange={(e) => setAdresse(e.target.value)}
@@ -176,7 +176,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         
         {/* Lieu de prélèvement */}
         <div className="mb-4">
-          <label htmlFor="lieuPrelevement" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="lieuPrelevement" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('location_type', { ns: 'glabo' })}
           </label>
           <select
@@ -184,7 +184,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
             name="lieuPrelevement"
             value={lieuPrelevement}
             onChange={e => setLieuPrelevement(e.target.value)}
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
           >
             <option value="domicile">{t('home', { ns: 'glabo' })}</option>
             <option value="travail">{t('workplace', { ns: 'glabo' })}</option>
@@ -193,7 +193,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         
         {/* Instructions d'accès */}
         <div className="mb-4">
-          <label htmlFor="instructionsAcces" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="instructionsAcces" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('access_instructions')}
           </label>
           <input
@@ -201,7 +201,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
             id="instructionsAcces"
             name="instructionsAcces"
             placeholder={t('access_instructions_placeholder')}
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             value={instructionsAcces}
             onChange={(e) => setInstructionsAcces(e.target.value)}
           />
@@ -209,7 +209,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         
         {/* Date souhaitée */}
         <div className="mb-4">
-          <label htmlFor="date" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="date" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('desiredDate', { ns: 'glabo' })}
           </label>
           <DatePicker
@@ -220,14 +220,14 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
             minDate={new Date()}
             locale={dateLocale}
             placeholderText="Sélectionnez une date"
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             required
           />
         </div>
         
         {/* Heure souhaitée */}
         <div className="mb-4">
-          <label htmlFor="heure" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="heure" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('desiredTime', { ns: 'glabo' })}
           </label>
           <select
@@ -235,7 +235,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
             name="heure"
             value={selectedTime}
             onChange={(e) => setSelectedTime(e.target.value)}
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             required
           >
             <option value="">{t('chooseTime', { ns: 'glabo' })}</option>
@@ -247,7 +247,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
 
         {/* Ordonnance */}
         <div className="mb-4">
-          <label htmlFor="ordonnance" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="ordonnance" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('prescription', { ns: 'glabo' })}
           </label>
           <select
@@ -255,7 +255,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
             name="ordonnance"
             value={hasOrdonnance}
             onChange={e => setHasOrdonnance(e.target.value)}
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
           >
             <option value="non">{t('no', { ns: 'glabo' })}</option>
             <option value="oui">{t('yes', { ns: 'glabo' })}</option>
@@ -264,14 +264,14 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         
         {/* Commentaires (optionnel) */}
         <div className="mb-4">
-          <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--primary-bordeaux)] mb-1">
+          <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
             {t('comments', { ns: 'glabo' })}
           </label>
           <textarea
             id="commentaires"
             name="commentaires"
             rows={3}
-            className="w-full p-2 border border-[var(--gray-300)] rounded-md shadow-sm focus:ring-[var(--accent-fuchsia)] focus:border-[var(--accent-fuchsia)]"
+            className="w-full p-2 bg-[var(--background-default)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md shadow-sm focus:ring-[var(--color-fuchsia-accent)] focus:border-[var(--color-fuchsia-accent)]"
             value={commentaires}
             onChange={e => setCommentaires(e.target.value)}
           />
@@ -281,7 +281,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         <div className="flex flex-col md:flex-row gap-3 justify-end">
           <button
             type="submit"
-            className="bg-[var(--accent-fuchsia)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2"
+            className="bg-[var(--color-fuchsia-accent)] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[var(--color-fuchsia-bright)] transition-colors w-full md:w-auto flex items-center justify-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />

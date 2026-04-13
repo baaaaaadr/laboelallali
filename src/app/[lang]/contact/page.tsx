@@ -11,9 +11,9 @@ const SimpleMap = dynamic(
   { 
     ssr: false,
     loading: () => (
-      <div className="h-96 w-full flex items-center justify-center bg-gray-100 rounded-lg">
-        <MapPin size={48} className="text-gray-400" />
-        <span className="ml-2 text-gray-500">Loading map...</span>
+      <div className="h-96 w-full flex items-center justify-center bg-[var(--background-secondary)] rounded-lg border border-[var(--border-default)]">
+        <MapPin size={48} className="text-[var(--text-tertiary)]" />
+        <span className="ml-2 text-[var(--text-secondary)]">Loading map...</span>
       </div>
     )
   }
@@ -54,8 +54,8 @@ export default function ContactPage({
               <div className="flex items-start">
                 <MapPin size={24} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[var(--brand-primary)]`} />
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">{labName}</h3>
-                  <p className="text-gray-700">{labAddress}</p>
+                  <h3 className="font-semibold text-lg mb-1 text-[var(--text-primary)]">{labName}</h3>
+                  <p className="text-[var(--text-secondary)]">{labAddress}</p>
                   <a 
                     href={LAB_COORDINATES.GOOGLE_MAPS_URL} 
                     target="_blank" 
@@ -68,7 +68,7 @@ export default function ContactPage({
                 </div>
               </div>
               
-              <div className="border-t border-gray-200 pt-6">
+              <div className="border-t border-[var(--border-default)] pt-6">
                 <h3 className="font-semibold text-lg mb-4">{t('contact')}</h3>
                 <ul className="space-y-4">
                   <li className="flex items-start">
@@ -111,11 +111,11 @@ export default function ContactPage({
           
           {/* Additional Information Card */}
           <div className="card p-6 bg-[var(--background-secondary)]">
-            <h3 className="text-xl font-semibold text-[var(--brand-primary)] mb-4">{t('find_us')}</h3>
-            <p className="text-gray-700 mb-4">
+            <h3 className="text-xl font-semibold text-[var(--color-bordeaux-primary)] mb-4">{t('find_us')}</h3>
+            <p className="text-[var(--text-secondary)] mb-4">
               {t('find_us_text')}
             </p>
-            <p className="text-gray-700">
+            <p className="text-[var(--text-secondary)]">
               {t('emergency_contact')}
             </p>
           </div>
@@ -133,8 +133,8 @@ export default function ContactPage({
               />
             </div>
             <div className="p-6">
-              <h3 className="font-semibold text-xl mb-2">{labName}</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="font-semibold text-xl mb-2 text-[var(--text-primary)]">{labName}</h3>
+              <p className="text-[var(--text-secondary)] mb-4">
                 {labAddress}
               </p>
               <div className="flex flex-wrap gap-3">
@@ -149,7 +149,7 @@ export default function ContactPage({
                 </a>
                 <a
                   href={LAB_CONTACT.LANDLINE.url}
-                  className="flex items-center justify-center min-w-[160px] h-12 px-6 border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-sm transition-colors text-center text-lg hover:bg-gray-100 focus:bg-gray-100 gap-2"
+                  className="flex items-center justify-center min-w-[160px] h-12 px-6 border border-[var(--border-default)] text-[var(--text-secondary)] font-semibold rounded-lg shadow-sm transition-colors text-center text-lg hover:bg-[var(--background-secondary)] gap-2"
                 >
                   <Phone size={22} className="mr-2 -ml-1" />
                   {t('call_us')}

@@ -46,7 +46,7 @@ export default function HomeClient({ lang }: { lang: string }) {
         <HeroBanner />
         {/* Opening Hours Widget - Positioned at top right on large screens, always visible */}
         <div className="lg:absolute lg:top-4 lg:right-4 lg:z-20 lg:max-w-80 w-full">
-          <div className="card bg-white/95 dark:bg-[var(--background-card)]/95 backdrop-blur-sm shadow-lg border border-[var(--border-default)] mx-4 mt-4 lg:mx-0 lg:mt-0">
+          <div className="card bg-[var(--background-card)]/95 backdrop-blur-sm shadow-lg border border-[var(--border-default)] mx-4 mt-4 lg:mx-0 lg:mt-0">
             <div className="flex flex-col md:flex-row lg:flex-col items-center justify-between gap-4">
               <div className="flex-1 w-full">
                 <h3 className="text-lg font-bold text-[var(--color-bordeaux-primary)] mb-1 flex items-center">
@@ -56,8 +56,8 @@ export default function HomeClient({ lang }: { lang: string }) {
                 <p className="text-sm text-[var(--text-secondary)]">{t('opening_hours_text')}</p>
               </div>
               <div className="flex flex-col items-center justify-center gap-2">
-                <div className={`${labStatus.isOpen ? 'bg-green-700' : 'bg-[#B71C1C]'} text-white px-5 py-2 rounded-full font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
-                  <span className={`w-3 h-3 ${labStatus.isOpen ? 'bg-green-300' : 'bg-red-300'} rounded-full`}></span>
+                <div className={`${labStatus.isOpen ? 'bg-[var(--status-success)]' : 'bg-[var(--status-error)]'} text-white px-5 py-2 rounded-full font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
+                  <span className={`w-3 h-3 ${labStatus.isOpen ? 'opacity-100' : 'opacity-80'} bg-white rounded-full ${labStatus.isOpen ? 'animate-pulse' : ''}`}></span>
                   {labStatus.statusText}
                 </div>
                 {/* Only show countdown on client side to prevent hydration mismatch */}
@@ -180,7 +180,7 @@ export default function HomeClient({ lang }: { lang: string }) {
         <section id="contact" className="mb-12 fade-in-section">
           <h2 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] mb-6">{t('our_location')}</h2>
           <div className="card p-0 overflow-hidden">
-            <div className="bg-gray-200 dark:bg-gray-700 h-64 md:h-96">
+            <div className="bg-[var(--background-secondary)] h-64 md:h-96">
               {isClient ? (
                 <SimpleMap 
                   latitude={30.4173116} 

@@ -33,12 +33,12 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">{t('contact')}</h3>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <MapPin size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
+                <MapPin size={20} className="flex-shrink-0 text-white dark:text-[var(--color-fuchsia-light)] mt-0.5" />
                 <span>{t(LAB_ADDRESS)}</span>
               </li>
               <li className="flex flex-col">
                 <div className="flex items-start space-x-3 mb-1">
-                  <Phone size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
+                  <Phone size={20} className="flex-shrink-0 text-white dark:text-[var(--color-fuchsia-light)] mt-0.5" />
                   <span className="font-semibold">{t('lab_contact')}</span>
                 </div>
                 <div className={`${isRTL ? 'mr-7' : 'ml-7'}`}>
@@ -53,7 +53,7 @@ const Footer = () => {
                 </div>
               </li>
               <li className="flex items-start space-x-3">
-                <Mail size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
+                <Mail size={20} className="flex-shrink-0 text-white dark:text-[var(--color-fuchsia-light)] mt-0.5" />
                 <div className="flex flex-col">
                   <a href={LAB_CONTACT.EMAIL.url} className="hover:underline">
                     {LAB_CONTACT.EMAIL.display}
@@ -61,7 +61,7 @@ const Footer = () => {
                 </div>
               </li>
               <li className="flex items-start space-x-3">
-                <Clock size={20} className="flex-shrink-0 text-white dark:text-rose-200 mt-0.5" />
+                <Clock size={20} className="flex-shrink-0 text-white dark:text-[var(--color-fuchsia-light)] mt-0.5" />
                 <div>
                   <p>{LAB_HOURS.WEEKDAYS}</p>
                   <p>{LAB_HOURS.SUNDAY}</p>
@@ -75,25 +75,25 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">{t('quick_links')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
+                <Link href="/" className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('home')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#services" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
+                <Link href="#services" className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('our_main_services')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#info" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
+                <Link href="#info" className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('practical_info')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] dark:hover:text-rose-300 transition-colors duration-200 min-h-[44px] py-2">
+                <Link href="#contact" className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('contact')}</span>
                 </Link>
@@ -137,7 +137,7 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-gray-700 mt-8 pt-6 text-center">
+        <div className="border-t border-white/20 mt-8 pt-6 text-center">
           <p className="footer-copyright"> {currentYear} {t('laboratory_name')}. {t('rights_reserved')}</p>
         </div>
       </div>

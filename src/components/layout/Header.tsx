@@ -30,36 +30,36 @@ function getLangFromPath(path: string) {
 // Inline styles for mobile menu - ensures visibility regardless of CSS
 const menuStyles = {
   navLink: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '12px 16px',
-    color: '#1f2937',
-    textDecoration: 'none',
-    fontWeight: 500,
-    borderRadius: '8px',
-    transition: 'all 0.2s ease',
-    width: '100%',
-    backgroundColor: 'transparent',
+     display: 'flex',
+     alignItems: 'center',
+     padding: '12px 16px',
+     color: 'var(--text-primary)',
+     textDecoration: 'none',
+     fontWeight: 500,
+     borderRadius: '8px',
+     transition: 'all 0.2s ease',
+     width: '100%',
+     backgroundColor: 'transparent',
   } as React.CSSProperties,
   navLinkDark: {
-    color: '#e5e5e5',
+     color: 'var(--text-primary)',
   } as React.CSSProperties,
   navIcon: {
-    color: '#800020',
-    flexShrink: 0,
-    width: '24px',
-    marginRight: '12px',
+     color: 'var(--color-bordeaux-primary)',
+     flexShrink: 0,
+     width: '24px',
+     marginRight: '12px',
   } as React.CSSProperties,
   navIconDark: {
-    color: '#ff80ab',
+     color: 'var(--color-fuchsia-light)',
   } as React.CSSProperties,
   navText: {
-    color: '#1f2937',
-    fontSize: '15px',
-    fontWeight: 500,
+     color: 'var(--text-primary)',
+     fontSize: '15px',
+     fontWeight: 500,
   } as React.CSSProperties,
   navTextDark: {
-    color: '#e5e5e5',
+     color: 'var(--text-primary)',
   } as React.CSSProperties,
 };
 
@@ -317,7 +317,7 @@ const Header = () => {
             <div className="flex items-center">
               <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
                 <span className="header-logo text-lg font-bold mr-3">L</span>
-                <span className="font-semibold text-lg">{t('laboName')}</span>
+                <span className="font-semibold text-lg text-[var(--text-primary)]">{t('laboName')}</span>
               </Link>
             </div>
             <button 
@@ -439,8 +439,8 @@ const Header = () => {
           <div
             className="p-6 space-y-4"
             style={{
-              backgroundColor: isDarkMode ? '#1a1a2e' : '#ffffff',
-              borderTop: `1px solid ${isDarkMode ? '#3d3d5c' : '#e5e7eb'}`,
+              backgroundColor: 'var(--background-default)',
+              borderTop: '1px solid var(--border-default)',
             }}
           >
             {/* WhatsApp Contact Button */}
@@ -458,9 +458,9 @@ const Header = () => {
                 borderRadius: '8px',
                 fontWeight: 500,
                 minHeight: '48px',
-                border: `2px solid ${isDarkMode ? '#ff80ab' : '#800020'}`,
+                border: '2px solid var(--color-bordeaux-primary)',
                 backgroundColor: 'transparent',
-                color: isDarkMode ? '#ff80ab' : '#800020',
+                color: 'var(--color-bordeaux-primary)',
                 textDecoration: 'none',
                 transition: 'all 0.2s ease',
               }}
@@ -488,8 +488,8 @@ const Header = () => {
                 borderRadius: '8px',
                 fontWeight: 500,
                 minHeight: '48px',
-                border: '2px solid #c2185b',
-                backgroundColor: '#c2185b',
+                border: '2px solid var(--color-fuchsia-bright)',
+                backgroundColor: 'var(--color-fuchsia-bright)',
                 color: '#ffffff',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -520,9 +520,9 @@ const Header = () => {
                 borderRadius: '8px',
                 fontWeight: 500,
                 minHeight: '48px',
-                border: `2px solid ${isDarkMode ? '#ff80ab' : '#800020'}`,
-                backgroundColor: isDarkMode ? '#ff80ab' : '#800020',
-                color: isDarkMode ? '#1a1a2e' : '#ffffff',
+                border: '2px solid var(--color-bordeaux-primary)',
+                backgroundColor: 'var(--color-bordeaux-primary)',
+                color: 'white',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 gap: '8px',

@@ -483,7 +483,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
             {/* Search bar */}
             <div className="py-3">
               <div className="relative max-w-2xl mx-auto">
-                <Search className={`absolute ${isArabic ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400`} />
+                <Search className={`absolute ${isArabic ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)] group-focus-within:text-[var(--color-fuchsia-accent)] transition-colors`} />
                 <input
                   type="text"
                   value={searchTerm}
@@ -491,10 +491,11 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                   placeholder={t('search_in_tags', 'Rechercher par nom, catégorie ou mots-clés...')}
                   className={`
                     w-full ${isArabic ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-2.5 rounded-full
-                    bg-white dark:bg-[var(--background-secondary)]
-                    border border-gray-200 dark:border-[var(--border-default)]
-                    text-gray-900 dark:text-[var(--text-primary)] text-sm
-                    focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:border-transparent
+                    bg-[var(--background-default)] text-[var(--text-primary)]
+                    border border-[var(--border-default)]
+                    text-sm
+                    focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent
+                    placeholder:text-[var(--text-tertiary)]
                     shadow-sm
                     transition-all duration-200
                   `}

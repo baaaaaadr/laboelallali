@@ -141,11 +141,12 @@ export default function MedecinsPage() {
 
         {/* Filtres de recherche */}
         <div style={{
-          background: 'var(--background-tertiary)',
+          background: 'var(--background-card)',
           padding: 'clamp(12px, 3vw, 25px)',
           borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          marginBottom: '20px'
+          boxShadow: 'var(--shadow-sm)',
+          marginBottom: '20px',
+          border: '1px solid var(--border-default)'
         }}>
           <div style={{
             display: 'flex',
@@ -239,7 +240,7 @@ export default function MedecinsPage() {
             onClick={resetFilters}
             style={{
               padding: '10px 20px',
-              background: theme.colors.bordeaux.light,
+              background: 'var(--color-bordeaux-primary)',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -286,21 +287,22 @@ export default function MedecinsPage() {
               <div
                 key={medecin.id}
                 style={{
-                  background: 'var(--background-tertiary)',
+                  background: 'var(--background-card)',
                   padding: 'clamp(12px, 3vw, 20px)',
                   borderRadius: '12px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  boxShadow: 'var(--shadow-sm)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
-                  height: 'fit-content'
+                  height: 'fit-content',
+                  border: '1px solid var(--border-default)'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
                   <div style={{ flex: '1 1 auto', minWidth: '0' }}>
                     <h3 style={{
                       fontSize: 'clamp(1.1rem, 3.5vw, 1.3rem)',
-                      color: theme.colors.fuchsia.accent,
+                      color: 'var(--color-fuchsia-accent)',
                       marginBottom: '5px',
                       fontWeight: 700,
                       wordBreak: 'break-word'
@@ -309,7 +311,7 @@ export default function MedecinsPage() {
                     </h3>
                     <p style={{
                       fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
-                      color: theme.colors.bordeaux.primary,
+                      color: 'var(--color-bordeaux-primary)',
                       marginBottom: '0',
                       fontWeight: 600,
                       wordBreak: 'break-word'
@@ -364,7 +366,7 @@ export default function MedecinsPage() {
                       📞 <a
                         href={`tel:${medecin.tel_professionnel}`}
                         style={{
-                          color: theme.colors.bordeaux.primary,
+                          color: 'var(--color-bordeaux-primary)',
                           textDecoration: 'none',
                           wordBreak: 'break-all'
                         }}
@@ -381,7 +383,7 @@ export default function MedecinsPage() {
                       ✉️ <a
                         href={`mailto:${medecin.email}`}
                         style={{
-                          color: theme.colors.bordeaux.primary,
+                          color: 'var(--color-bordeaux-primary)',
                           textDecoration: 'none',
                           wordBreak: 'break-all',
                           overflowWrap: 'break-word'
