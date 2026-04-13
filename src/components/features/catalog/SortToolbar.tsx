@@ -26,7 +26,7 @@ export function SortToolbar({
   return (
     <div className={`flex items-center gap-4 mb-6 ${isRtl ? 'flex-row-reverse' : 'flex-row'}`}>
       {/* Label */}
-      <span className="text-sm text-gray-700 dark:text-gray-200 font-medium">
+      <span className="text-sm text-[var(--text-primary)] font-medium">
         {t('tabs.sort_by', 'Trier par')}:
       </span>
 
@@ -41,7 +41,7 @@ export function SortToolbar({
             currentSort: sortBy,
             isSelected: isSelected,
             shouldBeRose: isSelected,
-            classes: isSelected ? 'bg-[#E3004F] text-white (ROSE BRAND)' : 'bg-white text-gray-900 (WHITE)'
+            classes: isSelected ? 'bg-[var(--brand-primary)] text-white' : 'bg-[var(--background-secondary)] text-[var(--text-secondary)]'
           });
 
           return (
@@ -54,13 +54,13 @@ export function SortToolbar({
               className={`
                 px-4 py-1.5 rounded-full text-xs font-medium
                 transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1
+                focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:ring-offset-1
                 ${isSelected
-                  ? 'bg-gray-900 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  ? 'bg-gray-900 dark:bg-[var(--brand-primary)] text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-[var(--background-secondary)] text-gray-600 dark:text-[var(--text-secondary)] hover:bg-gray-200 dark:hover:bg-[var(--background-hover)]'
                 }
               `}
-              style={isSelected ? { backgroundColor: '#1F2937', color: 'white' } : {}}
+              style={isSelected ? { color: 'white' } : {}}
             >
               {t(option.labelKey, option.label)}
             </button>

@@ -54,12 +54,12 @@ export function BilanCard({
       }}
       className={`
         relative w-full rounded-xl overflow-hidden
-        bg-white dark:bg-gray-800
+        bg-[var(--background-card)]
         transition-all duration-300
         cursor-pointer
         ${bilan.Is_Featured
-          ? 'shadow-lg shadow-pink-500/10 border-2 border-pink-100 dark:border-pink-900/30'
-          : 'shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-2px_rgba(0,0,0,0.1)]'
+          ? 'shadow-lg shadow-pink-500/10 border-2 border-pink-100 dark:border-[var(--border-accent)]'
+          : 'shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-[var(--border-default)] hover:shadow-[0_8px_30px_-2px_rgba(0,0,0,0.1)]'
         }
       `}
       style={{ minHeight: '320px' }}
@@ -82,11 +82,11 @@ export function BilanCard({
 
       {/* Content */}
       <div className="px-6 pb-6 flex flex-col h-full">
-        <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+        <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">
           {bilanName}
         </h3>
 
-        <p className="text-sm mb-4 line-clamp-2 text-gray-600 dark:text-gray-400">
+        <p className="text-sm mb-4 line-clamp-2 text-[var(--text-secondary)]">
           {bilanDescription}
         </p>
 
@@ -133,9 +133,9 @@ export function BilanCard({
             onClick={handleShowDetails}
             className="
               w-full py-2 px-4 rounded-lg font-medium transition-all
-              border border-gray-300 dark:border-gray-600
-              text-gray-700 dark:text-gray-300
-              hover:bg-gray-50 dark:hover:bg-gray-700
+              border border-[var(--border-default)]
+              text-[var(--text-primary)]
+              hover:bg-[var(--background-hover)]
               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#E3004F]
             "
           >

@@ -74,10 +74,10 @@ export function TabsNavigation({
             hidden lg:flex
             absolute ${isRtl ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 z-10
             h-8 w-8 rounded-full
-            bg-white dark:bg-gray-800
+            bg-[var(--background-default)]
             shadow-md
             items-center justify-center
-            hover:bg-gray-50 dark:hover:bg-gray-700
+            hover:bg-[var(--background-hover)]
             transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:ring-offset-2
             ${isRtl ? '-mr-4' : '-ml-4'}
@@ -112,7 +112,7 @@ export function TabsNavigation({
             activeTab: activeTab,
             isActive: isActive,
             shouldBeRose: isActive,
-            classes: isActive ? 'bg-[#E3004F] text-white (ROSE BRAND)' : 'bg-white text-gray-900 (WHITE)'
+            classes: isActive ? 'bg-[#E3004F] text-white (ROSE BRAND)' : 'bg-[var(--background-card)] text-[var(--text-primary)] (CARD)'
           });
 
           return (
@@ -130,7 +130,7 @@ export function TabsNavigation({
                 focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:ring-offset-2
                 ${isActive
                   ? 'bg-[#E3004F] text-white shadow-md font-semibold'
-                  : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 hover:border-[#E3004F] dark:hover:border-[#E3004F]'
+                  : 'bg-[var(--background-card)] text-[var(--text-primary)] border border-[var(--border-default)] hover:border-[#E3004F]'
                 }
               `}
               style={isActive ? { backgroundColor: '#E3004F', color: 'white' } : {}}
@@ -139,7 +139,7 @@ export function TabsNavigation({
               <span className="text-sm">
                 {tab.label}
                 {tab.count !== undefined && (
-                  <span className={`ml-1 ${isActive ? 'text-white/90' : 'text-gray-500'}`}>
+                  <span className={`ml-1 ${isActive ? 'text-white/90' : 'text-[var(--text-secondary)]'}`}>
                     ({tab.count})
                   </span>
                 )}
@@ -157,10 +157,10 @@ export function TabsNavigation({
             hidden lg:flex
             absolute ${isRtl ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 z-10
             h-8 w-8 rounded-full
-            bg-white dark:bg-gray-800
+            bg-[var(--background-default)]
             shadow-md
             items-center justify-center
-            hover:bg-gray-50 dark:hover:bg-gray-700
+            hover:bg-[var(--background-hover)]
             transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:ring-offset-2
             ${isRtl ? '-ml-4' : '-mr-4'}

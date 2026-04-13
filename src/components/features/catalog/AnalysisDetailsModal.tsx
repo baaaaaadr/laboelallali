@@ -58,7 +58,7 @@ export function AnalysisDetailsModal({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel
-                className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all"
+                className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-[var(--background-card)] p-6 text-left align-middle shadow-xl transition-all border border-[var(--border-default)]"
                 dir={isArabic ? 'rtl' : 'ltr'}
               >
                 {/* Header */}
@@ -66,27 +66,27 @@ export function AnalysisDetailsModal({
                   <div className="flex-1">
                     <Dialog.Title
                       as="h3"
-                      className="text-2xl font-bold text-gray-900 dark:text-white mb-2"
+                      className="text-2xl font-bold text-[var(--text-primary)] mb-2"
                     >
                       {name}
                     </Dialog.Title>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-[var(--text-secondary)]">
                       {t('card.category_label')} {category}
                     </p>
                   </div>
                   <button
                     onClick={onClose}
-                    className="ml-4 rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="ml-4 rounded-full p-2 hover:bg-[var(--background-hover)] transition-colors"
                     aria-label={t('close', 'Fermer')}
                   >
-                    <X className="h-6 w-6 text-gray-500" />
+                    <X className="h-6 w-6 text-[var(--text-secondary)]" />
                   </button>
                 </div>
 
                 {/* Price */}
-                <div className="mb-6 p-4 bg-gradient-to-r from-pink-50 to-fuchsia-50 dark:from-pink-900/20 dark:to-fuchsia-900/20 rounded-lg border border-pink-100 dark:border-pink-800">
+                <div className="mb-6 p-4 bg-gradient-to-r from-pink-50 to-fuchsia-50 dark:from-[var(--background-secondary)] dark:to-[var(--background-secondary)] rounded-lg border border-pink-100 dark:border-[var(--border-default)]">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className="text-sm font-medium text-[var(--text-secondary)]">
                       {t('card.price_currency', 'Prix')}
                     </span>
                     <span className="text-3xl font-bold text-[#E3004F]">
@@ -100,11 +100,11 @@ export function AnalysisDetailsModal({
 
                 {/* Description */}
                 {description && description.trim() && (
-                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                  <div className="mb-6 p-4 bg-[var(--background-default)] rounded-lg border border-[var(--border-default)]">
+                    <h4 className="font-semibold text-[var(--text-primary)] mb-2">
                       {t('card.description_label', 'Description')}
                     </h4>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                       {description}
                     </p>
                   </div>
@@ -116,7 +116,7 @@ export function AnalysisDetailsModal({
                     <h4 className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1 uppercase tracking-wide">
                       {t('card.technical_name_label', 'Nom Technique')}
                     </h4>
-                    <p className="text-sm text-gray-900 dark:text-white font-mono">
+                    <p className="text-sm text-[var(--text-primary)] font-mono">
                       {technicalName}
                     </p>
                   </div>
@@ -127,10 +127,10 @@ export function AnalysisDetailsModal({
                   <div className="mb-6 flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
                     <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      <h4 className="font-semibold text-[var(--text-primary)] mb-1">
                         {t('card.preparation_label', 'Préparation')}
                       </h4>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">
+                      <p className="text-sm text-[var(--text-secondary)] whitespace-pre-line leading-relaxed">
                         {preparation}
                       </p>
                     </div>
@@ -139,18 +139,18 @@ export function AnalysisDetailsModal({
 
                 {/* No preparation message */}
                 {(!preparation || !preparation.trim()) && (
-                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  <div className="mb-6 p-4 bg-[var(--background-default)] rounded-lg border border-[var(--border-default)]">
+                    <p className="text-sm text-[var(--text-secondary)] text-center">
                       {t('card.no_preparation', 'Aucune préparation spécifique requise')}
                     </p>
                   </div>
                 )}
 
                 {/* Close Button */}
-                <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-[var(--border-default)]">
                   <button
                     onClick={onClose}
-                    className="px-6 py-2.5 rounded-lg font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    className="px-6 py-2.5 rounded-lg font-medium bg-[var(--background-secondary)] text-[var(--text-primary)] hover:bg-[var(--background-hover)] transition-colors"
                   >
                     {t('close', 'Fermer')}
                   </button>

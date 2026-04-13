@@ -43,8 +43,8 @@ export function AnalysisMiniCard({
     <div
       className={`
         flex items-center justify-between p-4
-        bg-white dark:bg-gray-800 rounded-xl shadow-sm
-        border border-transparent
+        bg-[var(--background-card)] rounded-xl shadow-sm
+        border border-[var(--border-default)]
         hover:border-[#FF4081] hover:shadow-md
         transition-all duration-200
         cursor-pointer
@@ -61,10 +61,10 @@ export function AnalysisMiniCard({
     >
       {/* Left: Name + Description */}
       <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-gray-900 dark:text-white mb-0.5 truncate">
+        <h4 className="font-bold text-[var(--text-primary)] mb-0.5 truncate">
           {analysisName}
         </h4>
-        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+        <p className="text-xs text-[var(--text-secondary)] line-clamp-2">
           {description || category}
         </p>
       </div>

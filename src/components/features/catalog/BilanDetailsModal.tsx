@@ -126,8 +126,9 @@ export function BilanDetailsModal({
             >
               <Dialog.Panel className="
                 w-full max-w-2xl transform overflow-hidden rounded-2xl
-                bg-[var(--background-default)] dark:bg-[var(--background-secondary)]
+                bg-[var(--background-card)]
                 p-6 text-left align-middle shadow-xl transition-all
+                border border-[var(--border-default)]
               ">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
@@ -146,7 +147,7 @@ export function BilanDetailsModal({
                       >
                         {bilanName}
                       </Dialog.Title>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                      <p className="text-sm text-[var(--text-secondary)] mb-1">
                         {bilanCategory}
                       </p>
                       <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
@@ -207,8 +208,8 @@ export function BilanDetailsModal({
                             transition-colors duration-200
                             ${isInCart ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
                             ${isChecked
-                              ? 'bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] border-2 border-[var(--color-fuchsia-accent)]'
-                              : 'bg-gray-50 dark:bg-gray-800 border-2 border-transparent hover:border-gray-300'
+                              ? 'bg-[var(--background-secondary)] border-2 border-[var(--border-accent)]'
+                              : 'bg-[var(--background-default)] border-2 border-transparent hover:border-[var(--border-default)]'
                             }
                           `}
                         >
@@ -346,7 +347,7 @@ export function BilanDetailsModal({
           <div className={`
             fixed bottom-20 ${isArabic ? 'left-4' : 'right-4'} z-[60]
             max-w-sm w-full
-            bg-white dark:bg-gray-800
+            bg-[var(--background-card)]
             rounded-xl shadow-2xl
             border-2 ${toastType === 'success' ? 'border-green-500' : 'border-red-500'}
             p-4

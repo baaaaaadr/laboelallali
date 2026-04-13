@@ -464,11 +464,11 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         onLoadingStateChange={handleLoadingStateChange}
       />
 
-      <div className="min-h-screen pb-32">
+      <div className="min-h-screen bg-[var(--background-default)] dark:bg-[var(--background-default)] pb-32">
         {/* Title - Normal flow, NOT STICKY */}
-        <div className="pt-6 pb-4">
+        <div className="pt-6 pb-4 bg-[var(--background-default)]">
           <div className="container mx-auto px-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl md:text-3xl font-bold text-center text-gray-900 dark:text-[var(--text-primary)]">
               {t('title', 'Catalogue des Analyses')}
             </h1>
           </div>
@@ -476,7 +476,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
 
         {/* Sticky Container - Search + Tabs Together */}
         <div
-          className="sticky top-0 z-50 bg-white dark:bg-[#1F1014] shadow-sm border-b border-gray-200 dark:border-gray-800"
+          className="sticky top-0 z-50 bg-[var(--background-default)] shadow-sm border-b border-gray-200 dark:border-[var(--border-default)]"
           style={{ willChange: 'transform' }}
         >
           <div className="container mx-auto px-4">
@@ -491,9 +491,9 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                   placeholder={t('search_in_tags', 'Rechercher par nom, catégorie ou mots-clés...')}
                   className={`
                     w-full ${isArabic ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-2.5 rounded-full
-                    bg-white dark:bg-[#2A151A]
-                    border border-gray-200 dark:border-gray-700
-                    text-gray-900 dark:text-gray-100 text-sm
+                    bg-white dark:bg-[var(--background-secondary)]
+                    border border-gray-200 dark:border-[var(--border-default)]
+                    text-gray-900 dark:text-[var(--text-primary)] text-sm
                     focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:border-transparent
                     shadow-sm
                     transition-all duration-200

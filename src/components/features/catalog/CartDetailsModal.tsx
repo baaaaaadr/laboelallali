@@ -105,10 +105,10 @@ export function CartDetailsModal({
               leaveFrom="opacity-100 translate-y-0 md:scale-100"
               leaveTo="opacity-0 translate-y-full md:translate-y-0 md:scale-95"
             >
-              <Dialog.Panel className="w-full md:max-w-2xl transform overflow-hidden md:rounded-2xl rounded-t-3xl bg-white dark:bg-gray-800 text-left align-middle shadow-2xl transition-all fixed md:relative bottom-0 md:bottom-auto max-h-[85vh] md:max-h-[90vh] flex flex-col">
+              <Dialog.Panel className="w-full md:max-w-2xl transform overflow-hidden md:rounded-2xl rounded-t-3xl bg-[var(--background-card)] text-left align-middle shadow-2xl transition-all fixed md:relative bottom-0 md:bottom-auto max-h-[85vh] md:max-h-[90vh] flex flex-col border border-[var(--border-default)]">
 
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800 sticky top-0 z-10">
+                <div className="px-6 py-4 border-b border-[var(--border-default)] flex items-center justify-between bg-[var(--background-card)] sticky top-0 z-10">
                   <Dialog.Title
                     as="h3"
                     className="text-xl font-bold text-gray-900 dark:text-white"
@@ -141,8 +141,8 @@ export function CartDetailsModal({
                   {selectedItems.length === 0 ? (
                     /* État vide */
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <ShoppingCart className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      <ShoppingCart className="h-16 w-16 text-[var(--text-tertiary)] mb-4" />
+                      <p className="text-lg font-semibold text-[var(--text-primary)] mb-2">
                         {t('analyses_catalog.selection.cart_empty', 'Votre panier est vide')}
                       </p>
                       <button
@@ -249,7 +249,7 @@ export function CartDetailsModal({
 
                 {/* Footer - Sticky */}
                 {selectedItems.length > 0 && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 space-y-4 bg-white dark:bg-gray-800 sticky bottom-0">
+                  <div className="border-t border-[var(--border-default)] px-6 py-4 space-y-4 bg-[var(--background-card)] sticky bottom-0">
                     {/* Total */}
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-gray-900 dark:text-white">

@@ -136,7 +136,7 @@ export default function TotalCalculator({
         className={`
           lg:hidden
           fixed left-0 right-0 z-50
-          bg-[#800020] text-white
+          bg-[#800020] dark:bg-[var(--brand-primary)] text-white
           shadow-[0_-4px_20px_-2px_rgba(0,0,0,0.1)]
           px-4 py-3
           flex items-center justify-between
@@ -216,13 +216,12 @@ export default function TotalCalculator({
         className={`
           hidden lg:block
           fixed w-64 max-w-[calc(100vw-2rem)] z-50
-          bg-[#800020] text-white rounded-2xl p-6 min-w-[280px]
+          bg-[#800020] dark:bg-[var(--brand-primary)] text-white rounded-2xl p-6 min-w-[280px]
           shadow-[0_8px_30px_-2px_rgba(0,0,0,0.15)]
           transition-all duration-300 ease-out
           ${isRtlDirection ? 'lg:left-6' : 'lg:right-6'}
         `}
         dir={isRtlDirection ? 'rtl' : 'ltr'}
-        title={translationsUI.tooltip}
         aria-live="polite"
         data-testid="total-calculator-desktop"
         style={{
