@@ -35,9 +35,13 @@ body {
 }
 
 /* Focus styles */
-:focus {
+/* Focus styles - Only show on keyboard navigation, hide on mouse/touch click */
+:focus-visible {
   outline: 2px solid var(--brand-accent);
   outline-offset: 2px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* Links */

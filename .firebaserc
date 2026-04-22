@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "labo-el-allali-pwa"
-  }
+    "default": "labo-el-allali-pwa",
+    "laboelallali": "labo-el-allali-pwa"
+  },
+  "targets": {},
+  "etags": {}
 }

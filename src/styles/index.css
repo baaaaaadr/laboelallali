@@ -57,6 +57,11 @@ html, body {
   padding: 0;
 }
 
+/* Remove mobile tap highlight (pink/grey frame on click) */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* === HEADER STYLES === */
 
 /* FIXED: Header styles and navigation alignment */
