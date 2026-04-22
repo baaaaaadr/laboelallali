@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { collection, query, getDocs } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import { AnalyseItem, BilanItem, CartItem } from "@/components/features/catalog/AnalysisCard";
@@ -115,7 +116,16 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   const [isCartModalOpen, setIsCartModalOpen] = useState(false); // NOUVEAU - State pour cart modal
 
   // NEW: Tabs state
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState<string>('bilans');
+
+  // Handle initial tab from query param
+  useEffect(() => {
+    if (tabParam && (tabParam === 'all' || tabParam === 'bilans')) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
   const [sortBy, setSortBy] = useState<SortOption>('name');
 
   // Normalize ID helper - removes all spaces and converts to uppercase

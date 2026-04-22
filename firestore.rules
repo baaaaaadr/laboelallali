@@ -32,6 +32,11 @@ service cloud.firestore {
       allow write: if false; // Only admin/script can modify via Google Sheets sync
     }
 
+    // Allow authenticated users to read and write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
     // Default deny for anything not explicitly allowed
     match /{document=**} {
       allow read, write: if false;

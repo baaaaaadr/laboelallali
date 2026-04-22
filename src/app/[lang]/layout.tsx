@@ -12,6 +12,7 @@ import BottomNav from '@/components/layout/BottomNav';
 import PWAComponents from '@/components/features/pwa/PWAComponents';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ToastProvider from '@/components/providers/ToastProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Font is defined but not used in this layout - if needed, uncomment and apply to elements
 // import { Inter } from 'next/font/google';
@@ -147,7 +148,8 @@ export default async function LangLayout({
           namespaces={[defaultNS, 'appointment', 'glabo', 'catalog']}
           resources={resources}
         >
-          <div className="flex flex-col min-h-screen">
+          <AuthProvider>
+            <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow w-full main-content-mobile-padding">
               <div className="max-w-full">
@@ -169,6 +171,7 @@ export default async function LangLayout({
               `}
             </Script>
           </div>
+          </AuthProvider>
         </TranslationsProvider>
       </ThemeProvider>
     </div>

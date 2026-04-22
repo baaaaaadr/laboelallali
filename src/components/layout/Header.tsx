@@ -9,6 +9,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { supportedLngs } from '../../../i18n';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import dynamic from 'next/dynamic';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Debug version - update this to verify deployment
 const HEADER_VERSION = 'v2.0.1-fix-menu-colors-2024-12-27';
@@ -71,6 +72,7 @@ const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const mobileLangDropdownRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   const lang = i18n.language || getLangFromPath(pathname);
   // Make sure we're using the language from the URL, not potentially a mismatched language from i18n
@@ -262,9 +264,12 @@ const Header = () => {
               <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
             {/* User Icon - Desktop only */}
-            <button className="hidden lg:flex p-2 lg:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors">
+            <Link 
+              href={`${currentLanguagePath}/${user ? 'profile' : 'login'}`}
+              className="hidden lg:flex p-2 lg:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors"
+            >
               <User size={20} className="text-white dark:text-[var(--text-primary)]" />
-            </button>
+            </Link>
             {/* Hamburger Menu - Mobile/Tablet only */}
             <button
               className="mobile-menu-toggle lg:hidden p-1.5 sm:p-2 lg:p-3 rounded-full min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
@@ -421,7 +426,7 @@ const Header = () => {
 
             {/* Profile Link - Mobile Only */}
             <Link
-              href={`${currentLanguagePath}/profile`}
+              href={`${currentLanguagePath}/${user ? 'profile' : 'login'}`}
               style={{
                 ...menuStyles.navLink,
                 ...(isDarkMode ? menuStyles.navLinkDark : {}),

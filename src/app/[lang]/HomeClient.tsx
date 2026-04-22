@@ -135,7 +135,7 @@ export default function HomeClient({ lang }: { lang: string }) {
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-[var(--text-primary)]">{t('blood_tests')}</h3>
                 <p className="text-[var(--text-secondary)] mb-4">{t('blood_tests_text')}</p>
-                <Link href={`/${lang}/analyses/sang`} className="btn-text" aria-label={t('learn_more_about_blood_tests')}>
+                <Link href={`/${lang}/analyses?tab=all`} className="btn-text" aria-label={t('learn_more_about_blood_tests')}>
                   {t('learn_more')}
                   <span className="btn-chevron" aria-hidden="true">
                     <ChevronRight className="text-[var(--color-bordeaux-primary)]" size={16} />
@@ -150,7 +150,7 @@ export default function HomeClient({ lang }: { lang: string }) {
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-[var(--text-primary)]">{t('health_checks')}</h3>
                 <p className="text-[var(--text-secondary)] mb-4">{t('health_checks_text')}</p>
-                <Link href={`/${lang}/bilans`} className="btn-text" aria-label={t('learn_more_about_health_checks')}>
+                <Link href={`/${lang}/analyses?tab=bilans`} className="btn-text" aria-label={t('learn_more_about_health_checks')}>
                   {t('learn_more')}
                   <span className="btn-chevron" aria-hidden="true">
                     <ChevronRight className="text-[var(--color-bordeaux-primary)]" size={16} />
