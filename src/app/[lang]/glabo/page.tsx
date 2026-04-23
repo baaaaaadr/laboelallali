@@ -102,14 +102,14 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-[#121212] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
+    <main className="min-h-screen bg-[var(--background-default)] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
       <div className="max-w-6xl mx-auto">
         {/* En-tête de la page */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center p-4 bg-fuchsia-100 dark:bg-fuchsia-900/30 rounded-full mb-4 shadow-sm">
-            <Activity className="h-10 w-10 text-[var(--color-fuchsia-accent)]" />
+          <div className="inline-flex items-center justify-center p-4 bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-tertiary)] rounded-full mb-4 shadow-sm">
+            <Activity className="h-10 w-10 text-[var(--brand-accent)]" />
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold text-[var(--color-bordeaux-primary)] dark:text-white mb-6 font-['Inter','Public Sans',sans-serif]">
+          <h1 className="text-3xl md:text-5xl font-bold text-[var(--brand-primary)] dark:text-[var(--text-primary)] mb-6 font-['Inter','Public Sans',sans-serif]">
             {t('glabo_title', { ns: 'common' })}
           </h1>
           <p className="text-[var(--text-secondary)] max-w-2xl mx-auto text-lg">
@@ -120,8 +120,8 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Colonne d'information (gauche sur desktop) */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white dark:bg-[var(--background-secondary)] rounded-2xl shadow-md border border-gray-100 dark:border-[var(--border-default)] p-6">
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+            <div className="bg-[var(--background-card)] rounded-2xl shadow-md border border-[var(--border-default)] p-6">
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-6 border-b border-[var(--border-default)] pb-4">
                 Pourquoi choisir ce service ?
               </h3>
               
@@ -157,10 +157,10 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
             </div>
             
             {/* Contact direct */}
-            <div className="bg-[var(--color-bordeaux-primary)] rounded-2xl shadow-md p-6 text-white text-center">
-              <h3 className="text-lg font-semibold mb-2">Une question urgente ?</h3>
-              <p className="text-bordeaux-pale text-sm mb-4">Notre équipe est disponible pour vous renseigner.</p>
-              <a href={LAB_CONTACT.LANDLINE.url} className="inline-flex items-center justify-center gap-2 bg-white text-[var(--color-bordeaux-primary)] px-6 py-2.5 rounded-full font-bold hover:bg-gray-50 transition-colors w-full">
+            <div className="bg-[var(--brand-primary)] rounded-2xl shadow-md p-6 text-white text-center">
+              <h3 className="text-lg font-bold mb-2 !text-white">Une question urgente ?</h3>
+              <p className="!text-white/90 text-sm mb-6">Notre équipe est disponible pour vous renseigner.</p>
+              <a href={LAB_CONTACT.LANDLINE.url} className="inline-flex items-center justify-center gap-2 bg-white text-[var(--brand-primary)] px-6 py-2.5 rounded-full font-bold hover:bg-gray-50 transition-colors w-full shadow-sm">
                 <Phone className="h-5 w-5" />
                 {LAB_CONTACT.LANDLINE.display}
               </a>
@@ -169,9 +169,9 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
 
           {/* Colonne Formulaire (droite sur desktop) */}
           <div className="lg:col-span-8">
-            <div className="bg-white dark:bg-[var(--background-secondary)] rounded-2xl shadow-xl border border-gray-100 dark:border-[var(--border-default)] overflow-hidden">
+            <div className="bg-[var(--background-card)] rounded-2xl shadow-xl border border-[var(--border-default)] overflow-hidden">
               <div className="p-6 md:p-8">
-                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6 pb-4 border-b border-[var(--border-default)]">
                   Formulaire de demande
                 </h2>
                 
@@ -193,7 +193,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             type="text"
                             id="nomComplet"
                             name="nomComplet"
-                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                            className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                             autoComplete="name"
                             value={nom}
                             onChange={e => setNom(e.target.value)}
@@ -216,7 +216,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             type="tel"
                             id="telephone"
                             name="telephone"
-                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                            className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                             autoComplete="tel"
                             inputMode="tel"
                             value={telephone}
@@ -240,7 +240,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             type="email"
                             id="email"
                             name="email"
-                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                            className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                             autoComplete="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -252,7 +252,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                   </div>
         
                   {/* Informations de localisation */}
-                  <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-[var(--border-default)]">
+                  <div className="space-y-4 pt-4 border-t border-[var(--border-default)]">
                     <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">2. Lieu du prélèvement</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Lieu de prélèvement */}
@@ -269,7 +269,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             name="lieuPrelevement"
                             value={lieuPrelevement}
                             onChange={e => setLieuPrelevement(e.target.value)}
-                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
+                            className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
                           >
                             <option value="domicile">{t('home', { ns: 'glabo' })}</option>
                             <option value="travail">{t('workplace', { ns: 'glabo' })}</option>
@@ -290,7 +290,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             type="text"
                             id="adresse"
                             name="adresse"
-                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                            className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                             autoComplete="street-address"
                             value={adresse}
                             onChange={(e) => setAdresse(e.target.value)}
@@ -314,7 +314,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             id="instructionsAcces"
                             name="instructionsAcces"
                             placeholder={t('access_instructions_placeholder')}
-                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                            className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                             value={instructionsAcces}
                             onChange={(e) => setInstructionsAcces(e.target.value)}
                           />
@@ -324,7 +324,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                   </div>
                   
                   {/* Date et Heure */}
-                  <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-[var(--border-default)]">
+                  <div className="space-y-4 pt-4 border-t border-[var(--border-default)]">
                     <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">3. Date et Heure</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Date souhaitée */}
@@ -344,7 +344,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             minDate={new Date()}
                             locale={dateLocale}
                             placeholderText="Sélectionnez une date"
-                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                            className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                             required
                           />
                         </div>
@@ -364,7 +364,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             name="heure"
                             value={selectedTime}
                             onChange={(e) => setSelectedTime(e.target.value)}
-                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
+                            className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
                             required
                           >
                             <option value="">{t('chooseTime', { ns: 'glabo' })}</option>
@@ -378,7 +378,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                   </div>
 
                   {/* Ordonnance et détails */}
-                  <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-[var(--border-default)]">
+                  <div className="space-y-4 pt-4 border-t border-[var(--border-default)]">
                     <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">4. Détails médicaux</h3>
                     
                     {/* Ordonnance */}
@@ -395,7 +395,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                           name="ordonnance"
                           value={hasOrdonnance}
                           onChange={e => setHasOrdonnance(e.target.value)}
-                          className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
+                          className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
                         >
                           <option value="non">{t('no', { ns: 'glabo' })}</option>
                           <option value="oui">{t('yes', { ns: 'glabo' })}</option>
@@ -416,7 +416,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                           id="commentaires"
                           name="commentaires"
                           rows={3}
-                          className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] resize-none"
+                          className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] resize-none"
                           value={commentaires}
                           onChange={e => setCommentaires(e.target.value)}
                           placeholder="Ex: Prise de sang à jeun..."

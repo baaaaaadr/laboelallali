@@ -20,7 +20,12 @@ const PWAInstallButton = dynamic<{ className?: string, variant?: 'button' | 'ban
   }
 );
 
-const HeroBanner = () => {
+interface HeroBannerProps {
+  onCallClick?: (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void;
+  isMobile?: boolean;
+}
+
+const HeroBanner: React.FC<HeroBannerProps> = ({ onCallClick, isMobile = true }) => {
   // Use a simpler approach without type assertions
   const { t, i18n } = useTranslation('common');
   const currentLang = i18n.language || 'fr';
@@ -51,15 +56,28 @@ const HeroBanner = () => {
           <div className="flex flex-col gap-4 justify-center items-center w-full">
             {/* First row: 3 main action buttons on desktop, stacked on mobile */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
-              <a
-                href="tel:0528843384"
-                className="button-fuchsia w-full sm:w-auto sm:min-w-[200px] text-lg"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a2 2 0 011.94 1.515l.3 1.2a2 2 0 01-.45 1.95l-1.27 1.27a16.001 16.001 0 006.586 6.586l1.27-1.27a2 2 0 011.95-.45l1.2.3A2 2 0 0121 16.72V19a2 2 0 01-2 2h-1C9.163 21 3 14.837 3 7V5z" />
-                </svg>
-                {t('call_us')}
-              </a>
+              {isMobile ? (
+                <a
+                  href="tel:0528843384"
+                  onClick={onCallClick}
+                  className="button-fuchsia w-full sm:w-auto sm:min-w-[200px] text-lg flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a2 2 0 011.94 1.515l.3 1.2a2 2 0 01-.45 1.95l-1.27 1.27a16.001 16.001 0 006.586 6.586l1.27-1.27a2 2 0 011.95-.45l1.2.3A2 2 0 0121 16.72V19a2 2 0 01-2 2h-1C9.163 21 3 14.837 3 7V5z" />
+                  </svg>
+                  {t('call_us')}
+                </a>
+              ) : (
+                <button
+                  onClick={onCallClick}
+                  className="button-fuchsia w-full sm:w-auto sm:min-w-[200px] text-lg flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2.28a2 2 0 011.94 1.515l.3 1.2a2 2 0 01-.45 1.95l-1.27 1.27a16.001 16.001 0 006.586 6.586l1.27-1.27a2 2 0 011.95-.45l1.2.3A2 2 0 0121 16.72V19a2 2 0 01-2 2h-1C9.163 21 3 14.837 3 7V5z" />
+                  </svg>
+                  {t('call_us')}
+                </button>
+              )}
               <Link
                 href={`/${currentLang}/rendez-vous`}
                 className="button-fuchsia w-full sm:w-auto sm:min-w-[240px] text-lg"

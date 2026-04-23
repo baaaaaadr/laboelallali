@@ -201,9 +201,6 @@ const Header = () => {
               <div className="header-logo">
                 <span className="font-bold text-lg">L</span>
               </div>
-              <h1 className="text-xl font-bold hidden sm:block dark:text-[var(--text-primary)]">
-                {t('laboName')}
-              </h1>
             </Link>
           </div>
 

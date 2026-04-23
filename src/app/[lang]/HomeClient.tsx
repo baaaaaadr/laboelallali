@@ -4,6 +4,7 @@ import HeroBanner from '@/components/features/home/HeroBanner';
 import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, Home as HomeIcon, Info, MapPin, ChevronRight, Phone, Navigation } from 'lucide-react';
 import SimpleMap from '@/components/SimpleMap';
 import Link from 'next/link';
+import ContactModal from '@/components/ui/ContactModal';
 import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { useLabStatus } from '@/hooks/useLabStatus';
@@ -21,9 +22,35 @@ export default function HomeClient({ lang }: { lang: string }) {
 
   // Track if we're on the client side for map rendering
   const [isClient, setIsClient] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const [isMobile, setIsMobile] = useState(true); // Default to true for SSR safety
+  
+  useEffect(() => {
+    setIsClient(true);
+    // Determine actual device on mount
+    const checkMobile = () => {
+      const uaMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const widthMobile = window.innerWidth < 768;
+      setIsMobile(uaMobile || widthMobile);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const handleCallClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+    // Si ce n'est pas un mobile, on bloque le comportement par défaut et on ouvre la modale
+    if (!isMobile) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsContactModalOpen(true);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,7 +70,7 @@ export default function HomeClient({ lang }: { lang: string }) {
     <>
       {/* Hero Banner with Opening Hours Widget */}
       <div className="relative">
-        <HeroBanner />
+        <HeroBanner onCallClick={handleCallClick} isMobile={isMobile} />
         {/* Opening Hours Widget - Positioned at top right on large screens, always visible */}
         <div className="lg:absolute lg:top-4 lg:right-4 lg:z-20 lg:max-w-80 w-full">
           <div className="card bg-[var(--background-card)]/95 backdrop-blur-sm shadow-lg border border-[var(--border-default)] mx-4 mt-4 lg:mx-0 lg:mt-0">
@@ -212,13 +239,23 @@ export default function HomeClient({ lang }: { lang: string }) {
                     <Navigation size={22} className="mr-2 -ml-1" />
                     {t('get_directions')}
                   </a>
-                  <a
-                    href="tel:0528843384"
-                    className="map-call-btn flex items-center justify-center min-w-[160px] h-12 px-6 font-semibold rounded-lg shadow-sm transition-colors text-center text-lg gap-2"
-                  >
-                    <Phone size={22} className="mr-2 -ml-1" />
-                    {t('call_us')}
-                  </a>
+                  {isMobile ? (
+                    <a
+                      href="tel:0528843384"
+                      className="map-call-btn flex items-center justify-center min-w-[160px] h-12 px-6 font-semibold rounded-lg shadow-sm transition-colors text-center text-lg gap-2 cursor-pointer"
+                    >
+                      <Phone size={22} className="mr-2 -ml-1" />
+                      {t('call_us')}
+                    </a>
+                  ) : (
+                    <button
+                      onClick={handleCallClick}
+                      className="map-call-btn flex items-center justify-center min-w-[160px] h-12 px-6 font-semibold rounded-lg shadow-sm transition-colors text-center text-lg gap-2 cursor-pointer"
+                    >
+                      <Phone size={22} className="mr-2 -ml-1" />
+                      {t('call_us')}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -234,20 +271,24 @@ export default function HomeClient({ lang }: { lang: string }) {
                     <Info className="text-[var(--color-bordeaux-primary)]" size={24} />
                 </div>
                 <div>
-                    <div className="flex items-center justify-center">
-                      <Info size={24} className="text-[var(--color-bordeaux-primary)] mr-2" />
+                    <div className="flex items-center mb-2">
                       <h3 className="font-semibold text-[var(--text-primary)]">{t('glabo:analysis_tips')}</h3>
                     </div>
-                    <ul className="list-disc pl-10 pt-4 space-y-2 text-[var(--text-secondary)]">
+                    <ul className="list-disc pl-6 sm:pl-10 pt-2 space-y-2 text-[var(--text-secondary)]">
                       <li>{t('glabo:fasting_recommendation')}</li>
                       <li>{t('glabo:documents_to_bring')}</li>
                     </ul>
-                    <a href="#" className="text-[var(--color-bordeaux-primary)] hover:text-[var(--color-fuchsia-accent)] mt-4 inline-block font-medium transition-colors duration-200">{t('glabo:more_information')}</a>
+                    <Link href={`/${lang}/analyses`} className="text-[var(--color-bordeaux-primary)] hover:text-[var(--color-fuchsia-accent)] mt-4 inline-block font-medium transition-colors duration-200">{t('glabo:more_information')}</Link>
                 </div>
             </div>
           </div>
         </section>
       </div>
+
+      <ContactModal 
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
     </>
   );
 }

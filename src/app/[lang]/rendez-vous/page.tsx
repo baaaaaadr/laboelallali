@@ -290,14 +290,14 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-[#121212] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
+    <main className="min-h-screen bg-[var(--background-default)] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
       <div className="max-w-3xl mx-auto">
         {/* En-tête de la page */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center p-3 bg-fuchsia-100 dark:bg-fuchsia-900/30 rounded-full mb-4">
-            <CalendarDays className="h-8 w-8 text-[var(--color-fuchsia-accent)]" />
+          <div className="inline-flex items-center justify-center p-3 bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-tertiary)] rounded-full mb-4">
+            <CalendarDays className="h-8 w-8 text-[var(--brand-accent)]" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-[var(--color-bordeaux-primary)] dark:text-white mb-4 font-['Inter','Public Sans',sans-serif]">
+          <h1 className="text-3xl md:text-4xl font-bold text-[var(--brand-primary)] dark:text-[var(--text-primary)] mb-4 font-['Inter','Public Sans',sans-serif]">
             {t('appointment', { ns: 'appointment' })}
           </h1>
           <p className="text-[var(--text-secondary)] max-w-xl mx-auto text-lg">
@@ -305,19 +305,19 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
           </p>
         </div>
       {submitSuccess && (
-        <div className="max-w-lg mx-auto mb-6 p-4 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 rounded-md">
+        <div className="max-w-lg mx-auto mb-6 p-4 bg-green-50 dark:bg-[var(--background-tertiary)] border border-green-200 dark:border-green-800/50 text-green-800 dark:text-green-400 rounded-md">
           {t('appointment_request_success', { ns: 'appointment' })}
         </div>
       )}
       
       {submitError && (
-        <div className="max-w-lg mx-auto mb-6 p-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 rounded-md">
+        <div className="max-w-lg mx-auto mb-6 p-4 bg-red-50 dark:bg-[var(--background-tertiary)] border border-red-200 dark:border-red-800/50 text-red-800 dark:text-red-400 rounded-md">
           {submitError}
         </div>
       )}
       
         {/* Formulaire dans une carte */}
-        <div className="bg-white dark:bg-[var(--background-secondary)] rounded-2xl shadow-xl border border-gray-100 dark:border-[var(--border-default)] overflow-hidden">
+        <div className="bg-[var(--background-card)] rounded-2xl shadow-xl border border-[var(--border-default)] overflow-hidden">
           <div className="p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               
@@ -335,7 +335,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                       type="text"
                       id="nomComplet"
                       name="nomComplet"
-                      className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                       autoComplete="name"
                       value={nom}
                       onChange={e => setNom(e.target.value)}
@@ -358,7 +358,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                       type="tel"
                       id="telephone"
                       name="telephone"
-                      className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                       autoComplete="tel"
                       inputMode="tel"
                       value={telephone}
@@ -383,7 +383,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                     type="email"
                     id="email"
                     name="email"
-                    className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                    className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -410,7 +410,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                       minDate={new Date()}
                       locale={dateLocale}
                       placeholderText="Sélectionnez une date"
-                      className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                       required
                     />
                   </div>
@@ -430,7 +430,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                       name="heure"
                       value={selectedTime}
                       onChange={(e) => setSelectedTime(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
+                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
                       required
                     >
                       <option value="">{t('chooseTime', { ns: 'appointment' })}</option>
@@ -443,7 +443,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
               </div>
 
               {/* Téléchargement d'ordonnance */}
-              <div className="bg-gray-50 dark:bg-[var(--background-tertiary)] border border-dashed border-gray-300 dark:border-[var(--border-default)] rounded-xl p-6 text-center transition-colors hover:border-[var(--color-fuchsia-accent)]">
+              <div className="bg-[var(--background-secondary)] border border-dashed border-[var(--border-default)] rounded-xl p-6 text-center transition-colors hover:border-[var(--color-fuchsia-accent)]">
                 <FileText className="mx-auto h-8 w-8 text-gray-400 mb-3" />
                 <label htmlFor="prescriptionFile" className="block text-sm font-medium text-[var(--text-primary)] mb-2 cursor-pointer">
                   {t('prescription_upload_label', { ns: 'appointment' })}
@@ -466,7 +466,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                   <p className="mt-2 text-sm text-red-500 font-medium">{fileError}</p>
                 )}
                 {prescriptionFile && !fileError && (
-                  <div className="mt-4 p-3 bg-white dark:bg-[var(--background-secondary)] rounded-lg inline-block text-left shadow-sm border border-gray-100 dark:border-[var(--border-default)]">
+                  <div className="mt-4 p-3 bg-[var(--background-card)] rounded-lg inline-block text-left shadow-sm border border-[var(--border-default)]">
                     <p className="text-sm font-medium text-[var(--text-primary)] truncate max-w-xs flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-green-500"></span>
                       {prescriptionFile.name}
@@ -497,7 +497,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                     id="commentaires"
                     name="commentaires"
                     rows={4}
-                    className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-[var(--background-tertiary)] border border-gray-200 dark:border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] resize-none"
+                    className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] resize-none"
                     value={commentaires}
                     onChange={e => setCommentaires(e.target.value)}
                     placeholder="Précisez ici toute information utile pour le laboratoire..."

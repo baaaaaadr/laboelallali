@@ -246,12 +246,6 @@ export default function PWAInstallButton({
         <Download size={20} />
         <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
       </button>
-      {/* Only show hint text if not passed a className that might indicate hero usage */}
-      {!className?.includes('min-w-[170px]') && (
-        <div className="text-xs text-gray-600 dark:text-gray-300 mt-1 text-center">
-          {hintText}
-        </div>
-      )}
     </div>
   );
 }
