@@ -62,7 +62,6 @@ export function BilanCard({
           : 'shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-[var(--border-default)] hover:shadow-[0_8px_30px_-2px_rgba(0,0,0,0.1)]'
         }
       `}
-      style={{ minHeight: '320px' }}
     >
       {/* Featured Badge */}
       {bilan.Is_Featured && (
@@ -81,7 +80,7 @@ export function BilanCard({
       </div>
 
       {/* Content */}
-      <div className="px-6 pb-6 flex flex-col h-full">
+      <div className="px-6 pb-5 flex flex-col">
         <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">
           {bilanName}
         </h3>
@@ -91,22 +90,14 @@ export function BilanCard({
         </p>
 
         {/* Price and Circular Button Row */}
-        <div className={`flex items-center justify-between gap-4 mb-4 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex items-center justify-between gap-4 mb-3 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
           <p className="text-2xl font-bold text-[#E3004F]">
             {bilan.Prix_Affiche_Dhs.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {t('card.price_currency', 'MAD')}
           </p>
 
           {/* Circular Add Button - Like AnalysisMiniCard */}
           <button
-            onClick={(e) => {
-              console.log(`🔍 BILAN BUTTON DEBUG: "${bilanName}"`, {
-                isSelected: isSelected,
-                buttonColor: '#E3004F (ROSE BRAND)',
-                borderColor: 'white',
-                iconType: isSelected ? 'Check' : 'Plus'
-              });
-              handleSelectClick(e);
-            }}
+            onClick={handleSelectClick}
             className={`
               w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
               transition-all duration-200
@@ -128,7 +119,7 @@ export function BilanCard({
         </div>
 
         {/* Button to show details */}
-        <div className="mt-auto">
+        <div>
           <button
             onClick={handleShowDetails}
             className="

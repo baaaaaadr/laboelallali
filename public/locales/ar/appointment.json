@@ -18,7 +18,7 @@
   "messageCopied": "تم نسخ الرسالة إلى الحافظة! يمكنك الآن لصقها في تطبيق البريد الإلكتروني الخاص بك.",
   "emailInstructions": "يرجى إرسال بريد إلكتروني إلى",
   "emailSubject": "طلب موعد",
-  "emailBody": "مرحباً،\n\nأرغب في حجز موعد في المختبر:\n\nالاسم: {name}\nرقم الهاتف: {phone}{email}\nالتاريخ المطلوب: {date}\nالوقت المطلوب: {time}{comments}{prescription}\n\nشكراً.",
+  "emailBody": "مرحباً،\n\nأرغب في حجز موعد في المختبر:\n\nالاسم: {{name}}\nرقم الهاتف: {{phone}}{{email}}\nالتاريخ المطلوب: {{date}}\nالوقت المطلوب: {{time}}{{comments}}{{prescription}}\n\nشكراً.",
   "withPrescription": "لدي وصفة طبية سأرسلها لكم بشكل منفصل عبر واتساب.",
   "withoutPrescription": "ليس لدي وصفة طبية.",
   "prescription_upload_label": "تحميل وصفتك الطبية (اختياري)",

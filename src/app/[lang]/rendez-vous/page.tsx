@@ -62,7 +62,56 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [commentaires, setCommentaires] = useState('');
-  
+
+  // Pre-upload state: files are uploaded as soon as they are selected
+  // Each entry corresponds to prescriptionFiles[i]
+  type FileUploadState = 'uploading' | 'done' | 'error';
+  const [fileUploadStates, setFileUploadStates] = useState<FileUploadState[]>([]);
+  const uploadPromiseRef = useRef<Promise<string[]> | null>(null);
+  const preUploadVersionRef = useRef(0);
+
+  const isPreUploading = fileUploadStates.some(s => s === 'uploading');
+
+  // Trigger pre-upload whenever the file list changes
+  useEffect(() => {
+    if (prescriptionFiles.length === 0 || !storage) {
+      uploadPromiseRef.current = null;
+      setFileUploadStates([]);
+      return;
+    }
+
+    const activeStorage = storage;
+
+    const version = ++preUploadVersionRef.current;
+    setFileUploadStates(prescriptionFiles.map(() => 'uploading'));
+
+    const doUpload = async (): Promise<string[]> => {
+      const urls: string[] = [];
+      for (let i = 0; i < prescriptionFiles.length; i++) {
+        if (version !== preUploadVersionRef.current) return [];
+        try {
+          const storageRef = ref(activeStorage, `ordonnances/${Date.now()}-${prescriptionFiles[i].name}`);
+          await uploadBytes(storageRef, prescriptionFiles[i]);
+          if (version !== preUploadVersionRef.current) return [];
+          const url = await getDownloadURL(storageRef);
+          urls.push(url);
+          if (version === preUploadVersionRef.current) {
+            setFileUploadStates(prev => { const n = [...prev]; n[i] = 'done'; return n; });
+          }
+        } catch {
+          if (version === preUploadVersionRef.current) {
+            setFileUploadStates(prev => { const n = [...prev]; n[i] = 'error'; return n; });
+          }
+        }
+      }
+      return urls;
+    };
+
+    const promise = doUpload();
+    uploadPromiseRef.current = promise;
+    promise.catch(() => {});
+  }, [prescriptionFiles]);
+
   // Nouveaux états pour la gestion multi-étapes de la soumission
   type SubmitState = 'idle' | 'uploading_image' | 'saving_database' | 'sending_email' | 'success';
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
@@ -92,24 +141,30 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         throw new Error(t('appointment:errors.db_not_initialized', 'Le service de base de données n\'est pas disponible. Veuillez réessayer.'));
       }
 
-      // 1. Upload prescription files if exist
+      // 1. Upload prescription files if exist (use pre-uploaded URLs if available)
       let downloadURLs: string[] = [];
 
       if (prescriptionFiles.length > 0) {
         setSubmitState('uploading_image');
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Artificial delay to let user read
-        
-        if (!storage) {
-          throw new Error(t('appointment:errors.storage_not_initialized', 'Le service de stockage n\'est pas disponible. Veuillez réessayer.'));
-        }
 
-        for (const file of prescriptionFiles) {
-          const timestamp = Date.now();
-          const fileName = file.name;
-          const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
-          await uploadBytes(storageRef, file);
-          const url = await getDownloadURL(storageRef);
-          downloadURLs.push(url);
+        if (uploadPromiseRef.current) {
+          // Files were pre-uploaded when selected — reuse the result
+          downloadURLs = await uploadPromiseRef.current;
+          await new Promise(resolve => setTimeout(resolve, 800)); // Brief delay for UX
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Artificial delay to let user read
+
+          if (!storage) {
+            throw new Error(t('appointment:errors.storage_not_initialized', 'Le service de stockage n\'est pas disponible. Veuillez réessayer.'));
+          }
+
+          for (const file of prescriptionFiles) {
+            const timestamp = Date.now();
+            const storageRef = ref(storage, `ordonnances/${timestamp}-${file.name}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+            downloadURLs.push(url);
+          }
         }
       }
 
@@ -206,61 +261,65 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       return;
     }
 
+    // Open the popup synchronously here, inside the trusted click event,
+    // before any await. Browsers block popups opened after async work.
+    const whatsappWindow = window.open('', '_blank');
+    if (!whatsappWindow) {
+      toast.error(t('whatsapp_error', { ns: 'appointment' }));
+      return;
+    }
+
     setIsWhatsappLoading(true);
 
     try {
-      // Ensure Firestore is initialized
       if (!db) {
-        throw new Error(t('appointment:errors.db_not_initialized', 'Le service de base de données n\'est pas disponible. Veuillez réessayer.'));
+        throw new Error('db_not_initialized');
       }
 
+      // Use pre-uploaded URLs if available, otherwise fall back to on-demand upload
       let downloadURLs: string[] = [];
-
-      // Upload prescription files if exist
-      if (prescriptionFiles && prescriptionFiles.length > 0) {
-        // Ensure storage is initialized
-        if (!storage) {
-          throw new Error(t('appointment:errors.storage_not_initialized', 'Le service de stockage n\'est pas disponible. Veuillez réessayer.'));
-        }
-
-        // Upload all files
-        for (const file of prescriptionFiles) {
-          const timestamp = Date.now();
-          const fileName = file.name;
-          const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
-          
-          await uploadBytes(storageRef, file);
-          const url = await getDownloadURL(storageRef);
-          downloadURLs.push(url);
+      if (prescriptionFiles.length > 0) {
+        if (uploadPromiseRef.current) {
+          downloadURLs = await uploadPromiseRef.current;
+        } else if (storage) {
+          for (const file of prescriptionFiles) {
+            const storageRef = ref(storage, `ordonnances/${Date.now()}-${file.name}`);
+            await uploadBytes(storageRef, file);
+            downloadURLs.push(await getDownloadURL(storageRef));
+          }
         }
       }
 
       const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
 
-      // Format prescription text for WhatsApp
+      // Build prescription text (template literals — no i18next interpolation to avoid
+      // namespace-loading race conditions in async handlers)
       let prescriptionText = "";
       if (downloadURLs.length > 0) {
-        prescriptionText = `\n📎 ${t('prescriptionLink', { ns: 'appointment' })}:`;
+        const linkLabel = lang === 'ar' ? 'الوصفة الطبية' : 'Ordonnance';
+        prescriptionText = `\n📎 ${linkLabel}:`;
         downloadURLs.forEach((url, idx) => {
-          prescriptionText += `\n- Page ${idx + 1}: ${url}`;
+          prescriptionText += `\n- ${idx + 1}: ${url}`;
         });
-      } else {
-        prescriptionText = `\n${t('withoutPrescription', { ns: 'appointment' })}`;
+      } else if (prescriptionFiles.length === 0) {
+        prescriptionText = lang === 'ar'
+          ? '\nليس لدي وصفة طبية.'
+          : "\nJe n'ai pas d'ordonnance.";
       }
 
-      // Build message
-      const message = t('emailBody', {
-        name: nom,
-        phone: telephone,
-        email: email ? `\nEmail : ${email}` : '',
-        date: formattedDate,
-        time: selectedTime,
-        comments: commentaires ? `\n${t('comments', { ns: 'appointment' })} : ${commentaires}` : '',
-        prescription: prescriptionText
-      });
+      // Build the full message directly — avoids any i18next interpolation issues
+      const emailLine = email ? (lang === 'ar' ? `\nالبريد الإلكتروني: ${email}` : `\nEmail : ${email}`) : '';
+      const commentsLine = commentaires
+        ? (lang === 'ar' ? `\nملاحظات: ${commentaires}` : `\nCommentaires : ${commentaires}`)
+        : '';
+
+      const message = lang === 'ar'
+        ? `مرحباً،\n\nأرغب في حجز موعد في المختبر:\n\nالاسم: ${nom}\nرقم الهاتف: ${telephone}${emailLine}\nالتاريخ المطلوب: ${formattedDate}\nالوقت المطلوب: ${selectedTime}${commentsLine}${prescriptionText}\n\nشكراً.`
+        : `Bonjour,\n\nJe souhaite prendre un rendez-vous au laboratoire :\n\nNom : ${nom}\nTéléphone : ${telephone}${emailLine}\nDate souhaitée : ${formattedDate}\nHeure souhaitée : ${selectedTime}${commentsLine}${prescriptionText}\n\nMerci.`;
 
       const whatsappLink = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappLink, '_blank');
+      // Redirect the already-opened window to the final WhatsApp URL
+      whatsappWindow.location.href = whatsappLink;
 
       // Save to Firestore for tracking
       const appointmentData = {
@@ -270,7 +329,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         desiredDate: formattedDate,
         desiredTime: selectedTime,
         comments: commentaires || "",
-        prescriptionImageUrl: downloadURL,
+        prescriptionImageUrls: downloadURLs,
         submittedAt: serverTimestamp(),
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         status: "whatsapp_appointment_request",
@@ -290,11 +349,13 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       setPrescriptionFiles([]);
       setFilePreviews([]);
       setCommentaires('');
+      uploadPromiseRef.current = null;
 
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Error in WhatsApp handler:", error);
       }
+      whatsappWindow.close();
       toast.error(t('whatsapp_error', { ns: 'appointment' }));
     } finally {
       setIsWhatsappLoading(false);
@@ -456,13 +517,14 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
               </div>
 
               {/* Téléchargement d'ordonnance */}
-              <MultiFileUploader 
+              <MultiFileUploader
                 files={prescriptionFiles}
                 setFiles={setPrescriptionFiles}
                 filePreviews={filePreviews}
                 setFilePreviews={setFilePreviews}
                 error={fileError}
                 setError={setFileError}
+                fileUploadStates={fileUploadStates}
               />
               
               {/* Commentaires (optionnel) */}
@@ -494,8 +556,9 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                 <button
                   type="button"
                   onClick={handleWhatsapp}
+                  disabled={isWhatsappLoading}
                   style={{ backgroundColor: '#25D366' }}
-                  className="flex-1 text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 transition-all duration-200 shadow-sm hover:shadow flex items-center justify-center gap-2 group"
+                  className="flex-1 text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 transition-all duration-200 shadow-sm hover:shadow flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
                   aria-label={t('requestByWhatsApp', { ns: 'appointment' })}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="w-5 h-5 group-hover:scale-110 transition-transform">
@@ -505,8 +568,8 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                 </button>
                 <button
                   type="submit"
-                  disabled={submitState !== 'idle' || isWhatsappLoading}
-                  className={`flex-1 button-bordeaux group ${submitState !== 'idle' || isWhatsappLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  disabled={submitState !== 'idle' || isWhatsappLoading || isPreUploading}
+                  className={`flex-1 button-bordeaux group ${submitState !== 'idle' || isWhatsappLoading || isPreUploading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {submitState !== 'idle' && submitState !== 'success' ? (
                     <>

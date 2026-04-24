@@ -21,6 +21,7 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ['react-pdf', 'pdfjs-dist'],
   typescript: {
     // TODO: Fix i18next type recursion issues and remove this
     ignoreBuildErrors: true,

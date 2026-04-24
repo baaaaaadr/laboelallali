@@ -141,7 +141,7 @@ export default async function LangLayout({
 
   // This component's return value will be injected into the {children} of src/app/layout.tsx
   return (
-    <div lang={lang} dir={dirValue} className="h-full">
+    <div lang={lang} dir={dirValue} className="h-full" suppressHydrationWarning>
       <ThemeProvider>
         <TranslationsProvider
           locale={lang}

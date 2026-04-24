@@ -106,24 +106,12 @@ export function TabsNavigation({
           const IconComponent = tab.icon;
           const isActive = activeTab === tab.id;
 
-          // DEBUG: Log tab state
-          console.log(`🔍 TAB DEBUG: "${tab.label}"`, {
-            tabId: tab.id,
-            activeTab: activeTab,
-            isActive: isActive,
-            shouldBeRose: isActive,
-            classes: isActive ? 'bg-[#E3004F] text-white (ROSE BRAND)' : 'bg-[var(--background-card)] text-[var(--text-primary)] (CARD)'
-          });
-
           return (
             <button
               key={tab.id}
-              onClick={() => {
-                console.log(`🖱️ TAB CLICKED: "${tab.label}" (${tab.id})`);
-                onTabChange(tab.id);
-              }}
+              onClick={() => onTabChange(tab.id)}
               className={`
-                flex items-center gap-3 px-10 py-3 rounded-lg
+                flex items-center gap-2 rounded-lg
                 whitespace-nowrap flex-shrink-0 min-w-max
                 min-h-[44px]
                 transition-all duration-200
@@ -133,7 +121,13 @@ export function TabsNavigation({
                   : 'bg-[var(--background-card)] text-[var(--text-primary)] border border-[var(--border-default)] hover:border-[#E3004F]'
                 }
               `}
-              style={isActive ? { backgroundColor: '#E3004F', color: 'white' } : {}}
+              style={{
+                paddingLeft: '20px',
+                paddingRight: '20px',
+                paddingTop: '10px',
+                paddingBottom: '10px',
+                ...(isActive ? { backgroundColor: '#E3004F', color: 'white' } : {})
+              }}
             >
               <IconComponent className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#E3004F]'}`} />
               <span className="text-sm">

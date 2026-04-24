@@ -68,8 +68,9 @@ const BottomNav = () => {
       className="bottom-nav-container lg:hidden fixed bottom-0 left-0 right-0 z-40"
       role="navigation"
       aria-label="Navigation principale"
+      suppressHydrationWarning
     >
-      <div className="bottom-nav-bar">
+      <div className="bottom-nav-bar" suppressHydrationWarning>
         {navItems.map((item) => {
           const isActive = isActivePath(pathname, item.activePath);
           const IconComponent = item.icon;

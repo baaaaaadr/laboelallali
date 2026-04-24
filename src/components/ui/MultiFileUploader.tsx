@@ -13,6 +13,8 @@ const LazyDocument = lazy(() => import('react-pdf').then(mod => {
 }));
 const LazyPage = lazy(() => import('react-pdf').then(mod => ({ default: mod.Page })));
 
+export type FileUploadState = 'uploading' | 'done' | 'error';
+
 export interface MultiFileUploaderProps {
   files: File[];
   filePreviews: string[];
@@ -20,6 +22,7 @@ export interface MultiFileUploaderProps {
   setFilePreviews: React.Dispatch<React.SetStateAction<string[]>>;
   error: string;
   setError: React.Dispatch<React.SetStateAction<string>>;
+  fileUploadStates?: FileUploadState[];
   maxSizeMB?: number;
   acceptedTypes?: string[];
 }
@@ -37,6 +40,7 @@ export default function MultiFileUploader({
   setFilePreviews,
   error,
   setError,
+  fileUploadStates = [],
   maxSizeMB = 5,
   acceptedTypes = ['image/jpeg', 'image/png', 'application/pdf']
 }: MultiFileUploaderProps) {
@@ -164,12 +168,11 @@ export default function MultiFileUploader({
         <label htmlFor="prescriptionFile" className="block text-sm font-medium text-[var(--text-primary)] mb-2 cursor-pointer">
           {t('prescription_upload_label', { defaultValue: 'Téléchargez votre ordonnance (Plusieurs fichiers acceptés)' })}
         </label>
-        <div className="flex justify-center">
+        <div className="flex justify-center" suppressHydrationWarning>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            style={{ backgroundColor: 'var(--color-fuchsia-pale)', color: 'var(--color-fuchsia-accent)' }}
-            className="px-4 py-2 hover:!bg-[var(--color-fuchsia-accent)] hover:!text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+            className="px-6 py-2 bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-tertiary)] text-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-accent)] hover:text-white dark:hover:bg-[var(--color-fuchsia-accent)] dark:hover:text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
           >
             <FileText size={16} />
             Sélectionner des fichiers
@@ -197,10 +200,14 @@ export default function MultiFileUploader({
             const isPdf = file.type === 'application/pdf';
             const hasPreview = filePreviews[idx] && filePreviews[idx] !== '';
             
+            const uploadState = fileUploadStates[idx];
+            const isUploading = uploadState === 'uploading';
+            const isUploadError = uploadState === 'error';
+
             return (
               <div key={`${file.name}-${idx}`} className="relative p-3 pr-8 bg-[var(--background-card)] rounded-lg text-left shadow-sm border border-[var(--border-default)] group">
                 {/* Delete button */}
-                <button 
+                <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
                   className="absolute top-2 right-2 p-1 rounded-lg transition-colors z-10"
@@ -210,45 +217,71 @@ export default function MultiFileUploader({
                 </button>
 
                 <p className="text-sm font-medium text-[var(--text-primary)] truncate max-w-[150px] flex items-center gap-2 mb-2">
-                  <span className="w-2 h-2 rounded-lg flex-shrink-0" style={{ backgroundColor: '#22C55E' }}></span>
+                  <span
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: isUploadError ? '#DC2626' : isUploading ? '#F59E0B' : '#22C55E' }}
+                  />
                   <span className="truncate text-xs">{file.name}</span>
                 </p>
-                
+
                 {/* Thumbnail */}
-                {hasPreview && !isPdf ? (
-                  <div 
-                    className="relative cursor-pointer rounded-lg overflow-hidden group/img" 
-                    onClick={(e) => openPreview(e, file, filePreviews[idx])}
-                  >
-                    <img 
-                      src={filePreviews[idx]} 
-                      alt={`Aperçu ${idx + 1}`}
-                      className="h-24 w-24 object-cover border border-gray-200 dark:border-gray-700 transition-transform duration-300 group-hover/img:scale-110" 
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity duration-300">
-                      <Eye className="text-white" size={24} />
+                <div className="relative h-24 w-24">
+                  {hasPreview && !isPdf ? (
+                    <div
+                      className="relative cursor-pointer rounded-lg overflow-hidden group/img h-full w-full"
+                      onClick={(e) => !isUploading && openPreview(e, file, filePreviews[idx])}
+                    >
+                      <img
+                        src={filePreviews[idx]}
+                        alt={`Aperçu ${idx + 1}`}
+                        className="h-full w-full object-cover border border-gray-200 dark:border-gray-700 transition-transform duration-300 group-hover/img:scale-110"
+                      />
+                      {!isUploading && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                          <Eye className="text-white" size={24} />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ) : isPdf ? (
-                  <div 
-                    className="h-24 w-24 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-col cursor-pointer group/pdf relative overflow-hidden"
-                    style={{ backgroundColor: '#FEF2F2' }}
-                    onClick={(e) => hasPreview ? openPreview(e, file, filePreviews[idx]) : undefined}
-                  >
-                    <FileIcon className="mb-1 transition-transform duration-300 group-hover/pdf:scale-110" size={28} style={{ color: '#DC2626' }} />
-                    <span className="text-xs uppercase font-semibold" style={{ color: '#991B1B' }}>PDF</span>
-                    {hasPreview && (
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/pdf:opacity-100 flex items-center justify-center transition-opacity duration-300">
-                        <Eye className="text-white" size={24} />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="h-24 w-24 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-col">
-                    <ImageIcon className="text-gray-400 mb-1" size={24} />
-                    <span className="text-xs text-gray-500 uppercase">{file.type.split('/')[1] || 'Fichier'}</span>
-                  </div>
-                )}
+                  ) : isPdf ? (
+                    <div
+                      className="h-full w-full rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-col cursor-pointer group/pdf relative overflow-hidden"
+                      style={{ backgroundColor: '#FEF2F2' }}
+                      onClick={(e) => (!isUploading && hasPreview) ? openPreview(e, file, filePreviews[idx]) : undefined}
+                    >
+                      <FileIcon className="mb-1 transition-transform duration-300 group-hover/pdf:scale-110" size={28} style={{ color: '#DC2626' }} />
+                      <span className="text-xs uppercase font-semibold" style={{ color: '#991B1B' }}>PDF</span>
+                      {!isUploading && hasPreview && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/pdf:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                          <Eye className="text-white" size={24} />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="h-full w-full bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-col">
+                      <ImageIcon className="text-gray-400 mb-1" size={24} />
+                      <span className="text-xs text-gray-500 uppercase">{file.type.split('/')[1] || 'Fichier'}</span>
+                    </div>
+                  )}
+
+                  {/* Upload spinner overlay */}
+                  {isUploading && (
+                    <div className="absolute inset-0 rounded-lg flex flex-col items-center justify-center gap-1" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+                      <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span className="text-white text-[10px] font-medium">Envoi...</span>
+                    </div>
+                  )}
+
+                  {/* Error overlay */}
+                  {isUploadError && (
+                    <div className="absolute inset-0 rounded-lg flex flex-col items-center justify-center gap-1" style={{ backgroundColor: 'rgba(220,38,38,0.6)' }}>
+                      <X className="text-white" size={20} />
+                      <span className="text-white text-[10px] font-medium">Erreur</span>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}

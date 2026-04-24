@@ -24,12 +24,12 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="footer-gradient text-white pt-12 pb-8 mt-4 dark:bg-gradient-to-br dark:from-[var(--brand-primary)] dark:via-[var(--color-bordeaux-light)] dark:to-[var(--brand-accent)]">
-      <div className="container mx-auto px-4">
+    <footer className="footer-gradient text-white pt-12 pb-8 mt-4 dark:bg-gradient-to-br dark:from-[var(--brand-primary)] dark:via-[var(--color-bordeaux-light)] dark:to-[var(--brand-accent)]" suppressHydrationWarning>
+      <div className="container mx-auto px-4" suppressHydrationWarning>
         <div className="w-full h-1 mb-4 bg-gradient-to-r from-[var(--brand-primary)]/70 via-[var(--color-bordeaux-light)]/70 to-[var(--brand-accent)]/70 dark:from-[var(--brand-accent)]/50 dark:via-[var(--color-bordeaux-light)]/50 dark:to-[var(--brand-primary)]/50 rounded-lg"></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm sm:text-base">
           {/* Contact Info */}
-          <div>
+          <div suppressHydrationWarning>
             <h3 className="text-xl font-bold mb-4">{t('contact')}</h3>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
@@ -137,7 +137,7 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-white/20 mt-8 pt-6 text-center">
+        <div className="border-t border-white/20 mt-8 pt-6 text-center" suppressHydrationWarning>
           <p className="footer-copyright"> {currentYear} {t('laboratory_name')}. {t('rights_reserved')}</p>
         </div>
       </div>

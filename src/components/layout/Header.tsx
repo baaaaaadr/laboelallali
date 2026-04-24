@@ -194,9 +194,9 @@ const Header = () => {
   };
 
   return (
-    <header className="header-main shadow-md transition-colors duration-300 relative z-50 w-full overflow-hidden">
-      <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
-        <div className="flex items-center justify-between py-2 sm:py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)] min-h-[56px] sm:min-h-[64px]">
+    <header className="header-main shadow-md transition-colors duration-300 relative z-50 w-full overflow-hidden" suppressHydrationWarning>
+      <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative" suppressHydrationWarning>
+        <div className="flex items-center justify-between py-2 sm:py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)] min-h-[56px] sm:min-h-[64px]" suppressHydrationWarning>
           {/* Logo and name */}
           <div className="flex items-center">
             <Link href={currentLanguagePath} className="flex items-center">
@@ -319,7 +319,7 @@ const Header = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Menu Header Section - Matches main header height */}
-          <div className="mobile-menu-header h-16 flex items-center justify-between px-4">
+          <div className="mobile-menu-header h-16 flex items-center justify-between px-4" suppressHydrationWarning>
             <div className="flex items-center">
               <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
                 <span className="header-logo text-lg font-bold mr-3">L</span>

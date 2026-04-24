@@ -43,8 +43,8 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
       label: 'TÉLÉPHONE',
       value: LAB_CONTACT.LANDLINE.display,
       copyValue: LAB_CONTACT.LANDLINE.display.replace(/\s+/g, ''),
-      iconColor: 'text-[var(--color-bordeaux-primary)] dark:text-[var(--status-error)]',
-      iconBg: 'bg-red-100 dark:bg-red-900/30'
+      iconColor: 'text-red-600 dark:text-red-400',
+      iconBg: 'bg-red-50 dark:bg-red-400/20'
     },
     {
       id: 'whatsapp',
@@ -52,8 +52,8 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
       label: 'WHATSAPP',
       value: `+212 ${LAB_WHATSAPP_NUMBER.replace(/^0/, '')}`,
       copyValue: `+212${LAB_WHATSAPP_NUMBER.replace(/^0/, '')}`,
-      iconColor: 'text-[var(--status-success)]',
-      iconBg: 'bg-[var(--status-success)]/10 dark:bg-green-900/30'
+      iconColor: 'text-green-600 dark:text-green-400',
+      iconBg: 'bg-green-50 dark:bg-green-400/20'
     },
     {
       id: 'email',
@@ -62,7 +62,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
       value: LAB_CONTACT.EMAIL.display,
       copyValue: LAB_CONTACT.EMAIL.display,
       iconColor: 'text-blue-600 dark:text-blue-400',
-      iconBg: 'bg-blue-100 dark:bg-blue-900/30'
+      iconBg: 'bg-blue-50 dark:bg-blue-400/20'
     }
   ];
 

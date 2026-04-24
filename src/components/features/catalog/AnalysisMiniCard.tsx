@@ -42,7 +42,7 @@ export function AnalysisMiniCard({
   return (
     <div
       className={`
-        flex items-center justify-between p-4
+        flex items-start justify-between p-4
         bg-[var(--background-card)] rounded-lg shadow-sm
         border border-[var(--border-default)]
         hover:border-[#FF4081] hover:shadow-md
@@ -61,10 +61,10 @@ export function AnalysisMiniCard({
     >
       {/* Left: Name + Description */}
       <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-[var(--text-primary)] mb-0.5 truncate">
+        <h4 className="font-bold text-[var(--text-primary)] mb-0.5">
           {analysisName}
         </h4>
-        <p className="text-xs text-[var(--text-secondary)] line-clamp-2">
+        <p className="text-xs text-[var(--text-secondary)]">
           {description || category}
         </p>
       </div>
@@ -84,15 +84,7 @@ export function AnalysisMiniCard({
 
         {/* Circular Add Button */}
         <button
-          onClick={(e) => {
-            console.log(`🔍 ANALYSIS BUTTON DEBUG: "${analysis.Nom_Analyse_FR}"`, {
-              isSelected: isSelected,
-              buttonColor: '#E3004F (ROSE BRAND)',
-              borderColor: 'white',
-              iconType: isSelected ? 'Check' : 'Plus'
-            });
-            handleSelectClick(e);
-          }}
+          onClick={handleSelectClick}
           className={`
             w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0
             transition-all duration-200
