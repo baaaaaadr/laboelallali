@@ -73,7 +73,7 @@ export function TabsNavigation({
           className={`
             hidden lg:flex
             absolute ${isRtl ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 z-10
-            h-8 w-8 rounded-full
+            h-8 w-8 rounded-lg
             bg-[var(--background-default)]
             shadow-md
             items-center justify-center
@@ -123,7 +123,7 @@ export function TabsNavigation({
                 onTabChange(tab.id);
               }}
               className={`
-                flex items-center gap-2 px-8 py-3 rounded-full
+                flex items-center gap-2 px-8 py-3 rounded-lg
                 whitespace-nowrap flex-shrink-0 min-w-max
                 min-h-[44px]
                 transition-all duration-200
@@ -156,7 +156,7 @@ export function TabsNavigation({
           className={`
             hidden lg:flex
             absolute ${isRtl ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 z-10
-            h-8 w-8 rounded-full
+            h-8 w-8 rounded-lg
             bg-[var(--background-default)]
             shadow-md
             items-center justify-center

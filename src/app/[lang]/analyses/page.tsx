@@ -500,7 +500,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t('search_in_tags', 'Rechercher par nom, catégorie ou mots-clés...')}
                   className={`
-                    w-full ${isArabic ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-2.5 rounded-full
+                    w-full ${isArabic ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-2.5 rounded-lg
                     bg-[var(--background-default)] text-[var(--text-primary)]
                     border border-[var(--border-default)]
                     text-sm
@@ -531,14 +531,14 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
           {/* Loading state */}
           {loading && (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
+              <div className="inline-block animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
               <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading', 'Chargement en cours...')}</p>
             </div>
           )}
 
           {/* Error state */}
           {error && (
-            <div className="max-w-2xl mx-auto mb-8 p-6 rounded-xl bg-red-100 dark:bg-red-900/30 border-2 border-red-400 dark:border-red-700">
+            <div className="max-w-2xl mx-auto mb-8 p-6 rounded-lg bg-red-100 dark:bg-red-900/30 border-2 border-red-400 dark:border-red-700">
               <p className="text-red-800 dark:text-red-200 text-center">{error}</p>
             </div>
           )}
@@ -786,7 +786,7 @@ export default function Page({ params }: { params: Promise<{ lang: string }> }) 
   if (!resolvedParams) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
+        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
       </div>
     );
   }
@@ -794,7 +794,7 @@ export default function Page({ params }: { params: Promise<{ lang: string }> }) 
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
+        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
       </div>
     }>
       <AnalysesCatalogPageContents params={resolvedParams} />

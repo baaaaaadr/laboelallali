@@ -58,7 +58,7 @@ export function AnalysisDetailsModal({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel
-                className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-[var(--background-card)] p-6 text-left align-middle shadow-xl transition-all border border-[var(--border-default)]"
+                className="w-full max-w-2xl transform overflow-hidden rounded-lg bg-[var(--background-card)] p-6 text-left align-middle shadow-xl transition-all border border-[var(--border-default)]"
                 dir={isArabic ? 'rtl' : 'ltr'}
               >
                 {/* Header */}
@@ -76,7 +76,7 @@ export function AnalysisDetailsModal({
                   </div>
                   <button
                     onClick={onClose}
-                    className="ml-4 rounded-full p-2 hover:bg-[var(--background-hover)] transition-colors"
+                    className="ml-4 rounded-lg p-2 hover:bg-[var(--background-hover)] transition-colors"
                     aria-label={t('close', 'Fermer')}
                   >
                     <X className="h-6 w-6 text-[var(--text-secondary)]" />

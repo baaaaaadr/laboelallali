@@ -109,7 +109,7 @@ export default function PWABanner({ className = '' }: PWABannerProps) {
       </div>
       <button
         onClick={handleInstallClick}
-        className="ml-4 px-4 py-2 bg-white text-[var(--brand-primary)] font-medium rounded-md hover:bg-gray-100 transition-colors whitespace-nowrap"
+        className="ml-4 px-4 py-2 bg-white text-[var(--brand-primary)] font-medium rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap"
       >
         {t('pwa.install_button')}
       </button>

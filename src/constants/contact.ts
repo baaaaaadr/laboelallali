@@ -25,17 +25,13 @@ export const LAB_CONTACT = {
   },
   WHATSAPP: [
     {
-      display: "0634293900",
-      url: "https://wa.me/212634293900"
-    },
-    {
-      display: "0707291873",
-      url: "https://wa.me/212707291873"
+      display: "0654079592",
+      url: "https://wa.me/212654079592"
     }
   ],
   COMPANIES: {
-    display: "0664727681",
-    url: "tel:0664727681"
+    display: "0661208635",
+    url: "tel:0661208635"
   },
   FAX: "0528828758",
   EMAIL: {
@@ -45,8 +41,8 @@ export const LAB_CONTACT = {
 };
 
 export const LAB_HOURS = {
-  WEEKDAYS: "Lundi au Samedi: 7h30 à 18h30",
-  SUNDAY: "Dimanche: 08h00 à 18h00"
+  WEEKDAYS: "Lundi au Vendredi: 7h30 à 18h30",
+  SATURDAY: "Samedi: 07h30 à 13h00"
 };
 
 // Default WhatsApp number (first number from the WHATSAPP array)

@@ -65,16 +65,16 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
   if (loading || user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--background-default)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
+        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
       </div>
     );
   }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
-      <div className="max-w-md w-full space-y-8 bg-[var(--background-card)] p-8 rounded-2xl shadow-xl border border-[var(--border-default)]">
+      <div className="max-w-md w-full space-y-8 bg-[var(--background-card)] p-8 rounded-lg shadow-xl border border-[var(--border-default)]">
         <div>
-          <div className="mx-auto h-12 w-12 bg-[var(--color-bordeaux-primary)] text-white rounded-full flex items-center justify-center font-bold text-2xl">
+          <div className="mx-auto h-12 w-12 bg-[var(--color-bordeaux-primary)] text-white rounded-lg flex items-center justify-center font-bold text-2xl">
             L
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-[var(--text-primary)]">
@@ -87,12 +87,12 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
         
         <form className="mt-8 space-y-6" onSubmit={handleEmailAuth}>
           {error && (
-            <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 rounded-lg text-sm text-center">
+            <div className="p-3 bg-[var(--status-error)]/10 border border-[var(--status-error)]/30 text-[var(--status-error)] rounded-lg text-sm text-center">
               {error}
             </div>
           )}
           
-          <div className="rounded-md shadow-sm space-y-4">
+          <div className="rounded-lg shadow-sm space-y-4">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />

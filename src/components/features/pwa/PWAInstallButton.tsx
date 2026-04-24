@@ -55,30 +55,16 @@ export default function PWAInstallButton({
   forceShow = false,
   style = {}
 }: PWAInstallButtonProps) {
-  // For development, default to showing button
   const [showButton, setShowButton] = useState(process.env.NODE_ENV === 'development' || forceShow);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [isClientReady, setIsClientReady] = useState(false);
   
-  // Set isClientReady to true after component mounts (client-side only)
   useEffect(() => {
     setIsClientReady(true);
   }, []);
   
-  // Only initialize i18n when client is ready
   const { t } = useTranslation('common', { useSuspense: false });
   
-  // Log state for debugging
-  useEffect(() => {
-    console.log('PWAInstallButton state:', { 
-      showButton, 
-      isAppInstalled, 
-      env: process.env.NODE_ENV,
-      variant
-    });
-  }, [showButton, isAppInstalled, variant]);
-
-  // Check if the app is already installed
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
@@ -87,41 +73,30 @@ export default function PWAInstallButton({
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     
     if (isStandalone || (isIOS && !isSafari)) {
-      console.log('PWA: App is already installed or on iOS');
       setIsAppInstalled(true);
       setShowButton(false);
     }
   }, []);
 
-  // Set up event listeners for beforeinstallprompt
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // Check if the app is already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
-      console.log('PWA: App is already installed');
       setIsAppInstalled(true);
       setShowButton(false);
       return;
     }
     
-    // Initialize deferredPrompt for use later to show browser install prompt.
     window.deferredPrompt = null;
     
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      console.log('PWA: beforeinstallprompt event fired');
-      
-      // Cast the event to our custom type
       const installEvent = e as unknown as BeforeInstallPromptEvent;
-      
-      // Stash the event so it can be triggered later
       window.deferredPrompt = installEvent;
       setShowButton(true);
     };
 
     const handleAppInstalled = () => {
-      console.log('PWA: App was installed');
       setIsAppInstalled(true);
       setShowButton(false);
     };
@@ -135,13 +110,8 @@ export default function PWAInstallButton({
     };
   }, []);
 
-  // Handle install button click
   const handleInstallClick = useCallback(async () => {
-    console.log('PWA: Install button clicked');
-    
     if (!window.deferredPrompt) {
-      console.log('PWA: No install prompt available');
-      // Show alert in development mode
       if (process.env.NODE_ENV === 'development') {
         alert('PWA installation prompt not available in development. This button would trigger the PWA installation in production.');
       }
@@ -149,57 +119,39 @@ export default function PWAInstallButton({
     }
     
     try {
-      // Show the install prompt
-      console.log('PWA: Showing install prompt');
-      
-      // Trigger the prompt
       await window.deferredPrompt.prompt();
-      console.log('PWA: Install prompt shown');
-      
-      // Wait for the user to make a choice
       const choiceResult = await window.deferredPrompt.userChoice;
-      console.log(`PWA: User choice: ${choiceResult.outcome}`);
       
       if (choiceResult.outcome === 'accepted') {
-        console.log('PWA: User accepted the install prompt');
         setIsAppInstalled(true);
         setShowButton(false);
-      } else {
-        console.log('PWA: User dismissed the install prompt');
       }
     } catch (error) {
       console.error('PWA: Error showing install prompt:', error);
     } finally {
-      // Reset the deferred prompt variable as it can only be used once
       window.deferredPrompt = null;
     }
   }, []);
 
-  // Don't render anything if not on client yet to prevent hydration mismatch
-  if (!isClientReady) {
-    return null;
-  }
+  if (!isClientReady) return null;
   
-  // In development mode or if forceShow is true, always show the button for testing UI
   if ((isAppInstalled || !showButton) && process.env.NODE_ENV !== 'development' && !forceShow) {
     return null;
   }
   
-  // Banner variant - fixed position at bottom of screen
+  const isDisabled = !isClientReady || (!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow);
+  
   if (variant === 'banner') {
-    const isDisabled = !isClientReady || (!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow);
-    
     return (
       <div 
-        className="fixed bottom-16 sm:bottom-4 right-4 z-[999] bg-[var(--brand-accent)] text-white px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:bg-[var(--brand-accent-hover)] transition-colors"
+        className={`fixed bottom-16 sm:bottom-4 right-4 z-[999] bg-[var(--brand-accent)] text-white px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:bg-[var(--brand-accent-hover)] transition-colors ${className}`}
         style={style}
       >
         <button
           onClick={handleInstallClick}
           disabled={isDisabled}
-          className={`${className || 'menu-pwa-button'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`flex items-center space-x-2 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
-          aria-disabled={isDisabled}
         >
           <Download size={18} />
           <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
@@ -208,43 +160,36 @@ export default function PWAInstallButton({
     );
   }
   
-  // Footer variant - full width with bordeaux background
+  // Footer variant: rendered as a <div role="button"> to bypass the global `button { background-color: transparent }` reset.
+  // The WhatsApp link is an <a> tag and doesn't suffer from this. Using <div> is the cleanest fix.
   if (variant === 'footer') {
-    const isDisabled = !isClientReady || (!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow);
-    
     return (
-      <button
-        onClick={handleInstallClick}
-        className="menu-pwa-button w-full"
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={isDisabled ? undefined : handleInstallClick}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInstallClick(); } }}
+        className={`bg-[var(--brand-primary)] hover:bg-[var(--color-bordeaux-light)] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center space-x-2 transition-colors shadow-sm hover:shadow-md w-full cursor-pointer select-none ${className} ${isDisabled ? 'opacity-70 cursor-not-allowed pointer-events-none' : ''}`}
         aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
         style={style}
-        disabled={isDisabled}
       >
-        <Download size={18} />
+        <Download size={20} className="flex-shrink-0" />
         <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
-      </button>
+      </div>
     );
   }
   
-  // Default button variant
-  const isDisabled = !isClientReady || (!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow);
-  
-  // Get the hint text with a fallback
-  const hintText = isClientReady && t('pwa.install_hint') !== 'pwa.install_hint' 
-    ? t('pwa.install_hint') 
-    : 'Accès rapide via l\'application';
-  
   return (
-    <div className="w-full sm:w-auto" style={style}>
+    <div className={`w-full sm:w-auto ${className}`} style={style}>
       <button
         onClick={handleInstallClick}
-        className={className || 'button-fuchsia'}
+        className={`bg-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-bright)] text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 w-full transition-all ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         title={isClientReady ? t('pwa.install_app_title') : 'Install Application'}
         disabled={isDisabled}
         aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
       >
         <Download size={20} />
-        <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
+        <span className="font-medium">{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
       </button>
     </div>
   );

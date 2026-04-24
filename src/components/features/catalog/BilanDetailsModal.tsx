@@ -125,7 +125,7 @@ export function BilanDetailsModal({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="
-                w-full max-w-2xl transform overflow-hidden rounded-2xl
+                w-full max-w-2xl transform overflow-hidden rounded-lg
                 bg-[var(--background-card)]
                 p-6 text-left align-middle shadow-xl transition-all
                 border border-[var(--border-default)]
@@ -172,7 +172,7 @@ export function BilanDetailsModal({
                 </div>
 
                 {/* Price section */}
-                <div className="mb-6 p-4 rounded-xl bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] border-2 border-[var(--color-fuchsia-accent)]">
+                <div className="mb-6 p-4 rounded-lg bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] border-2 border-[var(--color-fuchsia-accent)]">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-[var(--text-secondary)] mb-1">
@@ -234,7 +234,7 @@ export function BilanDetailsModal({
                             className={`mt-1 w-5 h-5 rounded
                               focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:ring-offset-2
                               ${isInCart
-                                ? 'text-green-600 cursor-not-allowed'
+                                ? 'text-[var(--status-success)] cursor-not-allowed'
                                 : 'text-[var(--color-fuchsia-accent)] cursor-pointer'
                               }`}
                           />
@@ -244,7 +244,7 @@ export function BilanDetailsModal({
                             <p className={`text-sm font-medium leading-snug ${isInCart ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'}`}>
                               {analyseName}
                               {isInCart && (
-                                <span className="ml-2 text-xs text-green-600 dark:text-green-400 font-normal">
+                                <span className="ml-2 text-xs text-[var(--status-success)] font-normal">
                                   (Déjà dans le panier)
                                 </span>
                               )}
@@ -348,17 +348,17 @@ export function BilanDetailsModal({
             fixed bottom-20 ${isArabic ? 'left-4' : 'right-4'} z-[60]
             max-w-sm w-full
             bg-[var(--background-card)]
-            rounded-xl shadow-2xl
+            rounded-lg shadow-2xl
             border-2 ${toastType === 'success' ? 'border-green-500' : 'border-red-500'}
             p-4
             flex items-center gap-3
           `}>
             {toastType === 'success' ? (
-              <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
+              <CheckCircle2 className="w-6 h-6 text-[var(--status-success)] flex-shrink-0" />
             ) : (
-              <X className="w-6 h-6 text-red-500 flex-shrink-0" />
+              <X className="w-6 h-6 text-[var(--status-error)] flex-shrink-0" />
             )}
-            <p className={`text-sm font-medium ${toastType === 'success' ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
+            <p className={`text-sm font-medium ${toastType === 'success' ? 'text-[var(--status-success)]' : 'text-red-700 dark:text-red-300'}`}>
               {toastMessage}
             </p>
           </div>

@@ -52,7 +52,7 @@ export function SortToolbar({
                 onSortChange(option.id);
               }}
               className={`
-                px-4 py-1.5 rounded-full text-xs font-medium
+                px-4 py-1.5 rounded-lg text-xs font-medium
                 transition-all duration-200
                 focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:ring-offset-1
                 ${isSelected

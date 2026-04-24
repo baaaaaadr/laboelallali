@@ -79,7 +79,7 @@ export function BilanCarousel({
         disabled={isArabic ? !canScrollRight : !canScrollLeft}
         className={`
           absolute ${isArabic ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 z-10
-          h-10 w-10 rounded-full
+          h-10 w-10 rounded-lg
           bg-white/90 dark:bg-gray-800/90
           shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)]
           flex items-center justify-center
@@ -135,7 +135,7 @@ export function BilanCarousel({
         disabled={isArabic ? !canScrollLeft : !canScrollRight}
         className={`
           absolute ${isArabic ? 'left-0' : 'right-0'} top-1/2 -translate-y-1/2 z-10
-          h-10 w-10 rounded-full
+          h-10 w-10 rounded-lg
           bg-white/90 dark:bg-gray-800/90
           shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)]
           flex items-center justify-center

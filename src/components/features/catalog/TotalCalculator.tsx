@@ -155,7 +155,7 @@ export default function TotalCalculator({
           className="flex items-center gap-2 flex-1 cursor-pointer hover:opacity-90 transition-opacity"
           aria-label={t('analyses_catalog.selection.view_cart', 'Voir le panier')}
         >
-          <div className="bg-white/20 rounded-full px-2 py-1 text-sm font-bold">
+          <div className="bg-white/20 rounded-lg px-2 py-1 text-sm font-bold">
             {selectedCount}
           </div>
           <span className="text-sm font-semibold whitespace-nowrap">
@@ -169,7 +169,7 @@ export default function TotalCalculator({
           {/* Reset button */}
           <button
             onClick={onReset}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
             aria-label={translationsUI.reset}
             title={translationsUI.reset}
           >
@@ -184,7 +184,7 @@ export default function TotalCalculator({
             onClick={handleSendViaWhatsApp}
             className="
               flex items-center gap-2
-              bg-green-600 hover:bg-green-700
+              bg-[var(--status-success)] hover:brightness-90
               px-3 py-2 rounded-lg
               text-sm font-semibold
               transition-colors
@@ -216,7 +216,7 @@ export default function TotalCalculator({
         className={`
           hidden lg:block
           fixed w-64 max-w-[calc(100vw-2rem)] z-50
-          bg-[#800020] dark:bg-[var(--brand-primary)] text-white rounded-2xl p-6 min-w-[280px]
+          bg-[#800020] dark:bg-[var(--brand-primary)] text-white rounded-lg p-6 min-w-[280px]
           shadow-[0_8px_30px_-2px_rgba(0,0,0,0.15)]
           transition-all duration-300 ease-out
           ${isRtlDirection ? 'lg:left-6' : 'lg:right-6'}
@@ -232,7 +232,7 @@ export default function TotalCalculator({
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center">
             <div
-              className="bg-white/20 rounded-full px-2 py-1 text-sm font-bold transition-transform duration-200"
+              className="bg-white/20 rounded-lg px-2 py-1 text-sm font-bold transition-transform duration-200"
               style={{ marginRight: isRtlDirection ? 0 : '0.5rem', marginLeft: isRtlDirection ? '0.5rem' : 0 }}
             >
               {selectedCount}
@@ -244,7 +244,7 @@ export default function TotalCalculator({
 
           <button
             onClick={onReset}
-            className="p-1.5 rounded-full hover:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
             aria-label={translationsUI.reset}
             title={translationsUI.reset}
           >
@@ -278,7 +278,7 @@ export default function TotalCalculator({
           onClick={handleSendViaWhatsApp}
           className="
             w-full py-2 px-3 rounded-lg
-            bg-green-600 hover:bg-green-700
+            bg-[var(--status-success)] hover:brightness-90
             text-white text-sm font-medium
             flex items-center justify-center
             transition-colors duration-200

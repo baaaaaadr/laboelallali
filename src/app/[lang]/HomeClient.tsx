@@ -8,6 +8,7 @@ import ContactModal from '@/components/ui/ContactModal';
 import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { useLabStatus } from '@/hooks/useLabStatus';
+import { LAB_CONTACT } from '@/constants/contact';
 
 export default function HomeClient({ lang }: { lang: string }) {
   const { t, i18n } = useTranslation(['common', 'glabo']);
@@ -83,13 +84,13 @@ export default function HomeClient({ lang }: { lang: string }) {
                 <p className="text-sm text-[var(--text-secondary)]">{t('opening_hours_text')}</p>
               </div>
               <div className="flex flex-col items-center justify-center gap-2">
-                <div className={`${labStatus.isOpen ? 'bg-[var(--status-success)]' : 'bg-[var(--status-error)]'} text-white px-5 py-2 rounded-full font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
-                  <span className={`w-3 h-3 ${labStatus.isOpen ? 'opacity-100' : 'opacity-80'} bg-white rounded-full ${labStatus.isOpen ? 'animate-pulse' : ''}`}></span>
+                <div className={`${labStatus.isOpen ? 'bg-[var(--status-success)]' : 'bg-[var(--status-error)]'} text-white px-5 py-2 rounded-lg font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
+                  <span className={`w-3 h-3 ${labStatus.isOpen ? 'opacity-100' : 'opacity-80'} bg-white rounded-lg ${labStatus.isOpen ? 'animate-pulse' : ''}`}></span>
                   {labStatus.statusText}
                 </div>
                 {/* Only show countdown on client side to prevent hydration mismatch */}
                 {labStatus.isClient && labStatus.countdownText && (
-                  <div className="text-sm font-medium text-[var(--text-secondary)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] px-3 py-1 rounded-full border border-[var(--border-default)]">
+                  <div className="text-sm font-medium text-[var(--text-secondary)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] px-3 py-1 rounded-lg border border-[var(--border-default)]">
                     {labStatus.countdownText}
                   </div>
                 )}
@@ -106,7 +107,7 @@ export default function HomeClient({ lang }: { lang: string }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="card">
               <div className="flex items-start">
-                <div className="bg-[var(--color-fuchsia-accent)]/10 dark:bg-[var(--color-fuchsia-accent)]/20 p-3 rounded-full mr-3">
+                <div className="bg-[var(--color-fuchsia-accent)]/10 dark:bg-[var(--color-fuchsia-accent)]/20 p-3 rounded-lg mr-3">
                   <Award className="text-[var(--color-fuchsia-accent)]" size={24} />
                 </div>
                 <div>
@@ -117,7 +118,7 @@ export default function HomeClient({ lang }: { lang: string }) {
             </div>
             <div className="card">
               <div className="flex items-start">
-                <div className="bg-[var(--color-fuchsia-accent)]/10 dark:bg-[var(--color-fuchsia-accent)]/20 p-3 rounded-full mr-3">
+                <div className="bg-[var(--color-fuchsia-accent)]/10 dark:bg-[var(--color-fuchsia-accent)]/20 p-3 rounded-lg mr-3">
                   <FlaskConical className="text-[var(--color-fuchsia-accent)]" size={24} />
                 </div>
                 <div>
@@ -128,7 +129,7 @@ export default function HomeClient({ lang }: { lang: string }) {
             </div>
             <div className="card">
               <div className="flex items-start">
-                <div className="bg-[var(--color-fuchsia-accent)]/10 dark:bg-[var(--color-fuchsia-accent)]/20 p-3 rounded-full mr-3">
+                <div className="bg-[var(--color-fuchsia-accent)]/10 dark:bg-[var(--color-fuchsia-accent)]/20 p-3 rounded-lg mr-3">
                   <HeartPulse className="text-[var(--color-fuchsia-accent)]" size={24} />
                 </div>
                 <div>
@@ -139,7 +140,7 @@ export default function HomeClient({ lang }: { lang: string }) {
             </div>
             <div className="card">
               <div className="flex items-start">
-                <div className="bg-[var(--color-fuchsia-accent)]/10 dark:bg-[var(--color-fuchsia-accent)]/20 p-3 rounded-full mr-3">
+                <div className="bg-[var(--color-fuchsia-accent)]/10 dark:bg-[var(--color-fuchsia-accent)]/20 p-3 rounded-lg mr-3">
                   <CheckCircle className="text-[var(--color-fuchsia-accent)]" size={24} />
                 </div>
                 <div>
@@ -157,7 +158,7 @@ export default function HomeClient({ lang }: { lang: string }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="card">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20">
+                <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-lg bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20">
                   <FlaskConical className="text-[var(--color-bordeaux-primary)]" size={32} />
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-[var(--text-primary)]">{t('blood_tests')}</h3>
@@ -172,7 +173,7 @@ export default function HomeClient({ lang }: { lang: string }) {
             </div>
             <div className="card">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20">
+                <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-lg bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20">
                   <HeartPulse className="text-[var(--color-bordeaux-primary)]" size={32} />
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-[var(--text-primary)]">{t('health_checks')}</h3>
@@ -187,7 +188,7 @@ export default function HomeClient({ lang }: { lang: string }) {
             </div>
             <div className="card">
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20">
+                <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-lg bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20">
                   <HomeIcon className="text-[var(--color-bordeaux-primary)]" size={32} />
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-[var(--text-primary)]">{t('home_service')}</h3>
@@ -241,7 +242,7 @@ export default function HomeClient({ lang }: { lang: string }) {
                   </a>
                   {isMobile ? (
                     <a
-                      href="tel:0528843384"
+                      href={LAB_CONTACT.LANDLINE.url}
                       className="map-call-btn flex items-center justify-center min-w-[160px] h-12 px-6 font-semibold rounded-lg shadow-sm transition-colors text-center text-lg gap-2 cursor-pointer"
                     >
                       <Phone size={22} className="mr-2 -ml-1" />
@@ -267,7 +268,7 @@ export default function HomeClient({ lang }: { lang: string }) {
           <h2 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] mb-6">{t('practical_info')}</h2>
           <div className="card">
             <div className="flex items-start">
-                <div className="bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20 p-3 rounded-full mr-4">
+                <div className="bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20 p-3 rounded-lg mr-4">
                     <Info className="text-[var(--color-bordeaux-primary)]" size={24} />
                 </div>
                 <div>

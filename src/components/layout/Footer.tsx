@@ -26,7 +26,7 @@ const Footer = () => {
   return (
     <footer className="footer-gradient text-white pt-12 pb-8 mt-4 dark:bg-gradient-to-br dark:from-[var(--brand-primary)] dark:via-[var(--color-bordeaux-light)] dark:to-[var(--brand-accent)]">
       <div className="container mx-auto px-4">
-        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[var(--brand-primary)]/70 via-[var(--color-bordeaux-light)]/70 to-[var(--brand-accent)]/70 dark:from-[var(--brand-accent)]/50 dark:via-[var(--color-bordeaux-light)]/50 dark:to-[var(--brand-primary)]/50 rounded-full"></div>
+        <div className="w-full h-1 mb-4 bg-gradient-to-r from-[var(--brand-primary)]/70 via-[var(--color-bordeaux-light)]/70 to-[var(--brand-accent)]/70 dark:from-[var(--brand-accent)]/50 dark:via-[var(--color-bordeaux-light)]/50 dark:to-[var(--brand-primary)]/50 rounded-lg"></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm sm:text-base">
           {/* Contact Info */}
           <div>
@@ -64,7 +64,7 @@ const Footer = () => {
                 <Clock size={20} className="flex-shrink-0 text-white dark:text-[var(--color-fuchsia-light)] mt-0.5" />
                 <div>
                   <p>{LAB_HOURS.WEEKDAYS}</p>
-                  <p>{LAB_HOURS.SUNDAY}</p>
+                  <p>{LAB_HOURS.SATURDAY}</p>
                 </div>
               </li>
             </ul>

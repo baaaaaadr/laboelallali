@@ -13,9 +13,9 @@ const ImageTest = () => {
       </h2>
       
       <div className="space-y-6">
-        <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-md">
+        <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-lg">
           <h3 className="font-medium mb-2 text-[var(--text-primary)]">1. Direct Image Tag (No Overlay)</h3>
-          <div className="relative h-64 overflow-hidden rounded-md">
+          <div className="relative h-64 overflow-hidden rounded-lg">
             <img
               src="/images/hero-banner.jpg"
               alt="Hero Banner"
@@ -24,7 +24,7 @@ const ImageTest = () => {
               onError={() => setImageError(true)}
             />
             {imageError && (
-              <div className="absolute inset-0 flex items-center justify-center bg-red-100 text-red-700 p-4">
+              <div className="absolute inset-0 flex items-center justify-center bg-[var(--status-error)]/10 text-[var(--status-error)] p-4">
                 Error loading image
               </div>
             )}
@@ -34,9 +34,9 @@ const ImageTest = () => {
           </p>
         </div>
         
-        <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-md">
+        <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-lg">
           <h3 className="font-medium mb-2 text-[var(--text-primary)]">2. With Semi-Transparent Overlay</h3>
-          <div className="relative h-64 overflow-hidden rounded-md">
+          <div className="relative h-64 overflow-hidden rounded-lg">
             <img
               src="/images/hero-banner.jpg"
               alt="Hero Banner with Overlay"
@@ -49,9 +49,9 @@ const ImageTest = () => {
           </div>
         </div>
         
-        <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-md">
+        <div className="border border-gray-300 dark:border-gray-700 p-4 rounded-lg">
           <h3 className="font-medium mb-2 text-[var(--text-primary)]">3. Using Next.js Image (if available)</h3>
-          <div className="relative h-64 overflow-hidden rounded-md">
+          <div className="relative h-64 overflow-hidden rounded-lg">
             <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
               Add Next Image component here if desired
             </div>
@@ -59,9 +59,9 @@ const ImageTest = () => {
         </div>
       </div>
       
-      <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md">
-        <h3 className="font-medium mb-2 text-yellow-800 dark:text-yellow-200">Troubleshooting Notes</h3>
-        <ul className="list-disc pl-5 space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
+      <div className="mt-6 p-4 bg-[var(--status-warning)]/10 rounded-lg">
+        <h3 className="font-medium mb-2 text-[var(--status-warning)]">Troubleshooting Notes</h3>
+        <ul className="list-disc pl-5 space-y-1 text-sm text-[var(--status-warning)]">
           <li>Confirm the image exists at: <code>/public/images/hero-banner.jpg</code></li>
           <li>Check browser console for any errors</li>
           <li>Verify that public assets are being served correctly</li>

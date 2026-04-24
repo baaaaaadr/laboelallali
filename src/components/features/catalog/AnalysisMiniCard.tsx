@@ -43,7 +43,7 @@ export function AnalysisMiniCard({
     <div
       className={`
         flex items-center justify-between p-4
-        bg-[var(--background-card)] rounded-xl shadow-sm
+        bg-[var(--background-card)] rounded-lg shadow-sm
         border border-[var(--border-default)]
         hover:border-[#FF4081] hover:shadow-md
         transition-all duration-200
@@ -73,7 +73,7 @@ export function AnalysisMiniCard({
       <div className={`flex items-center gap-3 ml-4 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
         {/* Price or "Sur Devis" Badge */}
         {analysis.Prix_Dhs === 0 ? (
-          <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full whitespace-nowrap">
+          <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-lg whitespace-nowrap">
             {t('on_quote', 'Sur Devis')}
           </span>
         ) : (
@@ -94,7 +94,7 @@ export function AnalysisMiniCard({
             handleSelectClick(e);
           }}
           className={`
-            w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0
+            w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0
             transition-all duration-200
             shadow-lg
             focus:outline-none focus:ring-2 focus:ring-offset-1

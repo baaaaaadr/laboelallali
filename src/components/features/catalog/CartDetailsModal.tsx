@@ -105,7 +105,7 @@ export function CartDetailsModal({
               leaveFrom="opacity-100 translate-y-0 md:scale-100"
               leaveTo="opacity-0 translate-y-full md:translate-y-0 md:scale-95"
             >
-              <Dialog.Panel className="w-full md:max-w-2xl transform overflow-hidden md:rounded-2xl rounded-t-3xl bg-[var(--background-card)] text-left align-middle shadow-2xl transition-all fixed md:relative bottom-0 md:bottom-auto max-h-[85vh] md:max-h-[90vh] flex flex-col border border-[var(--border-default)]">
+              <Dialog.Panel className="w-full md:max-w-2xl transform overflow-hidden md:rounded-lg rounded-t-3xl bg-[var(--background-card)] text-left align-middle shadow-2xl transition-all fixed md:relative bottom-0 md:bottom-auto max-h-[85vh] md:max-h-[90vh] flex flex-col border border-[var(--border-default)]">
 
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-[var(--border-default)] flex items-center justify-between bg-[var(--background-card)] sticky top-0 z-10">
@@ -120,7 +120,7 @@ export function CartDetailsModal({
                     {selectedItems.length > 0 && (
                       <button
                         onClick={onClearCart}
-                        className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors"
+                        className="p-2 rounded-lg hover:bg-[var(--status-error)]/10 text-[var(--status-error)] transition-colors"
                         aria-label={t('analyses_catalog.selection.clear_all', 'Tout supprimer')}
                       >
                         <Trash2 className="h-5 w-5" />
@@ -128,7 +128,7 @@ export function CartDetailsModal({
                     )}
                     <button
                       onClick={onClose}
-                      className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
                       aria-label="Fermer"
                     >
                       <X className="h-5 w-5" />
@@ -188,7 +188,7 @@ export function CartDetailsModal({
                                     e.stopPropagation();
                                     onRemoveItem(item);
                                   }}
-                                  className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors ml-2 flex-shrink-0"
+                                  className="p-2 rounded-lg hover:bg-[var(--status-error)]/10 text-[var(--status-error)] transition-colors ml-2 flex-shrink-0"
                                   aria-label={t('analyses_catalog.selection.remove_item', 'Retirer')}
                                 >
                                   <Trash2 className="h-5 w-5" />
@@ -233,7 +233,7 @@ export function CartDetailsModal({
                                     e.stopPropagation();
                                     onRemoveItem(item);
                                   }}
-                                  className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors ml-2 flex-shrink-0"
+                                  className="p-2 rounded-lg hover:bg-[var(--status-error)]/10 text-[var(--status-error)] transition-colors ml-2 flex-shrink-0"
                                   aria-label={t('analyses_catalog.selection.remove_item', 'Retirer')}
                                 >
                                   <Trash2 className="h-5 w-5" />
@@ -263,7 +263,7 @@ export function CartDetailsModal({
                     {/* WhatsApp Button */}
                     <button
                       onClick={onWhatsAppSend}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-lg flex items-center justify-center gap-2 font-semibold transition-colors shadow-md"
+                      className="w-full bg-[var(--status-success)] hover:brightness-90 text-white py-4 rounded-lg flex items-center justify-center gap-2 font-semibold transition-colors shadow-md"
                       aria-label={t('analyses_catalog.selection.send_whatsapp', 'Envoyer via WhatsApp')}
                     >
                       <MessageCircle className="h-5 w-5" />

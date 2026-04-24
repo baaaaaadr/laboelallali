@@ -43,7 +43,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
       label: 'TÉLÉPHONE',
       value: LAB_CONTACT.LANDLINE.display,
       copyValue: LAB_CONTACT.LANDLINE.display.replace(/\s+/g, ''),
-      iconColor: 'text-[var(--color-bordeaux-primary)] dark:text-red-400',
+      iconColor: 'text-[var(--color-bordeaux-primary)] dark:text-[var(--status-error)]',
       iconBg: 'bg-red-100 dark:bg-red-900/30'
     },
     {
@@ -52,8 +52,8 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
       label: 'WHATSAPP',
       value: `+212 ${LAB_WHATSAPP_NUMBER.replace(/^0/, '')}`,
       copyValue: `+212${LAB_WHATSAPP_NUMBER.replace(/^0/, '')}`,
-      iconColor: 'text-green-600 dark:text-green-400',
-      iconBg: 'bg-green-100 dark:bg-green-900/30'
+      iconColor: 'text-[var(--status-success)]',
+      iconBg: 'bg-[var(--status-success)]/10 dark:bg-green-900/30'
     },
     {
       id: 'email',
@@ -79,7 +79,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 font-sans">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 font-primary">
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-md transition-all duration-300" 
@@ -88,7 +88,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
 
       {/* Modal Container */}
       <div 
-        className="relative w-full max-w-md bg-[var(--background-card)] rounded-3xl shadow-2xl overflow-hidden transform transition-all border border-[var(--border-default)]"
+        className="relative w-full max-w-md bg-[var(--background-card)] rounded-lg shadow-2xl overflow-hidden transform transition-all border border-[var(--border-default)]"
         role="dialog"
         aria-modal="true"
       >
@@ -96,14 +96,14 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
         <div className="relative bg-gradient-to-br from-[var(--color-bordeaux-primary)] to-[var(--color-fuchsia-accent)] p-6 md:p-8 text-white">
           <button 
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors focus:outline-none"
+            className="absolute top-4 right-4 p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors focus:outline-none"
             aria-label={t('close_menu')}
           >
             <X size={18} className="text-white" />
           </button>
           
           <div className="flex items-start gap-4">
-            <div className="bg-white/20 p-3 rounded-2xl shadow-inner flex-shrink-0">
+            <div className="bg-white/20 p-3 rounded-lg shadow-inner flex-shrink-0">
               <Phone size={28} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
@@ -111,8 +111,8 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
                 <p className="text-xs font-bold tracking-wider uppercase opacity-90">{t('assistance')}</p>
                 
                 {/* Online indicator */}
-                <div className="flex items-center gap-2 bg-black/25 rounded-full px-3 py-1 shadow-sm">
-                  <span className={`w-2 h-2 rounded-full ${labStatus.isOpen ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></span>
+                <div className="flex items-center gap-2 bg-black/25 rounded-lg px-3 py-1 shadow-sm">
+                  <span className={`w-2 h-2 rounded-lg ${labStatus.isOpen ? 'bg-[var(--status-success)] animate-pulse' : 'bg-[var(--status-error)]'}`}></span>
                   <span className="text-xs font-bold whitespace-nowrap">{labStatus.isOpen ? t('online') : t('closed')}</span>
                 </div>
               </div>
@@ -128,11 +128,11 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
             {contactItems.map((item) => (
               <div 
                 key={item.id}
-                className="flex items-center p-4 rounded-xl border border-[var(--border-default)] bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors cursor-pointer group shadow-sm"
+                className="flex items-center p-4 rounded-lg border border-[var(--border-default)] bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors cursor-pointer group shadow-sm"
                 onClick={() => handleCopy(item.copyValue, item.id)}
                 title="Cliquer pour copier"
               >
-                <div className={`p-3 rounded-xl mr-4 flex-shrink-0 ${item.iconBg} ${item.iconColor}`}>
+                <div className={`p-3 rounded-lg mr-4 flex-shrink-0 ${item.iconBg} ${item.iconColor}`}>
                   {React.cloneElement(item.icon as React.ReactElement, { className: 'text-current' })}
                 </div>
                 <div className="flex-1 overflow-hidden">
@@ -154,7 +154,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Horaires Section */}
-          <div className="mt-6 p-5 rounded-xl border border-[var(--color-fuchsia-accent)]/20 bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-secondary)] shadow-sm">
+          <div className="mt-6 p-5 rounded-lg border border-[var(--color-fuchsia-accent)]/20 bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-secondary)] shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <Clock size={16} className="text-[var(--color-fuchsia-accent)]" />
               <h3 className="text-xs font-bold tracking-widest text-[var(--color-fuchsia-accent)] uppercase">{t('opening_hours')}</h3>

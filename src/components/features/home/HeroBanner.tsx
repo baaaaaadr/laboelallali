@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 // Import useTranslation hook without type issues
 import { useTranslation as useTranslationOriginal } from 'react-i18next';
+import { LAB_CONTACT } from '@/constants/contact';
 
 // Create a wrapper to avoid TypeScript errors
 const useTranslation = (ns: string) => {
@@ -58,7 +59,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCallClick, isMobile = true })
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
               {isMobile ? (
                 <a
-                  href="tel:0528843384"
+                  href={LAB_CONTACT.LANDLINE.url}
                   onClick={onCallClick}
                   className="button-fuchsia w-full sm:w-auto sm:min-w-[200px] text-lg flex items-center justify-center gap-2"
                 >

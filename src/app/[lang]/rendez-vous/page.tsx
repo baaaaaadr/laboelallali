@@ -15,6 +15,8 @@ import { LAB_CONTACT } from "../../../constants/contact";
 import { generateTimeSlots } from "../../../utils/timeSlots";
 import toast from 'react-hot-toast';
 import { User, Phone, Mail, Calendar, Clock, FileText, MessageSquare, Send, CalendarDays } from 'lucide-react';
+import MultiFileUploader from "../../../components/ui/MultiFileUploader";
+import SubmitProgressModal, { SubmitState } from "../../../components/ui/SubmitProgressModal";
 
 interface RendezVousParams {
   lang: string;
@@ -55,64 +57,27 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   const [email, setEmail] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedTime, setSelectedTime] = useState('');
-  const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
+  const [prescriptionFiles, setPrescriptionFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string>('');
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [commentaires, setCommentaires] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  
+  // Nouveaux états pour la gestion multi-étapes de la soumission
+  type SubmitState = 'idle' | 'uploading_image' | 'saving_database' | 'sending_email' | 'success';
+  const [submitState, setSubmitState] = useState<SubmitState>('idle');
+  const [isWhatsappLoading, setIsWhatsappLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const timeSlots = generateTimeSlots(selectedDate);
   // Get WhatsApp number from constants (remove leading 0 and add country code)
   const laboWhatsapp = LAB_CONTACT.WHATSAPP[0].url.replace('https://wa.me/', '');
 
-  // Gère le téléchargement de fichier d'ordonnance
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setPrescriptionFile(file);
-    setFileError('');
-    
-    if (file) {
-      // Valider le type de fichier
-      const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-      if (!validTypes.includes(file.type)) {
-        setFileError(t('invalid_file_type', { ns: 'appointment' }));
-        setPrescriptionFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        setFilePreview(null);
-        return;
-      }
-      
-      // Valider la taille du fichier (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        setFileError(t('file_too_large', { ns: 'appointment' }));
-        setPrescriptionFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        setFilePreview(null);
-        return;
-      }
-      
-      // Créer un aperçu pour les images
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setFilePreview(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setFilePreview(null); // Pas d'aperçu pour les PDFs
-      }
-    } else {
-      setFilePreview(null);
-    }
-  };
+  // The MultiFileUploader component handles its own file change logic
+  // we just pass it the state
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Reset status states
-    setSubmitSuccess(false);
     setSubmitError(null);
     
     // Validation simple
@@ -121,39 +86,40 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       return;
     }
     
-    setIsLoading(true);
-    
     try {
       // Ensure Firestore is initialized
       if (!db) {
         throw new Error(t('appointment:errors.db_not_initialized', 'Le service de base de données n\'est pas disponible. Veuillez réessayer.'));
       }
 
-      // 1. Upload prescription file if exists
-      let downloadURL = null;
+      // 1. Upload prescription files if exist
+      let downloadURLs: string[] = [];
 
-      if (prescriptionFile) {
-        // Ensure storage is initialized
+      if (prescriptionFiles.length > 0) {
+        setSubmitState('uploading_image');
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Artificial delay to let user read
+        
         if (!storage) {
           throw new Error(t('appointment:errors.storage_not_initialized', 'Le service de stockage n\'est pas disponible. Veuillez réessayer.'));
         }
 
-        // Create a storage reference with a timestamp and original filename
-        const timestamp = Date.now();
-        const fileName = prescriptionFile.name;
-        const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
-
-        // Upload the file
-        await uploadBytes(storageRef, prescriptionFile);
-
-        // Get download URL
-        downloadURL = await getDownloadURL(storageRef);
+        for (const file of prescriptionFiles) {
+          const timestamp = Date.now();
+          const fileName = file.name;
+          const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
+          await uploadBytes(storageRef, file);
+          const url = await getDownloadURL(storageRef);
+          downloadURLs.push(url);
+        }
       }
 
       // 2. Format date for Firestore
       const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
 
       // 3. Prepare data for Firestore
+      setSubmitState('saving_database');
+      await new Promise(resolve => setTimeout(resolve, 1200)); // Artificial delay
+      
       const appointmentData = {
         name: nom,
         phone: telephone,
@@ -161,7 +127,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         desiredDate: formattedDate,
         desiredTime: selectedTime,
         comments: commentaires || "",
-        prescriptionImageUrl: downloadURL,
+        prescriptionImageUrls: downloadURLs,
         submittedAt: serverTimestamp(),
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         status: "new_appointment_request",
@@ -171,28 +137,65 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       // 4. Save to Firestore
       await addDoc(collection(db, "appointmentRequests"), appointmentData);
       
-      // 5. Show success message
-      setSubmitSuccess(true);
+      // 5. Envoi d'un email de notification via notre route API
+      setSubmitState('sending_email');
+      await new Promise(resolve => setTimeout(resolve, 1200)); // Artificial delay
+      
+      // Split name if it contains spaces for better email formatting
+      const nameParts = nom.trim().split(' ');
+      const prenom = nameParts.length > 1 ? nameParts.shift() : '';
+      const lastName = nameParts.join(' ');
+      
+      try {
+        const response = await fetch('/api/send-appointment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            nom: lastName || nom,
+            prenom: prenom,
+            telephone,
+            email,
+            date_souhaitee: formattedDate,
+            heure_souhaitee: selectedTime,
+            type_analyse: "Rendez-vous Laboratoire",
+            commentaires,
+            ordonnanceUrls: downloadURLs,
+            isHomeService: false
+          })
+        });
+        
+        if (!response.ok) {
+          console.warn('⚠️ Notification par email échouée, mais le RDV est bien enregistré.');
+        }
+      } catch (emailError) {
+        console.warn('⚠️ Erreur lors de l\'envoi de l\'email, le RDV est bien enregistré.', emailError);
+      }
+
+      // 6. Afficher l'animation de succès
+      setSubmitState('success');
       toast.success(t('appointment_request_success', { ns: 'appointment' }));
 
-      // 6. Reset the form
-      setNom('');
-      setTelephone('');
-      setEmail('');
-      setSelectedDate(new Date());
-      setSelectedTime('');
-      setPrescriptionFile(null);
-      setFilePreview(null);
-      setCommentaires('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      // 7. Reset the form after a short delay so the user can see the success animation
+      setTimeout(() => {
+        setSubmitState('idle');
+        setNom('');
+        setTelephone('');
+        setEmail('');
+        setSelectedDate(new Date());
+        setSelectedTime('');
+        setPrescriptionFiles([]);
+        setFilePreviews([]);
+        setCommentaires('');
+      }, 2500);
       
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Error submitting appointment request:", error);
       }
       setSubmitError(t('appointment_request_error', { ns: 'appointment' }));
-    } finally {
-      setIsLoading(false);
+      setSubmitState('idle');
     }
   };
 
@@ -203,7 +206,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       return;
     }
 
-    setIsLoading(true);
+    setIsWhatsappLoading(true);
 
     try {
       // Ensure Firestore is initialized
@@ -274,10 +277,9 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       setEmail('');
       setSelectedDate(new Date());
       setSelectedTime('');
-      setPrescriptionFile(null);
-      setFilePreview(null);
+      setPrescriptionFiles([]);
+      setFilePreviews([]);
       setCommentaires('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
 
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -285,16 +287,16 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       }
       toast.error(t('whatsapp_error', { ns: 'appointment' }));
     } finally {
-      setIsLoading(false);
+      setIsWhatsappLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[var(--background-default)] py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
+    <main className="min-h-screen bg-[var(--background-default)] py-12 px-4 sm:px-6 lg:px-8 font-primary transition-colors duration-300">
       <div className="max-w-3xl mx-auto">
         {/* En-tête de la page */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center p-3 bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-tertiary)] rounded-full mb-4">
+          <div className="inline-flex items-center justify-center p-3 bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-tertiary)] rounded-lg mb-4">
             <CalendarDays className="h-8 w-8 text-[var(--brand-accent)]" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-[var(--brand-primary)] dark:text-[var(--text-primary)] mb-4 font-['Inter','Public Sans',sans-serif]">
@@ -304,20 +306,21 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
             Planifiez votre visite au laboratoire rapidement et facilement.
           </p>
         </div>
-      {submitSuccess && (
-        <div className="max-w-lg mx-auto mb-6 p-4 bg-green-50 dark:bg-[var(--background-tertiary)] border border-green-200 dark:border-green-800/50 text-green-800 dark:text-green-400 rounded-md">
-          {t('appointment_request_success', { ns: 'appointment' })}
-        </div>
-      )}
       
       {submitError && (
-        <div className="max-w-lg mx-auto mb-6 p-4 bg-red-50 dark:bg-[var(--background-tertiary)] border border-red-200 dark:border-red-800/50 text-red-800 dark:text-red-400 rounded-md">
+        <div className="max-w-lg mx-auto mb-6 p-4 bg-[var(--status-error)]/10 border border-[var(--status-error)]/30 text-[var(--status-error)] rounded-lg">
           {submitError}
         </div>
       )}
       
         {/* Formulaire dans une carte */}
-        <div className="bg-[var(--background-card)] rounded-2xl shadow-xl border border-[var(--border-default)] overflow-hidden">
+        <div className="relative card border border-[var(--border-default)] overflow-hidden">
+          
+          <SubmitProgressModal 
+            submitState={submitState} 
+            hasFiles={prescriptionFiles.length > 0} 
+          />
+
           <div className="p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               
@@ -325,7 +328,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                 {/* Nom complet */}
                 <div>
                   <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                    {t('fullName', { ns: 'appointment' })} <span className="text-red-500">*</span>
+                    {t('fullName', { ns: 'appointment' })} <span className="text-[var(--status-error)]">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -335,7 +338,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                       type="text"
                       id="nomComplet"
                       name="nomComplet"
-                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                       autoComplete="name"
                       value={nom}
                       onChange={e => setNom(e.target.value)}
@@ -348,7 +351,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                 {/* Numéro de téléphone */}
                 <div>
                   <label htmlFor="telephone" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                    {t('phoneNumber', { ns: 'appointment' })} <span className="text-red-500">*</span>
+                    {t('phoneNumber', { ns: 'appointment' })} <span className="text-[var(--status-error)]">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -358,7 +361,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                       type="tel"
                       id="telephone"
                       name="telephone"
-                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                       autoComplete="tel"
                       inputMode="tel"
                       value={telephone}
@@ -383,7 +386,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                     type="email"
                     id="email"
                     name="email"
-                    className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                    className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -396,7 +399,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                 {/* Date souhaitée */}
                 <div>
                   <label htmlFor="date" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                    {t('desiredDate', { ns: 'appointment' })} <span className="text-red-500">*</span>
+                    {t('desiredDate', { ns: 'appointment' })} <span className="text-[var(--status-error)]">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
@@ -410,7 +413,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                       minDate={new Date()}
                       locale={dateLocale}
                       placeholderText="Sélectionnez une date"
-                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                       required
                     />
                   </div>
@@ -419,7 +422,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                 {/* Heure souhaitée */}
                 <div>
                   <label htmlFor="heure" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                    {t('desiredTime', { ns: 'appointment' })} <span className="text-red-500">*</span>
+                    {t('desiredTime', { ns: 'appointment' })} <span className="text-[var(--status-error)]">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -430,7 +433,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                       name="heure"
                       value={selectedTime}
                       onChange={(e) => setSelectedTime(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
+                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
                       required
                     >
                       <option value="">{t('chooseTime', { ns: 'appointment' })}</option>
@@ -443,46 +446,14 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
               </div>
 
               {/* Téléchargement d'ordonnance */}
-              <div className="bg-[var(--background-secondary)] border border-dashed border-[var(--border-default)] rounded-xl p-6 text-center transition-colors hover:border-[var(--color-fuchsia-accent)]">
-                <FileText className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-                <label htmlFor="prescriptionFile" className="block text-sm font-medium text-[var(--text-primary)] mb-2 cursor-pointer">
-                  {t('prescription_upload_label', { ns: 'appointment' })}
-                </label>
-                <div className="flex justify-center">
-                  <input
-                    type="file"
-                    id="prescriptionFile"
-                    name="prescriptionFile"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    className="block w-full max-w-xs text-sm text-[var(--text-secondary)] file:mr-4 file:py-2 file:px-4
-                      file:rounded-full file:border-0 file:text-sm file:font-semibold
-                      file:bg-[var(--color-fuchsia-pale)] file:text-[var(--color-fuchsia-accent)] hover:file:bg-[var(--color-fuchsia-accent)] hover:file:text-white
-                      file:cursor-pointer file:transition-colors cursor-pointer"
-                  />
-                </div>
-                {fileError && (
-                  <p className="mt-2 text-sm text-red-500 font-medium">{fileError}</p>
-                )}
-                {prescriptionFile && !fileError && (
-                  <div className="mt-4 p-3 bg-[var(--background-card)] rounded-lg inline-block text-left shadow-sm border border-[var(--border-default)]">
-                    <p className="text-sm font-medium text-[var(--text-primary)] truncate max-w-xs flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      {prescriptionFile.name}
-                    </p>
-                    {filePreview && (
-                      <div className="mt-3">
-                        <img 
-                          src={filePreview} 
-                          alt="Aperçu"
-                          className="h-32 object-cover rounded-md border border-gray-200 dark:border-gray-700 mx-auto" 
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <MultiFileUploader 
+                files={prescriptionFiles}
+                setFiles={setPrescriptionFiles}
+                filePreviews={filePreviews}
+                setFilePreviews={setFilePreviews}
+                error={fileError}
+                setError={setFileError}
+              />
               
               {/* Commentaires (optionnel) */}
               <div>
@@ -497,7 +468,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                     id="commentaires"
                     name="commentaires"
                     rows={4}
-                    className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-xl focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] resize-none"
+                    className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] resize-none"
                     value={commentaires}
                     onChange={e => setCommentaires(e.target.value)}
                     placeholder="Précisez ici toute information utile pour le laboratoire..."
@@ -514,7 +485,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                   type="button"
                   onClick={handleWhatsapp}
                   style={{ backgroundColor: '#25D366' }}
-                  className="flex-1 text-white font-medium py-3 px-4 rounded-xl hover:opacity-90 transition-all duration-200 shadow-sm hover:shadow flex items-center justify-center gap-2 group"
+                  className="flex-1 text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 transition-all duration-200 shadow-sm hover:shadow flex items-center justify-center gap-2 group"
                   aria-label={t('requestByWhatsApp', { ns: 'appointment' })}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" className="w-5 h-5 group-hover:scale-110 transition-transform">
@@ -524,10 +495,10 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className={`flex-1 button-bordeaux group ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  disabled={submitState !== 'idle' || isWhatsappLoading}
+                  className={`flex-1 button-bordeaux group ${submitState !== 'idle' || isWhatsappLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {isLoading ? (
+                  {submitState !== 'idle' && submitState !== 'success' ? (
                     <>
                       <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

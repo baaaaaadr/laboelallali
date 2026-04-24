@@ -57,7 +57,7 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--background-default)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
+        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
       </div>
     );
   }
@@ -70,9 +70,9 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
   if (!userProfile) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
-        <div className="max-w-md w-full space-y-8 bg-[var(--background-card)] p-8 rounded-2xl shadow-xl border border-[var(--border-default)]">
+        <div className="max-w-md w-full space-y-8 bg-[var(--background-card)] p-8 rounded-lg shadow-xl border border-[var(--border-default)]">
           <div>
-            <div className="mx-auto h-12 w-12 bg-[var(--color-bordeaux-primary)] text-white rounded-full flex items-center justify-center font-bold">
+            <div className="mx-auto h-12 w-12 bg-[var(--color-bordeaux-primary)] text-white rounded-lg flex items-center justify-center font-bold">
               <User size={24} />
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-[var(--text-primary)]">
@@ -85,12 +85,12 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
           
           <form className="mt-8 space-y-6" onSubmit={handleProfileSubmit}>
             {error && (
-              <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 rounded-lg text-sm text-center">
+              <div className="p-3 bg-[var(--status-error)]/10 border border-[var(--status-error)]/30 text-[var(--status-error)] rounded-lg text-sm text-center">
                 {error}
               </div>
             )}
             
-            <div className="rounded-md shadow-sm space-y-4">
+            <div className="rounded-lg shadow-sm space-y-4">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-gray-400" />
@@ -147,8 +147,8 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
       <div className="max-w-3xl mx-auto space-y-8">
         
         {/* Profile Header */}
-        <div className="bg-[var(--background-card)] rounded-2xl shadow-sm border border-[var(--border-default)] p-8 flex flex-col md:flex-row items-center gap-6">
-          <div className="h-24 w-24 bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] rounded-full flex items-center justify-center font-bold text-4xl flex-shrink-0">
+        <div className="card p-8 flex flex-col md:flex-row items-center gap-6">
+          <div className="h-24 w-24 bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] rounded-lg flex items-center justify-center font-bold text-4xl flex-shrink-0">
             {userProfile.fullName ? userProfile.fullName.charAt(0).toUpperCase() : 'U'}
           </div>
           <div className="flex-grow text-center md:text-left">
@@ -170,13 +170,13 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
         </div>
 
         {/* Profile Details */}
-        <div className="bg-[var(--background-card)] rounded-2xl shadow-sm border border-[var(--border-default)] p-8">
+        <div className="card p-8">
           <h2 className="text-xl font-bold text-[var(--color-bordeaux-primary)] mb-6 border-b border-[var(--border-default)] pb-4">
             {t('personal_information', 'Informations Personnelles')}
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-[var(--background-secondary)]">
+            <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
               <div className="mt-1">
                 <User className="text-[var(--color-fuchsia-accent)]" size={20} />
               </div>
@@ -186,7 +186,7 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-[var(--background-secondary)]">
+            <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
               <div className="mt-1">
                 <Calendar className="text-[var(--color-fuchsia-accent)]" size={20} />
               </div>
@@ -196,7 +196,7 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
               </div>
             </div>
             
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-[var(--background-secondary)]">
+            <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
               <div className="mt-1">
                 <Mail className="text-[var(--color-fuchsia-accent)]" size={20} />
               </div>

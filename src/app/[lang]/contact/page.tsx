@@ -124,7 +124,7 @@ export default function ContactPage({
         {/* Map Section */}
         <div className="h-full">
           <div className="card h-full p-0 overflow-hidden">
-            <div className="w-full" style={{ height: '400px' }}>
+            <div className="w-full relative z-10" style={{ height: '400px' }}>
               <SimpleMap 
                 latitude={30.4173116} 
                 longitude={-9.5897999} 
@@ -142,16 +142,16 @@ export default function ContactPage({
                   href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center min-w-[160px] h-12 px-6 bg-[var(--brand-accent)] text-white font-semibold rounded-lg shadow transition-colors text-center text-lg hover:bg-[var(--brand-accent-hover)] focus:bg-[var(--brand-accent-hover)] gap-2"
+                  className="button-bordeaux flex-1 min-w-[150px] h-12"
                 >
-                  <MapPin size={22} className="mr-2 -ml-1" />
+                  <MapPin size={22} />
                   {t('get_directions')}
                 </a>
                 <a
                   href={LAB_CONTACT.LANDLINE.url}
-                  className="flex items-center justify-center min-w-[160px] h-12 px-6 border border-[var(--border-default)] text-[var(--text-secondary)] font-semibold rounded-lg shadow-sm transition-colors text-center text-lg hover:bg-[var(--background-secondary)] gap-2"
+                  className="button-fuchsia flex-1 min-w-[150px] h-12"
                 >
-                  <Phone size={22} className="mr-2 -ml-1" />
+                  <Phone size={22} />
                   {t('call_us')}
                 </a>
               </div>

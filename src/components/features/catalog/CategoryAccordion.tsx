@@ -61,7 +61,7 @@ export function CategoryAccordion({
             <div
               className={`
                 flex items-center justify-between p-6
-                bg-white dark:bg-gray-800 rounded-xl
+                bg-white dark:bg-gray-800 rounded-lg
                 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]
                 hover:shadow-[0_8px_30px_-2px_rgba(0,0,0,0.1)]
                 transition-all duration-300
@@ -71,7 +71,7 @@ export function CategoryAccordion({
             >
               {/* Left: Icon + Category Name */}
               <div className={`flex items-center gap-4 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className="h-12 w-12 rounded-full bg-[#E3004F]/10 dark:bg-[#E3004F]/20 flex items-center justify-center">
+                <div className="h-12 w-12 rounded-lg bg-[#E3004F]/10 dark:bg-[#E3004F]/20 flex items-center justify-center">
                   <CategoryIcon className="h-6 w-6 text-[#E3004F]" />
                 </div>
                 <div className={`${isArabic ? 'text-right' : 'text-left'}`}>
@@ -96,7 +96,7 @@ export function CategoryAccordion({
 
           <Disclosure.Panel className="mt-4">
             {/* Analyses in vertical list (not grid) */}
-            <div className="space-y-2 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+            <div className="space-y-2 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
               {analyses.map((analyse) => (
                 <AnalysisCard
                   key={analyse.id}

@@ -108,7 +108,7 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect, onS
       <div className={`flex items-center gap-3 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
         {/* Price or "Sur Devis" Badge */}
         {analysis.price === 0 ? (
-          <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full whitespace-nowrap">
+          <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-lg whitespace-nowrap">
             {t('on_quote', 'Sur Devis')}
           </span>
         ) : (
@@ -121,7 +121,7 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect, onS
         <button
           onClick={handleSelectClick}
           className={`
-            h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0
+            h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0
             transition-all duration-200
             focus:outline-none focus:ring-2 focus:ring-[#FF4081] focus:ring-offset-2
             ${isSelected

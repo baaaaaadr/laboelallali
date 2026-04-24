@@ -53,7 +53,7 @@ export function BilanCard({
         }
       }}
       className={`
-        relative w-full rounded-xl overflow-hidden
+        relative w-full rounded-lg overflow-hidden
         bg-[var(--background-card)]
         transition-all duration-300
         cursor-pointer
@@ -67,7 +67,7 @@ export function BilanCard({
       {/* Featured Badge */}
       {bilan.Is_Featured && (
         <div className={`absolute top-3 ${isArabic ? 'left-3' : 'right-3'} z-10`}>
-          <span className="bg-gradient-to-r from-[#E3004F] to-[#FF4081] text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+          <span className="bg-gradient-to-r from-[#E3004F] to-[#FF4081] text-white px-3 py-1 rounded-lg text-xs font-semibold shadow-md">
             ⭐ {t('featured_badge', 'Vedette')}
           </span>
         </div>
@@ -108,7 +108,7 @@ export function BilanCard({
               handleSelectClick(e);
             }}
             className={`
-              w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0
+              w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
               transition-all duration-200
               shadow-lg
               focus:outline-none focus:ring-2 focus:ring-offset-1

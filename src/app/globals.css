@@ -16,6 +16,11 @@ html, body {
   max-width: 100vw;
 }
 
+/* Ensure Leaflet map stays below the header navigation */
+.leaflet-container {
+  z-index: 10 !important;
+}
+
 /* Remove mobile tap highlight (pink/grey frame on click) */
 * {
   -webkit-tap-highlight-color: transparent;
@@ -324,7 +329,7 @@ button {
 .footer-whatsapp-btn {
   background-color: var(--color-bordeaux-primary) !important;
   color: white !important;
-  border: 2px solid white !important;
+  border: none !important;
   padding: 0.875rem 1.5rem;
   border-radius: 0.5rem;
   font-weight: 600;

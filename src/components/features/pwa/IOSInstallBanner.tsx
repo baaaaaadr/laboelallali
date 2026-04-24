@@ -38,7 +38,7 @@ const IOSInstallBanner = () => {
       </span>
       <button 
         onClick={dismissBanner} 
-        className="ml-2 p-1 text-white hover:bg-white/20 rounded-full flex-shrink-0"
+        className="ml-2 p-1 text-white hover:bg-white/20 rounded-lg flex-shrink-0"
         aria-label={t('pwa.dismiss_banner_aria', "Fermer le bandeau d'installation")}
       >
         <X size={20} />

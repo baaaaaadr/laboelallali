@@ -33,6 +33,7 @@ const menuStyles = {
   navLink: {
      display: 'flex',
      alignItems: 'center',
+     justifyContent: 'flex-start',
      padding: '12px 16px',
      color: 'var(--text-primary)',
      textDecoration: 'none',
@@ -41,6 +42,7 @@ const menuStyles = {
      transition: 'all 0.2s ease',
      width: '100%',
      backgroundColor: 'transparent',
+     textAlign: 'start',
   } as React.CSSProperties,
   navLinkDark: {
      color: 'var(--text-primary)',
@@ -49,7 +51,7 @@ const menuStyles = {
      color: 'var(--color-bordeaux-primary)',
      flexShrink: 0,
      width: '24px',
-     marginRight: '12px',
+     marginInlineEnd: '12px',
   } as React.CSSProperties,
   navIconDark: {
      color: 'var(--color-fuchsia-light)',
@@ -257,19 +259,19 @@ const Header = () => {
             {/* Theme Switcher - Always visible but minimal */}
             <ThemeSwitcher />
             {/* Search - Hidden on mobile */}
-            <button className="hidden sm:flex p-2 lg:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors">
+            <button className="hidden sm:flex p-2 lg:p-3 rounded-lg min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors">
               <Search size={20} className="text-white dark:text-[var(--text-primary)]" />
             </button>
             {/* User Icon - Desktop only */}
             <Link 
               href={`${currentLanguagePath}/${user ? 'profile' : 'login'}`}
-              className="hidden lg:flex p-2 lg:p-3 rounded-full min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors"
+              className="hidden lg:flex p-2 lg:p-3 rounded-lg min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors"
             >
               <User size={20} className="text-white dark:text-[var(--text-primary)]" />
             </Link>
             {/* Hamburger Menu - Mobile/Tablet only */}
             <button
-              className="mobile-menu-toggle lg:hidden p-1.5 sm:p-2 lg:p-3 rounded-full min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
+              className="mobile-menu-toggle lg:hidden p-1.5 sm:p-2 lg:p-3 rounded-lg min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
               onClick={toggleMenu}
               aria-label={t('menu')}
             >
@@ -310,7 +312,9 @@ const Header = () => {
             transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out',
             transitionDelay: isMenuOpen ? '0s' : '0s',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            left: i18n.language === 'ar' ? 0 : 'auto',
+            right: i18n.language === 'ar' ? 'auto' : 0,
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -319,12 +323,12 @@ const Header = () => {
             <div className="flex items-center">
               <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
                 <span className="header-logo text-lg font-bold mr-3">L</span>
-                <span className="font-semibold text-lg text-[var(--text-primary)]">{t('laboName')}</span>
+                <span className="font-semibold text-lg text-white">{t('laboName')}</span>
               </Link>
             </div>
             <button 
               onClick={toggleMenu}
-              className="p-2 rounded-full hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="p-2 rounded-lg hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
               aria-label={t('close_menu')}
             >
               <X size={24} className="text-white" />
@@ -452,89 +456,31 @@ const Header = () => {
               rel="noopener noreferrer"
               onClick={toggleMenu}
               aria-label="Contact via WhatsApp"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                fontWeight: 500,
-                minHeight: '48px',
-                border: '2px solid var(--color-bordeaux-primary)',
-                backgroundColor: 'transparent',
-                color: 'var(--color-bordeaux-primary)',
-                textDecoration: 'none',
-                transition: 'all 0.2s ease',
-              }}
+              className="menu-whatsapp-button"
             >
-              <MessageCircle size={20} style={{ marginRight: '8px' }} />
+              <MessageCircle size={20} />
               {t('contact')} WhatsApp
             </a>
 
             {/* PWA Install Button */}
-            <button
-              onClick={() => {
-                const pwaButton = document.querySelector('[aria-label*="Install"]') as HTMLButtonElement;
-                if (pwaButton && pwaButton !== event?.currentTarget) {
-                  pwaButton.click();
-                }
-                toggleMenu();
-              }}
-              aria-label="Install App"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                fontWeight: 500,
-                minHeight: '48px',
-                border: '2px solid var(--color-fuchsia-bright)',
-                backgroundColor: 'var(--color-fuchsia-bright)',
-                color: '#ffffff',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <Download size={20} style={{ marginRight: '8px' }} />
-              {t('pwa.install_app_button', "Installer l'App")}
-            </button>
+            <div className="w-full">
+              <PWAInstallButton variant="footer" />
+            </div>
 
             {/* Language Switch Button - Mobile Menu */}
             <button
               onClick={() => {
                 const newLang = urlLang === 'fr' ? 'ar' : 'fr';
-                console.log('🌍 [Mobile Menu Switch] Toggling', {
-                  from: urlLang,
-                  to: newLang,
-                  timestamp: new Date().toISOString()
-                });
                 handleLanguageChange(newLang);
               }}
               aria-label={t('changeLanguage')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                fontWeight: 500,
-                minHeight: '48px',
-                border: '2px solid var(--color-bordeaux-primary)',
-                backgroundColor: 'var(--color-bordeaux-primary)',
-                color: 'white',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                gap: '8px',
-              }}
+              className="menu-language-button"
             >
               <Globe size={20} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                <span style={{ opacity: urlLang === 'fr' ? 1 : 0.6 }}>FR</span>
-                <span style={{ opacity: 0.5 }}>|</span>
-                <span style={{ opacity: urlLang === 'ar' ? 1 : 0.6 }}>AR</span>
+              <div className="flex items-center gap-1 font-bold">
+                <span className={urlLang === 'fr' ? 'opacity-100' : 'opacity-60'}>FR</span>
+                <span className="opacity-40">|</span>
+                <span className={urlLang === 'ar' ? 'opacity-100' : 'opacity-60'}>AR</span>
               </div>
             </button>
           </div>
