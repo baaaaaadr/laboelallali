@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, MessageCircle, Mail, Clock, X, Check, Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { LAB_CONTACT, LAB_WHATSAPP_NUMBER } from '@/constants/contact';
+import { LAB_CONTACT, LAB_WHATSAPP_NUMBER, LAB_HOURS } from '@/constants/contact';
 import { useLabStatus } from '@/hooks/useLabStatus';
 
 interface ContactModalProps {
@@ -66,16 +66,16 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     }
   ];
 
-  // Extraction des heures depuis la traduction
-  const mondayToSaturdayText = t('monday_to_saturday');
-  const sundayText = t('sunday');
+  // On utilise directement LAB_HOURS
+  const mondayToFridayText = LAB_HOURS.WEEKDAYS;
+  const saturdayText = LAB_HOURS.SATURDAY;
   
-  const extractHours = (text: string, fallback: string) => {
+  const extractHours = (text: string) => {
     const parts = text.split(':');
-    return parts.length > 1 ? parts.slice(1).join(':').trim() : fallback;
+    return parts.length > 1 ? parts.slice(1).join(':').trim() : text;
   };
-  const extractDay = (text: string, fallback: string) => {
-    return text.split(':')[0] || fallback;
+  const extractDay = (text: string) => {
+    return text.split(':')[0] || text;
   };
 
   return (
@@ -108,16 +108,16 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                <p className="text-xs font-bold tracking-wider uppercase opacity-90">{t('assistance')}</p>
+                <p className="text-xs font-bold tracking-wider uppercase !text-white/90">{t('assistance')}</p>
                 
                 {/* Online indicator */}
                 <div className="flex items-center gap-2 bg-black/25 rounded-lg px-3 py-1 shadow-sm">
                   <span className={`w-2 h-2 rounded-lg ${labStatus.isOpen ? 'bg-[var(--status-success)] animate-pulse' : 'bg-[var(--status-error)]'}`}></span>
-                  <span className="text-xs font-bold whitespace-nowrap">{labStatus.isOpen ? t('online') : t('closed')}</span>
+                  <span className="text-xs font-bold whitespace-nowrap !text-white">{labStatus.isOpen ? t('online') : t('closed')}</span>
                 </div>
               </div>
-              <h2 className="text-2xl font-bold leading-tight truncate">{t('hotline_contact')}</h2>
-              <p className="text-sm opacity-90 mt-1 font-medium">{t('reply_fast')}</p>
+              <h2 className="text-2xl font-bold leading-tight truncate !text-white">{t('hotline_contact')}</h2>
+              <p className="text-sm !text-white/90 mt-1 font-medium">{t('reply_fast')}</p>
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Horaires Section */}
-          <div className="mt-6 p-5 rounded-lg border border-[var(--color-fuchsia-accent)]/20 bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-secondary)] shadow-sm">
+          <div className="mt-6 p-5 rounded-lg border border-[var(--color-fuchsia-accent)]/20 bg-[var(--background-secondary)] shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <Clock size={16} className="text-[var(--color-fuchsia-accent)]" />
               <h3 className="text-xs font-bold tracking-widest text-[var(--color-fuchsia-accent)] uppercase">{t('opening_hours')}</h3>
@@ -162,15 +162,15 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
             
             <div className="space-y-3 text-sm">
               <div className="flex justify-between items-center border-b border-[var(--border-default)] pb-3">
-                <span className="text-[var(--text-secondary)] font-medium">{extractDay(mondayToSaturdayText, "Lundi — Samedi")}</span>
-                <span className="font-bold bg-white dark:bg-[var(--background-tertiary)] px-2 py-1 rounded text-[var(--text-primary)] shadow-sm border border-[var(--border-default)]">
-                  {extractHours(mondayToSaturdayText, "7h30 - 18h30")}
+                <span className="text-[var(--text-secondary)] font-medium">{extractDay(mondayToFridayText)}</span>
+                <span className="font-bold bg-[var(--background-tertiary)] px-2 py-1 rounded text-[var(--text-primary)] shadow-sm border border-[var(--border-default)]">
+                  {extractHours(mondayToFridayText)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[var(--text-secondary)] font-medium">{extractDay(sundayText, "Dimanche")}</span>
-                <span className="font-bold bg-white dark:bg-[var(--background-tertiary)] px-2 py-1 rounded text-[var(--text-primary)] shadow-sm border border-[var(--border-default)]">
-                  {extractHours(sundayText, "08h00 - 18h00")}
+                <span className="text-[var(--text-secondary)] font-medium">{extractDay(saturdayText)}</span>
+                <span className="font-bold bg-[var(--background-tertiary)] px-2 py-1 rounded text-[var(--text-primary)] shadow-sm border border-[var(--border-default)]">
+                  {extractHours(saturdayText)}
                 </span>
               </div>
             </div>
