@@ -17,6 +17,7 @@ import CartDetailsModal from "@/components/features/catalog/CartDetailsModal";
 import { getCategoryIcon } from '@/utils/iconMapper';
 import { useTranslation } from 'react-i18next';
 import { Search, Star, BookOpen } from 'lucide-react';
+import { LAB_CONTACT } from "@/constants/contact";
 
 // Data fetcher component
 const CatalogDataFetcher = ({
@@ -126,7 +127,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
       setActiveTab(tabParam);
     }
   }, [tabParam]);
-  const [sortBy, setSortBy] = useState<SortOption>('name');
+  const [sortBy, setSortBy] = useState<SortOption>('popularity');
 
   // Normalize ID helper - removes all spaces and converts to uppercase
   const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
@@ -755,8 +756,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
           message += whatsappTranslations.websiteReference;
 
           const encodedMessage = encodeURIComponent(message);
-          const LAB_WHATSAPP_NUMBER = '212661661661'; // From constants
-          const whatsappUrl = `https://wa.me/${LAB_WHATSAPP_NUMBER}?text=${encodedMessage}`;
+          const whatsappUrl = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodedMessage}`;
           window.open(whatsappUrl, '_blank');
           setIsCartModalOpen(false);
         }}

@@ -59,7 +59,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCallClick, isMobile = true })
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
               {isMobile ? (
                 <a
-                  href={LAB_CONTACT.LANDLINE.url}
+                  href={LAB_CONTACT.WHATSAPP_TEL}
                   onClick={onCallClick}
                   className="button-fuchsia w-full sm:w-auto sm:min-w-[200px] text-lg flex items-center justify-center gap-2"
                 >

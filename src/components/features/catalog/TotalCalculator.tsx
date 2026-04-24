@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Analysis, CartItem } from './AnalysisCard';
-import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
+import { LAB_CONTACT } from '@/constants/contact';
 import { ChevronUp } from 'lucide-react';
 
 interface TotalCalculatorProps {
@@ -122,7 +122,7 @@ export default function TotalCalculator({
   const handleSendViaWhatsApp = () => {
     const message = generateWhatsAppMessage();
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${LAB_WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
   };
 

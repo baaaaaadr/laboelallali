@@ -101,7 +101,7 @@ export default function ContactPage({
                     <div>
                       <p className="font-medium">{t('working_hours_label')}</p>
                       <p>{LAB_HOURS.WEEKDAYS}</p>
-                      <p>{LAB_HOURS.SUNDAY}</p>
+                      <p>{LAB_HOURS.SATURDAY}</p>
                     </div>
                   </li>
                 </ul>
@@ -148,7 +148,7 @@ export default function ContactPage({
                   {t('get_directions')}
                 </a>
                 <a
-                  href={LAB_CONTACT.LANDLINE.url}
+                  href={LAB_CONTACT.WHATSAPP_TEL}
                   className="button-fuchsia flex-1 min-w-[150px] h-12"
                 >
                   <Phone size={22} />

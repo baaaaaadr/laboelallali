@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     const mailOptions = {
       from: `"Site Labo El Allali" <${process.env.SMTP_USER}>`,
       to: process.env.SMTP_USER, // Le destinataire principal (laboelallali@gmail.com)
-      cc: 'baaaaaadr@gmail.com, azizelallali@gmail.com', // Les adresses en copie
+      cc: 'baaaaaadr@gmail.com, azizelallali@gmail.com, communication.labo.elallali@gmail.com', // Les adresses en copie
       replyTo: email || process.env.SMTP_USER, // Permet de répondre directement au patient
       subject: `Nouveau Rendez-vous WEB : ${nom} ${prenom} - ${date_souhaitee}`,
       html: htmlContent,

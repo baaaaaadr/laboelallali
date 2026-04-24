@@ -212,6 +212,25 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         throw new Error(t('appointment:errors.db_not_initialized', 'Le service de base de données n\'est pas disponible. Veuillez réessayer.'));
       }
 
+      let downloadURLs: string[] = [];
+
+      // Upload prescription files if exist
+      if (prescriptionFiles && prescriptionFiles.length > 0) {
+        if (!storage) {
+          throw new Error(t('appointment:errors.storage_not_initialized', 'Le service de stockage n\'est pas disponible. Veuillez réessayer.'));
+        }
+
+        for (const file of prescriptionFiles) {
+          const timestamp = Date.now();
+          const fileName = file.name;
+          const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
+          
+          await uploadBytes(storageRef, file);
+          const url = await getDownloadURL(storageRef);
+          downloadURLs.push(url);
+        }
+      }
+
       const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
       
       const appointmentData = {
@@ -224,6 +243,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         desiredDate: formattedDate,
         desiredTime: selectedTime,
         comments: commentaires || "",
+        prescriptionImageUrls: downloadURLs,
         submittedAt: serverTimestamp(),
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         status: "whatsapp_home_service_request",
@@ -232,13 +252,17 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
 
       await addDoc(collection(db, "appointmentRequests"), appointmentData);
 
-      const hasOrdonnanceText = prescriptionFiles.length > 0 
-        ? "\n\nJ'ai une ordonnance que je vais vous envoyer en photo dans ce chat." 
-        : "";
+      let prescriptionText = "";
+      if (downloadURLs.length > 0) {
+        prescriptionText = `\n\n📎 Pièces jointes :`;
+        downloadURLs.forEach((url, idx) => {
+          prescriptionText += `\n- Fichier ${idx + 1}: ${url}`;
+        });
+      }
 
-      const message = `${t('greeting', { ns: 'glabo' })}\n\n${t('home_service_request', { ns: 'glabo' })}\n\n${t('name')}: ${nom}\n${t('phone')}: ${telephone}${email ? `\n${t('email')}: ${email}` : ''}\n${t('address')}: ${adresse}\n${t('location_type')}: ${lieuPrelevement === 'domicile' ? t('home') : t('workplace')}${instructionsAcces ? `\n${t('access_instructions')}: ${instructionsAcces}` : ''}\n${t('desiredDate', { ns: 'glabo' })}: ${formattedDate}\n${t('desiredTime', { ns: 'glabo' })}: ${selectedTime}${commentaires ? `\n${t('comments', { ns: 'glabo' })}: ${commentaires}` : ''}${hasOrdonnanceText}\n\n${t('thanks', { ns: 'glabo' })}`;
+      const message = `${t('greeting', { ns: 'glabo' })}\n\n${t('home_service_request', { ns: 'glabo' })}\n\n${t('name')}: ${nom}\n${t('phone')}: ${telephone}${email ? `\n${t('email')}: ${email}` : ''}\n${t('address')}: ${adresse}\n${t('location_type')}: ${lieuPrelevement === 'domicile' ? t('home') : t('workplace')}${instructionsAcces ? `\n${t('access_instructions')}: ${instructionsAcces}` : ''}\n${t('desiredDate', { ns: 'glabo' })}: ${formattedDate}\n${t('desiredTime', { ns: 'glabo' })}: ${selectedTime}${commentaires ? `\n${t('comments', { ns: 'glabo' })}: ${commentaires}` : ''}${prescriptionText}\n\n${t('thanks', { ns: 'glabo' })}`;
       
-      const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
+      const whatsappLink = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodeURIComponent(message)}`;
       window.open(whatsappLink, '_blank');
       
       toast.success(t('whatsapp_redirect_success', { ns: 'appointment' }));

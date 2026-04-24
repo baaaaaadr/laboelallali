@@ -123,7 +123,7 @@ export function TabsNavigation({
                 onTabChange(tab.id);
               }}
               className={`
-                flex items-center gap-2 px-8 py-3 rounded-lg
+                flex items-center gap-3 px-10 py-3 rounded-lg
                 whitespace-nowrap flex-shrink-0 min-w-max
                 min-h-[44px]
                 transition-all duration-200

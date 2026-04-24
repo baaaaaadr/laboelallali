@@ -214,29 +214,41 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         throw new Error(t('appointment:errors.db_not_initialized', 'Le service de base de données n\'est pas disponible. Veuillez réessayer.'));
       }
 
-      let downloadURL = null;
+      let downloadURLs: string[] = [];
 
-      // Upload prescription file if exists
-      if (prescriptionFile) {
+      // Upload prescription files if exist
+      if (prescriptionFiles && prescriptionFiles.length > 0) {
         // Ensure storage is initialized
         if (!storage) {
           throw new Error(t('appointment:errors.storage_not_initialized', 'Le service de stockage n\'est pas disponible. Veuillez réessayer.'));
         }
 
-        const timestamp = Date.now();
-        const fileName = prescriptionFile.name;
-        const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
-
-        // Upload the file
-        await uploadBytes(storageRef, prescriptionFile);
-
-        // Get download URL
-        downloadURL = await getDownloadURL(storageRef);
+        // Upload all files
+        for (const file of prescriptionFiles) {
+          const timestamp = Date.now();
+          const fileName = file.name;
+          const storageRef = ref(storage, `ordonnances/${timestamp}-${fileName}`);
+          
+          await uploadBytes(storageRef, file);
+          const url = await getDownloadURL(storageRef);
+          downloadURLs.push(url);
+        }
       }
 
       const formattedDate = selectedDate ? format(selectedDate, "dd/MM/yyyy") : "";
 
-      // Build message with prescription URL if available
+      // Format prescription text for WhatsApp
+      let prescriptionText = "";
+      if (downloadURLs.length > 0) {
+        prescriptionText = `\n📎 ${t('prescriptionLink', { ns: 'appointment' })}:`;
+        downloadURLs.forEach((url, idx) => {
+          prescriptionText += `\n- Page ${idx + 1}: ${url}`;
+        });
+      } else {
+        prescriptionText = `\n${t('withoutPrescription', { ns: 'appointment' })}`;
+      }
+
+      // Build message
       const message = t('emailBody', {
         name: nom,
         phone: telephone,
@@ -244,12 +256,10 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         date: formattedDate,
         time: selectedTime,
         comments: commentaires ? `\n${t('comments', { ns: 'appointment' })} : ${commentaires}` : '',
-        prescription: downloadURL
-          ? `\n📎 ${t('prescriptionLink', { ns: 'appointment' })}: ${downloadURL}`
-          : `\n${t('withoutPrescription', { ns: 'appointment' })}`
+        prescription: prescriptionText
       });
 
-      const whatsappLink = `https://wa.me/${laboWhatsapp}?text=${encodeURIComponent(message)}`;
+      const whatsappLink = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodeURIComponent(message)}`;
       window.open(whatsappLink, '_blank');
 
       // Save to Firestore for tracking

@@ -37,7 +37,9 @@ export const LAB_CONTACT = {
   EMAIL: {
     display: "laboelallali@gmail.com",
     url: "mailto:laboelallali@gmail.com"
-  }
+  },
+  WHATSAPP_ID: "212654079592",
+  WHATSAPP_TEL: "tel:0654079592"
 };
 
 export const LAB_HOURS = {

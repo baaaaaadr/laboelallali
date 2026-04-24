@@ -52,12 +52,12 @@ export function SortToolbar({
                 onSortChange(option.id);
               }}
               className={`
-                px-4 py-1.5 rounded-lg text-xs font-medium
+                px-6 py-1.5 rounded-lg text-xs font-semibold
                 transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:ring-offset-1
+                focus:outline-none focus:ring-2 focus:ring-[var(--color-bordeaux-primary)] focus:ring-offset-1
                 ${isSelected
-                  ? 'bg-gray-900 dark:bg-[var(--brand-primary)] text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-[var(--background-secondary)] text-gray-600 dark:text-[var(--text-secondary)] hover:bg-gray-200 dark:hover:bg-[var(--background-hover)]'
+                  ? 'bg-[var(--color-bordeaux-primary)] text-white shadow-md'
+                  : 'bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--color-bordeaux-primary)]'
                 }
               `}
               style={isSelected ? { color: 'white' } : {}}

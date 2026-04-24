@@ -242,7 +242,7 @@ export default function HomeClient({ lang }: { lang: string }) {
                   </a>
                   {isMobile ? (
                     <a
-                      href={LAB_CONTACT.LANDLINE.url}
+                      href={LAB_CONTACT.WHATSAPP_TEL}
                       className="map-call-btn flex items-center justify-center min-w-[160px] h-12 px-6 font-semibold rounded-lg shadow-sm transition-colors text-center text-lg gap-2 cursor-pointer"
                     >
                       <Phone size={22} className="mr-2 -ml-1" />
