@@ -30,5 +30,11 @@
   "submitting": "جاري الإرسال...",
   "prescriptionLink": "الوصفة الطبية",
   "whatsapp_redirect_success": "جاري التوجيه إلى واتساب...",
-  "whatsapp_error": "حدث خطأ أثناء تحضير طلب واتساب. يرجى المحاولة مرة أخرى."
+  "whatsapp_error": "حدث خطأ أثناء تحضير طلب واتساب. يرجى المحاولة مرة أخرى.",
+  "select_files": "اختيار الملفات",
+  "preview": "معاينة",
+  "file": "ملف",
+  "fullscreen_preview": "معاينة بملء الشاشة",
+  "pdf_load_error": "تعذر تحميل ملف PDF"
 }
+

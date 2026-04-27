@@ -63,8 +63,8 @@ const Footer = () => {
               <li className="flex items-start space-x-3">
                 <Clock size={20} className="flex-shrink-0 text-white dark:text-[var(--color-fuchsia-light)] mt-0.5" />
                 <div>
-                  <p>{LAB_HOURS.WEEKDAYS}</p>
-                  <p>{LAB_HOURS.SATURDAY}</p>
+                  <p>{t('monday_to_friday')}</p>
+                  <p>{t('saturday_hours')}</p>
                 </div>
               </li>
             </ul>
@@ -75,31 +75,31 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">{t('quick_links')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/" className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
+                <Link href={`/${i18n.language}`} className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('home')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#services" className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
+                <Link href={`/${i18n.language}/#services`} className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('our_main_services')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#info" className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
+                <Link href={`/${i18n.language}/contact#info`} className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('practical_info')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
+                <Link href={`/${i18n.language}/contact`} className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('contact')}</span>
                 </Link>
               </li>
               <li>
-                <Link href="#faq" className="flex items-center space-x-2 hover:text-[var(--brand-accent)] transition-colors min-h-[44px] py-2">
+                <Link href={`/${i18n.language}/contact#faq`} className="flex items-center space-x-2 hover:text-[var(--brand-accent)] transition-colors min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('faq')}</span>
                 </Link>

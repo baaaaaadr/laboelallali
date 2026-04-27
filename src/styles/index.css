@@ -49,6 +49,18 @@ button {
 
 /* Base HTML styles using CSS variables */
 html, body {
+  scroll-behavior: smooth !important;
+}
+
+:root {
+  scroll-behavior: smooth !important;
+}
+
+[id] {
+  scroll-margin-top: 160px !important;
+}
+
+html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--background-default);
   color: var(--text-primary);

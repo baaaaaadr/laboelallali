@@ -4,6 +4,8 @@ import React from 'react';
 import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import dynamic from 'next/dynamic';
+import ContactModal from '@/components/ui/ContactModal';
+import { useState, useEffect } from 'react';
 
 // Dynamically import SimpleMap with SSR disabled to avoid window is not defined errors
 const SimpleMap = dynamic(
@@ -36,6 +38,27 @@ export default function ContactPage({
   const { t, i18n } = useTranslation('common');
   const isRTL = i18n.language === 'ar';
   
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const uaMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const widthMobile = window.innerWidth < 768;
+      setIsMobile(uaMobile || widthMobile);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const handleCallClick = (e: React.MouseEvent) => {
+    if (!isMobile) {
+      e.preventDefault();
+      setIsContactModalOpen(true);
+    }
+  };
+
   // Get translated lab name and address
   const labName = t(LAB_NAME);
   const labAddress = t(LAB_ADDRESS);
@@ -100,8 +123,8 @@ export default function ContactPage({
                     <Clock size={20} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[var(--brand-primary)]`} />
                     <div>
                       <p className="font-medium">{t('working_hours_label')}</p>
-                      <p>{LAB_HOURS.WEEKDAYS}</p>
-                      <p>{LAB_HOURS.SATURDAY}</p>
+                      <p>{t('monday_to_friday')}</p>
+                      <p>{t('saturday_hours')}</p>
                     </div>
                   </li>
                 </ul>
@@ -149,6 +172,7 @@ export default function ContactPage({
                 </a>
                 <a
                   href={LAB_CONTACT.WHATSAPP_TEL}
+                  onClick={handleCallClick}
                   className="button-fuchsia flex-1 min-w-[150px] h-12"
                 >
                   <Phone size={22} />
@@ -159,6 +183,58 @@ export default function ContactPage({
           </div>
         </div>
       </div>
+
+      <ContactModal 
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
+
+      {/* Practical Information Section */}
+      <section id="info" className="mt-16 pt-8 border-t border-[var(--border-default)]">
+        <h2 className="text-2xl font-bold text-[var(--brand-primary)] mb-8 flex items-center">
+          <Clock size={28} className={`${isRTL ? 'ml-3' : 'mr-3'}`} />
+          {t('practical_info')}
+        </h2>
+        
+        <div className="card p-6 md:p-8 bg-[var(--background-card)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-4">{t('glabo:analysis_tips')}</h3>
+              <ul className={`space-y-3 text-[var(--text-secondary)] ${isRTL ? 'list-disc pr-5' : 'list-disc pl-5'}`}>
+                <li>{t('glabo:fasting_recommendation')}</li>
+                <li>{t('glabo:documents_to_bring')}</li>
+              </ul>
+            </div>
+            <div className="bg-[var(--background-secondary)] p-6 rounded-xl border border-[var(--border-default)]">
+              <h3 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">{t('lab_coordinates')}</h3>
+              <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
+                {t('find_us_text')}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="mt-16 pt-8 mb-8">
+        <h2 className="text-2xl font-bold text-[var(--brand-primary)] mb-8 flex items-center">
+          <ChevronRight size={28} className={`${isRTL ? 'ml-3 rotate-180' : 'mr-3'}`} />
+          {t('faq')}
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((num) => (
+            <div key={num} className="card p-6 border border-[var(--border-default)] hover:border-[var(--brand-primary)]/30 transition-colors">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-3">
+                {t(`faq_questions.q${num}`)}
+              </h3>
+              <p className="text-[var(--text-secondary)] leading-relaxed">
+                {t(`faq_questions.a${num}`)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

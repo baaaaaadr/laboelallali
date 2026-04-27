@@ -175,7 +175,7 @@ export default function MultiFileUploader({
             className="px-6 py-2 bg-[var(--color-fuchsia-pale)] dark:bg-[var(--background-tertiary)] text-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-accent)] hover:text-white dark:hover:bg-[var(--color-fuchsia-accent)] dark:hover:text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
           >
             <FileText size={16} />
-            Sélectionner des fichiers
+            {t('select_files')}
           </button>
           <input
             type="file"
@@ -233,7 +233,7 @@ export default function MultiFileUploader({
                     >
                       <img
                         src={filePreviews[idx]}
-                        alt={`Aperçu ${idx + 1}`}
+                        alt={`${t('preview', { defaultValue: 'Aperçu' })} ${idx + 1}`}
                         className="h-full w-full object-cover border border-gray-200 dark:border-gray-700 transition-transform duration-300 group-hover/img:scale-110"
                       />
                       {!isUploading && (
@@ -259,7 +259,7 @@ export default function MultiFileUploader({
                   ) : (
                     <div className="h-full w-full bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center flex-col">
                       <ImageIcon className="text-gray-400 mb-1" size={24} />
-                      <span className="text-xs text-gray-500 uppercase">{file.type.split('/')[1] || 'Fichier'}</span>
+                      <span className="text-xs text-gray-500 uppercase">{file.type.split('/')[1] || t('file', { defaultValue: 'Fichier' })}</span>
                     </div>
                   )}
 
@@ -270,7 +270,7 @@ export default function MultiFileUploader({
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      <span className="text-white text-[10px] font-medium">Envoi...</span>
+                      <span className="text-white text-[10px] font-medium">{t('uploading', { defaultValue: 'Envoi...' })}</span>
                     </div>
                   )}
 
@@ -278,7 +278,7 @@ export default function MultiFileUploader({
                   {isUploadError && (
                     <div className="absolute inset-0 rounded-lg flex flex-col items-center justify-center gap-1" style={{ backgroundColor: 'rgba(220,38,38,0.6)' }}>
                       <X className="text-white" size={20} />
-                      <span className="text-white text-[10px] font-medium">Erreur</span>
+                      <span className="text-white text-[10px] font-medium">{t('error', { defaultValue: 'Erreur' })}</span>
                     </div>
                   )}
                 </div>
@@ -325,7 +325,7 @@ export default function MultiFileUploader({
               <div className="flex items-center justify-center p-6 min-h-[300px]">
                 <img 
                   src={previewData.url} 
-                  alt="Aperçu plein écran"
+                  alt={t('fullscreen_preview')}
                   className="max-w-full max-h-[80vh] object-contain rounded-lg"
                   style={{ 
                     filter: 'drop-shadow(0 25px 50px rgba(0,0,0,0.3))',
@@ -398,7 +398,7 @@ export default function MultiFileUploader({
                       error={
                         <div className="flex flex-col items-center justify-center py-20 text-white/70">
                           <FileIcon size={48} className="mb-3" />
-                          <p className="text-sm">Impossible de charger le PDF</p>
+                          <p className="text-sm">{t('pdf_load_error')}</p>
                         </div>
                       }
                     >

@@ -30,5 +30,11 @@
   "submitting": "Envoi en cours...",
   "prescriptionLink": "Ordonnance",
   "whatsapp_redirect_success": "Redirection vers WhatsApp en cours...",
-  "whatsapp_error": "Erreur lors de la préparation de la demande WhatsApp. Veuillez réessayer."
+  "whatsapp_error": "Erreur lors de la préparation de la demande WhatsApp. Veuillez réessayer.",
+  "select_files": "Sélectionner des fichiers",
+  "preview": "Aperçu",
+  "file": "Fichier",
+  "fullscreen_preview": "Aperçu plein écran",
+  "pdf_load_error": "Impossible de charger le PDF"
 }
+

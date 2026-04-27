@@ -301,7 +301,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
             {t('glabo_title', { ns: 'common' })}
           </h1>
           <p className="text-[var(--text-secondary)] max-w-2xl mx-auto text-lg">
-            Bénéficiez de l'expertise de notre laboratoire sans vous déplacer. Nos infirmiers qualifiés se rendent chez vous ou sur votre lieu de travail pour effectuer vos prélèvements en toute sécurité.
+            {t('description')}
           </p>
         </div>
 
@@ -310,17 +310,17 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-[var(--background-card)] rounded-lg shadow-md border border-[var(--border-default)] p-6">
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-6 border-b border-[var(--border-default)] pb-4">
-                Pourquoi choisir ce service ?
+                {t('why_choose_title')}
               </h3>
               
-              <ul className="space-y-6">
+              <ul className="space-y-6 mt-8">
                 <li className="flex items-start">
                   <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-[var(--status-success)]/10 text-[var(--status-success)]">
                     <ShieldCheck className="h-6 w-6" />
                   </div>
                   <div className="ml-4">
-                    <h4 className="text-base font-semibold text-[var(--text-primary)]">Sécurité maximale</h4>
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">Prélèvements réalisés dans le respect strict des normes d'hygiène.</p>
+                    <h4 className="text-base font-semibold text-[var(--text-primary)]">{t('safety_title')}</h4>
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">{t('safety_desc')}</p>
                   </div>
                 </li>
                 <li className="flex items-start">
@@ -328,8 +328,8 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                     <Clock3 className="h-6 w-6" />
                   </div>
                   <div className="ml-4">
-                    <h4 className="text-base font-semibold text-[var(--text-primary)]">Gain de temps</h4>
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">Évitez les déplacements et l'attente en salle. Idéal pour les personnes à mobilité réduite ou très occupées.</p>
+                    <h4 className="text-base font-semibold text-[var(--text-primary)]">{t('time_save_title')}</h4>
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">{t('time_save_desc')}</p>
                   </div>
                 </li>
                 <li className="flex items-start">
@@ -337,8 +337,8 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                     <Building className="h-6 w-6" />
                   </div>
                   <div className="ml-4">
-                    <h4 className="text-base font-semibold text-[var(--text-primary)]">Flexibilité</h4>
-                    <p className="mt-1 text-sm text-[var(--text-secondary)]">Intervention à domicile ou directement sur votre lieu de travail selon vos disponibilités.</p>
+                    <h4 className="text-base font-semibold text-[var(--text-primary)]">{t('flexibility_title')}</h4>
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">{t('flexibility_desc')}</p>
                   </div>
                 </li>
               </ul>
@@ -346,8 +346,8 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
             
             {/* Contact direct */}
             <div className="bg-[var(--brand-primary)] rounded-lg shadow-md p-6 text-white text-center">
-              <h3 className="text-lg font-bold mb-2 !text-white">Une question urgente ?</h3>
-              <p className="!text-white/90 text-sm mb-6">Notre équipe est disponible pour vous renseigner.</p>
+              <h3 className="text-lg font-bold mb-2 !text-white">{t('urgent_question_title')}</h3>
+              <p className="!text-white/90 text-sm mb-6">{t('urgent_question_desc')}</p>
               <a href={LAB_CONTACT.LANDLINE.url} className="inline-flex items-center justify-center gap-2 bg-white text-[var(--brand-primary)] px-6 py-2.5 rounded-lg font-bold hover:bg-gray-50 transition-colors w-full shadow-sm">
                 <Phone className="h-5 w-5" />
                 {LAB_CONTACT.LANDLINE.display}
@@ -371,19 +371,19 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
               />
 
               <div className="p-6 md:p-8">
-                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6 pb-4 border-b border-[var(--border-default)]">
-                  Formulaire de demande
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-12 pb-4 border-b border-[var(--border-default)]">
+                  {t('form_title')}
                 </h2>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Informations personnelles */}
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">1. Vos informations</h3>
+                  <div className="space-y-4 pt-8">
+                    <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-6">{t('section_info')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Nom complet */}
                       <div>
                         <label htmlFor="nomComplet" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                          {t('fullName', { ns: 'glabo' })} <span className="text-[var(--status-error)]">*</span>
+                          {t('fullName')} <span className="text-[var(--status-error)]">*</span>
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -406,7 +406,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                       {/* Numéro de téléphone */}
                       <div>
                         <label htmlFor="telephone" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                          {t('phoneNumber', { ns: 'glabo' })} <span className="text-[var(--status-error)]">*</span>
+                          {t('phoneNumber')} <span className="text-[var(--status-error)]">*</span>
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -430,7 +430,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                       {/* Email (optionnel) */}
                       <div className="md:col-span-2">
                         <label htmlFor="email" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                          {t('email', { ns: 'glabo' })} <span className="text-gray-400 text-xs ml-1">(Optionnel)</span>
+                          {t('email')} <span className="text-gray-400 text-xs ml-1">({t('common:optional', 'Optionnel')})</span>
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -453,12 +453,12 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         
                   {/* Informations de localisation */}
                   <div className="space-y-4 pt-4 border-t border-[var(--border-default)]">
-                    <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">2. Lieu du prélèvement</h3>
+                    <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{t('section_location')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Lieu de prélèvement */}
                       <div>
                         <label htmlFor="lieuPrelevement" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                          {t('location_type', { ns: 'glabo' })}
+                          {t('location_type')}
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -471,8 +471,8 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             onChange={e => setLieuPrelevement(e.target.value)}
                             className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
                           >
-                            <option value="domicile">{t('home', { ns: 'glabo' })}</option>
-                            <option value="travail">{t('workplace', { ns: 'glabo' })}</option>
+                            <option value="domicile">{t('home')}</option>
+                            <option value="travail">{t('workplace')}</option>
                           </select>
                         </div>
                       </div>
@@ -480,7 +480,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                       {/* Adresse de prélèvement */}
                       <div className="md:col-span-2">
                         <label htmlFor="adresse" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                          {t('address', { ns: 'glabo' })} <span className="text-[var(--status-error)]">*</span>
+                          {t('address')} <span className="text-[var(--status-error)]">*</span>
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -503,7 +503,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                       {/* Instructions d'accès */}
                       <div className="md:col-span-2">
                         <label htmlFor="instructionsAcces" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                          {t('access_instructions')} <span className="text-gray-400 text-xs ml-1">(Optionnel)</span>
+                          {t('access_instructions')} <span className="text-gray-400 text-xs ml-1">({t('common:optional', 'Optionnel')})</span>
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -525,12 +525,12 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                   
                   {/* Date et Heure */}
                   <div className="space-y-4 pt-4 border-t border-[var(--border-default)]">
-                    <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">3. Date et Heure</h3>
+                    <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{t('section_datetime')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Date souhaitée */}
                       <div>
                         <label htmlFor="date" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                          {t('desiredDate', { ns: 'glabo' })} <span className="text-[var(--status-error)]">*</span>
+                          {t('desiredDate')} <span className="text-[var(--status-error)]">*</span>
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
@@ -543,7 +543,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             dateFormat="dd/MM/yyyy"
                             minDate={new Date()}
                             locale={dateLocale}
-                            placeholderText="Sélectionnez une date"
+                            placeholderText={t('common:select_date', 'Sélectionnez une date')}
                             className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
                             required
                           />
@@ -553,7 +553,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                       {/* Heure souhaitée */}
                       <div>
                         <label htmlFor="heure" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                          {t('desiredTime', { ns: 'glabo' })} <span className="text-[var(--status-error)]">*</span>
+                          {t('desiredTime')} <span className="text-[var(--status-error)]">*</span>
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -567,7 +567,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] appearance-none"
                             required
                           >
-                            <option value="">{t('chooseTime', { ns: 'glabo' })}</option>
+                            <option value="">{t('chooseTime')}</option>
                             {timeSlots.map((slot) => (
                               <option key={slot} value={slot}>{slot}</option>
                             ))}
@@ -579,7 +579,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
 
                   {/* Ordonnance et détails */}
                   <div className="space-y-4 pt-4 border-t border-[var(--border-default)]">
-                    <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">4. Détails médicaux</h3>
+                    <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{t('section_medical')}</h3>
                     
                     {/* Téléchargement d'ordonnance */}
                     <MultiFileUploader 
@@ -594,7 +594,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                     {/* Commentaires (optionnel) */}
                     <div>
                       <label htmlFor="commentaires" className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                        {t('comments', { ns: 'glabo' })} <span className="text-gray-400 text-xs ml-1">(Optionnel)</span>
+                        {t('comments')} <span className="text-gray-400 text-xs ml-1">({t('common:optional', 'Optionnel')})</span>
                       </label>
                       <div className="relative">
                         <div className="absolute top-3 left-3 pointer-events-none">
@@ -607,7 +607,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                           className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] resize-none"
                           value={commentaires}
                           onChange={e => setCommentaires(e.target.value)}
-                          placeholder="Ex: Prise de sang à jeun..."
+                          placeholder={t('comments_placeholder')}
                         />
                       </div>
                     </div>

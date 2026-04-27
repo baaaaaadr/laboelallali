@@ -4,6 +4,18 @@
 @import '../styles/system/variables.css';
 
 /* Base HTML styles using CSS variables */
+html {
+  scroll-behavior: smooth !important;
+}
+
+:root {
+  scroll-behavior: smooth !important;
+}
+
+[id] {
+  scroll-margin-top: 130px !important;
+}
+
 html, body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--background-default);

@@ -279,7 +279,7 @@ export default function HomeClient({ lang }: { lang: string }) {
                       <li>{t('glabo:fasting_recommendation')}</li>
                       <li>{t('glabo:documents_to_bring')}</li>
                     </ul>
-                    <Link href={`/${lang}/analyses`} className="text-[var(--color-bordeaux-primary)] hover:text-[var(--color-fuchsia-accent)] mt-4 inline-block font-medium transition-colors duration-200">{t('glabo:more_information')}</Link>
+                    <Link href={`/${lang}/contact`} className="text-[var(--color-bordeaux-primary)] hover:text-[var(--color-fuchsia-accent)] mt-4 inline-block font-medium transition-colors duration-200">{t('glabo:more_information')}</Link>
                 </div>
             </div>
           </div>
