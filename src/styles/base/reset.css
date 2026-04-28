@@ -57,14 +57,17 @@ a:hover {
 
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--brand-primary);
   font-weight: var(--font-weight-bold);
   line-height: 1.2;
-  margin: 0;
+}
+
+h1, h2 {
+  color: var(--brand-primary);
 }
 
 h1 {
   font-size: var(--font-size-3xl);
+  margin-top: 0;
 }
 
 h2 {
@@ -75,6 +78,11 @@ h2 {
 h3 {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-medium);
+  color: inherit;
+}
+
+h4, h5, h6 {
+  margin: 0;
 }
 
 /* Ensure dark mode respects our color system */

@@ -90,5 +90,42 @@ Always use existing CSS utility classes from `globals.css` instead of raw Tailwi
 * **DON'T:** Invent new colors or spacing units. Stick to the tokens.
 * **DON'T:** Overuse the fuchsia accent; keep it for CTAs and highlights.
 
-## 10. Agent Prompt Guide
-*AI Agents reading this file: When modifying or creating UI components, strictly use the tokens defined above. Validate color classes against the system variables. If asked to "create a new card", apply `.card`, `rounded-lg`, and the appropriate typography scale.*
+## 10. Heading Hierarchy & Typography System
+
+### Color Scheme for Headings
+- **H1**: `text-[var(--color-bordeaux-primary)]` | Primary title color (Bordeaux #800020)
+- **H2**: `text-[var(--color-bordeaux-primary)]` | Section titles in Bordeaux
+- **H3**: `text-[var(--color-gray-600)]` | Subsection titles in Gray (#4B5563) for visual hierarchy
+- **H4-H6**: Use case-dependent; default to gray or inherit
+
+### Heading Spacing Rules
+- **H1**: `margin-top: 0`, no margin-bottom reset (allow Tailwind `mb-*` to apply)
+- **H2**: `mb-10` (2.5rem = 40px) for breathing room before content
+- **H3**: `mb-2` to `mb-4` (small gap between title and content)
+- Reset CSS rule: Only h1 and h2 have forced `color: var(--brand-primary)` to preserve hierarchy
+
+## 11. Icon System & Consistency
+
+### Icon Colors
+- **All icons**: Use `text-[var(--color-bordeaux-primary)]` (#800020) for brand consistency across all pages
+- Never use fuchsia/pink for icons; reserve fuchsia only for specific interactive elements (buttons, hover states)
+
+### Icon Backgrounds
+- **Icon containers**: Use `bg-[var(--color-bordeaux-primary)]/10` (light tint) for light mode
+- **Dark mode**: Use `bg-[var(--color-bordeaux-primary)]/20` for slightly darker contrast
+- Padding: `p-3` or `p-4`; Border radius: `rounded-lg` (8px)
+- Example: `<div className="bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20 p-3 rounded-lg">`
+
+### Icon Sizing Guidelines
+- Small icons (16-20px): Used in buttons, links, inline elements
+- Medium icons (24-32px): Used in card headers, section highlights
+- Large icons: Rarely used; reserved for hero sections
+
+## 12. Visual Hierarchy & Color Distribution
+- **Primary (Bordeaux)**: H1, H2, icon colors, primary buttons, primary accents
+- **Secondary (Gray)**: H3, body text, secondary information
+- **Accent (Fuchsia)**: Limited use—hover states, active links, specific CTAs
+- **Principle**: Reduce color noise by limiting bordeaux+fuchsia usage to intentional accents
+
+## 13. Agent Prompt Guide
+*AI Agents reading this file: When modifying or creating UI components, strictly use the tokens defined above. Validate color classes against the system variables. If asked to "create a new card", apply `.card`, `rounded-lg`, and the appropriate typography scale. Always maintain heading color hierarchy (h1/h2 Bordeaux, h3 Gray) and use `mb-10` spacing for h2 elements.*

@@ -196,15 +196,15 @@ const Header = () => {
   return (
     <header className="header-main shadow-md transition-colors duration-300 relative z-50 w-full overflow-hidden" suppressHydrationWarning>
       <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative" suppressHydrationWarning>
-        <div className="flex items-center justify-between py-2 sm:py-4 transition-all duration-200 text-white dark:text-[var(--text-primary)] min-h-[56px] sm:min-h-[64px]" suppressHydrationWarning>
+        <div className="flex items-center justify-between transition-all duration-200 text-white dark:text-[var(--text-primary)] min-h-[56px] sm:min-h-[64px]" suppressHydrationWarning>
           {/* Logo and name */}
-          <div className="flex items-center">
-            <Link href={currentLanguagePath} className="flex items-center">
-              <div className="header-logo">
-                <span className="font-bold text-lg">L</span>
-              </div>
-            </Link>
-          </div>
+          <Link href={currentLanguagePath} className="flex items-center h-full">
+            <img
+              src="/images/icons/logo-footer.png"
+              alt="Labo El Allali"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg"
+            />
+          </Link>
 
           {/* Desktop Navigation - Only visible at lg (1024px) and above */}
           <nav className="desktop-nav hidden lg:flex items-center space-x-4 xl:space-x-6">
@@ -320,9 +320,13 @@ const Header = () => {
         >
           {/* Menu Header Section - Matches main header height */}
           <div className="mobile-menu-header h-16 flex items-center justify-between px-4" suppressHydrationWarning>
-            <div className="flex items-center">
-              <Link href={currentLanguagePath} className="flex items-center" onClick={toggleMenu}>
-                <span className="header-logo text-lg font-bold mr-3">L</span>
+            <div className="flex items-center gap-2">
+              <Link href={currentLanguagePath} className="flex items-center gap-2" onClick={toggleMenu}>
+                <img
+                  src="/images/icons/logo-footer.png"
+                  alt="Labo El Allali"
+                  className="w-8 h-8 rounded-lg"
+                />
                 <span className="font-semibold text-lg text-white">{t('laboName')}</span>
               </Link>
             </div>

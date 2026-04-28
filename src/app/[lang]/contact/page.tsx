@@ -65,19 +65,19 @@ export default function ContactPage({
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-[var(--brand-primary)] mb-8">{t('contact_title')}</h1>
+      <h1 className="text-3xl font-bold text-[var(--brand-primary)] mb-10">{t('contact_title')}</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Contact Information */}
         <div className="space-y-8">
           <div className="card p-6">
-            <h2 className="text-2xl font-bold text-[var(--brand-primary)] mb-6">{t('lab_coordinates')}</h2>
+            <h2 className="text-2xl font-bold text-[var(--brand-primary)] mb-10">{t('lab_coordinates')}</h2>
             
             <div className="space-y-6">
               <div className="flex items-start">
                 <MapPin size={24} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[var(--brand-primary)]`} />
                 <div>
-                  <h3 className="font-semibold text-lg mb-1 text-[var(--text-primary)]">{labName}</h3>
+                  <h3 className="font-semibold text-lg mb-1 text-[var(--color-gray-600)]">{labName}</h3>
                   <p className="text-[var(--text-secondary)]">{labAddress}</p>
                   <a 
                     href={LAB_COORDINATES.GOOGLE_MAPS_URL} 
@@ -92,7 +92,7 @@ export default function ContactPage({
               </div>
               
               <div className="border-t border-[var(--border-default)] pt-6">
-                <h3 className="font-semibold text-lg mb-4">{t('contact')}</h3>
+                <h3 className="font-semibold text-lg mb-4 text-[var(--color-gray-600)]">{t('contact')}</h3>
                 <ul className="space-y-4">
                   <li className="flex items-start">
                     <Phone size={20} className={`${isRTL ? 'ml-4' : 'mr-4'} mt-1 flex-shrink-0 text-[var(--brand-primary)]`} />
@@ -134,7 +134,7 @@ export default function ContactPage({
           
           {/* Additional Information Card */}
           <div className="card p-6 bg-[var(--background-secondary)]">
-            <h3 className="text-xl font-semibold text-[var(--color-bordeaux-primary)] mb-4">{t('find_us')}</h3>
+            <h3 className="text-xl font-semibold text-[var(--color-gray-600)] mb-8">{t('find_us')}</h3>
             <p className="text-[var(--text-secondary)] mb-4">
               {t('find_us_text')}
             </p>

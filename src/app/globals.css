@@ -131,17 +131,23 @@ button {
 }
 
 .header-logo {
-  background-color: white;
-  color: var(--color-bordeaux-primary);
-  padding: 0.375rem;
-  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-right: 0.5rem;
-  transition: colors 0.2s ease;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  border-radius: 0.375rem;
 }
 
-.dark .header-logo {
-  background-color: var(--color-bordeaux-primary);
-  color: var(--color-fuchsia-accent);
+.header-logo img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+}
+
+.dark .header-logo img {
+  filter: brightness(1.1);
 }
 
 /* FIXED: Hero banner text visibility */
