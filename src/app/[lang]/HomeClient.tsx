@@ -2,7 +2,8 @@
 "use client";
 import HeroBanner from '@/components/features/home/HeroBanner';
 import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, Home as HomeIcon, Info, MapPin, ChevronRight, Phone, Navigation } from 'lucide-react';
-import SimpleMap from '@/components/SimpleMap';
+import dynamic from 'next/dynamic';
+const SimpleMap = dynamic(() => import('@/components/SimpleMap'), { ssr: false });
 import Link from 'next/link';
 import ContactModal from '@/components/ui/ContactModal';
 import { useEffect, useState } from "react";

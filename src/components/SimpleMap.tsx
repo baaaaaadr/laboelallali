@@ -6,13 +6,15 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix for default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: '/images/leaflet/marker-icon-2x.png',
-  iconUrl: '/images/leaflet/marker-icon.png',
-  shadowUrl: '/images/leaflet/marker-shadow.png',
-});
+// Fix for default marker icons - only on client side
+if (typeof window !== 'undefined') {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: '/images/leaflet/marker-icon-2x.png',
+    iconUrl: '/images/leaflet/marker-icon.png',
+    shadowUrl: '/images/leaflet/marker-shadow.png',
+  });
+}
 
 interface SimpleMapProps {
   latitude: number;
