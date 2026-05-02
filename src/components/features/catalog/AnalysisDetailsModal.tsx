@@ -150,7 +150,7 @@ export function AnalysisDetailsModal({
                 <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-[var(--border-default)]">
                   <button
                     onClick={onClose}
-                    className="px-6 py-2.5 rounded-lg font-medium bg-[var(--background-secondary)] text-[var(--text-primary)] hover:bg-[var(--background-hover)] transition-colors"
+                    className="px-6 py-2.5 rounded-lg font-bold bg-[var(--color-fuchsia-accent)] text-white hover:bg-[var(--color-fuchsia-bright)] transition-all shadow-md active:scale-95"
                   >
                     {t('close', 'Fermer')}
                   </button>

@@ -18,6 +18,7 @@ interface CartDetailsModalProps {
   isRtl?: boolean;
   onViewAnalysisDetails: (analysis: AnalyseItem) => void;
   onViewBilanDetails: (bilan: BilanItem) => void;
+  normalizedAnalysesMap?: Map<string, AnalyseItem>;
 }
 
 export function CartDetailsModal({
@@ -31,7 +32,8 @@ export function CartDetailsModal({
   currencyLabel,
   isRtl = false,
   onViewAnalysisDetails,
-  onViewBilanDetails
+  onViewBilanDetails,
+  normalizedAnalysesMap
 }: CartDetailsModalProps) {
   const { t } = useTranslation('common');
 
@@ -49,18 +51,7 @@ export function CartDetailsModal({
 
   const getItemName = (item: CartItem) => {
     if (item.type === 'analyse') {
-      const name = isRtl ? item.item.Nom_Patient_AR : item.item.Nom_Patient_FR;
-      console.log('🔍 DEBUG getItemName - analyse:', {
-        type: item.type,
-        id: item.item.id,
-        Nom_Patient_FR: item.item.Nom_Patient_FR,
-        Nom_Patient_AR: item.item.Nom_Patient_AR,
-        Categorie_FR: item.item.Categorie_FR,
-        Categorie_AR: item.item.Categorie_AR,
-        returnedName: name,
-        isRtl
-      });
-      return name;
+      return isRtl ? item.item.Nom_Patient_AR : item.item.Nom_Patient_FR;
     } else {
       return isRtl ? item.item.Nom_Bilan_AR : item.item.Nom_Bilan_FR;
     }
@@ -74,8 +65,13 @@ export function CartDetailsModal({
     }
   };
 
-  const getItemPrice = (item: CartItem) => {
-    return item.type === 'analyse' ? item.item.Prix_Dhs : item.item.Prix_Affiche_Dhs;
+  const getItemPrice = (item: CartItem): number => {
+    if (item.type === 'analyse') return item.item.Prix_Dhs;
+    if (!normalizedAnalysesMap) return item.item.Prix_Affiche_Dhs;
+    return item.item.Composition_Codes.reduce((sum, code) => {
+      const key = code.replace(/\s+/g, '').toUpperCase();
+      return sum + (normalizedAnalysesMap.get(key)?.Prix_Dhs ?? 0);
+    }, 0);
   };
 
   return (

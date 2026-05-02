@@ -34,20 +34,22 @@ export function BilanDetailsModal({
   // Normalize ID helper - removes all spaces and converts to uppercase
   const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
 
-  // State for selected analysis codes - start empty, user must check manually
-  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(() => {
-    return new Set();
-  });
+  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
 
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
-  // Reset selection when bilan changes - clear selections
+  // Pre-select all analyses that are not already in cart when modal opens
   useEffect(() => {
     if (bilan && isOpen) {
-      setSelectedCodes(new Set());
+      const preSelected = new Set<string>(
+        compositionAnalyses
+          .filter(a => !selectedAnalysesInCart.has(a.id))
+          .map(a => a.id)
+      );
+      setSelectedCodes(preSelected);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bilan?.id, isOpen]);
@@ -158,13 +160,7 @@ export function BilanDetailsModal({
 
                   <button
                     onClick={onClose}
-                    className="
-                      ml-4 rounded-lg p-2
-                      text-[var(--text-secondary)] hover:text-[var(--color-bordeaux-primary)]
-                      hover:bg-[var(--background-tertiary)]
-                      transition-colors duration-200
-                      focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:ring-opacity-50
-                    "
+                    className="ml-4 rounded-lg p-2 text-[var(--text-secondary)] hover:text-[var(--color-bordeaux-primary)] hover:bg-[var(--color-bordeaux-pale)] transition-colors duration-200 focus:outline-none"
                     aria-label={t('close', 'Fermer')}
                   >
                     <X className="w-5 h-5" />
@@ -172,27 +168,63 @@ export function BilanDetailsModal({
                 </div>
 
                 {/* Price section */}
-                <div className="mb-6 p-4 rounded-lg bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] border-2 border-[var(--color-fuchsia-accent)]">
+                <div
+                  className="mb-6 p-4 rounded-lg"
+                  style={{
+                    backgroundColor: 'var(--color-bordeaux-pale)',
+                    border: '1.5px solid rgba(128,0,32,0.2)'
+                  }}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-[var(--text-secondary)] mb-1">
+                      <p className="text-sm text-[var(--text-secondary)] mb-0.5">
                         {t('bilan.total_selected', 'Total des analyses sélectionnées')}
                       </p>
-                      <p className="text-xs text-[var(--text-tertiary)]">
-                        {selectedCount} {selectedCount === 1 ? t('bilan.analysis', 'analyse') : t('bilan.analyses', 'analyses')}
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {selectedCodes.size} {selectedCodes.size === 1 ? t('bilan.analysis', 'analyse') : t('bilan.analyses', 'analyses')}
                       </p>
                     </div>
-                    <span className="text-3xl font-bold text-[var(--color-fuchsia-accent)]">
-                      {totalPrice.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {t('card.price_currency', 'MAD')}
-                    </span>
+                    <div className="text-right">
+                      <span className="text-2xl font-bold" style={{ color: 'var(--color-bordeaux-primary)' }}>
+                        {totalPrice.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')}
+                      </span>
+                      <span className="text-sm font-medium text-[var(--text-secondary)] ml-1">
+                        {t('card.price_currency', 'MAD')}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Composition section */}
                 <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
-                    {t('bilan_includes', 'Inclus dans ce bilan')} ({selectedCodes.size}/{compositionAnalyses.length})
-                  </h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-[var(--text-primary)]">
+                      {t('bilan_includes', 'Inclus dans ce bilan')} ({selectedCodes.size}/{compositionAnalyses.length})
+                    </h4>
+                    {(() => {
+                      const selectableIds = compositionAnalyses
+                        .filter(a => !selectedAnalysesInCart.has(a.id))
+                        .map(a => a.id);
+                      const allSelected = selectableIds.length > 0 && selectableIds.every(id => selectedCodes.has(id));
+                      return (
+                        <button
+                          onClick={() => {
+                            setSelectedCodes(new Set(allSelected ? [] : selectableIds));
+                          }}
+                          className="text-sm font-medium px-3 py-1 rounded-lg border transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1"
+                          style={{
+                            color: 'var(--color-bordeaux-primary)',
+                            borderColor: 'var(--color-bordeaux-primary)',
+                            backgroundColor: 'transparent',
+                          }}
+                        >
+                          {allSelected
+                            ? t('bilan.deselect_all', 'Tout décocher')
+                            : t('bilan.select_all', 'Tout sélectionner')}
+                        </button>
+                      );
+                    })()}
+                  </div>
 
                   <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
                     {compositionAnalyses.map((analyse) => {
@@ -203,15 +235,13 @@ export function BilanDetailsModal({
                       return (
                         <label
                           key={analyse.id}
-                          className={`
-                            flex items-start gap-3 p-3 rounded-lg
-                            transition-colors duration-200
-                            ${isInCart ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
-                            ${isChecked
-                              ? 'bg-[var(--background-secondary)] border-2 border-[var(--border-accent)]'
-                              : 'bg-[var(--background-default)] border-2 border-transparent hover:border-[var(--border-default)]'
-                            }
-                          `}
+                          className={`flex items-start gap-3 p-3 rounded-lg transition-all duration-150 ${isInCart ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                          style={{
+                            backgroundColor: isChecked ? 'var(--color-bordeaux-pale)' : 'var(--background-default)',
+                            border: isChecked
+                              ? '1.5px solid rgba(128,0,32,0.25)'
+                              : '1.5px solid transparent',
+                          }}
                         >
                           {/* Checkbox */}
                           <input
@@ -222,21 +252,14 @@ export function BilanDetailsModal({
                               if (!isInCart) {
                                 setSelectedCodes(prev => {
                                   const newSet = new Set(prev);
-                                  if (newSet.has(analyse.id)) {
-                                    newSet.delete(analyse.id);
-                                  } else {
-                                    newSet.add(analyse.id);
-                                  }
+                                  if (newSet.has(analyse.id)) newSet.delete(analyse.id);
+                                  else newSet.add(analyse.id);
                                   return newSet;
                                 });
                               }
                             }}
-                            className={`mt-1 w-5 h-5 rounded
-                              focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:ring-offset-2
-                              ${isInCart
-                                ? 'text-[var(--status-success)] cursor-not-allowed'
-                                : 'text-[var(--color-fuchsia-accent)] cursor-pointer'
-                              }`}
+                            className={`mt-0.5 w-4 h-4 rounded ${isInCart ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                            style={{ accentColor: '#800020' }}
                           />
 
                           {/* Analyse Info */}
@@ -244,20 +267,23 @@ export function BilanDetailsModal({
                             <p className={`text-sm font-medium leading-snug ${isInCart ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'}`}>
                               {analyseName}
                               {isInCart && (
-                                <span className="ml-2 text-xs text-[var(--status-success)] font-normal">
-                                  (Déjà dans le panier)
+                                <span className="ml-2 text-xs font-normal" style={{ color: 'var(--status-success)' }}>
+                                  ✓ Déjà dans le panier
                                 </span>
                               )}
                             </p>
                             {analyse.Description_Patient_FR && (
-                              <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2">
+                              <p className="text-xs text-[var(--text-secondary)] mt-0.5 line-clamp-1">
                                 {isArabic ? analyse.Description_Patient_AR : analyse.Description_Patient_FR}
                               </p>
                             )}
                           </div>
 
                           {/* Prix */}
-                          <span className={`text-sm font-medium flex-shrink-0 ${isChecked ? 'text-[var(--color-fuchsia-accent)]' : 'text-[var(--text-secondary)]'}`}>
+                          <span
+                            className="text-sm font-semibold flex-shrink-0"
+                            style={{ color: isChecked ? 'var(--color-bordeaux-primary)' : 'var(--text-secondary)' }}
+                          >
                             {analyse.Prix_Dhs.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} {t('card.price_currency', 'MAD')}
                           </span>
                         </label>
@@ -270,62 +296,43 @@ export function BilanDetailsModal({
                 <div className={`flex gap-3 ${isArabic ? 'flex-row-reverse' : 'flex-row'}`}>
                   <button
                     onClick={onClose}
-                    className="
-                      flex-1 px-6 py-3 text-sm rounded-lg
-                      border-2 border-[var(--border-default)]
-                      text-[var(--text-primary)]
-                      hover:bg-[var(--background-tertiary)]
-                      transition-colors duration-200
-                      focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:ring-opacity-50
-                      font-medium
-                    "
+                    className="flex-1 px-6 py-3 text-sm rounded-lg font-medium transition-colors duration-200 focus:outline-none"
+                    style={{
+                      border: '1px solid var(--border-default)',
+                      color: 'var(--text-secondary)',
+                      backgroundColor: 'transparent',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--background-secondary)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
                   >
                     {t('close', 'Fermer')}
                   </button>
 
                   <button
                     onClick={() => {
-                      // Get selected analyses (exclude those already in cart)
                       const selectedAnalyses = compositionAnalyses.filter(analyse =>
                         selectedCodes.has(analyse.id) && !selectedAnalysesInCart.has(analyse.id)
                       );
-
                       if (selectedAnalyses.length === 0) {
                         showNotification(t('bilan.select_at_least_one', 'Veuillez sélectionner au moins une analyse'), 'error');
                         return;
                       }
-
-                      // Add to cart
                       onAddAnalysesToCart(selectedAnalyses);
-
-                      // Success notification
                       showNotification(t('bilan.added_to_cart', `${selectedAnalyses.length} analyse(s) ajoutée(s) au panier`), 'success');
-
-                      // Close modal after a short delay
                       setTimeout(() => onClose(), 500);
                     }}
                     disabled={selectedCount === 0}
+                    className="flex-1 px-6 py-3 text-sm rounded-lg font-semibold transition-all duration-200 shadow-md focus:outline-none"
                     style={{
-                      backgroundColor: selectedCount === 0 ? '#D1D5DB' : '#800020',
-                      color: selectedCount === 0 ? '#6B7280' : '#FFFFFF',
+                      backgroundColor: selectedCount === 0 ? 'var(--background-secondary)' : '#800020',
+                      color: selectedCount === 0 ? 'var(--text-secondary)' : '#FFFFFF',
+                      cursor: selectedCount === 0 ? 'not-allowed' : 'pointer',
                       opacity: selectedCount === 0 ? 0.6 : 1,
-                      cursor: selectedCount === 0 ? 'not-allowed' : 'pointer'
                     }}
-                    className="flex-1 px-6 py-3 text-base rounded-lg font-bold tracking-wide
-                      transition-all duration-200 shadow-lg
-                      focus:outline-none focus:ring-2 focus:ring-offset-2"
-                    onMouseEnter={(e) => {
-                      if (selectedCount > 0) {
-                        e.currentTarget.style.opacity = '0.85';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedCount > 0) {
-                        e.currentTarget.style.opacity = '1';
-                      }
-                    }}
+                    onMouseEnter={e => { if (selectedCount > 0) (e.currentTarget as HTMLElement).style.backgroundColor = '#600018'; }}
+                    onMouseLeave={e => { if (selectedCount > 0) (e.currentTarget as HTMLElement).style.backgroundColor = '#800020'; }}
                   >
-                    Ajouter {selectedCount} analyse{selectedCount > 1 ? 's' : ''}
+                    {t('bilan.add_analyses', 'Ajouter')} {selectedCount > 0 ? `${selectedCount} analyse${selectedCount > 1 ? 's' : ''}` : ''}
                   </button>
                 </div>
               </Dialog.Panel>

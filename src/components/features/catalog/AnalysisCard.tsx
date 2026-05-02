@@ -123,10 +123,10 @@ export function AnalysisCard({ analysis, lang, isSelected = false, onSelect, onS
           className={`
             h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0
             transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-[#FF4081] focus:ring-offset-2
+            focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:ring-offset-2
             ${isSelected
-              ? 'bg-[#FF4081] text-white scale-110'
-              : 'bg-[#FF4081] text-white hover:scale-110 hover:bg-[#F50057]'
+              ? 'bg-white text-[var(--color-fuchsia-accent)] border-2 border-[var(--color-fuchsia-accent)] scale-110 shadow-md'
+              : 'bg-[var(--color-fuchsia-accent)] text-white hover:scale-110 hover:bg-[var(--color-fuchsia-bright)]'
             }
           `}
           aria-label={isSelected ? t('card.selected', 'Retirer du panier') : t('card.select', 'Ajouter au panier')}

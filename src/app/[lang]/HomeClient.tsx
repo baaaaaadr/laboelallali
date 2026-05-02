@@ -84,10 +84,13 @@ export default function HomeClient({ lang }: { lang: string }) {
                 </h3>
                 <p className="text-sm text-[var(--text-secondary)]">{t('opening_hours_text')}</p>
               </div>
-              <div className="flex flex-col items-center justify-center gap-2">
-                <div className={`${labStatus.isOpen ? 'bg-[var(--status-success)]' : 'bg-[var(--status-error)]'} text-white px-5 py-2 rounded-lg font-semibold text-base shadow transition-colors duration-200 flex items-center gap-2`}>
-                  <span className={`w-3 h-3 ${labStatus.isOpen ? 'opacity-100' : 'opacity-80'} bg-white rounded-lg ${labStatus.isOpen ? 'animate-pulse' : ''}`}></span>
-                  {labStatus.statusText}
+              <div className="flex flex-col items-center justify-center gap-2" suppressHydrationWarning>
+                <div 
+                  className={`${labStatus.isOpen ? 'bg-[var(--status-success)]' : 'bg-[var(--status-error)]'} text-white px-5 py-2 rounded-lg font-semibold text-base shadow transition-colors flex items-center gap-2`}
+                  suppressHydrationWarning
+                >
+                  <span className={`w-3 h-3 ${labStatus.isOpen ? 'opacity-100' : 'opacity-80'} bg-white rounded-lg ${labStatus.isOpen ? 'animate-pulse' : ''}`} suppressHydrationWarning></span>
+                  {labStatus.statusText || '...'}
                 </div>
                 {/* Only show countdown on client side to prevent hydration mismatch */}
                 {labStatus.isClient && labStatus.countdownText && (

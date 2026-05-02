@@ -3,17 +3,19 @@
  * Minimal reset and base styles for HTML elements
  */
 
-/* Reset button defaults for Tailwind v4 compatibility */
-button {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-color: transparent;
-  border: none;
-  padding: 0;
-  font: inherit;
-  cursor: pointer;
-  outline: inherit;
+/* Reset button defaults — inside @layer base so Tailwind utilities (@layer utilities) override it */
+@layer base {
+  button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+  }
 }
 
 /* Base HTML styles using CSS variables */
@@ -31,7 +33,7 @@ body {
   min-height: 100vh;
   background-color: var(--background-default);
   color: var(--text-primary);
-  transition: background-color 0.6s ease, color 0.6s ease;
+  transition: background-color 1s ease, color 1s ease;
 }
 
 /* Focus styles */

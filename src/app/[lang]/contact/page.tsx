@@ -224,7 +224,7 @@ export default function ContactPage({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[1, 2, 3, 4].map((num) => (
-            <div key={num} className="card p-6 border border-[var(--border-default)] hover:border-[var(--brand-primary)]/30 transition-colors">
+            <div key={num} className="card p-6 border border-[var(--border-default)] hover:border-[var(--brand-primary)]/30">
               <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-3">
                 {t(`faq_questions.q${num}`)}
               </h3>

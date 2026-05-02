@@ -97,10 +97,14 @@ html.dark {
   --border-default: #3A2229;
   --border-light: #2E1A1F;
   --border-accent: #FF79A8;
-  --brand-primary: #D64669;
-  --brand-primary-hover: #B83A5A;
+  --brand-primary: #FF79A8;
+  --brand-primary-hover: #FF5C95;
   --brand-accent: #FF79A8;
   --brand-accent-hover: #FF5C95;
+  --color-bordeaux-primary: #FF79A8;
+  --color-bordeaux-dark: #D64669;
+  --color-bordeaux-light: #FFB3C6;
+  --color-bordeaux-pale: rgba(214, 70, 105, 0.15);
   --button-primary-bg: #FF79A8;
   --button-primary-bg-hover: #FF5C95;
   --button-primary-text: #1A0F12;

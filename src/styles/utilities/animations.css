@@ -83,7 +83,7 @@
 
 /* Hover Lift Animation */
 .hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 1s ease, color 1s ease, border-color 1s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .hover-lift:hover {
@@ -107,11 +107,12 @@
 
 /* Smooth Transition Utility */
 .transition-all {
-  transition: all 0.2s ease;
+  transition: background-color 1s ease, color 1s ease, border-color 1s ease,
+              transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
 .transition-colors {
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  transition: color 1s ease, background-color 1s ease, border-color 1s ease;
 }
 
 .transition-transform {

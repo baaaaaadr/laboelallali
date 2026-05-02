@@ -117,16 +117,15 @@ export function TabsNavigation({
                 transition-all duration-200
                 focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:ring-offset-2
                 ${isActive
-                  ? 'bg-[#E3004F] text-white shadow-md font-semibold'
-                  : 'bg-[var(--background-card)] text-[var(--text-primary)] border border-[var(--border-default)] hover:border-[#E3004F]'
+                  ? 'bg-[var(--color-fuchsia-accent)] text-white shadow-md font-semibold'
+                  : 'bg-transparent text-[var(--text-primary)] border-2 border-[var(--border-default)] hover:border-[var(--color-fuchsia-accent)]'
                 }
               `}
               style={{
                 paddingLeft: '20px',
                 paddingRight: '20px',
                 paddingTop: '10px',
-                paddingBottom: '10px',
-                ...(isActive ? { backgroundColor: '#E3004F', color: 'white' } : {})
+                paddingBottom: '10px'
               }}
             >
               <IconComponent className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#E3004F]'}`} />

@@ -16,8 +16,10 @@ import TotalCalculator from "@/components/features/catalog/TotalCalculator";
 import CartDetailsModal from "@/components/features/catalog/CartDetailsModal";
 import { getCategoryIcon } from '@/utils/iconMapper';
 import { useTranslation } from 'react-i18next';
-import { Search, Star, BookOpen } from 'lucide-react';
+import { Search, Star, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { useInView } from 'react-intersection-observer';
 import { LAB_CONTACT } from "@/constants/contact";
+import MedicalLoader from "@/components/ui/MedicalLoader";
 
 // Data fetcher component
 const CatalogDataFetcher = ({
@@ -114,7 +116,9 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   const [selectedBilanForDetails, setSelectedBilanForDetails] = useState<BilanItem | null>(null);
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
   const [selectedAnalysisForDetails, setSelectedAnalysisForDetails] = useState<AnalyseItem | null>(null);
-  const [isCartModalOpen, setIsCartModalOpen] = useState(false); // NOUVEAU - State pour cart modal
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const ITEMS_PER_PAGE = 24;
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   // NEW: Tabs state
   const searchParams = useSearchParams();
@@ -128,6 +132,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     }
   }, [tabParam]);
   const [sortBy, setSortBy] = useState<SortOption>('popularity');
+  const [closedCategories, setClosedCategories] = useState<Set<string>>(new Set());
 
   // Normalize ID helper - removes all spaces and converts to uppercase
   const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
@@ -251,30 +256,29 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         const nameB = isArabic ? b.Nom_Patient_AR : b.Nom_Patient_FR;
         return nameA.localeCompare(nameB, lang);
       });
-    } else if (sortBy === 'popularity') {
+    } else {
+      // popularity (default) and category both sort by popularity
       sorted.sort((a, b) => (b.Nombre_Demandes || 0) - (a.Nombre_Demandes || 0));
     }
 
     return sorted;
   }, [filteredAnalyses, sortBy, isArabic, lang]);
 
-  // Categories with analyses
+  // Categories with analyses — uses sortedAnalyses to keep popularity order within each group
   const categoriesWithAnalyses = useMemo(() => {
     const categoryMap = new Map<string, AnalyseItem[]>();
 
-    filteredAnalyses.forEach(analyse => {
+    sortedAnalyses.forEach(analyse => {
       const category = isArabic ? analyse.Categorie_AR : analyse.Categorie_FR;
-      if (!categoryMap.has(category)) {
-        categoryMap.set(category, []);
-      }
+      if (!categoryMap.has(category)) categoryMap.set(category, []);
       categoryMap.get(category)!.push(analyse);
     });
 
     return Array.from(categoryMap.entries())
       .map(([name, analyses]) => ({ name, analyses }))
       .sort((a, b) => a.name.localeCompare(b.name, lang))
-      .filter(cat => cat.analyses.length > 0); // Only non-empty categories
-  }, [filteredAnalyses, isArabic, lang]);
+      .filter(cat => cat.analyses.length > 0);
+  }, [sortedAnalyses, isArabic, lang]);
 
   // NEW: Build tabs list dynamically
   const tabs: TabItem[] = useMemo(() => {
@@ -390,16 +394,19 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     setIsCartModalOpen(false); // Fermer la modale
   }, []);
 
-  // Calculate total cost
+  // Calculate total cost — bilans priced as sum of their analyses (no forfait/remise)
   const totalCost = useMemo(() => {
     return selectedItems.reduce((sum, item) => {
       if (item.type === 'analyse') {
         return sum + item.item.Prix_Dhs;
       } else {
-        return sum + item.item.Prix_Affiche_Dhs;
+        return sum + item.item.Composition_Codes.reduce((bSum, code) => {
+          const key = code.replace(/\s+/g, '').toUpperCase();
+          return bSum + (normalizedAnalysesMap.get(key)?.Prix_Dhs ?? 0);
+        }, 0);
       }
     }, 0);
-  }, [selectedItems]);
+  }, [selectedItems, normalizedAnalysesMap]);
 
   // NOUVEAU - Auto-close cart modal si panier devient vide
   useEffect(() => {
@@ -466,6 +473,23 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     }
   }, [activeTab, sortedAnalyses, filteredAnalyses, isArabic]);
 
+  // Handle infinite scroll
+  const { ref, inView } = useInView({
+    threshold: 0,
+    rootMargin: '100px',
+  });
+
+  useEffect(() => {
+    if (inView && !loading && sortBy !== 'category' && displayedAnalyses.length > visibleCount) {
+      setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+    }
+  }, [inView, loading, sortBy, displayedAnalyses.length, visibleCount]);
+
+  // Reset pagination when tab, search or sort changes
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [activeTab, searchTerm, sortBy]);
+
   return (
     <>
       <CatalogDataFetcher
@@ -531,10 +555,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
 
           {/* Loading state */}
           {loading && (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading', 'Chargement en cours...')}</p>
-            </div>
+            <MedicalLoader label={t('loading', 'Chargement en cours...')} />
           )}
 
           {/* Error state */}
@@ -560,6 +581,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                           isSelected={isBilanInCart(bilan)}
                           onSelect={toggleBilanInCart}
                           onShowDetails={handleShowBilanDetails}
+                          normalizedAnalysesMap={normalizedAnalysesMap}
                         />
                       ))}
                     </div>
@@ -579,38 +601,162 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                   {/* Sort toolbar */}
                   <SortToolbar
                     sortBy={sortBy}
-                    onSortChange={setSortBy}
+                    onSortChange={(next) => {
+                      setSortBy(next);
+                      // Reset all closed categories when entering category view
+                      if (next === 'category') setClosedCategories(new Set());
+                    }}
                     isRtl={isArabic}
                   />
 
-                  {/* Analyses list */}
-                  {displayedAnalyses.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {displayedAnalyses.map((analyse) => (
-                        <AnalysisMiniCard
-                          key={analyse.id}
-                          analysis={analyse}
-                          lang={lang}
-                          isSelected={isAnalyseInCart(analyse)}
-                          onSelect={() => toggleAnalyseInCart(analyse)}
-                          onShowDetails={() => handleShowAnalysisDetails(analyse)}
-                        />
-                      ))}
-                    </div>
+                  {/* ── Category view ── */}
+                  {sortBy === 'category' ? (
+                    categoriesWithAnalyses.length > 0 ? (
+                      <div className="space-y-3">
+                        {categoriesWithAnalyses.map(({ name: catName, analyses: catAnalyses }) => {
+                          const isOpen = !closedCategories.has(catName);
+                          const CategoryIcon = getCategoryIcon(catName);
+                          const toggleCategory = () => {
+                            setClosedCategories(prev => {
+                              const next = new Set(prev);
+                              if (next.has(catName)) next.delete(catName);
+                              else next.add(catName);
+                              return next;
+                            });
+                          };
+
+                          return (
+                            <div
+                              key={catName}
+                              className="rounded-lg overflow-hidden transition-shadow duration-200"
+                              style={{
+                                border: '1px solid var(--border-default)',
+                                backgroundColor: 'var(--background-card)',
+                              }}
+                            >
+                              {/* Category header */}
+                              <button
+                                onClick={toggleCategory}
+                                className="w-full flex items-center justify-between px-5 py-4 transition-colors duration-150 focus:outline-none"
+                                style={{ backgroundColor: isOpen ? 'var(--color-bordeaux-pale)' : 'transparent' }}
+                                onMouseEnter={e => {
+                                  if (!isOpen) (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--background-secondary)';
+                                }}
+                                onMouseLeave={e => {
+                                  if (!isOpen) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                                }}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ backgroundColor: isOpen ? 'rgba(128,0,32,0.12)' : 'var(--background-secondary)' }}
+                                  >
+                                    <CategoryIcon
+                                      className="h-4 w-4"
+                                      style={{ color: 'var(--color-bordeaux-primary)' }}
+                                    />
+                                  </div>
+                                  <span
+                                    className="font-semibold text-sm"
+                                    style={{ color: isOpen ? 'var(--color-bordeaux-primary)' : 'var(--text-primary)' }}
+                                  >
+                                    {catName}
+                                  </span>
+                                  <span
+                                    className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                    style={{
+                                      backgroundColor: isOpen ? 'rgba(128,0,32,0.1)' : 'var(--background-secondary)',
+                                      color: isOpen ? 'var(--color-bordeaux-primary)' : 'var(--text-secondary)',
+                                    }}
+                                  >
+                                    {catAnalyses.length}
+                                  </span>
+                                </div>
+                                {isOpen
+                                  ? <ChevronUp className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--color-bordeaux-primary)' }} />
+                                  : <ChevronDown className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--text-secondary)' }} />
+                                }
+                              </button>
+
+                              {/* Analyses grid — visible when open */}
+                              {isOpen && (
+                                <div className="px-4 pb-4 pt-2">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {catAnalyses.map((analyse) => (
+                                      <AnalysisMiniCard
+                                        key={analyse.id}
+                                        analysis={analyse}
+                                        lang={lang}
+                                        isSelected={isAnalyseInCart(analyse)}
+                                        onSelect={() => toggleAnalyseInCart(analyse)}
+                                        onShowDetails={() => handleShowAnalysisDetails(analyse)}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-[var(--text-secondary)] text-lg">
+                          {t('no_results', 'Aucun résultat trouvé.')}
+                        </p>
+                      </div>
+                    )
                   ) : (
-                    <div className="text-center py-12">
-                      <p className="text-gray-600 dark:text-gray-400 text-lg">
-                        {t('no_results', 'Aucun résultat trouvé.')}
-                      </p>
-                      {searchTerm && (
-                        <button
-                          onClick={() => setSearchTerm('')}
-                          className="mt-4 px-6 py-2 rounded-lg bg-[#E3004F] text-white hover:bg-[#C20042] transition-colors duration-200"
-                        >
-                          {t('clear_filters', 'Effacer les filtres')}
-                        </button>
-                      )}
-                    </div>
+                    /* ── Flat view (popularity / A-Z) ── */
+                    displayedAnalyses.length > 0 ? (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {displayedAnalyses.slice(0, visibleCount).map((analyse) => (
+                            <AnalysisMiniCard
+                              key={analyse.id}
+                              analysis={analyse}
+                              lang={lang}
+                              isSelected={isAnalyseInCart(analyse)}
+                              onSelect={() => toggleAnalyseInCart(analyse)}
+                              onShowDetails={() => handleShowAnalysisDetails(analyse)}
+                            />
+                          ))}
+                        </div>
+                        
+                        {/* Infinite Scroll Trigger */}
+                        {filteredAnalyses.length > visibleCount && (
+                          <div ref={ref} className="mt-12 flex flex-col items-center justify-center gap-4 py-8">
+                            <MedicalLoader size="sm" />
+                            <p className="text-sm text-[var(--text-tertiary)] transition-colors">
+                              {isArabic ? 'جاري تحميل المزيد...' : 'Chargement de plus d\'analyses...'}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {filteredAnalyses.length > 0 && filteredAnalyses.length <= visibleCount && (
+                          <div className="mt-12 text-center py-8 opacity-50">
+                            <p className="text-sm text-[var(--text-tertiary)]">
+                              {isArabic ? 'نهاية القائمة' : 'Fin de la liste'}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-[var(--text-secondary)] text-lg">
+                          {t('no_results', 'Aucun résultat trouvé.')}
+                        </p>
+                        {searchTerm && (
+                          <button
+                            onClick={() => setSearchTerm('')}
+                            className="mt-4 px-6 py-2 rounded-lg text-white transition-colors duration-200"
+                            style={{ backgroundColor: 'var(--color-bordeaux-primary)' }}
+                          >
+                            {t('clear_filters', 'Effacer les filtres')}
+                          </button>
+                        )}
+                      </div>
+                    )
                   )}
                 </section>
               )}
@@ -634,18 +780,30 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
 
                   {/* Analyses list */}
                   {displayedAnalyses.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {displayedAnalyses.map((analyse) => (
-                        <AnalysisMiniCard
-                          key={analyse.id}
-                          analysis={analyse}
-                          lang={lang}
-                          isSelected={isAnalyseInCart(analyse)}
-                          onSelect={() => toggleAnalyseInCart(analyse)}
-                          onShowDetails={() => handleShowAnalysisDetails(analyse)}
-                        />
-                      ))}
-                    </div>
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {displayedAnalyses.slice(0, visibleCount).map((analyse) => (
+                          <AnalysisMiniCard
+                            key={analyse.id}
+                            analysis={analyse}
+                            lang={lang}
+                            isSelected={isAnalyseInCart(analyse)}
+                            onSelect={() => toggleAnalyseInCart(analyse)}
+                            onShowDetails={() => handleShowAnalysisDetails(analyse)}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Infinite Scroll Trigger */}
+                      {displayedAnalyses.length > visibleCount && (
+                        <div ref={ref} className="mt-12 flex flex-col items-center justify-center gap-4 py-8">
+                          <MedicalLoader size="sm" />
+                          <p className="text-sm text-[var(--text-tertiary)] transition-colors">
+                            {isArabic ? 'جاري تحميل المزيد...' : 'Chargement de plus d\'analyses...'}
+                          </p>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="text-center py-12">
                       <p className="text-gray-600 dark:text-gray-400 text-lg">
@@ -762,6 +920,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         }}
         currencyLabel={isArabic ? 'درهم' : 'MAD'}
         isRtl={isArabic}
+        normalizedAnalysesMap={normalizedAnalysesMap}
         onViewAnalysisDetails={(analysis) => {
           setSelectedAnalysisForDetails(analysis);
           setAnalysisModalOpen(true);
@@ -784,19 +943,11 @@ export default function Page({ params }: { params: Promise<{ lang: string }> }) 
   }, [params]);
 
   if (!resolvedParams) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
-      </div>
-    );
+    return <MedicalLoader fullScreen />;
   }
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
-      </div>
-    }>
+    <Suspense fallback={<MedicalLoader fullScreen />}>
       <AnalysesCatalogPageContents params={resolvedParams} />
     </Suspense>
   );

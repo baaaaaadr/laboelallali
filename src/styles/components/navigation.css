@@ -12,6 +12,7 @@
   top: 0;
   z-index: 40;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 1s ease, color 1s ease;
 }
 
 .header-container {
@@ -33,7 +34,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: background-color 1s ease, color 1s ease, transform 0.2s ease;
 }
 
 .header-logo:hover {
@@ -46,7 +47,7 @@
   padding: var(--space-3);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
-  transition: all 0.2s ease;
+  transition: background-color 1s ease, color 1s ease, border-color 1s ease, text-shadow 0.2s ease;
   position: relative;
   display: flex;
   align-items: center;
@@ -381,7 +382,7 @@
   min-height: 64px;
   min-width: 44px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: background-color 1s ease, color 1s ease, border-color 1s ease;
   border-radius: var(--radius-md);
   cursor: pointer;
   color: var(--text-secondary);
@@ -420,6 +421,7 @@
 /* Dark Mode Adjustments */
 .dark .header-main {
   background-color: var(--background-secondary);
+  color: white;
   border-bottom: 1px solid var(--border-default);
 }
 
