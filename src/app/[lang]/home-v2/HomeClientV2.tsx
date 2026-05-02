@@ -2,13 +2,24 @@
 "use client";
 import HeroBannerV2 from '@/components/features/home/HeroBannerV2';
 import { Clock, CheckCircle, Award, FlaskConical, HeartPulse, Home as HomeIcon, Info, MapPin, ChevronRight, Phone, Navigation } from 'lucide-react';
-import SimpleMap from '@/components/SimpleMap';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import ContactModal from '@/components/ui/ContactModal';
 import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { useLabStatus } from '@/hooks/useLabStatus';
 import { LAB_CONTACT } from '@/constants/contact';
+
+const SimpleMap = dynamic(() => import('@/components/SimpleMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full flex items-center justify-center">
+      <MapPin size={48} style={{ color: 'var(--text-tertiary)' }} />
+      <span className="ml-2" style={{ color: 'var(--text-tertiary)' }}>Loading map...</span>
+    </div>
+  )
+});
+
 
 export default function HomeClientV2({ lang }: { lang: string }) {
   const { t, i18n } = useTranslation(['common', 'glabo']);
