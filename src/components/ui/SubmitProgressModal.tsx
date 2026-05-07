@@ -12,7 +12,7 @@ export default function SubmitProgressModal({ submitState, hasFiles }: SubmitPro
   if (submitState === 'idle') return null;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/90 dark:bg-[var(--background-secondary)]/90 backdrop-blur-md">
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
       <div className="w-full max-w-sm px-6">
         <h3 className="text-xl font-bold text-center mb-8 text-[var(--brand-primary)] dark:text-white">
           Traitement de votre demande...

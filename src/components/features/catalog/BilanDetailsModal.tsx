@@ -111,7 +111,7 @@ export function BilanDetailsModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
         </Transition.Child>
 
         {/* Modal container */}

@@ -55,7 +55,7 @@ export default function MedicalLoader({
       <div
         className={
           fullScreen
-            ? 'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[var(--background-default)]/80 backdrop-blur-md'
+            ? 'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/40 backdrop-blur-md'
             : 'flex flex-col items-center justify-center py-12 w-full'
         }
         role="status"

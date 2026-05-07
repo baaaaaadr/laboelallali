@@ -43,7 +43,7 @@ export function AnalysisDetailsModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
