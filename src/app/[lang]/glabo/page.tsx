@@ -205,6 +205,19 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
       return;
     }
 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let whatsappWindow: Window | null = null;
+    
+    if (!isMobile) {
+      // Open the popup synchronously here, before any await. 
+      // Browsers block popups opened after async work.
+      whatsappWindow = window.open('', '_blank');
+      if (!whatsappWindow) {
+        toast.error(t('whatsapp_error', { ns: 'appointment' }));
+        return;
+      }
+    }
+
     setIsWhatsappLoading(true);
 
     try {
@@ -263,7 +276,12 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
       const message = `${t('greeting', { ns: 'glabo' })}\n\n${t('home_service_request', { ns: 'glabo' })}\n\n${t('name')}: ${nom}\n${t('phone')}: ${telephone}${email ? `\n${t('email')}: ${email}` : ''}\n${t('address')}: ${adresse}\n${t('location_type')}: ${lieuPrelevement === 'domicile' ? t('home') : t('workplace')}${instructionsAcces ? `\n${t('access_instructions')}: ${instructionsAcces}` : ''}\n${t('desiredDate', { ns: 'glabo' })}: ${formattedDate}\n${t('desiredTime', { ns: 'glabo' })}: ${selectedTime}${commentaires ? `\n${t('comments', { ns: 'glabo' })}: ${commentaires}` : ''}${prescriptionText}\n\n${t('thanks', { ns: 'glabo' })}`;
       
       const whatsappLink = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappLink, '_blank');
+      
+      if (isMobile) {
+        window.location.href = whatsappLink;
+      } else if (whatsappWindow) {
+        whatsappWindow.location.href = whatsappLink;
+      }
       
       toast.success(t('whatsapp_redirect_success', { ns: 'appointment' }));
 
@@ -282,6 +300,9 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Error in WhatsApp handler:", error);
+      }
+      if (whatsappWindow) {
+        whatsappWindow.close();
       }
       toast.error(t('whatsapp_error', { ns: 'appointment' }));
     } finally {

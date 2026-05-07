@@ -10,7 +10,6 @@
   "no_analyses": "لا توجد تحاليل متاحة حاليًا.",
   "loading": "جاري التحميل...",
   "error_fetching": "فشل في تحميل التحاليل",
-
   "bilans_vedettes_title": "الباقات المميزة",
   "bilans_vedettes_subtitle": "أكثر باقات التحاليل طلباً",
   "bilans_section_title": "الباقات",
@@ -30,7 +29,6 @@
   "item_count": "{count} عنصر",
   "no_bilans_found": "لم يتم العثور على باقات.",
   "featured_badge": "مميزة",
-
   "card": {
     "category_label": "التصنيف:",
     "delay_label": "المدة:",

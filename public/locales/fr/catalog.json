@@ -10,7 +10,6 @@
   "no_analyses": "Aucune analyse disponible pour le moment.",
   "loading": "Chargement en cours...",
   "error_fetching": "Échec du chargement des analyses",
-
   "bilans_vedettes_title": "Bilans Vedettes",
   "bilans_vedettes_subtitle": "Nos packs d'analyses les plus demandés",
   "bilans_section_title": "Bilans",
@@ -30,7 +29,6 @@
   "item_count": "{count} élément(s)",
   "no_bilans_found": "Aucun bilan trouvé.",
   "featured_badge": "Vedette",
-
   "card": {
     "category_label": "Catégorie:",
     "delay_label": "Délai:",

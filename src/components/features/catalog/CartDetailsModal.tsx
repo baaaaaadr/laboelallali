@@ -107,7 +107,7 @@ export function CartDetailsModal({
                 <div className="px-6 py-4 border-b border-[var(--border-default)] flex items-center justify-between bg-[var(--background-card)] sticky top-0 z-10">
                   <Dialog.Title
                     as="h3"
-                    className="text-xl font-bold text-gray-900 dark:text-white"
+                    className="text-xl font-bold text-[var(--text-primary)]"
                   >
                     {t('analyses_catalog.selection.cart_details_title', 'Mon Panier')}
                   </Dialog.Title>
@@ -124,7 +124,7 @@ export function CartDetailsModal({
                     )}
                     <button
                       onClick={onClose}
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+                      className="p-2 rounded-lg hover:bg-[var(--background-secondary)] text-[var(--text-secondary)] transition-colors"
                       aria-label="Fermer"
                     >
                       <X className="h-5 w-5" />
@@ -153,24 +153,24 @@ export function CartDetailsModal({
                       {/* Section Bilans */}
                       {bilans.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">
+                          <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 uppercase tracking-wide">
                             {t('analyses_catalog.selection.bilans_section', 'Bilans')} ({bilans.length})
                           </h4>
                           <div className="space-y-2">
                             {bilans.map((item, index) => (
                               <div
                                 key={`bilan-${item.item.ID_Bilan}-${index}`}
-                                className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 group"
+                                className="flex items-center justify-between py-3 border-b border-[var(--border-default)] group"
                               >
                                 <button
                                   onClick={() => handleItemClick(item)}
-                                  className="flex-1 flex items-start gap-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg transition-colors"
+                                  className="flex-1 flex items-start gap-3 text-left hover:bg-[var(--background-secondary)] p-2 rounded-lg transition-colors"
                                 >
                                   <div className="flex-1">
-                                    <p className="font-semibold text-gray-900 dark:text-white group-hover:text-[#E3004F] transition-colors">
+                                    <p className="font-semibold text-[var(--text-primary)] group-hover:text-[#E3004F] transition-colors">
                                       {getItemName(item)}
                                     </p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    <p className="text-sm text-[var(--text-secondary)]">
                                       {getItemCategory(item)}
                                     </p>
                                   </div>
@@ -198,24 +198,24 @@ export function CartDetailsModal({
                       {/* Section Analyses */}
                       {analyses.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">
+                          <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 uppercase tracking-wide">
                             {t('analyses_catalog.selection.analyses_section', 'Analyses')} ({analyses.length})
                           </h4>
                           <div className="space-y-2">
                             {analyses.map((item, index) => (
                               <div
                                 key={`analyse-${item.item.ID_Analyse}-${index}`}
-                                className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 group"
+                                className="flex items-center justify-between py-3 border-b border-[var(--border-default)] group"
                               >
                                 <button
                                   onClick={() => handleItemClick(item)}
-                                  className="flex-1 flex items-start gap-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg transition-colors"
+                                  className="flex-1 flex items-start gap-3 text-left hover:bg-[var(--background-secondary)] p-2 rounded-lg transition-colors"
                                 >
                                   <div className="flex-1">
-                                    <p className="font-semibold text-gray-900 dark:text-white group-hover:text-[#E3004F] transition-colors">
+                                    <p className="font-semibold text-[var(--text-primary)] group-hover:text-[#E3004F] transition-colors">
                                       {getItemName(item)}
                                     </p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    <p className="text-sm text-[var(--text-secondary)]">
                                       {getItemCategory(item)}
                                     </p>
                                   </div>
@@ -246,14 +246,32 @@ export function CartDetailsModal({
                 {/* Footer - Sticky */}
                 {selectedItems.length > 0 && (
                   <div className="border-t border-[var(--border-default)] px-6 py-4 space-y-4 bg-[var(--background-card)] sticky bottom-0">
-                    {/* Total */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {t('analyses_catalog.selection.total', 'Total')}:
-                      </span>
-                      <span className="text-2xl font-bold text-[#E3004F]">
-                        {totalCost.toLocaleString(isRtl ? 'ar-MA' : 'fr-MA')} {currencyLabel}
-                      </span>
+                    {/* Subtotal + Sampling Fee breakdown */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-[var(--text-secondary)]">
+                          {t('analyses_catalog.selection.subtotal', 'Sous-total')}
+                        </span>
+                        <span className="font-medium text-[var(--text-primary)]">
+                          {(totalCost - 20).toLocaleString(isRtl ? 'ar-MA' : 'fr-MA')} {currencyLabel}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-[var(--text-secondary)]">
+                          {t('analyses_catalog.selection.sampling_fee', 'Frais de prélèvement')}
+                        </span>
+                        <span className="font-medium text-[var(--text-primary)]">
+                          20 {currencyLabel}
+                        </span>
+                      </div>
+                      <div className="border-t border-[var(--border-default)] pt-2 flex justify-between items-center">
+                        <span className="text-lg font-semibold text-[var(--text-primary)]">
+                          {t('analyses_catalog.selection.total', 'Total')}:
+                        </span>
+                        <span className="text-2xl font-bold text-[#E3004F]">
+                          {totalCost.toLocaleString(isRtl ? 'ar-MA' : 'fr-MA')} {currencyLabel}
+                        </span>
+                      </div>
                     </div>
 
                     {/* WhatsApp Button */}

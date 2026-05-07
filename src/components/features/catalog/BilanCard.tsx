@@ -32,9 +32,9 @@ export function BilanCard({
 
   const computedPrice = normalizedAnalysesMap
     ? bilan.Composition_Codes.reduce((sum, code) => {
-        const key = code.replace(/\s+/g, '').toUpperCase();
-        return sum + (normalizedAnalysesMap.get(key)?.Prix_Dhs ?? 0);
-      }, 0)
+      const key = code.replace(/\s+/g, '').toUpperCase();
+      return sum + (normalizedAnalysesMap.get(key)?.Prix_Dhs ?? 0);
+    }, 0)
     : bilan.Prix_Affiche_Dhs;
 
   const handleSelectClick = (e: React.MouseEvent) => {
@@ -64,9 +64,9 @@ export function BilanCard({
     >
       {/* Thin top accent bar for featured */}
       {bilan.Is_Featured && (
-        <div 
-          className="h-[3px] w-full" 
-          style={{ background: 'linear-gradient(90deg, var(--color-bordeaux-primary), var(--color-bordeaux-light))' }} 
+        <div
+          className="h-[3px] w-full"
+          style={{ background: 'linear-gradient(90deg, var(--color-bordeaux-primary), var(--color-bordeaux-light))' }}
         />
       )}
 
@@ -117,11 +117,10 @@ export function BilanCard({
 
           <button
             onClick={handleSelectClick}
-            className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-1 transition-all ${
-              isSelected 
-                ? 'bg-white text-[var(--color-fuchsia-accent)] border-2 border-[var(--color-fuchsia-accent)] scale-110 shadow-lg' 
+            className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-1 transition-all ${isSelected
+                ? 'bg-white text-[var(--color-fuchsia-accent)] border-2 border-[var(--color-fuchsia-accent)] scale-110 shadow-lg'
                 : 'bg-[var(--color-fuchsia-accent)] text-white border-2 border-transparent hover:scale-105 active:scale-95'
-            }`}
+              }`}
             aria-label={isSelected ? t('card.selected', 'Retirer du panier') : t('card.select', 'Ajouter au panier')}
           >
             {isSelected

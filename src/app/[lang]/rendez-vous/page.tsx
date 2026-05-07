@@ -261,12 +261,17 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       return;
     }
 
-    // Open the popup synchronously here, inside the trusted click event,
-    // before any await. Browsers block popups opened after async work.
-    const whatsappWindow = window.open('', '_blank');
-    if (!whatsappWindow) {
-      toast.error(t('whatsapp_error', { ns: 'appointment' }));
-      return;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let whatsappWindow: Window | null = null;
+    
+    if (!isMobile) {
+      // Open the popup synchronously here, inside the trusted click event,
+      // before any await. Browsers block popups opened after async work.
+      whatsappWindow = window.open('', '_blank');
+      if (!whatsappWindow) {
+        toast.error(t('whatsapp_error', { ns: 'appointment' }));
+        return;
+      }
     }
 
     setIsWhatsappLoading(true);
@@ -318,8 +323,13 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         : `Bonjour,\n\nJe souhaite prendre un rendez-vous au laboratoire :\n\nNom : ${nom}\nTéléphone : ${telephone}${emailLine}\nDate souhaitée : ${formattedDate}\nHeure souhaitée : ${selectedTime}${commentsLine}${prescriptionText}\n\nMerci.`;
 
       const whatsappLink = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodeURIComponent(message)}`;
-      // Redirect the already-opened window to the final WhatsApp URL
-      whatsappWindow.location.href = whatsappLink;
+      
+      // Redirect to WhatsApp
+      if (isMobile) {
+        window.location.href = whatsappLink;
+      } else if (whatsappWindow) {
+        whatsappWindow.location.href = whatsappLink;
+      }
 
       // Save to Firestore for tracking
       const appointmentData = {
@@ -355,7 +365,9 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       if (process.env.NODE_ENV === 'development') {
         console.error("Error in WhatsApp handler:", error);
       }
-      whatsappWindow.close();
+      if (whatsappWindow) {
+        whatsappWindow.close();
+      }
       toast.error(t('whatsapp_error', { ns: 'appointment' }));
     } finally {
       setIsWhatsappLoading(false);

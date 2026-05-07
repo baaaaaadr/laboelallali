@@ -123,7 +123,13 @@ export default function TotalCalculator({
     const message = generateWhatsAppMessage();
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+    
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = whatsappUrl;
+    } else {
+      window.open(whatsappUrl, '_blank');
+    }
   };
 
   // Only render if there are selected items

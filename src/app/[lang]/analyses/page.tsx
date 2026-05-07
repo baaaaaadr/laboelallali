@@ -57,15 +57,19 @@ const CatalogDataFetcher = ({
 
         if (!isMounted) return;
 
-        const fetchedAnalyses: AnalyseItem[] = analysesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<AnalyseItem, "id">)
-        }));
+        const fetchedAnalyses: AnalyseItem[] = analysesSnapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as Omit<AnalyseItem, "id">)
+          }))
+          .filter(item => item.Nom_Patient_FR !== 'Nom_Patient_FR');
 
-        const fetchedBilans: BilanItem[] = bilansSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<BilanItem, "id">)
-        }));
+        const fetchedBilans: BilanItem[] = bilansSnapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...(doc.data() as Omit<BilanItem, "id">)
+          }))
+          .filter(item => item.Nom_Bilan_FR !== 'Nom_Bilan_FR');
 
         onDataFetched(fetchedAnalyses, fetchedBilans);
       } catch (err) {
@@ -313,12 +317,6 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     return tabsList;
   }, [sortedBilans, sortedAnalyses, categoriesWithAnalyses, t]);
 
-  // NEW: Auto-switch to "all" tab when searching
-  useEffect(() => {
-    if (searchTerm.trim() && activeTab !== 'all') {
-      setActiveTab('all');
-    }
-  }, [searchTerm, activeTab]);
 
   // Cart operations
   const isAnalyseInCart = useCallback((analyse: AnalyseItem) => {
@@ -394,9 +392,12 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     setIsCartModalOpen(false); // Fermer la modale
   }, []);
 
-  // Calculate total cost — bilans priced as sum of their analyses (no forfait/remise)
+  // Frais de prélèvement fixes (acte de prise de sang)
+  const SAMPLING_FEE = 20;
+
+  // Calculate total cost — bilans priced as sum of their analyses + flat 20 MAD sampling fee
   const totalCost = useMemo(() => {
-    return selectedItems.reduce((sum, item) => {
+    const itemsTotal = selectedItems.reduce((sum, item) => {
       if (item.type === 'analyse') {
         return sum + item.item.Prix_Dhs;
       } else {
@@ -406,6 +407,8 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         }, 0);
       }
     }, 0);
+    // Add flat sampling fee if cart is non-empty
+    return selectedItems.length > 0 ? itemsTotal + SAMPLING_FEE : 0;
   }, [selectedItems, normalizedAnalysesMap]);
 
   // NOUVEAU - Auto-close cart modal si panier devient vide
@@ -722,7 +725,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                             />
                           ))}
                         </div>
-                        
+
                         {/* Infinite Scroll Trigger */}
                         {filteredAnalyses.length > visibleCount && (
                           <div ref={ref} className="mt-12 flex flex-col items-center justify-center gap-4 py-8">
@@ -732,7 +735,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                             </p>
                           </div>
                         )}
-                        
+
                         {filteredAnalyses.length > 0 && filteredAnalyses.length <= visibleCount && (
                           <div className="mt-12 text-center py-8 opacity-50">
                             <p className="text-sm text-[var(--text-tertiary)]">
@@ -915,7 +918,14 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
 
           const encodedMessage = encodeURIComponent(message);
           const whatsappUrl = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodedMessage}`;
-          window.open(whatsappUrl, '_blank');
+          
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (isMobile) {
+            window.location.href = whatsappUrl;
+          } else {
+            window.open(whatsappUrl, '_blank');
+          }
+          
           setIsCartModalOpen(false);
         }}
         currencyLabel={isArabic ? 'درهم' : 'MAD'}
