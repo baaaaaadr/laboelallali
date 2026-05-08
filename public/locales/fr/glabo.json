@@ -16,7 +16,7 @@
   "no": "NON",
   "comments": "Notes ou commentaires supplémentaires (optionnel)",
   "comments_placeholder": "Ex: Prise de sang à jeun...",
-  "requestByEmail": "Envoyer ma demande par email",
+  "requestByEmail": "Demander par email",
   "requestByWhatsApp": "Demander par WhatsApp",
   "requiredFields": "Veuillez remplir tous les champs obligatoires (nom, téléphone, adresse, date, heure).",
   "withPrescription": "Je dispose d'une ordonnance que je vous enverrai séparément par WhatsApp.",

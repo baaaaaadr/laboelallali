@@ -666,7 +666,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                       ) : (
                         <>
                           <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform inline-block mr-2" />
-                          {t('submit_appointment_request', { ns: 'appointment' })}
+                          {t('requestByEmail')}
                         </>
                       )}
                     </button>
