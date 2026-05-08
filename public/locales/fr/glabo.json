@@ -44,6 +44,7 @@
   "analysis_tips": "Conseils pour vos analyses",
   "fasting_recommendation": "Pour certaines analyses, un jeûne de 8 à 12 heures peut être nécessaire.",
   "documents_to_bring": "Apportez votre carte d'identité, ordonnance et carte d'assurance si disponible.",
-  "more_information": "Plus d'informations"
+  "more_information": "Plus d'informations",
+  "invalidPhone": "Numéro invalide. Format marocain : 06 ou 07 suivi de 8 chiffres. Format international : +212... ou 00212..."
 }
 
