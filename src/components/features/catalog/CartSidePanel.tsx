@@ -76,7 +76,7 @@ export function CartSidePanel({
 
   const handleDownloadPdf = async () => {
     const { jsPDF } = await import('jspdf');
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
 
     // Layout
     const W = 210, H = 297, mg = 13;
@@ -104,9 +104,10 @@ export function CartSidePanel({
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
+          const px = 83; // 14mm @ 150 DPI — no need to embed at native resolution
           const cv = document.createElement('canvas');
-          cv.width = img.naturalWidth; cv.height = img.naturalHeight;
-          cv.getContext('2d')!.drawImage(img, 0, 0);
+          cv.width = px; cv.height = px;
+          cv.getContext('2d')!.drawImage(img, 0, 0, px, px);
           doc.addImage(cv.toDataURL('image/png'), 'PNG', mg, 3.5, 14, 14);
           res();
         };

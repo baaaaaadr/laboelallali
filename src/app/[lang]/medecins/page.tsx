@@ -143,7 +143,7 @@ export default function MedecinsPage() {
   }, [inView, loading, filteredMedecins.length, visibleCount]);
 
   return (
-    <div className="min-h-screen bg-[var(--background-secondary)] pt-[80px] transition-all">
+    <div className="min-h-screen bg-[var(--background-default)] pt-[80px] transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* En-tête */}
