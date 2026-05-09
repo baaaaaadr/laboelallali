@@ -40,7 +40,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     {
       id: 'phone',
       icon: <Phone size={20} />,
-      label: 'TÉLÉPHONE',
+      label: 'APPEL',
       value: LAB_CONTACT.LANDLINE.display,
       copyValue: LAB_CONTACT.LANDLINE.display.replace(/\s+/g, ''),
       iconColor: 'text-red-600 dark:text-red-400',
@@ -49,7 +49,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     {
       id: 'whatsapp',
       icon: <MessageCircle size={20} />,
-      label: 'WHATSAPP',
+      label: 'APPEL + WHATSAPP',
       value: `+212 ${LAB_WHATSAPP_NUMBER.replace(/^0/, '')}`,
       copyValue: `+212${LAB_WHATSAPP_NUMBER.replace(/^0/, '')}`,
       iconColor: 'text-green-600 dark:text-green-400',
@@ -94,29 +94,28 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
       >
         {/* Gradient Header - Labo Theme */}
         <div className="relative bg-gradient-to-br from-[var(--color-bordeaux-primary)] to-[var(--color-fuchsia-accent)] p-6 md:p-8 text-white">
-          <button 
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors focus:outline-none"
-            aria-label={t('close_menu')}
-          >
-            <X size={18} className="text-white" />
-          </button>
-          
-          <div className="flex items-start gap-4">
+          {/* Top-right controls: status badge + close button */}
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-black/25 rounded-lg px-2.5 py-1 shadow-sm">
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${labStatus.isOpen ? 'bg-[var(--status-success)] animate-pulse' : 'bg-[var(--status-error)]'}`}></span>
+              <span className="text-xs font-bold whitespace-nowrap !text-white">{labStatus.isOpen ? t('labo_open') : t('labo_closed')}</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors focus:outline-none"
+              aria-label={t('close_menu')}
+            >
+              <X size={18} className="text-white" />
+            </button>
+          </div>
+
+          <div className="flex items-start gap-4 pt-2">
             <div className="bg-white/20 p-3 rounded-lg shadow-inner flex-shrink-0">
               <Phone size={28} className="text-white" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                <p className="text-xs font-bold tracking-wider uppercase !text-white/90">{t('assistance')}</p>
-                
-                {/* Online indicator */}
-                <div className="flex items-center gap-2 bg-black/25 rounded-lg px-3 py-1 shadow-sm">
-                  <span className={`w-2 h-2 rounded-lg ${labStatus.isOpen ? 'bg-[var(--status-success)] animate-pulse' : 'bg-[var(--status-error)]'}`}></span>
-                  <span className="text-xs font-bold whitespace-nowrap !text-white">{labStatus.isOpen ? t('online') : t('closed')}</span>
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold leading-tight truncate !text-white">{t('hotline_contact')}</h2>
+            <div className="flex-1 min-w-0 pr-32">
+              <p className="text-xs font-bold tracking-wider uppercase !text-white/90 mb-1">{t('assistance')}</p>
+              <h2 className="text-2xl font-bold leading-tight !text-white">{t('hotline_contact')}</h2>
               <p className="text-sm !text-white/90 mt-1 font-medium">{t('reply_fast')}</p>
             </div>
           </div>
@@ -146,7 +145,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
                       <span className="hidden sm:inline">{t('copy_success')}</span>
                     </div>
                   ) : (
-                    <Copy size={16} className="text-[var(--text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Copy size={16} className="text-[var(--text-tertiary)]" />
                   )}
                 </div>
               </div>

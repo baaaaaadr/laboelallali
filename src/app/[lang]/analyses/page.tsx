@@ -17,7 +17,7 @@ import CartDetailsModal from "@/components/features/catalog/CartDetailsModal";
 import { getCategoryIcon } from '@/utils/iconMapper';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { Search, Star, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Star, BookOpen, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { LAB_CONTACT } from "@/constants/contact";
 import MedicalLoader from "@/components/ui/MedicalLoader";
@@ -594,14 +594,14 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
             {/* Search bar */}
             <div className="py-3">
               <div className="relative max-w-2xl mx-auto">
-                <Search className={`absolute ${isArabic ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)] group-focus-within:text-[var(--color-fuchsia-accent)] transition-colors`} />
+                <Search className={`absolute ${isArabic ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-tertiary)] transition-colors`} />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t('search_in_tags', 'Rechercher par nom, catégorie ou mots-clés...')}
                   className={`
-                    w-full ${isArabic ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-2.5 rounded-lg
+                    w-full ${isArabic ? 'pr-12 pl-10' : 'pl-12 pr-10'} py-2.5 rounded-lg
                     bg-[var(--background-default)] text-[var(--text-primary)]
                     border border-[var(--border-default)]
                     text-sm
@@ -612,6 +612,15 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                   `}
                   dir={isArabic ? 'rtl' : 'ltr'}
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className={`absolute ${isArabic ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 p-0.5 rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--background-secondary)] transition-colors`}
+                    aria-label="Effacer la recherche"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
 

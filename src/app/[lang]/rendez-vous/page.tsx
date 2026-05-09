@@ -13,6 +13,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { LAB_CONTACT } from "../../../constants/contact";
 import { generateTimeSlots } from "../../../utils/timeSlots";
+import { validatePhone } from "../../../utils/phone";
 import toast from 'react-hot-toast';
 import { User, Phone, Mail, Calendar, Clock, FileText, MessageSquare, Send, CalendarDays } from 'lucide-react';
 import MultiFileUploader from "../../../components/ui/MultiFileUploader";
@@ -117,6 +118,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [isWhatsappLoading, setIsWhatsappLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState('');
 
   const timeSlots = generateTimeSlots(selectedDate);
   // Get WhatsApp number from constants (remove leading 0 and add country code)
@@ -134,7 +136,13 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       toast.error(t('requiredFields', { ns: 'appointment' }));
       return;
     }
-    
+
+    if (!validatePhone(telephone)) {
+      setPhoneError(t('invalidPhone', { ns: 'appointment' }));
+      return;
+    }
+    setPhoneError('');
+
     try {
       // Ensure Firestore is initialized
       if (!db) {
@@ -260,6 +268,12 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       toast.error(t('requiredFields', { ns: 'appointment' }));
       return;
     }
+
+    if (!validatePhone(telephone)) {
+      setPhoneError(t('invalidPhone', { ns: 'appointment' }));
+      return;
+    }
+    setPhoneError('');
 
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let whatsappWindow: Window | null = null;
@@ -444,15 +458,18 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                       type="tel"
                       id="telephone"
                       name="telephone"
-                      className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                      className={`block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] ${phoneError ? 'border-[var(--status-error)]' : 'border-[var(--border-default)]'}`}
                       autoComplete="tel"
                       inputMode="tel"
                       value={telephone}
-                      onChange={(e) => setTelephone(e.target.value)}
-                      placeholder="06 XX XX XX XX"
+                      onChange={(e) => { setTelephone(e.target.value); setPhoneError(''); }}
+                      placeholder="06 XX XX XX XX / +212..."
                       required
                     />
                   </div>
+                  {phoneError && (
+                    <p className="mt-1 text-xs text-[var(--status-error)]">{phoneError}</p>
+                  )}
                 </div>
               </div>
 

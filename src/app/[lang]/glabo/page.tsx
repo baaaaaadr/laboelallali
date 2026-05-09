@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { LAB_CONTACT } from "../../../constants/contact";
 import { generateTimeSlots } from "../../../utils/timeSlots";
+import { validatePhone } from "../../../utils/phone";
 import toast from 'react-hot-toast';
 import { db, storage } from "../../../config/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -68,6 +69,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [isWhatsappLoading, setIsWhatsappLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState('');
 
   const timeSlots = generateTimeSlots(selectedDate);
   // Get WhatsApp number from constants
@@ -85,7 +87,13 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
       toast.error(t('requiredFields', { ns: 'appointment' }));
       return;
     }
-    
+
+    if (!validatePhone(telephone)) {
+      setPhoneError(t('invalidPhone'));
+      return;
+    }
+    setPhoneError('');
+
     try {
       if (!db) {
         throw new Error(t('appointment:errors.db_not_initialized', 'Le service de base de données n\'est pas disponible. Veuillez réessayer.'));
@@ -204,6 +212,12 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
       toast.error(t('requiredFields', { ns: 'appointment' }));
       return;
     }
+
+    if (!validatePhone(telephone)) {
+      setPhoneError(t('invalidPhone'));
+      return;
+    }
+    setPhoneError('');
 
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     let whatsappWindow: Window | null = null;
@@ -437,15 +451,18 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             type="tel"
                             id="telephone"
                             name="telephone"
-                            className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"
+                            className={`block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)] ${phoneError ? 'border-[var(--status-error)]' : 'border-[var(--border-default)]'}`}
                             autoComplete="tel"
                             inputMode="tel"
                             value={telephone}
-                            onChange={(e) => setTelephone(e.target.value)}
-                            placeholder="06 XX XX XX XX"
+                            onChange={(e) => { setTelephone(e.target.value); setPhoneError(''); }}
+                            placeholder="06 XX XX XX XX / +212..."
                             required
                           />
                         </div>
+                        {phoneError && (
+                          <p className="mt-1 text-xs text-[var(--status-error)]">{phoneError}</p>
+                        )}
                       </div>
                       
                       {/* Email (optionnel) */}
@@ -666,7 +683,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                       ) : (
                         <>
                           <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform inline-block mr-2" />
-                          {t('submit_appointment_request', { ns: 'appointment' })}
+                          {t('requestByEmail')}
                         </>
                       )}
                     </button>

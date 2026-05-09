@@ -16,7 +16,7 @@
   "no": "NON",
   "comments": "Notes ou commentaires supplémentaires (optionnel)",
   "comments_placeholder": "Ex: Prise de sang à jeun...",
-  "requestByEmail": "Envoyer ma demande par email",
+  "requestByEmail": "Demander par email",
   "requestByWhatsApp": "Demander par WhatsApp",
   "requiredFields": "Veuillez remplir tous les champs obligatoires (nom, téléphone, adresse, date, heure).",
   "withPrescription": "Je dispose d'une ordonnance que je vous enverrai séparément par WhatsApp.",
@@ -44,6 +44,7 @@
   "analysis_tips": "Conseils pour vos analyses",
   "fasting_recommendation": "Pour certaines analyses, un jeûne de 8 à 12 heures peut être nécessaire.",
   "documents_to_bring": "Apportez votre carte d'identité, ordonnance et carte d'assurance si disponible.",
-  "more_information": "Plus d'informations"
+  "more_information": "Plus d'informations",
+  "invalidPhone": "Numéro invalide. Format marocain : 06 ou 07 suivi de 8 chiffres. Format international : +212... ou 00212..."
 }
 

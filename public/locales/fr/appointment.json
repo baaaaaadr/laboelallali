@@ -35,6 +35,7 @@
   "preview": "Aperçu",
   "file": "Fichier",
   "fullscreen_preview": "Aperçu plein écran",
-  "pdf_load_error": "Impossible de charger le PDF"
+  "pdf_load_error": "Impossible de charger le PDF",
+  "invalidPhone": "Numéro invalide. Format marocain : 06 ou 07 suivi de 8 chiffres. Format international : +212... ou 00212..."
 }
 
