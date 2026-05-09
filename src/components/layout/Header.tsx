@@ -162,7 +162,7 @@ const Header = () => {
   };
 
   return (
-    <header className="header-main shadow-md relative z-50 w-full overflow-hidden">
+    <header className="header-main shadow-md sticky top-0 z-50 w-full overflow-hidden">
       <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
         <div className="flex items-center justify-between transition-all text-white h-[64px]">
           {/* Logo and name */}

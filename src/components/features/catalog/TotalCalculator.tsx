@@ -205,11 +205,11 @@ export default function TotalCalculator({
         </div>
       </div>
 
-      {/* Desktop Floating Bubble - Visible on screens >= 1024px */}
+      {/* Desktop Floating Bubble - replaced by CartSidePanel on lg+ */}
       <div
         ref={containerRef}
         className={`
-          hidden lg:block
+          hidden
           fixed w-64 max-w-[calc(100vw-2rem)] z-50
           bg-[#800020] dark:bg-[var(--brand-primary)] text-white rounded-lg p-6 min-w-[280px]
           shadow-[0_8px_30px_-2px_rgba(0,0,0,0.15)]

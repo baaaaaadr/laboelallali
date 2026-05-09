@@ -165,6 +165,10 @@
       "analyses_section": "Analyses",
       "subtotal": "Sous-total",
       "sampling_fee": "Frais de prélèvement",
+      "panel_title": "Mon Panier",
+      "open_panel": "Voir le panier",
+      "close_panel": "Réduire",
+      "empty_panel_hint": "Ajoutez des analyses pour voir votre devis ici.",
       "whatsapp_message": {
         "greeting": "Bonjour Laboratoire El Allali,",
         "intro": "Je suis intéressé(e) par les analyses suivantes :",

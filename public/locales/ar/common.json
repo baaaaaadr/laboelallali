@@ -159,6 +159,10 @@
       "analyses_section": "التحاليل",
       "subtotal": "المجموع الفرعي",
       "sampling_fee": "رسوم أخذ العينة",
+      "panel_title": "سلتي",
+      "open_panel": "عرض السلة",
+      "close_panel": "تصغير",
+      "empty_panel_hint": "أضف تحاليل لعرض تقديرك هنا.",
       "whatsapp_message": {
         "greeting": "مرحباً مختبر العلالي,",
         "intro": "أنا مهتم/مهتمة بالتحاليل التالية:",

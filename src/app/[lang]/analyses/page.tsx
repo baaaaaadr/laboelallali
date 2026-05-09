@@ -14,10 +14,11 @@ import BilanDetailsModal from "@/components/features/catalog/BilanDetailsModal";
 import AnalysisDetailsModal from "@/components/features/catalog/AnalysisDetailsModal";
 import TotalCalculator from "@/components/features/catalog/TotalCalculator";
 import CartDetailsModal from "@/components/features/catalog/CartDetailsModal";
+import CartSidePanel from "@/components/features/catalog/CartSidePanel";
 import { getCategoryIcon } from '@/utils/iconMapper';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { Search, Star, BookOpen, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Search, Star, BookOpen, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { LAB_CONTACT } from "@/constants/contact";
 import MedicalLoader from "@/components/ui/MedicalLoader";
@@ -125,6 +126,8 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   const [selectedAnalysisForDetails, setSelectedAnalysisForDetails] = useState<AnalyseItem | null>(null);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [cartInitialTab, setCartInitialTab] = useState<'devis' | 'preparation'>('devis');
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const hasPanelAutoOpened = useRef(false);
   const ITEMS_PER_PAGE = 24;
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
@@ -198,6 +201,23 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedItems));
     } catch {}
   }, [selectedItems]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-open side panel on first item add (desktop only, one-shot)
+  useEffect(() => {
+    if (selectedItems.length > 0 && !hasPanelAutoOpened.current) {
+      hasPanelAutoOpened.current = true;
+      setIsPanelOpen(true);
+    }
+  }, [selectedItems.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Close panel when viewport drops below lg breakpoint (1024px)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => { if (!e.matches) setIsPanelOpen(false); };
+    mq.addEventListener('change', handler);
+    if (!mq.matches) setIsPanelOpen(false);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // Search function
   const searchInItem = useCallback((item: AnalyseItem | BilanItem, term: string): boolean => {
@@ -451,7 +471,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   const clearCart = useCallback(() => {
     setSelectedItems([]);
     localStorage.removeItem(STORAGE_KEY);
-    setIsCartModalOpen(false); // Fermer la modale
+    setIsCartModalOpen(false);
   }, []);
 
   // Frais de prélèvement fixes (acte de prise de sang)
@@ -510,6 +530,58 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     setAnalysisModalOpen(false);
     setSelectedAnalysisForDetails(null);
   }, []);
+
+  // Shared WhatsApp send handler — used by both CartDetailsModal and CartSidePanel
+  const handleWhatsAppSend = useCallback(() => {
+    const whatsappTranslations = {
+      greeting: t('analyses_catalog.selection.whatsapp_message.greeting', 'Bonjour Laboratoire El Allali,'),
+      intro: t('analyses_catalog.selection.whatsapp_message.intro', 'Je suis intéressé(e) par les analyses suivantes :'),
+      analysisItemPrefix: t('analyses_catalog.selection.whatsapp_message.analysis_item_prefix', '- '),
+      totalLabel: t('analyses_catalog.selection.whatsapp_message.total_label', 'Total estimé :'),
+      currency: t('analyses_catalog.selection.whatsapp_message.currency', 'MAD'),
+      closingRemark: t('analyses_catalog.selection.whatsapp_message.closing_remark', "Pouvez-vous me donner plus d'informations ?"),
+      websiteReference: t('analyses_catalog.selection.whatsapp_message.website_reference', 'Sélection faite depuis le site web.')
+    };
+
+    let message = `${whatsappTranslations.greeting}\n\n`;
+    message += `${whatsappTranslations.intro}\n`;
+
+    const bilans = selectedItems.filter(item => item.type === 'bilan');
+    const analyses = selectedItems.filter(item => item.type === 'analyse');
+
+    if (bilans.length > 0) {
+      message += `\n📦 ${t('catalog:bilans', 'Bilans')} :\n`;
+      bilans.forEach(cartItem => {
+        const name = isArabic ? cartItem.item.Nom_Bilan_AR : cartItem.item.Nom_Bilan_FR;
+        message += `${whatsappTranslations.analysisItemPrefix}${name}\n`;
+      });
+    }
+
+    if (analyses.length > 0) {
+      message += `\n🔬 ${t('catalog:analyses', 'Analyses')} :\n`;
+      analyses.forEach(cartItem => {
+        const name = isArabic ? cartItem.item.Nom_Patient_AR : cartItem.item.Nom_Patient_FR;
+        message += `${whatsappTranslations.analysisItemPrefix}${name}\n`;
+      });
+    }
+
+    const locale = isArabic ? 'ar-MA' : 'fr-MA';
+    message += `\n${whatsappTranslations.totalLabel} ${totalCost.toLocaleString(locale)} ${whatsappTranslations.currency}\n\n`;
+    message += `${whatsappTranslations.closingRemark}\n\n`;
+    message += whatsappTranslations.websiteReference;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodedMessage}`;
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = whatsappUrl;
+    } else {
+      window.open(whatsappUrl, '_blank');
+    }
+
+    setIsCartModalOpen(false);
+  }, [selectedItems, totalCost, isArabic, t]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get selected analyses for accordion
   const selectedAnalyses = useMemo(() => {
@@ -574,7 +646,17 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         onLoadingStateChange={handleLoadingStateChange}
       />
 
-      <div className="min-h-screen bg-[var(--background-default)] dark:bg-[var(--background-default)] pb-32">
+      <div
+        className="bg-[var(--background-default)] dark:bg-[var(--background-default)]"
+        style={isArabic ? {
+          paddingLeft: isPanelOpen ? '360px' : '0px',
+          transition: 'padding-left 0.3s ease-in-out',
+        } : {
+          paddingRight: isPanelOpen ? '360px' : '0px',
+          transition: 'padding-right 0.3s ease-in-out',
+        }}
+      >
+        <div className="min-h-screen pb-32 lg:pb-8">
         {/* Title - Normal flow, NOT STICKY */}
         <div className="pt-6 pb-4 bg-[var(--background-default)]">
           <div className="container mx-auto px-4">
@@ -586,7 +668,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
 
         {/* Sticky Container - Search + Tabs Together */}
         <div
-          className="sticky top-0 z-50 bg-[var(--background-default)] shadow-sm border-b border-gray-200 dark:border-[var(--border-default)]"
+          className="sticky top-[64px] z-40 bg-[var(--background-default)] shadow-sm border-b border-gray-200 dark:border-[var(--border-default)]"
           style={{ willChange: 'transform' }}
         >
           <div className="container mx-auto px-4">
@@ -900,6 +982,41 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
             </>
           )}
         </div>
+        </div>
+      </div>
+
+      {/* Fixed desktop side panel — below site header (top: 64px), independent scroll */}
+      <div
+        className="hidden lg:block fixed z-30 overflow-hidden"
+        style={{
+          top: '64px',
+          right: isArabic ? 'auto' : '0',
+          left: isArabic ? '0' : 'auto',
+          height: 'calc(100vh - 64px)',
+          width: isPanelOpen ? '360px' : '0',
+          transition: 'width 0.3s ease-in-out',
+        }}
+      >
+        <div className="w-[360px] h-full">
+          <CartSidePanel
+            selectedItems={selectedItems}
+            totalCost={totalCost}
+            onRemoveItem={removeItemFromCart}
+            onClearCart={clearCart}
+            onWhatsAppSend={handleWhatsAppSend}
+            currencyLabel={isArabic ? 'درهم' : 'MAD'}
+            isRtl={isArabic}
+            normalizedAnalysesMap={normalizedAnalysesMap}
+            onViewAnalysisDetails={(analysis) => {
+              setSelectedAnalysisForDetails(analysis);
+              setAnalysisModalOpen(true);
+            }}
+            onViewBilanDetails={(bilan) => {
+              setSelectedBilanForDetails(bilan);
+              setBilanModalOpen(true);
+            }}
+          />
+        </div>
       </div>
 
       {/* Floating Cart */}
@@ -938,7 +1055,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         />
       )}
 
-      {/* Cart Details Modal */}
+      {/* Cart Details Modal — mobile only (panel handles desktop) */}
       <CartDetailsModal
         isOpen={isCartModalOpen}
         onClose={() => setIsCartModalOpen(false)}
@@ -946,57 +1063,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         totalCost={totalCost}
         onRemoveItem={removeItemFromCart}
         onClearCart={clearCart}
-        onWhatsAppSend={() => {
-          // Generate WhatsApp message
-          const whatsappTranslations = {
-            greeting: t('analyses_catalog.selection.whatsapp_message.greeting', 'Bonjour Laboratoire El Allali,'),
-            intro: t('analyses_catalog.selection.whatsapp_message.intro', 'Je suis intéressé(e) par les analyses suivantes :'),
-            analysisItemPrefix: t('analyses_catalog.selection.whatsapp_message.analysis_item_prefix', '- '),
-            totalLabel: t('analyses_catalog.selection.whatsapp_message.total_label', 'Total estimé :'),
-            currency: t('analyses_catalog.selection.whatsapp_message.currency', 'MAD'),
-            closingRemark: t('analyses_catalog.selection.whatsapp_message.closing_remark', 'Pouvez-vous me donner plus d\'informations ?'),
-            websiteReference: t('analyses_catalog.selection.whatsapp_message.website_reference', 'Sélection faite depuis le site web.')
-          };
-
-          let message = `${whatsappTranslations.greeting}\n\n`;
-          message += `${whatsappTranslations.intro}\n`;
-
-          const bilans = selectedItems.filter(item => item.type === 'bilan');
-          const analyses = selectedItems.filter(item => item.type === 'analyse');
-
-          if (bilans.length > 0) {
-            message += `\n📦 ${t('catalog:bilans', 'Bilans')} :\n`;
-            bilans.forEach(cartItem => {
-              const name = isArabic ? cartItem.item.Nom_Bilan_AR : cartItem.item.Nom_Bilan_FR;
-              message += `${whatsappTranslations.analysisItemPrefix}${name}\n`;
-            });
-          }
-
-          if (analyses.length > 0) {
-            message += `\n🔬 ${t('catalog:analyses', 'Analyses')} :\n`;
-            analyses.forEach(cartItem => {
-              const name = isArabic ? cartItem.item.Nom_Patient_AR : cartItem.item.Nom_Patient_FR;
-              message += `${whatsappTranslations.analysisItemPrefix}${name}\n`;
-            });
-          }
-
-          const locale = isArabic ? 'ar-MA' : 'fr-MA';
-          message += `\n${whatsappTranslations.totalLabel} ${totalCost.toLocaleString(locale)} ${whatsappTranslations.currency}\n\n`;
-          message += `${whatsappTranslations.closingRemark}\n\n`;
-          message += whatsappTranslations.websiteReference;
-
-          const encodedMessage = encodeURIComponent(message);
-          const whatsappUrl = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodedMessage}`;
-          
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          if (isMobile) {
-            window.location.href = whatsappUrl;
-          } else {
-            window.open(whatsappUrl, '_blank');
-          }
-          
-          setIsCartModalOpen(false);
-        }}
+        onWhatsAppSend={handleWhatsAppSend}
         currencyLabel={isArabic ? 'درهم' : 'MAD'}
         isRtl={isArabic}
         normalizedAnalysesMap={normalizedAnalysesMap}
@@ -1010,6 +1077,30 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
           setBilanModalOpen(true);
         }}
       />
+
+      {/* Desktop panel toggle tab — fixed to viewport edge, slides with panel */}
+      <button
+        onClick={() => setIsPanelOpen(v => !v)}
+        className={`hidden lg:flex fixed z-40 top-1/2 -translate-y-1/2 items-center justify-center w-6 h-16 bg-[#800020] dark:bg-[var(--brand-primary)] text-white shadow-lg ${isArabic ? 'rounded-r-lg' : 'rounded-l-lg'}`}
+        style={{
+          right: isArabic ? 'auto' : (isPanelOpen ? '360px' : '0'),
+          left: isArabic ? (isPanelOpen ? '360px' : '0') : 'auto',
+          transition: 'right 0.3s ease-in-out, left 0.3s ease-in-out',
+        }}
+        aria-label={isPanelOpen
+          ? t('analyses_catalog.selection.close_panel', 'Réduire')
+          : t('analyses_catalog.selection.open_panel', 'Voir le panier')}
+      >
+        {isArabic
+          ? (isPanelOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />)
+          : (isPanelOpen ? <ChevronRight size={14} /> : <ChevronLeft size={14} />)
+        }
+        {!isPanelOpen && selectedItems.length > 0 && (
+          <span className={`absolute -top-2 ${isArabic ? '-right-2' : '-left-2'} text-[10px] bg-white text-[#800020] rounded-full w-4 h-4 flex items-center justify-center font-bold`}>
+            {selectedItems.length}
+          </span>
+        )}
+      </button>
     </>
   );
 }
