@@ -32,7 +32,7 @@
   "card": {
     "category_label": "Catégorie:",
     "delay_label": "Délai:",
-    "price_currency": "MAD",
+    "price_currency": "Prix",
     "show_preparation": "Voir Préparation",
     "hide_preparation": "Masquer Préparation",
     "preparation_label": "Instructions de préparation:",
@@ -49,6 +49,44 @@
     "sort_by": "Trier par",
     "popularity": "Popularité",
     "alphabetical": "A-Z"
+  },
+  "cart": {
+    "analyse_in_bilan": "Cette analyse est déjà incluse dans le bilan «{{bilan}}».",
+    "analyses_replaced": "{{count}} analyse(s) retirée(s), déjà couvertes par le bilan «{{bilan}}».",
+    "analyses_skipped_in_bilan": "{{count}} analyse(s) ignorée(s), déjà couvertes par un bilan dans votre panier.",
+    "tab_devis": "Mon Devis",
+    "tab_preparation": "Ma Préparation",
+    "download_pdf": "Télécharger / Imprimer PDF"
+  },
+  "preparation_summary": {
+    "open_btn": "Ma préparation",
+    "subtitle": "Fiche de préparation",
+    "title": "Votre visite au laboratoire",
+    "analyses_count": "{{count}} analyse(s) sélectionnée(s)",
+    "card_documents_title": "Documents Administratifs",
+    "cin": "Carte d'Identité Nationale (CIN)",
+    "mutuelle": "Carte de Mutuelle / Assurance",
+    "ordonnance": "Ordonnance médicale (si vous en avez une)",
+    "card_samples_title": "Vos Prélèvements & Préparation",
+    "tubes_provided": "Les flacons et tubes nécessaires sont fournis directement par le laboratoire.",
+    "fasting_warning": "Jeûne strict de {{hours}} heures requis avant votre prise de sang.",
+    "fasting_ok": "Aucun jeûne obligatoire pour vos analyses.",
+    "card_delay_title": "Délai & Devis",
+    "delay_same_day": "Résultats partiels ou complets disponibles le jour même.",
+    "delay_days": "Vos résultats seront disponibles sous {{days}} jour(s).",
+    "total_label": "Montant estimé de votre bilan",
+    "whatsapp_cta": "Envoyer mon récapitulatif sur WhatsApp"
+  },
+  "preanalytic": {
+    "section_label": "Conditions pré-analytiques",
+    "type_label": "Type de prélèvement",
+    "fasting_label": "Condition de jeûne",
+    "fasting_required": "Jeûne strict requis : {{hours}}h",
+    "fasting_not_required": "Jeûne non obligatoire",
+    "delay_label": "Délai de rendu",
+    "delay_same_day": "Résultat le jour même",
+    "delay_days": "Résultat sous {{days}} jour(s)",
+    "special_instructions_label": "Consignes spéciales"
   },
   "bilan": {
     "total_selected": "Total des analyses sélectionnées",

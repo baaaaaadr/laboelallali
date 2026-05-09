@@ -16,10 +16,13 @@ import TotalCalculator from "@/components/features/catalog/TotalCalculator";
 import CartDetailsModal from "@/components/features/catalog/CartDetailsModal";
 import { getCategoryIcon } from '@/utils/iconMapper';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { Search, Star, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { LAB_CONTACT } from "@/constants/contact";
 import MedicalLoader from "@/components/ui/MedicalLoader";
+
+const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
 
 // Data fetcher component
 const CatalogDataFetcher = ({
@@ -121,6 +124,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
   const [selectedAnalysisForDetails, setSelectedAnalysisForDetails] = useState<AnalyseItem | null>(null);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const [cartInitialTab, setCartInitialTab] = useState<'devis' | 'preparation'>('devis');
   const ITEMS_PER_PAGE = 24;
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
@@ -137,9 +141,6 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   }, [tabParam]);
   const [sortBy, setSortBy] = useState<SortOption>('popularity');
   const [closedCategories, setClosedCategories] = useState<Set<string>>(new Set());
-
-  // Normalize ID helper - removes all spaces and converts to uppercase
-  const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
 
   // Create analyses map for fast lookups
   const analysesMap = useMemo(() => {
@@ -328,45 +329,107 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   }, [selectedItems]);
 
   const toggleAnalyseInCart = useCallback((analyse: AnalyseItem) => {
-    setSelectedItems(prev => {
-      const inCart = prev.some(item => item.type === 'analyse' && item.item.id === analyse.id);
-      if (inCart) {
-        return prev.filter(item => !(item.type === 'analyse' && item.item.id === analyse.id));
-      } else {
-        return [...prev, { type: 'analyse' as const, item: analyse }];
-      }
-    });
-  }, []);
+    // If already a direct item, remove it
+    const inCartAsAnalyse = selectedItems.some(
+      item => item.type === 'analyse' && item.item.id === analyse.id
+    );
+    if (inCartAsAnalyse) {
+      setSelectedItems(prev =>
+        prev.filter(item => !(item.type === 'analyse' && item.item.id === analyse.id))
+      );
+      return;
+    }
+
+    // Block if already covered by a bilan in the cart
+    const normId = normalizeId(analyse.id);
+    const coveringBilan = selectedItems
+      .filter((item): item is Extract<CartItem, { type: 'bilan' }> => item.type === 'bilan')
+      .find(item => item.item.Composition_Codes.some(code => normalizeId(code) === normId));
+
+    if (coveringBilan) {
+      const bilanName = isArabic ? coveringBilan.item.Nom_Bilan_AR : coveringBilan.item.Nom_Bilan_FR;
+      toast(t('cart.analyse_in_bilan', 'Cette analyse est déjà incluse dans le bilan «{{bilan}}»', { bilan: bilanName }), {
+        icon: 'ℹ️',
+        duration: 4000,
+      });
+      return;
+    }
+
+    setSelectedItems(prev => [...prev, { type: 'analyse' as const, item: analyse }]);
+  }, [selectedItems, isArabic, t]);
 
   const toggleBilanInCart = useCallback((bilan: BilanItem) => {
+    // If already in cart, remove it
+    const inCart = selectedItems.some(item => item.type === 'bilan' && item.item.id === bilan.id);
+    if (inCart) {
+      setSelectedItems(prev =>
+        prev.filter(item => !(item.type === 'bilan' && item.item.id === bilan.id))
+      );
+      return;
+    }
+
+    // Remove individual analyses that are already covered by this bilan
+    const bilanNormCodes = new Set(bilan.Composition_Codes.map(code => normalizeId(code)));
+    const overlapping = selectedItems.filter(
+      item => item.type === 'analyse' && bilanNormCodes.has(normalizeId(item.item.id))
+    );
+
+    if (overlapping.length > 0) {
+      const bilanName = isArabic ? bilan.Nom_Bilan_AR : bilan.Nom_Bilan_FR;
+      toast(
+        t('cart.analyses_replaced', '{{count}} analyse(s) retirée(s), déjà couvertes par le bilan «{{bilan}}»', {
+          count: overlapping.length,
+          bilan: bilanName,
+        }),
+        { icon: 'ℹ️', duration: 5000 }
+      );
+    }
+
     setSelectedItems(prev => {
-      const inCart = prev.some(item => item.type === 'bilan' && item.item.id === bilan.id);
-      if (inCart) {
-        return prev.filter(item => !(item.type === 'bilan' && item.item.id === bilan.id));
-      } else {
-        return [...prev, { type: 'bilan' as const, item: bilan }];
-      }
+      const filtered = prev.filter(
+        item => !(item.type === 'analyse' && bilanNormCodes.has(normalizeId(item.item.id)))
+      );
+      return [...filtered, { type: 'bilan' as const, item: bilan }];
     });
-  }, []);
+  }, [selectedItems, isArabic, t]);
 
   // Add multiple analyses to cart (used by BilanDetailsModal)
-  const addAnalysesToCart = useCallback((analyses: AnalyseItem[]) => {
+  const addAnalysesToCart = useCallback((newAnalyses: AnalyseItem[]) => {
+    // Build set of analysis IDs already covered by bilans in the cart
+    const coveredCodes = new Set<string>();
+    selectedItems.forEach(item => {
+      if (item.type === 'bilan') {
+        item.item.Composition_Codes.forEach(code => coveredCodes.add(normalizeId(code)));
+      }
+    });
+
+    const toAdd = newAnalyses.filter(a => !coveredCodes.has(normalizeId(a.id)));
+    const skippedCount = newAnalyses.length - toAdd.length;
+
+    if (skippedCount > 0) {
+      toast(
+        t('cart.analyses_skipped_in_bilan', '{{count}} analyse(s) ignorée(s), déjà couvertes par un bilan dans votre panier', {
+          count: skippedCount,
+        }),
+        { icon: 'ℹ️', duration: 4000 }
+      );
+    }
+
+    if (toAdd.length === 0) return;
+
     setSelectedItems(prev => {
       const newItems = [...prev];
-
-      analyses.forEach(analyse => {
+      toAdd.forEach(analyse => {
         const alreadyInCart = newItems.some(
           item => item.type === 'analyse' && item.item.id === analyse.id
         );
-
         if (!alreadyInCart) {
           newItems.push({ type: 'analyse' as const, item: analyse });
         }
       });
-
       return newItems;
     });
-  }, []);
+  }, [selectedItems, t]);
 
   // NOUVEAU - Fonction pour retirer un item individuel du panier
   const removeItemFromCart = useCallback((itemToRemove: CartItem) => {
@@ -395,19 +458,29 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   // Frais de prélèvement fixes (acte de prise de sang)
   const SAMPLING_FEE = 20;
 
-  // Calculate total cost — bilans priced as sum of their analyses + flat 20 MAD sampling fee
+  // Calculate total cost — deduplicated by normalized analysis ID to prevent double-counting
   const totalCost = useMemo(() => {
-    const itemsTotal = selectedItems.reduce((sum, item) => {
+    const seen = new Set<string>();
+    let itemsTotal = 0;
+
+    for (const item of selectedItems) {
       if (item.type === 'analyse') {
-        return sum + item.item.Prix_Dhs;
+        const key = normalizeId(item.item.id);
+        if (!seen.has(key)) {
+          seen.add(key);
+          itemsTotal += item.item.Prix_Dhs;
+        }
       } else {
-        return sum + item.item.Composition_Codes.reduce((bSum, code) => {
-          const key = code.replace(/\s+/g, '').toUpperCase();
-          return bSum + (normalizedAnalysesMap.get(key)?.Prix_Dhs ?? 0);
-        }, 0);
+        for (const code of item.item.Composition_Codes) {
+          const key = normalizeId(code);
+          if (!seen.has(key)) {
+            seen.add(key);
+            itemsTotal += normalizedAnalysesMap.get(key)?.Prix_Dhs ?? 0;
+          }
+        }
       }
-    }, 0);
-    // Add flat sampling fee if cart is non-empty
+    }
+
     return selectedItems.length > 0 ? itemsTotal + SAMPLING_FEE : 0;
   }, [selectedItems, normalizedAnalysesMap]);
 
@@ -831,6 +904,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
           isRtl={isArabic}
           selectedItems={selectedItems}
           onOpenCartDetails={() => setIsCartModalOpen(true)}
+          onOpenPreparation={() => { setCartInitialTab('preparation'); setIsCartModalOpen(true); }}
         />
       )}
 
@@ -849,20 +923,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
       {/* Analysis Details Modal */}
       {selectedAnalysisForDetails && (
         <AnalysisDetailsModal
-          analysis={{
-            id: selectedAnalysisForDetails.id,
-            name_fr: selectedAnalysisForDetails.Nom_Patient_FR,
-            name_ar: selectedAnalysisForDetails.Nom_Patient_AR,
-            price: selectedAnalysisForDetails.Prix_Dhs,
-            category_fr: selectedAnalysisForDetails.Categorie_FR,
-            category_ar: selectedAnalysisForDetails.Categorie_AR,
-            preparation_fr: selectedAnalysisForDetails.Pre_Analytique_FR,
-            preparation_ar: selectedAnalysisForDetails.Pre_Analytique_AR,
-            description_fr: selectedAnalysisForDetails.Description_Patient_FR,
-            description_ar: selectedAnalysisForDetails.Description_Patient_AR,
-            technical_name: selectedAnalysisForDetails.Nom_Technique,
-            is_active: true
-          }}
+          analysis={selectedAnalysisForDetails}
           isOpen={analysisModalOpen}
           onClose={handleCloseAnalysisModal}
           lang={lang}
@@ -931,6 +992,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         currencyLabel={isArabic ? 'درهم' : 'MAD'}
         isRtl={isArabic}
         normalizedAnalysesMap={normalizedAnalysesMap}
+        initialTab={cartInitialTab}
         onViewAnalysisDetails={(analysis) => {
           setSelectedAnalysisForDetails(analysis);
           setAnalysisModalOpen(true);

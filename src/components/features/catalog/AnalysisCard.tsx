@@ -33,6 +33,10 @@ export interface AnalyseItem {
   Description_Patient_AR?: string;
   Nom_Technique?: string;
   Nombre_Demandes?: number;
+  CPA_Type?: string;        // e.g. "Sang", "Urine"
+  CPA_Jeune_H?: number;     // fasting hours, e.g. 0, 8, 12
+  CPA_Instructions?: string; // e.g. "Recueil 24h", can be empty
+  DRR_Jours?: number;       // turnaround days: 0 = same day, 1 = next day
 }
 
 // New interface for test packs/bilans from the 'bilans' collection

@@ -3,12 +3,12 @@
 import React from "react";
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { X, AlertCircle } from 'lucide-react';
+import { X, TestTube, Clock, CalendarClock, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Analysis } from './AnalysisCard';
+import { AnalyseItem } from './AnalysisCard';
 
 interface AnalysisDetailsModalProps {
-  analysis: Analysis | null;
+  analysis: AnalyseItem | null;
   isOpen: boolean;
   onClose: () => void;
   lang: string;
@@ -25,11 +25,14 @@ export function AnalysisDetailsModal({
 
   if (!analysis) return null;
 
-  const name = isArabic ? analysis.name_ar : analysis.name_fr;
-  const category = isArabic ? analysis.category_ar : analysis.category_fr;
-  const preparation = isArabic ? analysis.preparation_ar : analysis.preparation_fr;
-  const description = isArabic ? analysis.description_ar : analysis.description_fr;
-  const technicalName = analysis.technical_name;
+  const name = isArabic ? analysis.Nom_Patient_AR : analysis.Nom_Patient_FR;
+  const category = isArabic ? analysis.Categorie_AR : analysis.Categorie_FR;
+  const description = isArabic ? analysis.Description_Patient_AR : analysis.Description_Patient_FR;
+  const technicalName = analysis.Nom_Technique;
+
+  const fastingHours = analysis.CPA_Jeune_H ?? 0;
+  const deliveryDays = analysis.DRR_Jours ?? 0;
+  const requiresFasting = fastingHours > 0;
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -90,9 +93,9 @@ export function AnalysisDetailsModal({
                       {t('card.price_currency', 'Prix')}
                     </span>
                     <span className="text-3xl font-bold text-[#E3004F]">
-                      {analysis.price === 0
+                      {analysis.Prix_Dhs === 0
                         ? t('on_quote', 'Sur Devis')
-                        : `${analysis.price.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} MAD`
+                        : `${analysis.Prix_Dhs.toLocaleString(isArabic ? 'ar-MA' : 'fr-MA')} MAD`
                       }
                     </span>
                   </div>
@@ -122,29 +125,101 @@ export function AnalysisDetailsModal({
                   </div>
                 )}
 
-                {/* Preparation Instructions */}
-                {preparation && preparation.trim() && (
-                  <div className="mb-6 flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
-                    <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--text-primary)] mb-1">
-                        {t('card.preparation_label', 'Préparation')}
-                      </h4>
-                      <p className="text-sm text-[var(--text-secondary)] whitespace-pre-line leading-relaxed">
-                        {preparation}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                {/* Pre-Analytics Grid */}
+                <div className="mb-6">
+                  <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-4">
+                    {t('preanalytic.section_label', 'Conditions pré-analytiques')}
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-                {/* No preparation message */}
-                {(!preparation || !preparation.trim()) && (
-                  <div className="mb-6 p-4 bg-[var(--background-default)] rounded-lg border border-[var(--border-default)]">
-                    <p className="text-sm text-[var(--text-secondary)] text-center">
-                      {t('card.no_preparation', 'Aucune préparation spécifique requise')}
-                    </p>
+                    {/* Sample type */}
+                    {analysis.CPA_Type && (
+                      <div className="flex items-center gap-3 p-3 bg-[var(--background-default)] rounded-lg border border-[var(--border-default)]">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <TestTube className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-[var(--text-secondary)] font-medium">
+                            {t('preanalytic.type_label', 'Type de prélèvement')}
+                          </p>
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">
+                            {analysis.CPA_Type}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Fasting */}
+                    <div className={`flex items-center gap-3 p-3 rounded-lg border ${
+                      requiresFasting
+                        ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                        : 'bg-[var(--background-default)] border-[var(--border-default)]'
+                    }`}>
+                      <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${
+                        requiresFasting
+                          ? 'bg-orange-100 dark:bg-orange-900/40'
+                          : 'bg-[var(--background-secondary)]'
+                      }`}>
+                        <Clock className={`h-4 w-4 ${
+                          requiresFasting
+                            ? 'text-orange-600 dark:text-orange-400'
+                            : 'text-[var(--text-secondary)]'
+                        }`} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-[var(--text-secondary)] font-medium">
+                          {t('preanalytic.fasting_label', 'Condition de jeûne')}
+                        </p>
+                        <p className={`text-sm font-semibold ${
+                          requiresFasting
+                            ? 'text-orange-700 dark:text-orange-300'
+                            : 'text-[var(--text-primary)]'
+                        }`}>
+                          {requiresFasting
+                            ? t('preanalytic.fasting_required', 'Jeûne strict requis : {{hours}}h', { hours: fastingHours })
+                            : t('preanalytic.fasting_not_required', 'Jeûne non obligatoire')
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Delivery time */}
+                    <div className="flex items-center gap-3 p-3 bg-[var(--background-default)] rounded-lg border border-[var(--border-default)]">
+                      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-[var(--background-secondary)] flex items-center justify-center">
+                        <CalendarClock className="h-4 w-4 text-[var(--text-secondary)]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-[var(--text-secondary)] font-medium">
+                          {t('preanalytic.delay_label', 'Délai de rendu')}
+                        </p>
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">
+                          {deliveryDays === 0
+                            ? t('preanalytic.delay_same_day', 'Résultat le jour même')
+                            : t('preanalytic.delay_days', 'Résultat sous {{days}} jour(s)', { days: deliveryDays })
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Special instructions */}
+                    {analysis.CPA_Instructions && analysis.CPA_Instructions.trim() && (
+                      <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 sm:col-span-2">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+                          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                            {t('preanalytic.special_instructions_label', 'Consignes spéciales')}
+                          </p>
+                          <p className="text-sm text-[var(--text-primary)] mt-0.5 whitespace-pre-line leading-relaxed">
+                            {analysis.CPA_Instructions}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                   </div>
-                )}
+                </div>
 
                 {/* Close Button */}
                 <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-[var(--border-default)]">

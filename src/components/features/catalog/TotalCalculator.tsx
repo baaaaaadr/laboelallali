@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Analysis, CartItem } from './AnalysisCard';
 import { LAB_CONTACT } from '@/constants/contact';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, ClipboardList } from 'lucide-react';
 
 interface TotalCalculatorProps {
   totalCost: number;
@@ -15,6 +15,7 @@ interface TotalCalculatorProps {
   selectedAnalyses?: Analysis[]; // Legacy support
   selectedItems?: CartItem[]; // New mixed cart support
   onOpenCartDetails?: () => void; // NOUVEAU - Callback pour ouvrir la modale panier
+  onOpenPreparation?: () => void;
 }
 
 export default function TotalCalculator({
@@ -25,7 +26,8 @@ export default function TotalCalculator({
   isRtl = false,
   selectedAnalyses = [],
   selectedItems = [],
-  onOpenCartDetails
+  onOpenCartDetails,
+  onOpenPreparation
 }: TotalCalculatorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(selectedCount);
@@ -172,6 +174,18 @@ export default function TotalCalculator({
 
         {/* Right section - Reset button + WhatsApp button */}
         <div className="flex items-center gap-2">
+          {/* Preparation summary button */}
+          {onOpenPreparation && (
+            <button
+              onClick={onOpenPreparation}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              aria-label={t('preparation_summary.open_btn', 'Ma préparation')}
+              title={t('preparation_summary.open_btn', 'Ma préparation')}
+            >
+              <ClipboardList className="h-[18px] w-[18px]" />
+            </button>
+          )}
+
           {/* Reset button */}
           <button
             onClick={onReset}
@@ -278,6 +292,18 @@ export default function TotalCalculator({
             <ChevronUp className="h-3 w-3" />
           </div>
         </button>
+
+        {/* Preparation summary button */}
+        {onOpenPreparation && (
+          <button
+            onClick={onOpenPreparation}
+            className="w-full py-2 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors duration-200"
+            aria-label={t('preparation_summary.open_btn', 'Ma préparation')}
+          >
+            <ClipboardList className="h-4 w-4 flex-shrink-0" />
+            <span>{t('preparation_summary.open_btn', 'Ma préparation')}</span>
+          </button>
+        )}
 
         {/* WhatsApp button */}
         <button

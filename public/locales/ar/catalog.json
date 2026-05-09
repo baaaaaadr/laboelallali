@@ -32,7 +32,7 @@
   "card": {
     "category_label": "التصنيف:",
     "delay_label": "المدة:",
-    "price_currency": "درهم",
+    "price_currency": "السعر",
     "show_preparation": "عرض التحضير",
     "hide_preparation": "إخفاء التحضير",
     "preparation_label": "تعليمات التحضير:",
@@ -49,6 +49,44 @@
     "sort_by": "ترتيب حسب",
     "popularity": "الشعبية",
     "alphabetical": "أ-ي"
+  },
+  "cart": {
+    "analyse_in_bilan": "هذا التحليل مدرج بالفعل في الباقة «{{bilan}}».",
+    "analyses_replaced": "تم إزالة {{count}} تحليل/تحاليل، مشمولة بالفعل في الباقة «{{bilan}}».",
+    "analyses_skipped_in_bilan": "تم تجاهل {{count}} تحليل/تحاليل، مشمولة بالفعل في إحدى الباقات في سلتك.",
+    "tab_devis": "عرضي التقديري",
+    "tab_preparation": "تحضيري",
+    "download_pdf": "تنزيل / طباعة PDF"
+  },
+  "preparation_summary": {
+    "open_btn": "تحضيري",
+    "subtitle": "بطاقة التحضير",
+    "title": "زيارتك للمختبر",
+    "analyses_count": "{{count}} تحليل محدد",
+    "card_documents_title": "الوثائق الإدارية",
+    "cin": "بطاقة التعريف الوطنية",
+    "mutuelle": "بطاقة التأمين / التعاضدية",
+    "ordonnance": "الوصفة الطبية (إن توفرت)",
+    "card_samples_title": "عيناتك وشروط التحضير",
+    "tubes_provided": "الأنابيب والحاويات اللازمة متوفرة مباشرة في المختبر.",
+    "fasting_warning": "صيام إلزامي لمدة {{hours}} ساعة قبل سحب الدم.",
+    "fasting_ok": "لا يُشترط الصيام لتحاليلك.",
+    "card_delay_title": "المدة والتكلفة",
+    "delay_same_day": "النتائج الجزئية أو الكاملة متاحة في نفس اليوم.",
+    "delay_days": "ستكون نتائجك جاهزة خلال {{days}} يوم/أيام.",
+    "total_label": "المبلغ التقديري لفحوصاتك",
+    "whatsapp_cta": "إرسال ملخصي عبر واتساب"
+  },
+  "preanalytic": {
+    "section_label": "الشروط قبل التحليلية",
+    "type_label": "نوع العينة",
+    "fasting_label": "حالة الصيام",
+    "fasting_required": "صيام إلزامي : {{hours}} ساعة",
+    "fasting_not_required": "الصيام غير مطلوب",
+    "delay_label": "مدة الاستلام",
+    "delay_same_day": "النتيجة في نفس اليوم",
+    "delay_days": "النتيجة خلال {{days}} يوم/أيام",
+    "special_instructions_label": "تعليمات خاصة"
   },
   "bilan": {
     "total_selected": "مجموع التحاليل المحددة",

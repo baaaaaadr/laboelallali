@@ -1,0 +1,11 @@
+Code_Interne,Nom_FR,CPA_Type,CPA_Jeune,CPA_Instructions,DRR
+C  HBA1,Hémoglobine Glyquée (HbA1c),Sang,0,Non requis,J0
+H  NFS,NFS (Numération Sanguine),Sang,0,Non requis,J0
+C  GLY,Glycémie à jeun,Sang,8,Jeûne strict,J0
+C  CR,Créatinine (Reins),Sang,0,Jeûne préférable,J0
+C  U,Urée Sanguine,Sang,0,Jeûne préférable,J0
+N  TSH,TSH (Thyroïde),Sang,0,Le matin de préférence,J0
+C  CHOL,Cholestérol Total,Sang,12,Jeûne strict,J0
+EZ ALAT,ALAT (Foie),Sang,0,Jeûne préférable,J0
+EZ ASAT,ASAT (Foie),Sang,0,Jeûne préférable,J0
+C  CRP,CRP (Inflammation),Sang,0,Non requis,J0
