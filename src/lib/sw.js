@@ -1,5 +1,5 @@
 // Service Worker for LaboElAllali PWA
-const CACHE_NAME = 'laboelallali-v2';
+const CACHE_NAME = 'laboelallali-v3';
 const OFFLINE_PAGE = '/offline.html';
 
 // Install event - cache the application shell
@@ -25,7 +25,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - cache first, then network
+// Fetch event
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests and cross-origin requests
   if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
@@ -33,9 +33,16 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Skip chrome-extension and dev tools
-  if (event.request.url.includes('chrome-extension://') || 
-      event.request.url.includes('sockjs-node') || 
+  if (event.request.url.includes('chrome-extension://') ||
+      event.request.url.includes('sockjs-node') ||
       event.request.url.includes('__webpack_hmr')) {
+    return;
+  }
+
+  // Skip /_next/ chunks entirely — Next.js handles caching via HTTP Cache-Control headers.
+  // Cache-first here causes hydration mismatches: the SW serves stale JS while the server
+  // returns fresh HTML, creating server/client render divergence on full-page navigations.
+  if (event.request.url.includes('/_next/')) {
     return;
   }
 
@@ -44,7 +51,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // If we got a valid response, cache it
           if (response.status === 200 || response.status === 0) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -54,7 +60,6 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // If network fails, try cache
           return caches.match(event.request)
             .then((response) => response || caches.match(OFFLINE_PAGE));
         })
@@ -62,11 +67,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For other requests, try cache first, then network
+  // For other static assets (images, fonts, etc.), cache first then network
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       return cachedResponse || fetch(event.request).then((response) => {
-        // If we got a valid response, cache it
         if (response && (response.status === 200 || response.status === 0)) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {

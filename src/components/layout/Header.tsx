@@ -140,61 +140,24 @@ const Header = () => {
   }, [isLangDropdownOpen]);
 
   const handleLanguageChange = (newLocale: string) => {
-    console.log('🌍 [Language Change] Handler called', {
-      requestedLocale: newLocale,
-      currentUrlLang: urlLang,
-      currentPathname: pathname,
-      timestamp: new Date().toISOString()
-    });
+    if (newLocale === urlLang) return;
 
-    // Only change if it's different from current language
-    if (newLocale !== urlLang) {
-      console.log('🌍 [Language Change] Guard passed - different locale', {
-        newLocale,
-        urlLang,
-        willNavigate: true
-      });
-      // Extract the path after the language code
-      let pathWithoutLang = pathname;
-      const langPattern = new RegExp(`^/(${supportedLngs.join('|')})`);
-      if (langPattern.test(pathname)) {
-        // Remove the language prefix from the path
-        pathWithoutLang = pathname.replace(langPattern, '');
-        // If the path is empty after removing language code, set it to '/' for homepage
-        if (pathWithoutLang === '') pathWithoutLang = '/';
-      }
-
-      // Construct a new path with the new language code
-      const newPath = pathWithoutLang === '/'
-        ? `/${newLocale}`
-        : `/${newLocale}${pathWithoutLang}`;
-
-      console.log('🌍 [Language Change] Navigating', {
-        oldPath: pathname,
-        newPath: newPath,
-        method: 'window.location.href'
-      });
-
-      // Force a full page reload to reset i18n context
-      window.location.href = newPath;
-    } else {
-      console.log('🌍 [Language Change] Guard blocked - same locale', {
-        newLocale,
-        urlLang,
-        skipped: true
-      });
+    let pathWithoutLang = pathname;
+    const langPattern = new RegExp(`^/(${supportedLngs.join('|')})`);
+    if (langPattern.test(pathname)) {
+      pathWithoutLang = pathname.replace(langPattern, '');
+      if (pathWithoutLang === '') pathWithoutLang = '/';
     }
 
-    // Close the dropdown
+    const newPath = pathWithoutLang === '/'
+      ? `/${newLocale}`
+      : `/${newLocale}${pathWithoutLang}`;
+
+    router.push(newPath);
     setIsLangDropdownOpen(false);
   };
 
   const toggleLangDropdown = () => {
-    console.log('🌍 [Language Dropdown] Toggle clicked', {
-      currentState: isLangDropdownOpen,
-      willBecome: !isLangDropdownOpen,
-      timestamp: new Date().toISOString()
-    });
     setIsLangDropdownOpen(!isLangDropdownOpen);
   };
 

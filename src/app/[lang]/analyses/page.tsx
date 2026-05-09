@@ -1,7 +1,7 @@
 // src/app/[lang]/analyses/page.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo, Suspense, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { collection, query, getDocs } from "firebase/firestore";
 import { db } from "@/config/firebase";
@@ -158,6 +158,9 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     return map;
   }, [analyses]);
 
+  // Ref to guard against overwriting localStorage with [] before the initial load has run
+  const isFirstLoad = useRef(true);
+
   // Stable callbacks
   const handleDataFetched = useCallback((fetchedAnalyses: AnalyseItem[], fetchedBilans: BilanItem[]) => {
     setAnalyses(fetchedAnalyses);
@@ -172,33 +175,29 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     setLoading(isLoading);
   }, []);
 
-  // Load from localStorage
+  // Combined load-then-save effect.
+  // On the very first call: load from localStorage and return early (never write [] on mount).
+  // On all subsequent calls: save the current cart.
+  // This prevents the race where the save runs with [] before the load has updated state.
   useEffect(() => {
-    try {
-      const savedSelections = localStorage.getItem(STORAGE_KEY);
-      if (savedSelections) {
-        const parsedSelections = JSON.parse(savedSelections);
-        if (Array.isArray(parsedSelections)) {
-          setSelectedItems(parsedSelections);
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSelectedItems(parsed);
+            return; // state will update → effect re-runs → save happens then
+          }
         }
-      }
-    } catch {
-      // Silently ignore errors
+      } catch {}
+      return; // nothing to load, nothing to save on initial empty mount
     }
-  }, []);
-
-  // Save to localStorage
-  const saveSelectionsToStorage = useCallback((selections: CartItem[]) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(selections));
-    } catch {
-      // Silently ignore errors
-    }
-  }, []);
-
-  useEffect(() => {
-    saveSelectionsToStorage(selectedItems);
-  }, [selectedItems, saveSelectionsToStorage]);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedItems));
+    } catch {}
+  }, [selectedItems]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Search function
   const searchInItem = useCallback((item: AnalyseItem | BilanItem, term: string): boolean => {

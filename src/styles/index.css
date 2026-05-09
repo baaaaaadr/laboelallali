@@ -12,6 +12,9 @@
 /* 2. Tailwind CSS – compiled via PostCSS */
 @import "tailwindcss";
 
+/* Enable class-based dark mode for dark: utilities (Tailwind v4 CSS-first config) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* 3. Design System Variables */
 @import './system/variables.css';
 

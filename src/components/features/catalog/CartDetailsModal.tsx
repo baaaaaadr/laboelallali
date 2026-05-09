@@ -349,19 +349,19 @@ export function CartDetailsModal({
                     <button
                       key={id}
                       onClick={() => setActiveTab(id)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-4 px-3 text-sm font-semibold transition-colors border-b-2 ${
+                      className={`flex-1 flex items-center justify-center gap-2 py-4 px-2 text-sm font-semibold transition-colors border-b-2 ${
                         activeTab === id
                           ? 'border-[var(--color-fuchsia-accent)] text-[var(--color-fuchsia-accent)]'
                           : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       }`}
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">{label}</span>
+                      <span className="truncate max-[360px]:hidden">{label}</span>
                     </button>
                   ))}
                 </div>
                 {/* Actions */}
-                <div className="flex items-center gap-1 px-3 border-b-2 border-transparent py-4 flex-shrink-0">
+                <div className="flex items-center gap-1 px-2 border-b-2 border-transparent py-4 flex-shrink-0">
                   {selectedItems.length > 0 && (
                     <button
                       onClick={onClearCart}
@@ -454,9 +454,9 @@ export function CartDetailsModal({
 
                     {/* Documents — compact list */}
                     <div className="rounded-xl border border-[var(--border-default)] overflow-hidden">
-                      <div className="flex items-center gap-2.5 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-[var(--border-default)]">
-                        <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                        <h3 className="font-semibold text-sm text-[var(--text-primary)]">
+                      <div className="flex items-center gap-2.5 px-4 py-3 bg-blue-50 dark:bg-blue-900/50 border-b border-[var(--border-default)]">
+                        <FileText className="h-4 w-4 text-blue-600 dark:text-blue-300 flex-shrink-0" />
+                        <h3 className="font-semibold text-sm text-blue-900 dark:text-blue-100">
                           {tc('preparation_summary.card_documents_title', 'Documents Administratifs')}
                         </h3>
                       </div>
@@ -477,9 +477,9 @@ export function CartDetailsModal({
                     {/* Prélèvements — framed card with badge row */}
                     {sampleTypes.length > 0 && (
                       <div className="rounded-xl border border-[var(--border-default)] overflow-hidden">
-                        <div className="flex items-center gap-2.5 px-4 py-3 bg-teal-50 dark:bg-teal-900/20 border-b border-[var(--border-default)]">
-                          <TestTube className="h-4 w-4 text-teal-600 dark:text-teal-400 flex-shrink-0" />
-                          <h3 className="font-semibold text-sm text-[var(--text-primary)]">
+                        <div className="flex items-center gap-2.5 px-4 py-3 bg-teal-50 dark:bg-teal-900/50 border-b border-[var(--border-default)]">
+                          <TestTube className="h-4 w-4 text-teal-600 dark:text-teal-300 flex-shrink-0" />
+                          <h3 className="font-semibold text-sm text-teal-900 dark:text-teal-100">
                             {tc('preanalytic.type_label', 'Type de prélèvement')}
                           </h3>
                         </div>
@@ -510,9 +510,9 @@ export function CartDetailsModal({
 
                       {/* Fasting — orange alert or quiet green line */}
                       {requiresFasting ? (
-                        <div className="rounded-xl border border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 px-4 py-3 flex items-start gap-2.5">
-                          <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-                          <p className="text-sm font-semibold text-orange-800 dark:text-orange-200 leading-snug">
+                        <div className="rounded-xl border border-orange-400 dark:border-orange-600 bg-orange-100 dark:bg-orange-900/30 px-4 py-3 flex items-start gap-2.5">
+                          <AlertTriangle className="h-4 w-4 text-orange-700 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm font-semibold text-orange-900 dark:text-orange-200 leading-snug">
                             {tc('preparation_summary.fasting_warning', 'Jeûne strict de {{hours}} heures requis avant votre prise de sang.', { hours: maxJeune })}
                           </p>
                         </div>
@@ -550,7 +550,7 @@ export function CartDetailsModal({
                 <div className="border-t border-[var(--border-default)] px-4 py-3 bg-[var(--background-card)] flex-shrink-0 flex gap-2">
                   <button
                     onClick={onWhatsAppSend}
-                    className="flex-1 bg-[var(--status-success)] hover:brightness-90 text-white py-3 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm transition-colors shadow-md active:scale-[0.98]"
+                    className="flex-1 bg-[var(--status-success)] dark:bg-transparent dark:border dark:border-[var(--status-success)] text-white dark:text-[var(--status-success)] hover:brightness-90 dark:hover:bg-[var(--status-success)]/10 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm transition-colors shadow-md dark:shadow-none active:scale-[0.98]"
                   >
                     <MessageCircle className="h-4 w-4 flex-shrink-0" />
                     {t('analyses_catalog.selection.send_whatsapp', 'Envoyer via WhatsApp')}
