@@ -7,6 +7,8 @@ This is the main landing page of the Labo El Allali PWA.
 - Location: `src/app/[lang]/page.tsx` and `src/app/[lang]/HomeClient.tsx`
 - Key Features: Hero Banner, Lab Status (Opening Hours), Main Services, Location Info, Practical Info.
 - Components Used: `HeroBanner`, `WhyChooseUs`, `MainServices`, `LocationInfo`, `PracticalInfo`, `ContactModal`.
+- Hero action: "Whatsapp" opens the laboratory WhatsApp `wa.me` link in a new browser tab/window.
+- Hero action: "Localisation" opens the laboratory Google Maps listing in a new browser tab/window.
 
 ## Data Fetching
 - Client-side lab status checking.

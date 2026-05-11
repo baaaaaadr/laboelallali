@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Phone, MessageCircle, Mail, Clock, X, Check, Copy } from 'lucide-react';
+import { Building2, Phone, MessageCircle, Mail, Clock, X, Check, Copy, Printer } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LAB_CONTACT, LAB_WHATSAPP_NUMBER, LAB_HOURS } from '@/constants/contact';
 import { useLabStatus } from '@/hooks/useLabStatus';
@@ -27,6 +27,19 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -56,6 +69,24 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
       iconBg: 'bg-green-50 dark:bg-green-400/20'
     },
     {
+      id: 'companies',
+      icon: <Building2 size={20} />,
+      label: t('companies_label').replace(':', ''),
+      value: LAB_CONTACT.COMPANIES.display,
+      copyValue: LAB_CONTACT.COMPANIES.display.replace(/\s+/g, ''),
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      iconBg: 'bg-purple-50 dark:bg-purple-400/20'
+    },
+    {
+      id: 'fax',
+      icon: <Printer size={20} />,
+      label: t('fax_label').replace(':', ''),
+      value: LAB_CONTACT.FAX,
+      copyValue: LAB_CONTACT.FAX.replace(/\s+/g, ''),
+      iconColor: 'text-slate-600 dark:text-slate-300',
+      iconBg: 'bg-slate-50 dark:bg-slate-400/20'
+    },
+    {
       id: 'email',
       icon: <Mail size={20} />,
       label: 'EMAIL',
@@ -79,7 +110,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 font-primary">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-4 font-primary">
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-md transition-all duration-300" 
@@ -88,12 +119,12 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
 
       {/* Modal Container */}
       <div 
-        className="relative w-full max-w-md bg-[var(--background-card)] rounded-lg shadow-2xl overflow-hidden transform transition-all border border-[var(--border-default)]"
+        className="relative w-full max-w-md max-h-[calc(100vh-2rem)] bg-[var(--background-card)] rounded-lg shadow-2xl overflow-y-auto transform transition-all border border-[var(--border-default)]"
         role="dialog"
         aria-modal="true"
       >
         {/* Gradient Header - Labo Theme */}
-        <div className="relative bg-gradient-to-br from-[var(--color-bordeaux-primary)] to-[var(--color-fuchsia-accent)] p-6 md:p-8 text-white">
+        <div className="relative bg-gradient-to-br from-[var(--color-bordeaux-primary)] to-[var(--color-fuchsia-accent)] p-5 md:p-6 text-white">
           {/* Top-right controls: status badge + close button */}
           <div className="absolute top-4 right-4 flex items-center gap-2">
             <div className="flex items-center gap-1.5 bg-black/25 rounded-lg px-2.5 py-1 shadow-sm">
@@ -110,28 +141,28 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div className="flex items-start gap-4 pt-2">
-            <div className="bg-white/20 p-3 rounded-lg shadow-inner flex-shrink-0">
-              <Phone size={28} className="text-white" />
+            <div className="bg-white/20 p-2.5 rounded-lg shadow-inner flex-shrink-0">
+              <Phone size={24} className="text-white" />
             </div>
             <div className="flex-1 min-w-0 pr-32">
               <p className="text-xs font-bold tracking-wider uppercase !text-white/90 mb-1">{t('assistance')}</p>
-              <h2 className="text-2xl font-bold leading-tight !text-white">{t('hotline_contact')}</h2>
-              <p className="text-sm !text-white/90 mt-1 font-medium">{t('reply_fast')}</p>
+              <h2 className="text-xl font-bold leading-tight !text-white">{t('hotline_contact')}</h2>
+              <p className="text-xs !text-white/90 mt-1 font-medium">{t('reply_fast')}</p>
             </div>
           </div>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 md:p-8">
-          <div className="space-y-3">
+        <div className="p-5 md:p-6">
+          <div className="space-y-2">
             {contactItems.map((item) => (
               <div 
                 key={item.id}
-                className="flex items-center p-4 rounded-lg border border-[var(--border-default)] bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors cursor-pointer group shadow-sm"
+                className="flex items-center p-3 rounded-lg border border-[var(--border-default)] bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors cursor-pointer group shadow-sm"
                 onClick={() => handleCopy(item.copyValue, item.id)}
                 title="Cliquer pour copier"
               >
-                <div className={`p-3 rounded-lg mr-4 flex-shrink-0 ${item.iconBg} ${item.iconColor}`}>
+                <div className={`p-2.5 rounded-lg mr-3 flex-shrink-0 ${item.iconBg} ${item.iconColor}`}>
                   {React.cloneElement(item.icon as React.ReactElement, { className: 'text-current' })}
                 </div>
                 <div className="flex-1 overflow-hidden">
@@ -153,14 +184,14 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Horaires Section */}
-          <div className="mt-6 p-5 rounded-lg border border-[var(--color-fuchsia-accent)]/20 bg-[var(--background-secondary)] shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
+          <div className="mt-4 p-4 rounded-lg border border-[var(--color-fuchsia-accent)]/20 bg-[var(--background-secondary)] shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
               <Clock size={16} className="text-[var(--color-fuchsia-accent)]" />
               <h3 className="text-xs font-bold tracking-widest text-[var(--color-fuchsia-accent)] uppercase">{t('opening_hours')}</h3>
             </div>
             
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center border-b border-[var(--border-default)] pb-3">
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center border-b border-[var(--border-default)] pb-2">
                 <span className="text-[var(--text-secondary)] font-medium">{extractDay(mondayToFridayText)}</span>
                 <span className="font-bold bg-[var(--background-tertiary)] px-2 py-1 rounded text-[var(--text-primary)] shadow-sm border border-[var(--border-default)]">
                   {extractHours(mondayToFridayText)}

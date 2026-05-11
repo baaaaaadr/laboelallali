@@ -136,7 +136,7 @@
   "welcome_banner": "مرحبًا بكم في مختبر العلالي",
   "welcome_description": "صحتك هي أولويتنا. تحاليل طبية دقيقة وسريعة في أكادير.",
   "banner_alt": "صورة مختبر العلالي",
-  "send_prescription": "أرسل وصفتك الطبية",
+  "send_prescription": "واتساب",
   
   "analyses_catalog": {
     "selection": {
@@ -181,7 +181,7 @@
     "button": "حساب التكلفة"
   },
 
-  "navigate_to_lab": "الاتجاه إلى المختبر",
+  "navigate_to_lab": "الموقع",
 
   "practical_info": "معلومات عملية",
   "select_date": "اختر تاريخًا",

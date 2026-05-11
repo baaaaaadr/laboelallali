@@ -265,12 +265,17 @@ export default function UniversalSearchModal({ isOpen, onClose, lang }: Props) {
               className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0"
               aria-label="Effacer"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           )}
-          <kbd className="hidden sm:inline-flex items-center px-2 py-1 text-xs font-mono rounded border border-[var(--border-default)] text-[var(--text-tertiary)] flex-shrink-0">
-            Esc
-          </kbd>
+          <div className="w-px h-5 bg-[var(--border-default)] flex-shrink-0" aria-hidden="true" />
+          <button
+            onClick={onClose}
+            className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0 p-1 rounded-md hover:bg-[var(--background-secondary)]"
+            aria-label="Fermer la recherche"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Body */}

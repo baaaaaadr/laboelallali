@@ -1,8 +1,6 @@
 import React from 'react';
 import { Navigation, FileText } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
-import Link from 'next/link';
 // Import useTranslation hook without type issues
 import { useTranslation as useTranslationOriginal } from 'react-i18next';
 import { LAB_CONTACT } from '@/constants/contact';
@@ -28,8 +26,7 @@ interface HeroBannerProps {
 
 const HeroBanner: React.FC<HeroBannerProps> = ({ onCallClick, isMobile = true }) => {
   // Use a simpler approach without type assertions
-  const { t, i18n } = useTranslation('common');
-  const currentLang = i18n.language || 'fr';
+  const { t } = useTranslation('common');
 
   return (
     <div className="relative overflow-hidden -mt-[1px] w-full min-h-screen flex items-center justify-center hero-banner">
@@ -79,15 +76,17 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCallClick, isMobile = true })
                   {t('call_us')}
                 </button>
               )}
-              <Link
-                href={`/${currentLang}/rendez-vous`}
+              <a
+                href={LAB_CONTACT.WHATSAPP[0].url}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="button-fuchsia w-full sm:w-auto sm:min-w-[240px] text-lg"
               >
                 <FileText size={22} />
                 {t('send_prescription')}
-              </Link>
+              </a>
               <a
-                href="https://www.google.com/maps/dir/?api=1&destination=61+Bis+Rue+de+Marrakech+80020+Agadir"
+                href="https://maps.app.goo.gl/7ZnXdXo9wiehq2tm7"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="button-fuchsia w-full sm:w-auto sm:min-w-[220px] text-lg"

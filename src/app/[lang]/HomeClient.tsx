@@ -4,15 +4,25 @@ import HeroBanner from '@/components/features/home/HeroBanner';
 import { Clock } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from "react";
+import { useInView } from 'react-intersection-observer';
 import { useTranslation } from 'react-i18next';
 import { useLabStatus } from '@/hooks/useLabStatus';
 
-// Dynamically import below-the-fold components
-const WhyChooseUs = dynamic(() => import('@/components/features/home/WhyChooseUs'));
-const MainServices = dynamic(() => import('@/components/features/home/MainServices'));
-const LocationInfo = dynamic(() => import('@/components/features/home/LocationInfo'));
-const PracticalInfo = dynamic(() => import('@/components/features/home/PracticalInfo'));
+// Below-the-fold sections: no SSR + code-split → JS loaded only when near viewport
+const WhyChooseUs = dynamic(() => import('@/components/features/home/WhyChooseUs'), { ssr: false });
+const MainServices = dynamic(() => import('@/components/features/home/MainServices'), { ssr: false });
+const LocationInfo = dynamic(() => import('@/components/features/home/LocationInfo'), { ssr: false });
+const PracticalInfo = dynamic(() => import('@/components/features/home/PracticalInfo'), { ssr: false });
 const ContactModal = dynamic(() => import('@/components/ui/ContactModal'), { ssr: false });
+
+function LazySection({ children, minHeight = '200px' }: { children: React.ReactNode; minHeight?: string }) {
+  const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '350px 0px' });
+  return (
+    <div ref={ref} style={{ minHeight: inView ? undefined : minHeight }}>
+      {inView && children}
+    </div>
+  );
+}
 
 export default function HomeClient({ lang }: { lang: string }) {
   const { t, i18n } = useTranslation(['common', 'glabo']);
@@ -104,10 +114,10 @@ export default function HomeClient({ lang }: { lang: string }) {
       </div>
       
       <div className="container mx-auto px-4 pb-12">
-        <WhyChooseUs />
-        <MainServices lang={lang} />
-        <LocationInfo isClient={isClient} isMobile={isMobile} onCallClick={handleCallClick} />
-        <PracticalInfo lang={lang} />
+        <LazySection minHeight="300px"><WhyChooseUs /></LazySection>
+        <LazySection minHeight="400px"><MainServices lang={lang} /></LazySection>
+        <LazySection minHeight="400px"><LocationInfo isClient={isClient} isMobile={isMobile} onCallClick={handleCallClick} /></LazySection>
+        <LazySection minHeight="300px"><PracticalInfo lang={lang} /></LazySection>
       </div>
 
       <ContactModal 

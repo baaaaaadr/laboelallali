@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import type { MouseEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  LAB_NAME, 
   LAB_ADDRESS, 
-  LAB_CONTACT, 
-  LAB_HOURS 
+  LAB_CONTACT
 } from '@/constants/contact';
 
 // Dynamically import the PWA install button with SSR disabled
@@ -17,15 +18,56 @@ const PWAInstallButton = dynamic(
   { ssr: false }
 );
 
+const ContactModal = dynamic(() => import('@/components/ui/ContactModal'), { ssr: false });
+
 const Footer = () => {
   const { t } = useTranslation('common');
   const { i18n } = useTranslation();
+  const pathname = usePathname();
   const isRTL = i18n.language === 'ar';
   const currentYear = new Date().getFullYear();
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const uaMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const widthMobile = window.innerWidth < 768;
+      setIsMobile(uaMobile || widthMobile);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const handleHomeClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    const homePath = `/${i18n.language}`;
+
+    if (pathname === homePath || pathname === `${homePath}/`) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleDesktopContactClick = (e: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+    if (!isMobile) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsContactModalOpen(true);
+    }
+  };
+
+  const handleContactModalClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsContactModalOpen(true);
+  };
   
   return (
-    <footer className="footer-gradient text-white pt-12 pb-8 mt-4 dark:bg-gradient-to-br dark:from-[var(--brand-primary)] dark:via-[var(--color-bordeaux-light)] dark:to-[var(--brand-accent)]" suppressHydrationWarning>
-      <div className="container mx-auto px-4" suppressHydrationWarning>
+    <>
+      <footer className="footer-gradient text-white pt-12 pb-8 mt-4 dark:bg-gradient-to-br dark:from-[var(--brand-primary)] dark:via-[var(--color-bordeaux-light)] dark:to-[var(--brand-accent)]" suppressHydrationWarning>
+        <div className="container mx-auto px-4" suppressHydrationWarning>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm sm:text-base">
           {/* Contact Info */}
           <div suppressHydrationWarning>
@@ -41,14 +83,32 @@ const Footer = () => {
                   <span className="font-semibold">{t('lab_contact')}</span>
                 </div>
                 <div className={`${isRTL ? 'mr-7' : 'ml-7'}`}>
-                  <p>{t('landline_label')} <a href={LAB_CONTACT.LANDLINE.url} className="hover:underline">{LAB_CONTACT.LANDLINE.display}</a></p>
+                  <p>
+                    {t('landline_label')}{' '}
+                    <a href={LAB_CONTACT.LANDLINE.url} onClick={handleDesktopContactClick} className="hover:underline">
+                      {LAB_CONTACT.LANDLINE.display}
+                    </a>
+                  </p>
                   {LAB_CONTACT.WHATSAPP.map((whatsapp, index) => (
                     <p key={index}>
-                      {t('whatsapp_label')} <a href={whatsapp.url} className="hover:underline">{whatsapp.display}</a>
+                      {t('whatsapp_label')}{' '}
+                      <a href={whatsapp.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                        {whatsapp.display}
+                      </a>
                     </p>
                   ))}
-                  <p>{t('companies_label')} <a href={LAB_CONTACT.COMPANIES.url} className="hover:underline">{LAB_CONTACT.COMPANIES.display}</a></p>
-                  <p>{t('fax_label')} {LAB_CONTACT.FAX}</p>
+                  <p>
+                    {t('companies_label')}{' '}
+                    <a href={LAB_CONTACT.COMPANIES.url} onClick={handleDesktopContactClick} className="hover:underline">
+                      {LAB_CONTACT.COMPANIES.display}
+                    </a>
+                  </p>
+                  <p>
+                    {t('fax_label')}{' '}
+                    <button type="button" onClick={handleContactModalClick} className="p-0 text-left text-white hover:underline">
+                      {LAB_CONTACT.FAX}
+                    </button>
+                  </p>
                 </div>
               </li>
               <li className="flex items-start space-x-3">
@@ -74,7 +134,7 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">{t('quick_links')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link href={`/${i18n.language}`} className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
+                <Link href={`/${i18n.language}`} onClick={handleHomeClick} className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('home')}</span>
                 </Link>
@@ -147,7 +207,13 @@ const Footer = () => {
           <p className="footer-copyright">{currentYear} {t('laboratory_name')}. {t('rights_reserved')}</p>
         </div>
       </div>
-    </footer>
+      </footer>
+
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
+    </>
   );
 };
 
