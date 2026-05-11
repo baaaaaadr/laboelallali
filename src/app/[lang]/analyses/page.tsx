@@ -206,7 +206,9 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   useEffect(() => {
     if (selectedItems.length > 0 && !hasPanelAutoOpened.current) {
       hasPanelAutoOpened.current = true;
-      setIsPanelOpen(true);
+      if (window.matchMedia('(min-width: 1024px)').matches) {
+        setIsPanelOpen(true);
+      }
     }
   }, [selectedItems.length]); // eslint-disable-line react-hooks/exhaustive-deps
 

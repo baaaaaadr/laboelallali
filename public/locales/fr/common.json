@@ -179,6 +179,16 @@
         "website_reference": "Sélection faite depuis le site web."
       }
     }
+  },
+  "search": {
+    "modal_label": "Recherche universelle",
+    "placeholder": "Rechercher analyses, bilans, médecins...",
+    "loading": "Chargement des données...",
+    "hint": "Commencez à taper pour rechercher",
+    "no_results": "Aucun résultat pour",
+    "section_bilans": "Bilans",
+    "section_analyses": "Analyses",
+    "section_medecins": "Médecins"
   }
 }
 

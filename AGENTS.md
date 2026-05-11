@@ -28,3 +28,7 @@
 ## 4. Git & Deployment
 *   **Git Script:** Use `npm run git` to push quickly.
 *   **Firebase Hosting:** Use `npm run deploy:hosting` to build and deploy static Next.js assets to Firebase. Default full `npm run deploy` will attempt to build functions which may require missing environments.
+
+## 5. Automatic AI Documentation
+*   **Reading Context:** Before editing any page in `/src/app/[lang]/`, agents MUST read its corresponding documentation file in `/docs/pages/*.md`.
+*   **Updating Documentation:** If an agent modifies the structure, components, state, or logic of a page, they MUST update the corresponding markdown file in `/docs/pages/` so that future agents have accurate, up-to-date context.

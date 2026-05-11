@@ -23,6 +23,11 @@ const PWAInstallButton = dynamic(
   }
 );
 
+const UniversalSearchModal = dynamic(
+  () => import('@/components/features/search/UniversalSearchModal'),
+  { ssr: false }
+);
+
 function getLangFromPath(path: string) {
   const match = path.match(/^\/([a-zA-Z-]+)/);
   return match ? match[1] : 'fr'; // fallback on 'fr'
@@ -70,6 +75,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { t, i18n } = useTranslation('common');
   const router = useRouter();
   const pathname = usePathname();
@@ -226,8 +232,12 @@ const Header = () => {
             </button>
             {/* Theme Switcher - Always visible but minimal */}
             <ThemeSwitcher />
-            {/* Search - Hidden on mobile */}
-            <button className="hidden sm:flex p-2 lg:p-3 rounded-lg min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors">
+            {/* Search - Universal search modal trigger */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="flex p-2 lg:p-3 rounded-lg min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors"
+              aria-label={t('search.modal_label')}
+            >
               <Search size={20} className="text-white" />
             </button>
             {/* User Icon - Desktop only */}
@@ -458,6 +468,12 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      <UniversalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        lang={urlLang}
+      />
     </header>
   );
 };

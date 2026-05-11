@@ -219,5 +219,15 @@
     "ios_install_prompt_part3": "ثم 'إضافة إلى الشاشة الرئيسية'.",
     "ios_share_alt": "أيقونة المشاركة",
     "dismiss_banner_aria": "إغلاق شريط التثبيت"
+  },
+  "search": {
+    "modal_label": "البحث الشامل",
+    "placeholder": "ابحث عن تحاليل، باقات، أطباء...",
+    "loading": "جاري تحميل البيانات...",
+    "hint": "ابدأ الكتابة للبحث",
+    "no_results": "لا توجد نتائج لـ",
+    "section_bilans": "الباقات",
+    "section_analyses": "التحاليل",
+    "section_medecins": "الأطباء"
   }
 }

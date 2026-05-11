@@ -27,6 +27,12 @@ export default function MedecinsPage() {
     searchQuery: ''
   });
 
+  // Pre-fill search from ?q= URL param (e.g. coming from universal search modal)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) setFilters(prev => ({ ...prev, searchQuery: q }));
+  }, []);
+
   // Charger TOUTES les données UNE SEULE FOIS au montage
   useEffect(() => {
     async function loadData() {
