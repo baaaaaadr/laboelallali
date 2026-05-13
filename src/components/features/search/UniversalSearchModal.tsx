@@ -171,10 +171,14 @@ export default function UniversalSearchModal({ isOpen, onClose, lang }: Props) {
     ...results.medecins.map(m => ({ type: 'medecin' as const, id: m.id })),
   ], [results]);
 
-  const handleResultClick = useCallback((type: ResultType, searchQuery?: string) => {
+  const handleResultClick = useCallback((type: ResultType, name?: string) => {
     onClose();
-    if (type === 'medecin' && searchQuery) {
-      router.push(`/${lang}/medecins?q=${encodeURIComponent(searchQuery)}`);
+    if (type === 'medecin' && name) {
+      router.push(`/${lang}/medecins?q=${encodeURIComponent(name)}`);
+    } else if (type === 'bilan' && name) {
+      router.push(`/${lang}/analyses?tab=bilans&q=${encodeURIComponent(name)}`);
+    } else if (type === 'analyse' && name) {
+      router.push(`/${lang}/analyses?tab=all&q=${encodeURIComponent(name)}`);
     } else {
       router.push(`/${lang}/analyses`);
     }
@@ -211,8 +215,12 @@ export default function UniversalSearchModal({ isOpen, onClose, lang }: Props) {
           if (item.type === 'medecin') {
             const m = results.medecins.find(x => x.id === item.id);
             handleResultClick('medecin', m ? `${m.prenom} ${m.nom}` : undefined);
+          } else if (item.type === 'bilan') {
+            const b = results.bilans.find(x => x.id === item.id);
+            handleResultClick('bilan', b ? (isArabic ? b.Nom_Bilan_AR : b.Nom_Bilan_FR) : undefined);
           } else {
-            handleResultClick(item.type);
+            const a = results.analyses.find(x => x.id === item.id);
+            handleResultClick('analyse', a ? (isArabic ? a.Nom_Patient_AR : a.Nom_Patient_FR) : undefined);
           }
         }
       }
@@ -325,7 +333,7 @@ export default function UniversalSearchModal({ isOpen, onClose, lang }: Props) {
                       <li key={`bilan-${bilan.id}`} role="option" aria-selected={isActive}>
                         <button
                           ref={el => { itemRefs.current[idx] = el; }}
-                          onClick={() => handleResultClick('bilan')}
+                          onClick={() => handleResultClick('bilan', isArabic ? bilan.Nom_Bilan_AR : bilan.Nom_Bilan_FR)}
                           onMouseEnter={() => setActiveIndex(idx)}
                           className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${isActive ? 'ring-1 ring-inset ring-[var(--color-bordeaux-primary)]' : ''}`}
                           style={{ backgroundColor: isActive ? 'var(--color-bordeaux-pale)' : 'transparent' }}
@@ -369,7 +377,7 @@ export default function UniversalSearchModal({ isOpen, onClose, lang }: Props) {
                       <li key={`analyse-${analyse.id}`} role="option" aria-selected={isActive}>
                         <button
                           ref={el => { itemRefs.current[idx] = el; }}
-                          onClick={() => handleResultClick('analyse')}
+                          onClick={() => handleResultClick('analyse', isArabic ? analyse.Nom_Patient_AR : analyse.Nom_Patient_FR)}
                           onMouseEnter={() => setActiveIndex(idx)}
                           className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${isActive ? 'ring-1 ring-inset ring-[var(--color-bordeaux-primary)]' : ''}`}
                           style={{ backgroundColor: isActive ? 'var(--color-bordeaux-pale)' : 'transparent' }}

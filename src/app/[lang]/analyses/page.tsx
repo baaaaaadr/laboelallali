@@ -134,6 +134,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   // NEW: Tabs state
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
+  const qParam = searchParams.get('q');
   const [activeTab, setActiveTab] = useState<string>('bilans');
 
   // Handle initial tab from query param
@@ -142,6 +143,11 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
       setActiveTab(tabParam);
     }
   }, [tabParam]);
+
+  // Pre-fill search from ?q= URL param (e.g. coming from universal search modal)
+  useEffect(() => {
+    if (qParam) setSearchTerm(qParam);
+  }, [qParam]);
   const [sortBy, setSortBy] = useState<SortOption>('popularity');
   const [closedCategories, setClosedCategories] = useState<Set<string>>(new Set());
 

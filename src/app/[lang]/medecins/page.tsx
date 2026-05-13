@@ -103,6 +103,8 @@ export default function MedecinsPage() {
         const commune = m.commune ? String(m.commune).toLowerCase() : '';
         return nom.includes(searchTerm) ||
           prenom.includes(searchTerm) ||
+          `${prenom} ${nom}`.includes(searchTerm) ||
+          `${nom} ${prenom}`.includes(searchTerm) ||
           specialite.includes(searchTerm) ||
           commune.includes(searchTerm);
       });
