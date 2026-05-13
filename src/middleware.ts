@@ -59,9 +59,9 @@ export function middleware(req: NextRequest) {
     // if (!lng && req.headers.has('accept-language')) {
     //   lng = acceptLanguage.get(req.headers.get('accept-language'));
     // }
-    // Pour garantir que français est toujours la langue par défaut
+    // Langue par défaut (arabe) si aucune détection n'est possible
     if (!lng) {
-      lng = fallbackLng; // 'fr' défini dans i18n.ts
+      lng = fallbackLng; 
     }
 
     // Rediriger vers le même chemin préfixé par la langue détectée

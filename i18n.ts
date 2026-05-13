@@ -1,7 +1,7 @@
 // i18n.ts
 import type { InitOptions } from 'i18next';
 
-export const fallbackLng = 'fr';
+export const fallbackLng = 'ar';
 export const supportedLngs = ['fr', 'ar'];
 export const defaultNS = 'common';
 // Nom de cookie spécifique à l'application pour éviter les conflits
