@@ -171,8 +171,8 @@ button {
 }
 
 .dark .hero-banner-overlay {
-  background-color: var(--brand-primary-hover);
-  opacity: 0.7;
+  background-color: var(--hero-overlay-bg);
+  opacity: var(--hero-overlay-opacity);
 }
 
 /* FIXED: Button utilities with proper sizing and visibility */

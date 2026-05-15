@@ -183,13 +183,13 @@ export default function PWAInstallButton({
     <div className={`w-full sm:w-auto ${className}`} style={style}>
       <button
         onClick={handleInstallClick}
-        className={`bg-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-bright)] text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 w-full transition-all ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`bg-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-bright)] text-white text-base font-semibold px-[1.75rem] py-[0.875rem] min-h-[48px] rounded-lg flex items-center justify-center gap-2 w-full transition-all ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         title={isClientReady ? t('pwa.install_app_title') : 'Install Application'}
         disabled={isDisabled}
         aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
       >
         <Download size={20} />
-        <span className="font-medium">{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
+        <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
       </button>
     </div>
   );

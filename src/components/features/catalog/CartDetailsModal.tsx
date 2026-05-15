@@ -10,6 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { CartItem, AnalyseItem, BilanItem } from './AnalysisCard';
 import { usePreparationRules } from '@/hooks/usePreparationRules';
+import { generateDevisPdf } from '@/lib/pdf/generateDevisPdf';
 
 type TabId = 'devis' | 'preparation';
 
@@ -27,181 +28,6 @@ interface CartDetailsModalProps {
   onViewBilanDetails: (bilan: BilanItem) => void;
   normalizedAnalysesMap?: Map<string, AnalyseItem>;
   initialTab?: TabId;
-}
-
-// ---------------------------------------------------------------------------
-// Printable HTML generator (zero-dependency, works via window.print())
-// ---------------------------------------------------------------------------
-function generatePrintableHTML(data: {
-  items: Array<{ name: string; category: string; price: number }>;
-  totalCost: number;
-  currencyLabel: string;
-  maxJeune: number;
-  maxDRR: number;
-  sampleTypes: string[];
-  specialInstructions: string[];
-  isRtl: boolean;
-  locale: string;
-}): string {
-  const { items, totalCost, currencyLabel, maxJeune, maxDRR, sampleTypes, specialInstructions, isRtl, locale } = data;
-  const today = new Date().toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
-  const dir = isRtl ? 'rtl' : 'ltr';
-  const lang = isRtl ? 'ar' : 'fr';
-
-  // ── Devis column ──────────────────────────────────────────────────────────
-  const itemsHTML = items.map(item => `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f3f4f6;">
-      <div style="min-width:0;flex:1;">
-        <div style="font-weight:600;color:#111827;font-size:13px;line-height:1.3;">${item.name}</div>
-        <div style="font-size:11px;color:#9ca3af;margin-top:1px;">${item.category}</div>
-      </div>
-      <div style="font-weight:700;color:#e3004f;font-size:14px;white-space:nowrap;padding-${isRtl ? 'right' : 'left'}:12px;">
-        ${item.price.toLocaleString(locale)} ${currencyLabel}
-      </div>
-    </div>`).join('');
-
-  const devisColumn = `
-    <div class="card" style="border-top:3px solid #e3004f;">
-      <div class="card-header" style="background:#fdf2f8;">
-        <div class="dot" style="background:#e3004f;"></div>
-        <span style="font-weight:700;font-size:14px;color:#9d174d;">${isRtl ? 'التفاصيل والتكلفة' : 'Mon Devis'}</span>
-      </div>
-      <div class="card-body">
-        ${itemsHTML}
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280;margin-bottom:3px;">
-            <span>${isRtl ? 'المجموع الفرعي' : 'Sous-total'}</span>
-            <span>${(totalCost - 20).toLocaleString(locale)} ${currencyLabel}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280;margin-bottom:6px;">
-            <span>${isRtl ? 'رسوم أخذ العينة' : 'Frais de prélèvement'}</span>
-            <span>20 ${currencyLabel}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff1f4;border-radius:8px;">
-            <span style="font-size:14px;font-weight:700;">${isRtl ? 'المجموع' : 'Total'}</span>
-            <span style="font-size:20px;font-weight:800;color:#e3004f;">${totalCost.toLocaleString(locale)} ${currencyLabel}</span>
-          </div>
-        </div>
-      </div>
-    </div>`;
-
-  // ── Préparation column ────────────────────────────────────────────────────
-  const docItems = isRtl
-    ? ['بطاقة التعريف الوطنية', 'بطاقة التأمين / التعاضدية', 'الوصفة الطبية (إن توفرت)']
-    : ["Carte d'Identité Nationale (CIN)", 'Carte de Mutuelle / Assurance', 'Ordonnance médicale (si vous en avez une)'];
-
-  const sampleBadges = sampleTypes.length > 0
-    ? `<div class="card" style="border-top:3px solid #0d9488;">
-        <div class="card-header" style="background:#f0fdfa;">
-          <div class="dot" style="background:#0d9488;"></div>
-          <span style="font-weight:700;font-size:14px;color:#115e59;">${isRtl ? 'نوع العينة' : 'Type de prélèvement'}</span>
-        </div>
-        <div class="card-body" style="display:flex;flex-wrap:wrap;gap:6px;">
-          ${sampleTypes.map(st => `<span style="background:#ccfbf1;color:#0f766e;border:1px solid #99f6e4;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">${st}</span>`).join('')}
-        </div>
-      </div>`
-    : '';
-
-  const fastingHTML = maxJeune > 0
-    ? `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;display:flex;gap:8px;align-items:flex-start;">
-        <span style="color:#ea580c;font-size:15px;line-height:1;flex-shrink:0;margin-top:1px;">&#9888;</span>
-        <strong style="color:#9a3412;font-size:13px;line-height:1.4;">${isRtl ? `صيام إلزامي لمدة ${maxJeune} ساعة قبل سحب الدم.` : `Jeûne strict de ${maxJeune}h requis avant votre prise de sang.`}</strong>
-      </div>`
-    : `<div style="display:flex;gap:8px;align-items:center;">
-        <span style="color:#16a34a;font-size:15px;">&#10003;</span>
-        <span style="color:#166534;font-size:13px;">${isRtl ? 'لا يُشترط الصيام لتحاليلك.' : 'Aucun jeûne obligatoire.'}</span>
-      </div>`;
-
-  const instructionsHTML = specialInstructions.length > 0
-    ? `<div style="margin-top:8px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
-        ${specialInstructions.map((instr, i) => `
-          <div style="display:flex;gap:8px;align-items:flex-start;padding:7px 12px;${i > 0 ? 'border-top:1px solid #f3f4f6;' : ''}background:#fafafa;">
-            <span style="color:#6b7280;font-size:13px;flex-shrink:0;margin-top:1px;">&#x2139;</span>
-            <span style="font-size:13px;color:#374151;line-height:1.4;">${instr}</span>
-          </div>`).join('')}
-      </div>`
-    : '';
-
-  const delayText = maxDRR === 0
-    ? (isRtl ? 'النتائج متاحة في نفس اليوم.' : 'Résultats disponibles le jour même.')
-    : (isRtl ? `النتائج جاهزة خلال ${maxDRR} يوم.` : `Résultats sous ${maxDRR} jour(s).`);
-
-  const prepColumn = `
-    <div class="card" style="border-top:3px solid #1d4ed8;">
-      <div class="card-header" style="background:#eff6ff;">
-        <div class="dot" style="background:#1d4ed8;"></div>
-        <span style="font-weight:700;font-size:14px;color:#1e3a8a;">${isRtl ? 'الوثائق الإدارية' : 'Documents'}</span>
-      </div>
-      <div class="card-body">
-        <ul style="list-style:none;margin:0;padding:0;">
-          ${docItems.map(d => `<li style="display:flex;gap:8px;padding:4px 0;font-size:13px;"><span style="width:5px;height:5px;background:#3b82f6;border-radius:50%;flex-shrink:0;margin-top:6px;"></span>${d}</li>`).join('')}
-        </ul>
-      </div>
-    </div>
-    ${sampleBadges}
-    <div class="card" style="border-top:3px solid #d97706;">
-      <div class="card-header" style="background:#fffbeb;">
-        <div class="dot" style="background:#d97706;"></div>
-        <span style="font-weight:700;font-size:14px;color:#92400e;">${isRtl ? 'التحضير' : 'Préparation'}</span>
-      </div>
-      <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
-        ${fastingHTML}
-        ${instructionsHTML}
-      </div>
-    </div>
-    <div class="card" style="border-top:3px solid #16a34a;">
-      <div class="card-header" style="background:#f0fdf4;">
-        <div class="dot" style="background:#16a34a;"></div>
-        <span style="font-weight:700;font-size:14px;color:#166534;">${isRtl ? 'مدة الاستلام' : 'Délai de rendu'}</span>
-      </div>
-      <div class="card-body"><p style="font-size:13px;color:#374151;">${delayText}</p></div>
-    </div>`;
-
-  return `<!DOCTYPE html>
-<html dir="${dir}" lang="${lang}">
-<head>
-  <meta charset="utf-8">
-  <title>${isRtl ? 'بطاقة التحضير - مختبر الوهابي' : 'Fiche de préparation - Laboratoire El Allali'}</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #111827; max-width: 860px; margin: 0 auto; padding: 32px 28px; line-height: 1.5; background: #fff; }
-    .card { border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
-    .card-header { padding: 10px 16px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 10px; }
-    .card-body { padding: 14px 16px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-    @media print {
-      body { padding: 18px; max-width: 100%; }
-      .card { page-break-inside: avoid; }
-      .columns { grid-template-columns: 1fr 1fr; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Header with logo -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:18px;margin-bottom:22px;border-bottom:2px solid #800020;">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <img src="/images/icons/logo-header.png" alt="Labo El Allali" style="height:48px;width:auto;object-fit:contain;" />
-      <div>
-        <div style="font-size:18px;font-weight:800;color:#800020;line-height:1.2;">Laboratoire El Allali</div>
-        <div style="font-size:12px;color:#6b7280;margin-top:2px;">${isRtl ? 'بطاقة التحضير' : 'Fiche de préparation'}</div>
-      </div>
-    </div>
-    <div style="text-align:${isRtl ? 'left' : 'right'};">
-      <div style="font-size:12px;color:#9ca3af;">${today}</div>
-      <div style="font-size:11px;color:#d1d5db;margin-top:2px;">${isRtl ? 'وثيقة إرشادية' : 'Document indicatif'}</div>
-    </div>
-  </div>
-
-  <!-- 2-column layout -->
-  <div class="columns">
-    <div>${devisColumn}</div>
-    <div>${prepColumn}</div>
-  </div>
-
-</body>
-</html>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -265,10 +91,13 @@ export function CartDetailsModal({
   };
 
   const handleDownloadPdf = () => {
-    const html = generatePrintableHTML({
-      items: selectedItems.map(item => ({
-        name: getItemName(item),
-        category: getItemCategory(item),
+    void generateDevisPdf({
+      bilans: bilans.map(item => ({
+        name: item.item.Nom_Bilan_FR,
+        price: getItemPrice(item),
+      })),
+      analyses: analyses.map(item => ({
+        name: item.item.Nom_Patient_FR,
         price: getItemPrice(item),
       })),
       totalCost,
@@ -277,15 +106,7 @@ export function CartDetailsModal({
       maxDRR,
       sampleTypes,
       specialInstructions,
-      isRtl,
-      locale,
     });
-
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => { win.focus(); win.print(); }, 500);
   };
 
   // Shared item row renderer (used in both bilans and analyses sections)

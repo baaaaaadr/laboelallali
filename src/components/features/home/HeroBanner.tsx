@@ -100,7 +100,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCallClick, isMobile = true })
             <div className="flex justify-center w-full">
               <PWAInstallButton
                 variant="button"
-                className="button-fuchsia w-full sm:w-auto sm:min-w-[200px] text-lg"
+                className="w-full sm:w-auto sm:min-w-[200px]"
               />
             </div>
           </div>

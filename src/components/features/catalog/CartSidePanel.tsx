@@ -9,6 +9,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { CartItem, AnalyseItem, BilanItem } from './AnalysisCard';
 import { usePreparationRules } from '@/hooks/usePreparationRules';
+import { generateDevisPdf } from '@/lib/pdf/generateDevisPdf';
 
 type TabId = 'devis' | 'preparation';
 
@@ -74,198 +75,23 @@ export function CartSidePanel({
     }, 0);
   };
 
-  const handleDownloadPdf = async () => {
-    const { jsPDF } = await import('jspdf');
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-
-    // Layout
-    const W = 210, H = 297, mg = 13;
-    const col = (W - mg * 2 - 6) / 2; // ~89mm per column
-    const c1 = mg, c2 = mg + col + 6;
-
-    // Shorthand helpers
-    const f = (r: number, g: number, b: number) => doc.setFillColor(r, g, b);
-    const d = (r: number, g: number, b: number) => doc.setDrawColor(r, g, b);
-    const x = (r: number, g: number, b: number) => doc.setTextColor(r, g, b);
-
-    // PDF always French – jsPDF built-in fonts can't render Arabic shaping
-    const pdfName = (item: CartItem) =>
-      item.type === 'analyse' ? item.item.Nom_Patient_FR : item.item.Nom_Bilan_FR;
-
-    const today = new Date().toLocaleDateString('fr-MA', {
-      day: '2-digit', month: 'long', year: 'numeric',
+  const handleDownloadPdf = () => {
+    void generateDevisPdf({
+      bilans: bilans.map(item => ({
+        name: item.item.Nom_Bilan_FR,
+        price: getItemPrice(item),
+      })),
+      analyses: analyses.map(item => ({
+        name: item.item.Nom_Patient_FR,
+        price: getItemPrice(item),
+      })),
+      totalCost,
+      currencyLabel,
+      maxJeune,
+      maxDRR,
+      sampleTypes,
+      specialInstructions,
     });
-
-    // ── HEADER ────────────────────────────────────────────────────────
-    f(128, 0, 32); doc.rect(0, 0, W, 21, 'F');
-
-    try {
-      await new Promise<void>((res, rej) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          const px = 83; // 14mm @ 150 DPI — no need to embed at native resolution
-          const cv = document.createElement('canvas');
-          cv.width = px; cv.height = px;
-          cv.getContext('2d')!.drawImage(img, 0, 0, px, px);
-          doc.addImage(cv.toDataURL('image/png'), 'PNG', mg, 3.5, 14, 14);
-          res();
-        };
-        img.onerror = rej;
-        img.src = '/images/icons/logo-header.png';
-      });
-    } catch { /* skip logo on CORS failure */ }
-
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); x(255, 255, 255);
-    doc.text('Laboratoire El Allali', mg + 17, 10.5);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); x(220, 190, 200);
-    doc.text('Fiche de preparation', mg + 17, 16.5);
-    doc.setFontSize(7); x(190, 160, 170);
-    doc.text(today, W - mg, 11, { align: 'right' });
-
-    // ── COLUMN TITLE BARS ─────────────────────────────────────────────
-    let lY = 27, rY = 27;
-
-    f(227, 0, 79); doc.roundedRect(c1, lY, col, 7, 1.2, 1.2, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); x(255, 255, 255);
-    doc.text('MON DEVIS', c1 + 3, lY + 4.7);
-    doc.setFontSize(6);
-    doc.text(`${selectedItems.length} analyse${selectedItems.length > 1 ? 's' : ''}`, c1 + col - 3, lY + 4.7, { align: 'right' });
-
-    f(29, 78, 216); doc.roundedRect(c2, rY, col, 7, 1.2, 1.2, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); x(255, 255, 255);
-    doc.text('MA PREPARATION', c2 + 3, rY + 4.7);
-    lY += 10; rY += 10;
-
-    // ── LEFT: ITEM LIST ────────────────────────────────────────────────
-    const groupLabel = (label: string, y: number) => {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(6.2); x(107, 114, 128);
-      doc.text(label, c1, y);
-      return y + 3.5;
-    };
-    const itemRow = (item: CartItem, y: number) => {
-      const name = pdfName(item);
-      const price = getItemPrice(item);
-      const trunc = name.length > 36 ? name.slice(0, 34) + '...' : name;
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); x(17, 24, 39);
-      doc.text(trunc, c1 + 2, y);
-      doc.setFont('helvetica', 'bold'); x(227, 0, 79);
-      doc.text(`${price.toLocaleString('fr-MA')} ${currencyLabel}`, c1 + col, y, { align: 'right' });
-      d(232, 232, 232); doc.setLineWidth(0.25);
-      doc.line(c1, y + 1.8, c1 + col, y + 1.8);
-      return y + 6;
-    };
-
-    if (bilans.length > 0) {
-      lY = groupLabel('BILANS', lY);
-      bilans.forEach(item => { lY = itemRow(item, lY); });
-      lY += 2;
-    }
-    if (analyses.length > 0) {
-      lY = groupLabel('ANALYSES', lY);
-      analyses.forEach(item => { lY = itemRow(item, lY); });
-      lY += 2;
-    }
-
-    // Total box
-    f(243, 244, 246); doc.roundedRect(c1, lY, col, 21, 1.5, 1.5, 'F');
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); x(107, 114, 128);
-    doc.text('Sous-total', c1 + 3, lY + 5.5);
-    doc.text(`${(totalCost - 20).toLocaleString('fr-MA')} ${currencyLabel}`, c1 + col - 3, lY + 5.5, { align: 'right' });
-    doc.text('Frais de prelevement', c1 + 3, lY + 11);
-    doc.text(`20 ${currencyLabel}`, c1 + col - 3, lY + 11, { align: 'right' });
-    d(227, 0, 79); doc.setLineWidth(0.4);
-    doc.line(c1 + 2, lY + 13.5, c1 + col - 2, lY + 13.5);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); x(17, 24, 39);
-    doc.text('Total', c1 + 3, lY + 19);
-    doc.setFontSize(11); x(227, 0, 79);
-    doc.text(`${totalCost.toLocaleString('fr-MA')} ${currencyLabel}`, c1 + col - 3, lY + 19, { align: 'right' });
-
-    // ── RIGHT: DOCUMENTS ──────────────────────────────────────────────
-    const docList = ["Carte d'Identite (CIN)", "Mutuelle / Assurance", "Ordonnance (si disponible)"];
-    const dcH = 9 + docList.length * 6.5;
-    f(239, 246, 255); doc.roundedRect(c2, rY, col, dcH, 1.5, 1.5, 'F');
-    d(29, 78, 216); doc.setLineWidth(0.5); doc.line(c2, rY + 2.5, c2, rY + dcH - 2.5);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); x(29, 78, 216);
-    doc.text('Documents a apporter', c2 + 4.5, rY + 6);
-    docList.forEach((item, i) => {
-      f(29, 78, 216); doc.circle(c2 + 6, rY + 11 + i * 6.5, 0.9, 'F');
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(7); x(17, 24, 39);
-      doc.text(item, c2 + 9, rY + 11.5 + i * 6.5);
-    });
-    rY += dcH + 4;
-
-    // Sample types
-    if (sampleTypes.length > 0) {
-      const stH = 9 + Math.ceil(sampleTypes.length / 2) * 7;
-      f(240, 253, 250); doc.roundedRect(c2, rY, col, stH, 1.5, 1.5, 'F');
-      d(13, 148, 136); doc.setLineWidth(0.5); doc.line(c2, rY + 2.5, c2, rY + stH - 2.5);
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(7); x(13, 148, 136);
-      doc.text('Type de prelevement', c2 + 4.5, rY + 6);
-      let tx = c2 + 4.5, ty = rY + 12;
-      sampleTypes.forEach(s => {
-        const label = s.slice(0, 14);
-        const tw = Math.min(label.length * 1.95 + 6, col / 2 - 3);
-        if (tx + tw > c2 + col - 2) { tx = c2 + 4.5; ty += 7; }
-        f(204, 251, 241); doc.roundedRect(tx, ty - 4, tw, 5.5, 1, 1, 'F');
-        doc.setFontSize(6.5); x(15, 118, 110);
-        doc.text(label, tx + 3, ty);
-        tx += tw + 3;
-      });
-      rY += stH + 4;
-    }
-
-    // Fasting
-    if (requiresFasting) {
-      f(255, 247, 237); doc.roundedRect(c2, rY, col, 14, 1.5, 1.5, 'F');
-      d(217, 119, 6); doc.setLineWidth(0.5); doc.line(c2, rY + 2.5, c2, rY + 11.5);
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); x(217, 119, 6);
-      doc.text(`Jeune strict de ${maxJeune}h requis`, c2 + 4.5, rY + 6.5);
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(7); x(154, 52, 18);
-      doc.text('avant votre prise de sang.', c2 + 4.5, rY + 11);
-      rY += 17;
-    } else {
-      f(240, 253, 244); doc.roundedRect(c2, rY, col, 10, 1.5, 1.5, 'F');
-      d(22, 163, 74); doc.setLineWidth(0.5); doc.line(c2, rY + 1.5, c2, rY + 8.5);
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); x(22, 163, 74);
-      doc.text('Aucun jeune requis', c2 + 4.5, rY + 6.5);
-      rY += 13;
-    }
-
-    // Delay
-    f(240, 253, 244); doc.roundedRect(c2, rY, col, 14, 1.5, 1.5, 'F');
-    d(22, 163, 74); doc.setLineWidth(0.5); doc.line(c2, rY + 2.5, c2, rY + 11.5);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); x(22, 163, 74);
-    doc.text('Delai de rendu', c2 + 4.5, rY + 6.5);
-    doc.setFont('helvetica', 'normal'); x(17, 24, 39);
-    doc.text(
-      maxDRR === 0 ? 'Resultats disponibles le jour meme.' : `Resultats sous ${maxDRR} jour(s).`,
-      c2 + 4.5, rY + 11
-    );
-    rY += 17;
-
-    // Special instructions
-    if (specialInstructions.length > 0) {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); x(107, 114, 128);
-      doc.text('Instructions speciales', c2 + 4.5, rY + 2);
-      rY += 6;
-      specialInstructions.slice(0, 4).forEach(instr => {
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); x(17, 24, 39);
-        const lines = doc.splitTextToSize(`- ${instr}`, col - 6) as string[];
-        doc.text(lines, c2 + 4.5, rY);
-        rY += lines.length * 4 + 2;
-      });
-    }
-
-    // ── FOOTER ────────────────────────────────────────────────────────
-    f(128, 0, 32); doc.rect(0, H - 13, W, 13, 'F');
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); x(220, 190, 200);
-    doc.text(
-      '61 Bis, Rue de Marrakech, 80020, Agadir, Maroc   |   Tel: 0528 84 33 84   |   laboelallali@gmail.com',
-      W / 2, H - 7.5, { align: 'center' }
-    );
-
-    doc.save(`devis-labo-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   const renderItemRow = (item: CartItem, key: string) => (
@@ -507,7 +333,7 @@ export function CartSidePanel({
             {t('analyses_catalog.selection.send_whatsapp', 'Envoyer via WhatsApp')}
           </button>
           <button
-            onClick={() => { void handleDownloadPdf(); }}
+            onClick={handleDownloadPdf}
             className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--background-secondary)] border border-[var(--border-default)] transition-colors active:scale-[0.98] flex-shrink-0"
             aria-label={tc('cart.download_pdf', 'Télécharger / Imprimer PDF')}
           >

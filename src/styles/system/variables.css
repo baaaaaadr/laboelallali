@@ -84,6 +84,8 @@
 }
 
 html.dark {
+  --hero-overlay-bg: #1A0F12;
+  --hero-overlay-opacity: 0.88;
   --background-default: #1A0F12;
   --background-secondary: #241418;
   --background-tertiary: #2E1A1F;
