@@ -1,15 +1,18 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import {
   Trash2, ShoppingCart, MessageCircle, Download,
   FileText, ClipboardList, TestTube, AlertTriangle,
   CheckCircle2, CalendarCheck, Info
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { CartItem, AnalyseItem, BilanItem } from './AnalysisCard';
 import { usePreparationRules } from '@/hooks/usePreparationRules';
 import { generateDevisPdf } from '@/lib/pdf/generateDevisPdf';
+import { useAuth } from '@/contexts/AuthContext';
 
 type TabId = 'devis' | 'preparation';
 
@@ -41,6 +44,9 @@ export function CartSidePanel({
   const { t } = useTranslation('common');
   const { t: tc } = useTranslation('catalog');
   const locale = isRtl ? 'ar-MA' : 'fr-MA';
+  const router = useRouter();
+  const params = useParams<{ lang: string }>();
+  const { user, userProfile, loading: authLoading } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabId>('devis');
 
@@ -76,10 +82,23 @@ export function CartSidePanel({
   };
 
   const handleDownloadPdf = () => {
+    if (authLoading) {
+      toast(tc('cart.session_loading', 'Vérification de votre session…'));
+      return;
+    }
+    if (!user || !userProfile) {
+      toast.error(tc('cart.login_required_for_pdf', 'Créez un compte gratuit pour télécharger votre devis PDF !'));
+      router.push(`/${params?.lang ?? 'fr'}/login`);
+      return;
+    }
     void generateDevisPdf({
       bilans: bilans.map(item => ({
         name: item.item.Nom_Bilan_FR,
         price: getItemPrice(item),
+        compositionNames: item.item.Composition_Codes.map(code => {
+          const key = code.replace(/\s+/g, '').toUpperCase();
+          return normalizedAnalysesMap?.get(key)?.Nom_Patient_FR ?? code;
+        }),
       })),
       analyses: analyses.map(item => ({
         name: item.item.Nom_Patient_FR,
@@ -91,6 +110,8 @@ export function CartSidePanel({
       maxDRR,
       sampleTypes,
       specialInstructions,
+      patientName: userProfile.fullName,
+      patientPhone: userProfile.phone,
     });
   };
 

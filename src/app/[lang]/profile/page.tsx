@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { User, Calendar, Mail, LogOut, CheckCircle } from 'lucide-react';
+import { User, Calendar, Mail, LogOut, CheckCircle, Phone } from 'lucide-react';
 
 export default function ProfilePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params);
@@ -16,6 +16,7 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
   
   const [fullName, setFullName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [phone, setPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,6 +38,7 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
         uid: user.uid,
         fullName,
         dateOfBirth,
+        phone,
         email: user.email,
         createdAt: new Date().toISOString(),
       });
@@ -119,6 +121,21 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
                   onChange={(e) => setDateOfBirth(e.target.value)}
                   className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent sm:text-sm transition-colors"
                   placeholder={t('date_of_birth', 'Date de naissance')}
+                />
+              </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent sm:text-sm transition-colors"
+                  placeholder={t('phone', 'Téléphone')}
                 />
               </div>
             </div>
@@ -205,6 +222,18 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
                 <p className="text-[var(--text-primary)] font-semibold">{userProfile.email || user.email}</p>
               </div>
             </div>
+
+            {userProfile.phone && (
+              <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
+                <div className="mt-1">
+                  <Phone className="text-[var(--color-fuchsia-accent)]" size={20} />
+                </div>
+                <div>
+                  <p className="text-sm text-[var(--text-tertiary)] font-medium mb-1">{t('phone', 'Téléphone')}</p>
+                  <p className="text-[var(--text-primary)] font-semibold">{userProfile.phone}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

@@ -11,6 +11,7 @@ export interface UserProfile {
   dateOfBirth: string;
   email: string | null;
   createdAt: string;
+  phone?: string;
 }
 
 interface AuthContextType {
