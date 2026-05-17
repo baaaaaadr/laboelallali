@@ -11,7 +11,6 @@ export interface GenerateDevisPdfOptions {
   patientPhone?: string;
 }
 
-// ── Palette M3 (alignée maquette) ────────────────────────────────────────────
 const C = {
   headerBg:     [145,   0,  47] as const, // #91002F
   primary:      [181,   0,  61] as const, // #B5003D
@@ -28,17 +27,18 @@ const C = {
   warningAmber: [217, 119,   6] as const, // #D97706
 };
 
+type Doc = import('jspdf').jsPDF;
 const set = {
-  fill: ([r, g, b]: readonly number[], doc: any) => doc.setFillColor(r, g, b),
-  draw: ([r, g, b]: readonly number[], doc: any) => doc.setDrawColor(r, g, b),
-  text: ([r, g, b]: readonly number[], doc: any) => doc.setTextColor(r, g, b),
+  fill: ([r, g, b]: readonly number[], doc: Doc) => doc.setFillColor(r, g, b),
+  draw: ([r, g, b]: readonly number[], doc: Doc) => doc.setDrawColor(r, g, b),
+  text: ([r, g, b]: readonly number[], doc: Doc) => doc.setTextColor(r, g, b),
 };
 
 export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<void> {
   const { jsPDF } = await import('jspdf');
   const {
     bilans, analyses, totalCost, currencyLabel,
-    maxJeune, maxDRR, sampleTypes, specialInstructions,
+    maxJeune, maxDRR, sampleTypes,
     patientName, patientPhone,
   } = opts;
 
@@ -46,16 +46,16 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
 
   const W = 210, H = 297, mg = 14;
   const contentW = W - mg * 2;
-  const HEADER_H = 26;
-  const FOOTER_H = 32;
+  const HEADER_H = 28;
+  const FOOTER_H = 50;
   const CONTENT_TOP = HEADER_H + 8;
-  const CONTENT_BOTTOM = H - FOOTER_H - 6;
+  const CONTENT_BOTTOM = H - FOOTER_H - 5;
 
   const today = new Date().toLocaleDateString('fr-MA', {
     day: '2-digit', month: 'long', year: 'numeric',
   });
 
-  // ── Logo (chargé une fois) ─────────────────────────────────────────────────
+  // ── Logo ────────────────────────────────────────────────────────────────────
   let logoDataUrl: string | null = null;
   try {
     await new Promise<void>((res, rej) => {
@@ -74,52 +74,134 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
     });
   } catch { /* skip logo */ }
 
-  // ── HEADER ─────────────────────────────────────────────────────────────────
+  // ── HEADER (patient à droite) ──────────────────────────────────────────────
   const drawHeader = () => {
     set.fill(C.headerBg, doc); doc.rect(0, 0, W, HEADER_H, 'F');
+
     // Badge logo blanc à gauche
-    set.fill(C.white, doc); doc.roundedRect(mg, 6, 14, 14, 2.5, 2.5, 'F');
+    set.fill(C.white, doc); doc.roundedRect(mg, 7, 14, 14, 2.5, 2.5, 'F');
     if (logoDataUrl) {
-      doc.addImage(logoDataUrl, 'PNG', mg + 1.5, 7.5, 11, 11);
+      doc.addImage(logoDataUrl, 'PNG', mg + 1.5, 8.5, 11, 11);
     } else {
       set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
-      doc.text('L', mg + 7, 16, { align: 'center' });
+      doc.text('L', mg + 7, 17, { align: 'center' });
     }
     set.text(C.white, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
-    doc.text('Laboratoire El Allali', mg + 18, 13);
+    doc.text('Laboratoire El Allali', mg + 18, 14);
     set.text([255, 220, 225], doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
-    doc.text('Fiche de devis & préparation', mg + 18, 19);
-    set.text([255, 200, 210], doc); doc.setFontSize(8.5);
-    doc.text(today, W - mg, 16, { align: 'right' });
+    doc.text('Fiche de devis & préparation', mg + 18, 20);
+
+    // Bloc patient à droite (nom, téléphone, date)
+    const rightX = W - mg;
+    if (patientName) {
+      set.text(C.white, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+      doc.text(patientName, rightX, 12, { align: 'right' });
+    }
+    if (patientPhone) {
+      set.text([255, 220, 225], doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+      doc.text(`Tél. ${patientPhone}`, rightX, 17.5, { align: 'right' });
+    }
+    set.text([255, 200, 210], doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+    doc.text(today, rightX, 23, { align: 'right' });
   };
 
-  // ── FOOTER MARKETING ───────────────────────────────────────────────────────
-  const drawMarketingFooter = () => {
+  // ── FOOTER condensé style site ─────────────────────────────────────────────
+  const drawRichFooter = () => {
     const fY = H - FOOTER_H;
     set.fill(C.headerBg, doc); doc.rect(0, fY, W, FOOTER_H, 'F');
 
-    // Message wrapping
-    set.text(C.white, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
-    const msg = 'Installez notre application pour recevoir vos résultats, télécharger vos devis, prendre RDV et demander un prélèvement à domicile.';
-    const msgLines = doc.splitTextToSize(msg, W - 30) as string[];
-    msgLines.slice(0, 2).forEach((line, i) => {
-      doc.text(line, W / 2, fY + 7 + i * 4.5, { align: 'center' });
-    });
+    const padX = mg;
+    const colW = (W - padX * 2 - 8) / 3;
+    const c1X = padX;
+    const c2X = padX + colW + 4;
+    const c3X = padX + (colW + 4) * 2;
+    const topY = fY + 5;
 
-    // CTA pilule blanche
-    const btnW = 78, btnH = 12, btnX = (W - btnW) / 2, btnY = fY + 17;
-    set.fill(C.white, doc); doc.roundedRect(btnX, btnY, btnW, btnH, 6, 6, 'F');
-    set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
-    doc.text('Téléchargez notre application', W / 2, btnY + 5.5, { align: 'center' });
-    set.text([170, 60, 90], doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5);
-    doc.text('www.laboelallali.com', W / 2, btnY + 9.5, { align: 'center' });
+    const labelColor: readonly number[] = [255, 200, 210];
+    const valueColor: readonly number[] = [255, 245, 246];
+
+    // ── Colonne 1 — CONTACT ──────────────────────────────────────────────────
+    set.text(labelColor, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+    doc.text('CONTACT', c1X, topY);
+
+    let lineY = topY + 4;
+    set.text(valueColor, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.8);
+
+    const addrLines = doc.splitTextToSize('61 Bis, Rue de Marrakech, Agadir', colW) as string[];
+    addrLines.forEach(l => { doc.text(l, c1X, lineY); lineY += 3.3; });
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+    doc.text('Tél.', c1X, lineY + 1);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+    doc.text('0528 84 33 84', c1X + 7, lineY + 1);
+    lineY += 4;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+    doc.text('WhatsApp', c1X, lineY + 1);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+    doc.text('0654 07 95 92', c1X + 15, lineY + 1);
+    lineY += 4;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+    doc.text('Email', c1X, lineY + 1);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5);
+    doc.text('laboelallali@gmail.com', c1X + 9, lineY + 1);
+
+    // ── Colonne 2 — HORAIRES + LIENS ─────────────────────────────────────────
+    set.text(labelColor, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+    doc.text('HORAIRES', c2X, topY);
+
+    set.text(valueColor, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.8);
+    doc.text('Lun – Ven : 7h30 → 18h30', c2X, topY + 4);
+    doc.text('Samedi : 7h30 → 13h00', c2X, topY + 7.5);
+
+    set.text(labelColor, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+    doc.text('LIENS RAPIDES', c2X, topY + 13);
+
+    set.text(valueColor, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.8);
+    doc.text('Accueil  ·  Analyses  ·  RDV', c2X, topY + 17);
+    doc.text('GLABO à domicile  ·  Contact', c2X, topY + 20.5);
+
+    // ── Colonne 3 — APPLICATION ──────────────────────────────────────────────
+    set.text(labelColor, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
+    doc.text('APPLICATION', c3X, topY);
+
+    set.text(valueColor, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.8);
+    const ctaMsg = doc.splitTextToSize(
+      'Résultats, devis, RDV et prélèvement à domicile depuis votre téléphone.',
+      colW
+    ) as string[];
+    ctaMsg.forEach((l, i) => { doc.text(l, c3X, topY + 4 + i * 3.3); });
+
+    // Bouton CTA pilule blanche
+    const btnY = topY + 4 + ctaMsg.length * 3.3 + 1;
+    const btnW = Math.min(colW, 55);
+    const btnH = 10;
+    set.fill(C.white, doc); doc.roundedRect(c3X, btnY, btnW, btnH, 5, 5, 'F');
+    set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+    doc.text('Téléchargez notre app', c3X + btnW / 2, btnY + 4.5, { align: 'center' });
+    set.text([170, 60, 90], doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8);
+    doc.text('www.laboelallali.com', c3X + btnW / 2, btnY + 7.8, { align: 'center' });
+
+    // Séparateur + copyright
+    set.draw([255, 255, 255], doc); doc.setLineWidth(0.15);
+    doc.setLineDashPattern([], 0);
+    const sepY = fY + FOOTER_H - 7;
+    set.fill([255, 255, 255], doc);
+    doc.rect(padX, sepY, W - padX * 2, 0.15, 'F');
+    set.text([255, 200, 210], doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+    const year = new Date().getFullYear();
+    doc.text(
+      `© ${year}  Laboratoire El Allali  ·  Tous droits réservés`,
+      W / 2, fY + FOOTER_H - 3, { align: 'center' }
+    );
   };
 
   let y = CONTENT_TOP;
   drawHeader();
 
   const newPage = () => {
-    drawMarketingFooter();
+    drawRichFooter();
     doc.addPage();
     drawHeader();
     y = CONTENT_TOP;
@@ -130,29 +212,10 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   };
 
   // ══════════════════════════════════════════════════════════════════════════
-  // PAGE 1 — Vue d'ensemble
+  // CONTENU (flux continu, auto-pagination naturelle)
   // ══════════════════════════════════════════════════════════════════════════
 
-  // ── Bloc Patient (border-left épaisse, pas de fond) ────────────────────────
-  const patientH = 26;
-  ensureSpace(patientH + 4);
-  set.fill(C.primary, doc); doc.rect(mg, y, 1.6, patientH, 'F');
-  set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
-  doc.text('Patient', mg + 5, y + 7);
-
-  set.text(C.textVariant, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
-  doc.text('Nom :', mg + 5, y + 14.5);
-  set.text(C.textPrimary, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
-  doc.text(patientName ?? '—', mg + 18, y + 14.5);
-
-  set.text(C.textVariant, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
-  doc.text('Téléphone :', mg + 5, y + 22);
-  set.text(C.textPrimary, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
-  doc.text(patientPhone ?? '—', mg + 25, y + 22);
-
-  y += patientH + 4;
-
-  // ── Intro courte ───────────────────────────────────────────────────────────
+  // ── Intro ──────────────────────────────────────────────────────────────────
   const intro =
     "Bonjour, voici votre devis personnalisé. Présentez-le lors de votre passage au laboratoire — il regroupe vos analyses, leur tarif, le délai de rendu et la préparation à effectuer.";
   const introLines = doc.splitTextToSize(intro, contentW) as string[];
@@ -171,15 +234,17 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
     `${itemCount} analyse${itemCount > 1 ? 's' : ''}`,
     W - mg - 5, y + 6.8, { align: 'right' }
   );
-  y += 10;
+  y += 11;
 
-  // Body bordé
-  const drawSectionLabel = (label: string) => {
-    ensureSpace(8);
-    set.fill(C.surfaceLow, doc); doc.rect(mg, y, contentW, 6, 'F');
-    set.text(C.textVariant, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-    doc.text(label, mg + 4, y + 4.2);
-    y += 6;
+  // Sous-titre de groupe (distinct des rangées)
+  const drawGroupHeader = (label: string) => {
+    ensureSpace(9);
+    // bande primary avec léger gradient effet (fond surfaceMid + accent gauche)
+    set.fill(C.surfaceMid, doc); doc.rect(mg, y, contentW, 7, 'F');
+    set.fill(C.primary, doc); doc.rect(mg, y, 2, 7, 'F');
+    set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text(label, mg + 5.5, y + 5);
+    y += 7;
   };
 
   const drawItemRow = (name: string, price: number) => {
@@ -195,11 +260,11 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   };
 
   if (bilans.length > 0) {
-    drawSectionLabel('BILANS');
+    drawGroupHeader('BILANS');
     bilans.forEach(b => drawItemRow(b.name, b.price));
   }
   if (analyses.length > 0) {
-    drawSectionLabel('ANALYSES INDIVIDUELLES');
+    drawGroupHeader('ANALYSES INDIVIDUELLES');
     analyses.forEach(a => drawItemRow(a.name, a.price));
   }
   y += 4;
@@ -216,10 +281,8 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   );
   doc.text('Frais de prélèvement', mg + 6, y + 17);
   doc.text(`20 ${currencyLabel}`, W - mg - 6, y + 17, { align: 'right' });
-
   set.draw(C.primaryHot, doc); doc.setLineWidth(0.6);
   doc.line(mg + 4, y + 21, W - mg - 4, y + 21);
-
   set.text(C.textPrimary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
   doc.text('TOTAL', mg + 6, y + 31);
   set.text(C.primaryHot, doc); doc.setFontSize(22);
@@ -234,7 +297,6 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   const cardH = 22;
   ensureSpace(cardH + 4);
 
-  // Carte gauche : Délai
   set.fill(C.white, doc); doc.roundedRect(mg, y, cardW, cardH, 2, 2, 'F');
   set.fill(C.successGreen, doc); doc.rect(mg, y, 1.6, cardH, 'F');
   set.draw(C.outline, doc); doc.setLineWidth(0.2);
@@ -247,7 +309,6 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
     mg + 5, y + 16
   );
 
-  // Carte droite : Jeûne (ou pas de jeûne)
   const rX = mg + cardW + 6;
   set.fill(C.white, doc); doc.roundedRect(rX, y, cardW, cardH, 2, 2, 'F');
   if (maxJeune > 0) {
@@ -267,50 +328,66 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
     set.text(C.textVariant, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
     doc.text('Aucune préparation spécifique.', rX + 5, y + 16);
   }
-
-  y += cardH + 6;
+  y += cardH + 10;
 
   // ══════════════════════════════════════════════════════════════════════════
-  // PAGE 2 — Détails techniques
+  // DÉTAIL DE VOS BILANS — flux continu (pas de saut de page forcé)
   // ══════════════════════════════════════════════════════════════════════════
-  newPage();
-
-  // Titre section + note
   if (bilans.length > 0) {
-    ensureSpace(16);
+    // Hauteur estimée du bloc d'en-tête (titre + note + séparateur)
+    const noteLines = doc.splitTextToSize(
+      "Les analyses appartenant à plusieurs bilans ne sont facturées qu'une seule fois.",
+      contentW
+    ) as string[];
+    const headerBlockH = 9 + noteLines.length * 3.5 + 5;
+    ensureSpace(headerBlockH);
+
+    // Titre
     set.text(C.textPrimary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
     doc.text('DÉTAIL DE VOS BILANS', mg, y + 6);
-
-    const noteLines = doc.splitTextToSize(
-      'Les analyses appartenant à plusieurs bilans ne sont facturées qu\'une seule fois.',
-      80
-    ) as string[];
-    set.text(C.textVariant, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5);
-    noteLines.forEach((line, i) => {
-      doc.text(line, W - mg, y + 4 + i * 3.5, { align: 'right' });
-    });
-
     y += 9;
+
+    // Note italique sous le titre, AU-DESSUS du séparateur
+    set.text(C.textMuted, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5);
+    noteLines.forEach((line, i) => {
+      doc.text(line, mg, y + i * 3.5);
+    });
+    y += noteLines.length * 3.5 + 2;
+
+    // Séparateur (sous la note)
     set.draw(C.outline, doc); doc.setLineWidth(0.25);
     doc.line(mg, y, W - mg, y);
     y += 5;
 
+    // Bilans avec keep-together (titre + composition sur la même page)
     bilans.forEach(bilan => {
       const comp = bilan.compositionNames ?? [];
-      // header bilan
-      ensureSpace(11);
-      set.fill(C.primary, doc); doc.roundedRect(mg, y, contentW, 9.5, 2, 2, 'F');
+      const headerH = 9.5;
+      const innerPad = 4;
+      const lineH = 6;
+      const blockH = comp.length > 0
+        ? comp.length * lineH + innerPad * 2
+        : 8;
+      const totalBilanH = headerH + blockH + 5;
+
+      // Saut de page anticipé si tout ne tient pas
+      if (y + totalBilanH > CONTENT_BOTTOM) {
+        // Si le bilan entier dépasse même une page entière, on accepte un split
+        const pageContentH = CONTENT_BOTTOM - CONTENT_TOP;
+        if (totalBilanH <= pageContentH) {
+          newPage();
+        }
+      }
+
+      // Header bilan
+      set.fill(C.primary, doc); doc.roundedRect(mg, y, contentW, headerH, 2, 2, 'F');
       set.text(C.white, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
       const bilanName = bilan.name.length > 60 ? bilan.name.slice(0, 58) + '…' : bilan.name;
       doc.text(bilanName, mg + 4, y + 6.5);
-      y += 9.5;
+      y += headerH;
 
-      // bloc composition (indenté légèrement)
+      // Bloc composition
       if (comp.length > 0) {
-        const innerPad = 4;
-        const lineH = 6;
-        const blockH = comp.length * lineH + innerPad * 2;
-        ensureSpace(blockH + 4);
         set.fill(C.surfaceLow, doc);
         doc.roundedRect(mg + 4, y, contentW - 8, blockH, 1.5, 1.5, 'F');
         set.draw(C.outline, doc); doc.setLineWidth(0.2);
@@ -318,7 +395,6 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
 
         let lY = y + innerPad + 3.5;
         comp.forEach(name => {
-          ensureSpace(lineH);
           set.fill(C.primary, doc); doc.circle(mg + 9, lY - 1.2, 0.9, 'F');
           set.text(C.textPrimary, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
           const trunc = name.length > 60 ? name.slice(0, 58) + '…' : name;
@@ -327,14 +403,12 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
         });
         y += blockH;
       } else {
-        ensureSpace(8);
         set.text(C.textMuted, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(9.5);
         doc.text('Composition détaillée disponible au laboratoire.', mg + 8, y + 4);
         y += 8;
       }
       y += 5;
     });
-
     y += 2;
   }
 
@@ -354,7 +428,6 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
       set.fill(C.surfaceHi, doc); doc.roundedRect(tx, ty, tw, pillH, 4, 4, 'F');
       set.draw(C.outline, doc); doc.setLineWidth(0.2);
       doc.roundedRect(tx, ty, tw, pillH, 4, 4);
-      // petit cercle accent à gauche du label
       set.fill(C.primary, doc); doc.circle(tx + 4, ty + pillH / 2, 1.3, 'F');
       set.text(C.textPrimary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
       doc.text(label, tx + 7, ty + pillH / 2 + 1.5);
@@ -364,14 +437,6 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   }
 
   // ── Documents à préparer ───────────────────────────────────────────────────
-  ensureSpace(16);
-  set.text(C.textPrimary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
-  doc.text('DOCUMENTS À PRÉPARER', mg, y + 6);
-  y += 8;
-  set.draw(C.outline, doc); doc.setLineWidth(0.25);
-  doc.line(mg, y, W - mg, y);
-  y += 5;
-
   const docs: Array<{ title: string; desc: string; icon: string }> = [
     {
       title: "Carte d'Identité Nationale (CIN)",
@@ -393,44 +458,47 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   const docPad = 5;
   const docItemMin = 14;
   const docRows = docs.map(d => {
-    const titleH = 5;
     const descLines = doc.splitTextToSize(d.desc, contentW - 22) as string[];
-    return { ...d, descLines, h: Math.max(docItemMin, titleH + descLines.length * 4 + 3) };
+    return { ...d, descLines, h: Math.max(docItemMin, 5 + descLines.length * 4 + 3) };
   });
-  const blockH = docPad * 2 + docRows.reduce((acc, r) => acc + r.h, 0) + 2 * (docRows.length - 1);
-  ensureSpace(blockH + 4);
+  const docBlockH = docPad * 2 + docRows.reduce((acc, r) => acc + r.h, 0) + 2 * (docRows.length - 1);
 
-  // Carte conteneur
-  set.fill(C.surfaceLow, doc); doc.roundedRect(mg, y, contentW, blockH, 3, 3, 'F');
+  // Keep-together pour titre + bloc
+  ensureSpace(12 + docBlockH);
+  set.text(C.textPrimary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+  doc.text('DOCUMENTS À PRÉPARER', mg, y + 6);
+  y += 9;
   set.draw(C.outline, doc); doc.setLineWidth(0.25);
-  doc.roundedRect(mg, y, contentW, blockH, 3, 3);
+  doc.line(mg, y, W - mg, y);
+  y += 5;
+
+  set.fill(C.surfaceLow, doc); doc.roundedRect(mg, y, contentW, docBlockH, 3, 3, 'F');
+  set.draw(C.outline, doc); doc.setLineWidth(0.25);
+  doc.roundedRect(mg, y, contentW, docBlockH, 3, 3);
 
   let docY = y + docPad;
   docRows.forEach((r, idx) => {
-    // cercle icône
     const iconCx = mg + 8;
     const iconCy = docY + 4;
     set.fill(C.surfaceHi, doc); doc.circle(iconCx, iconCy, 3.5, 'F');
     set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
     doc.text(r.icon, iconCx, iconCy + 1.2, { align: 'center' });
 
-    // titre
     set.text(C.textPrimary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
     doc.text(r.title, mg + 14, docY + 4);
 
-    // description
     set.text(C.textVariant, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
     doc.text(r.descLines, mg + 14, docY + 8.5);
 
     docY += r.h + (idx < docRows.length - 1 ? 2 : 0);
   });
 
-  y += blockH + 4;
+  y += docBlockH + 4;
 
-  drawMarketingFooter();
+  drawRichFooter();
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SAUVEGARDE — Web Share API sur mobile, doc.save() en fallback
+  // SAUVEGARDE
   // ══════════════════════════════════════════════════════════════════════════
   const fileName = `devis-labo-${new Date().toISOString().slice(0, 10)}.pdf`;
   const blob = doc.output('blob');
