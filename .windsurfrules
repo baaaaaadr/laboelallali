@@ -2,6 +2,10 @@
 
 # Priority: Adhere to these rules for all code generation and suggestions.
 
+## CRITICAL: Automatic AI Documentation Rule
+- **Reading Context:** Before editing any page/route in `/src/app/[lang]/`, you MUST read its corresponding documentation file in `/docs/pages/[page].md`.
+- **Enforcement:** If you modify the structure, components, state, or logic of a page, you MUST immediately update the corresponding markdown file in `/docs/pages/[page].md`. Keep them comprehensive and detailed. Do NOT leave them empty or as skeletons.
+
 ## 0. Development Environment
 - **Windows Commands:** Always use PowerShell syntax for all terminal commands on Windows systems.
   - Use `Remove-Item -Path .next -Recurse -Force` instead of `rm -rf .next`

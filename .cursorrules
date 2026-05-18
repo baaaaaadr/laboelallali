@@ -1,0 +1,21 @@
+# --- Cursor AI Rules: Laboratoire El Allali PWA ---
+
+## 1. Automatic AI Documentation Rule (CRITICAL)
+- **Reading Context:** Before editing any page/route in `/src/app/[lang]/`, you MUST read its corresponding documentation file in `/docs/pages/[page].md`.
+- **Enforcement:** If you modify the structure, components, state, or logic of a page, you MUST immediately update the corresponding markdown file in `/docs/pages/[page].md`. Keep them comprehensive and detailed. Do NOT leave them empty or as skeletons.
+
+## 2. Core Coding Standards
+- **Framework:** Next.js 16+ (App Router, strict TypeScript).
+- **Client vs Server Components:** Default to Server Components. Use `"use client"` strictly at the top of interactive components using hooks (`useState`, `useEffect`, `useContext`) or browser APIs.
+- **Styling Strategy:** Use the defined semantic CSS classes from `DESIGN.md` in `src/app/globals.css` (e.g. `.button-bordeaux`, `.card`, `.button-fuchsia`) over ad-hoc utility classes for core elements to maintain visual consistency.
+- **Localization (i18n):** NEVER hardcode user-facing strings in React components. Always use `useTranslation()` and place translation keys in `public/locales/[lang]/common.json`.
+
+## 3. Technology Stack
+- **Database & Auth:** Firebase (Hosting, Firestore, Auth, Storage).
+- **Forms:** `react-hook-form` + `yup` for validations.
+- **Maps:** `leaflet` & `react-leaflet` with dynamic imports (`ssr: false`) to avoid hydration errors.
+- **Icons:** `lucide-react` or `react-icons`.
+- **Date Picking:** `react-datepicker` using `date-fns` locales.
+
+## 4. Windows Powershell Guidelines
+- Always use Windows PowerShell native commands when proposing shell executions (e.g. `Remove-Item` instead of `rm`, `Get-ChildItem` instead of `ls`).
