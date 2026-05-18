@@ -54,9 +54,11 @@ export interface BilanItem {
 }
 
 // Union type for cart items (supports both analyses and bilans)
+// `excludedCodes` (bilan only) : analysis codes the user has unchecked from the bilan composition.
+// Optional for backward-compat with existing localStorage carts — treated as [] when absent.
 export type CartItem =
   | { type: 'analyse'; item: AnalyseItem }
-  | { type: 'bilan'; item: BilanItem };
+  | { type: 'bilan'; item: BilanItem; excludedCodes?: string[] };
 
 interface AnalysisCardProps {
   analysis: Analysis;

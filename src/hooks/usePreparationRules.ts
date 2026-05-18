@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { CartItem, AnalyseItem } from '@/components/features/catalog/AnalysisCard';
+import { normalizeCode } from '@/lib/cart/cartItem';
 
 export interface PreparationRules {
   maxJeune: number;
@@ -24,8 +25,10 @@ export function usePreparationRules(
           analyses.push(cartItem.item);
         }
       } else if (cartItem.type === 'bilan' && analysesMap) {
+        const excluded = new Set((cartItem.excludedCodes ?? []).map(normalizeCode));
         for (const code of cartItem.item.Composition_Codes) {
-          const key = code.replace(/\s+/g, '').toUpperCase();
+          const key = normalizeCode(code);
+          if (excluded.has(key)) continue;
           const analyse = analysesMap.get(key);
           if (analyse && !seen.has(analyse.id)) {
             seen.add(analyse.id);

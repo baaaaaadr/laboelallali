@@ -15,7 +15,8 @@
     "context": "powershell -ExecutionPolicy Bypass -NoProfile -File ./generate_context.ps1",
     "tailwind:build": "tailwindcss -i ./src/app/globals.css -o ./output.css --content \"./src/**/*.{js,ts,jsx,tsx,mdx}\"",
     "generate:css-vars": "node scripts/generateCSSVariables.js",
-    "git": "git add . && git commit -m \"update\" && git push"
+    "git": "git add . && git commit -m \"update\" && git push",
+    "docs:concat": "node scripts/concat-docs.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",

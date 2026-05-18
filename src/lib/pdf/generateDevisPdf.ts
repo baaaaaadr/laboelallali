@@ -436,155 +436,7 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   y += summaryH + 8;
 
   // ══════════════════════════════════════════════════════════════════════════
-  // 2) TABLEAU ANALYSES + Composition avec prix + détection doublons
-  // ══════════════════════════════════════════════════════════════════════════
-  ensureSpace(12);
-  set.text(C.textVariant, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
-  doc.text('DÉTAIL DE VOS ANALYSES', mg, y + 4);
-  const cnt = bilans.length + analyses.length;
-  set.text(C.textMuted, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
-  doc.text(`${cnt} élément${cnt > 1 ? 's' : ''}`, W - mg, y + 4, { align: 'right' });
-  y += 6;
-
-  // Hairline sous le titre
-  set.fill(C.surfaceMid, doc);
-  doc.rect(mg, y, contentW, 0.3, 'F');
-  y += 4;
-
-  const normKey = (s: string) => s.replace(/\s+/g, '').toLowerCase();
-  const seenAnalyses = new Set<string>();
-
-  // Bilans
-  if (bilans.length > 0) {
-    ensureSpace(7);
-    set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
-    doc.text('BILANS', mg, y + 4);
-    y += 7;
-
-    bilans.forEach(bilan => {
-      const comp = bilan.composition ?? [];
-      const headerH = 8;
-      const innerPad = 3.5;
-      const lineH = 5.5;
-      const blockH = comp.length > 0
-        ? comp.length * lineH + innerPad * 2
-        : 7;
-      const totalBilanH = headerH + blockH + 4;
-
-      // Keep-together
-      if (y + totalBilanH > CONTENT_BOTTOM) {
-        const pageContentH = CONTENT_BOTTOM - CONTENT_TOP;
-        if (totalBilanH <= pageContentH) newPage();
-      }
-
-      // Header bilan (nom + prix)
-      set.text(C.textPrimary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
-      const tn = bilan.name.length > 48 ? bilan.name.slice(0, 46) + '…' : bilan.name;
-      doc.text(tn, mg, y + 5.5);
-      set.text(C.primaryHot, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
-      doc.text(
-        `${bilan.price.toLocaleString('fr-MA')} ${currencyLabel}`,
-        W - mg, y + 5.5, { align: 'right' }
-      );
-      y += headerH;
-
-      // Composition list
-      if (comp.length > 0) {
-        comp.forEach(a => {
-          const key = normKey(a.name);
-          const isDuplicate = seenAnalyses.has(key);
-          if (!isDuplicate) seenAnalyses.add(key);
-
-          const nameColor = isDuplicate ? C.textGreyed : C.textPrimary;
-          const priceColor = isDuplicate ? C.textGreyed : C.textVariant;
-          const fontStyle: 'italic' | 'normal' = isDuplicate ? 'italic' : 'normal';
-
-          // Puce
-          set.fill(isDuplicate ? C.textGreyed : C.primary, doc);
-          doc.circle(mg + 6, y + innerPad + 1.5, 0.8, 'F');
-
-          // Nom
-          set.text(nameColor, doc); doc.setFont('helvetica', fontStyle); doc.setFontSize(10);
-          const aname = a.name.length > 50 ? a.name.slice(0, 48) + '…' : a.name;
-          doc.text(aname, mg + 9.5, y + innerPad + 2.5);
-
-          // Tag "(déjà inclus)" si doublon
-          if (isDuplicate) {
-            const nameW = doc.getTextWidth(aname);
-            set.text(C.textGreyed, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5);
-            doc.text('(déjà inclus)', mg + 9.5 + nameW + 2, y + innerPad + 2.5);
-          }
-
-          // Prix
-          set.text(priceColor, doc); doc.setFont('helvetica', fontStyle); doc.setFontSize(10);
-          doc.text(
-            `${a.price.toLocaleString('fr-MA')} ${currencyLabel}`,
-            W - mg, y + innerPad + 2.5, { align: 'right' }
-          );
-
-          y += lineH;
-        });
-        y += innerPad * 2 - lineH * 0 + 1;
-      } else {
-        set.text(C.textMuted, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(9);
-        doc.text('Composition détaillée disponible au laboratoire.', mg + 9.5, y + 4);
-        y += 7;
-      }
-      y += 3;
-    });
-    y += 2;
-  }
-
-  // Analyses individuelles
-  if (analyses.length > 0) {
-    ensureSpace(8);
-    set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
-    doc.text('ANALYSES INDIVIDUELLES', mg, y + 4);
-    y += 7;
-
-    analyses.forEach(a => {
-      ensureSpace(8);
-      const key = normKey(a.name);
-      const isDuplicate = seenAnalyses.has(key);
-      if (!isDuplicate) seenAnalyses.add(key);
-
-      const nameColor = isDuplicate ? C.textGreyed : C.textPrimary;
-      const priceColor = isDuplicate ? C.textGreyed : C.primaryHot;
-      const fontStyle: 'italic' | 'normal' = isDuplicate ? 'italic' : 'normal';
-
-      set.text(nameColor, doc); doc.setFont('helvetica', fontStyle); doc.setFontSize(11);
-      const tn = a.name.length > 50 ? a.name.slice(0, 48) + '…' : a.name;
-      doc.text(tn, mg, y + 5);
-
-      if (isDuplicate) {
-        const nameW = doc.getTextWidth(tn);
-        set.text(C.textGreyed, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5);
-        doc.text('(déjà inclus dans un bilan)', mg + nameW + 2, y + 5);
-      }
-
-      set.text(priceColor, doc); doc.setFont('helvetica', isDuplicate ? 'italic' : 'bold'); doc.setFontSize(11);
-      doc.text(
-        `${a.price.toLocaleString('fr-MA')} ${currencyLabel}`,
-        W - mg, y + 5, { align: 'right' }
-      );
-      set.fill(C.surfaceMid, doc);
-      doc.rect(mg, y + 7, contentW, 0.25, 'F');
-      y += 8;
-    });
-    y += 2;
-  }
-
-  // Note 20 MAD en bas du tableau
-  ensureSpace(8);
-  set.text(C.textMuted, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5);
-  doc.text(
-    `+ 20 ${currencyLabel} de frais de prélèvement (comptés une seule fois)`,
-    mg, y + 4
-  );
-  y += 9;
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // 3) GRILLE 2 COLONNES — Prélèvements / Documents
+  // 2) GRILLE 2 COLONNES — Prélèvements / Documents (sous le résumé)
   // ══════════════════════════════════════════════════════════════════════════
   const docs = [
     { icon: 'card', title: "Carte d'Identité (CIN)", desc: "Format physique ou numérique." },
@@ -656,6 +508,171 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   });
 
   y += gridH + 8;
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 3) TABLEAU ANALYSES + Composition avec prix + détection doublons
+  // ══════════════════════════════════════════════════════════════════════════
+  ensureSpace(12);
+  set.text(C.textVariant, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+  doc.text('DÉTAIL DE VOS ANALYSES', mg, y + 4);
+  const cnt = bilans.length + analyses.length;
+  set.text(C.textMuted, doc); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+  doc.text(`${cnt} élément${cnt > 1 ? 's' : ''}`, W - mg, y + 4, { align: 'right' });
+  y += 6;
+
+  // Hairline sous le titre
+  set.fill(C.surfaceMid, doc);
+  doc.rect(mg, y, contentW, 0.3, 'F');
+  y += 4;
+
+  const normKey = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+  // Pour chaque analyse vue, on retient le nom du bilan (ou "analyse individuelle") qui l'a apportée en premier
+  const firstSourceByKey = new Map<string, string>();
+
+  // Helper : barre horizontale au milieu du texte (strikethrough)
+  const drawStrikethrough = (
+    textRightX: number, textBaselineY: number, textW: number, color: readonly number[]
+  ) => {
+    set.draw(color, doc); doc.setLineWidth(0.35);
+    doc.line(textRightX - textW, textBaselineY - 1.2, textRightX, textBaselineY - 1.2);
+  };
+
+  // Bilans
+  if (bilans.length > 0) {
+    ensureSpace(7);
+    set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
+    doc.text('BILANS', mg, y + 4);
+    y += 7;
+
+    bilans.forEach(bilan => {
+      const comp = bilan.composition ?? [];
+      const headerH = 8;
+      const innerPad = 3.5;
+      const lineH = 5.5;
+      const blockH = comp.length > 0
+        ? comp.length * lineH + innerPad * 2
+        : 7;
+      const totalBilanH = headerH + blockH + 4;
+
+      // Keep-together
+      if (y + totalBilanH > CONTENT_BOTTOM) {
+        const pageContentH = CONTENT_BOTTOM - CONTENT_TOP;
+        if (totalBilanH <= pageContentH) newPage();
+      }
+
+      // Header bilan (nom + prix)
+      set.text(C.textPrimary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+      const tn = bilan.name.length > 48 ? bilan.name.slice(0, 46) + '…' : bilan.name;
+      doc.text(tn, mg, y + 5.5);
+      set.text(C.primaryHot, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+      doc.text(
+        `${bilan.price.toLocaleString('fr-MA')} ${currencyLabel}`,
+        W - mg, y + 5.5, { align: 'right' }
+      );
+      y += headerH;
+
+      // Composition list
+      if (comp.length > 0) {
+        comp.forEach(a => {
+          const key = normKey(a.name);
+          const sourceBilanName = firstSourceByKey.get(key);
+          const isDuplicate = sourceBilanName !== undefined;
+          if (!isDuplicate) firstSourceByKey.set(key, bilan.name);
+
+          const nameColor = isDuplicate ? C.textGreyed : C.textPrimary;
+          const priceColor = isDuplicate ? C.textGreyed : C.textVariant;
+          const fontStyle: 'italic' | 'normal' = isDuplicate ? 'italic' : 'normal';
+
+          // Puce
+          set.fill(isDuplicate ? C.textGreyed : C.primary, doc);
+          doc.circle(mg + 6, y + innerPad + 1.5, 0.8, 'F');
+
+          // Nom
+          set.text(nameColor, doc); doc.setFont('helvetica', fontStyle); doc.setFontSize(10);
+          const aname = a.name.length > 50 ? a.name.slice(0, 48) + '…' : a.name;
+          doc.text(aname, mg + 9.5, y + innerPad + 2.5);
+
+          // Tag avec nom du bilan source si doublon
+          if (isDuplicate && sourceBilanName) {
+            const nameW = doc.getTextWidth(aname);
+            set.text(C.textGreyed, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5);
+            const tag = `(déjà incluse dans ${sourceBilanName})`;
+            doc.text(tag, mg + 9.5 + nameW + 2, y + innerPad + 2.5);
+          }
+
+          // Prix (barré si doublon)
+          set.text(priceColor, doc); doc.setFont('helvetica', fontStyle); doc.setFontSize(10);
+          const priceText = `${a.price.toLocaleString('fr-MA')} ${currencyLabel}`;
+          const priceY = y + innerPad + 2.5;
+          doc.text(priceText, W - mg, priceY, { align: 'right' });
+          if (isDuplicate) {
+            const priceW = doc.getTextWidth(priceText);
+            drawStrikethrough(W - mg, priceY, priceW, C.textGreyed);
+          }
+
+          y += lineH;
+        });
+        y += innerPad * 2 - lineH * 0 + 1;
+      } else {
+        set.text(C.textMuted, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(9);
+        doc.text('Composition détaillée disponible au laboratoire.', mg + 9.5, y + 4);
+        y += 7;
+      }
+      y += 3;
+    });
+    y += 2;
+  }
+
+  // Analyses individuelles
+  if (analyses.length > 0) {
+    ensureSpace(8);
+    set.text(C.primary, doc); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5);
+    doc.text('ANALYSES INDIVIDUELLES', mg, y + 4);
+    y += 7;
+
+    analyses.forEach(a => {
+      ensureSpace(8);
+      const key = normKey(a.name);
+      const sourceBilanName = firstSourceByKey.get(key);
+      const isDuplicate = sourceBilanName !== undefined;
+      if (!isDuplicate) firstSourceByKey.set(key, a.name);
+
+      const nameColor = isDuplicate ? C.textGreyed : C.textPrimary;
+      const priceColor = isDuplicate ? C.textGreyed : C.primaryHot;
+      const fontStyle: 'italic' | 'normal' = isDuplicate ? 'italic' : 'normal';
+
+      set.text(nameColor, doc); doc.setFont('helvetica', fontStyle); doc.setFontSize(11);
+      const tn = a.name.length > 50 ? a.name.slice(0, 48) + '…' : a.name;
+      doc.text(tn, mg, y + 5);
+
+      if (isDuplicate && sourceBilanName) {
+        const nameW = doc.getTextWidth(tn);
+        set.text(C.textGreyed, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5);
+        doc.text(`(déjà incluse dans ${sourceBilanName})`, mg + nameW + 2, y + 5);
+      }
+
+      set.text(priceColor, doc); doc.setFont('helvetica', isDuplicate ? 'italic' : 'bold'); doc.setFontSize(11);
+      const priceText = `${a.price.toLocaleString('fr-MA')} ${currencyLabel}`;
+      doc.text(priceText, W - mg, y + 5, { align: 'right' });
+      if (isDuplicate) {
+        const priceW = doc.getTextWidth(priceText);
+        drawStrikethrough(W - mg, y + 5, priceW, C.textGreyed);
+      }
+      set.fill(C.surfaceMid, doc);
+      doc.rect(mg, y + 7, contentW, 0.25, 'F');
+      y += 8;
+    });
+    y += 2;
+  }
+
+  // Note 20 MAD en bas du tableau
+  ensureSpace(8);
+  set.text(C.textMuted, doc); doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5);
+  doc.text(
+    `+ 20 ${currencyLabel} de frais de prélèvement (comptés une seule fois)`,
+    mg, y + 4
+  );
+  y += 9;
 
   // ══════════════════════════════════════════════════════════════════════════
   // 4) ENCART MARKETING — QR Code cliquable

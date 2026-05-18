@@ -17,6 +17,7 @@
 *   `/src/components`: Reusable React components. Use functional components and hooks only.
 *   `/public/locales`: Contains JSON files mapping translations (`fr`, `ar`).
 *   `/scripts`: Custom Node.js scripts for build tasks or generation tools.
+    *   `scripts/concat-docs.js` — concatenates all AI context files into `docs/FULL_CONTEXT.md` for use with external AIs. Run with `npm run docs:concat`.
 *   `/functions`: Firebase Cloud Functions backend code.
 
 ## 3. Coding Standards
@@ -29,6 +30,24 @@
 *   **Git Script:** Use `npm run git` to push quickly.
 *   **Firebase Hosting:** Use `npm run deploy:hosting` to build and deploy static Next.js assets to Firebase. Default full `npm run deploy` will attempt to build functions which may require missing environments.
 
-## 5. Automatic AI Documentation
-*   **Reading Context:** Before editing any page in `/src/app/[lang]/`, agents MUST read its corresponding documentation file in `/docs/pages/*.md`.
-*   **Updating Documentation:** If an agent modifies the structure, components, state, or logic of a page, they MUST update the corresponding markdown file in `/docs/pages/` so that future agents have accurate, up-to-date context.
+## 5. Automatic AI Documentation — MANDATORY PROTOCOL
+
+### At the start of every conversation
+An agent MUST proactively read ALL files in `/docs/pages/` before starting any work. Do not rely on conversation summaries alone — the markdown files are the authoritative source of truth for each page.
+
+### While working
+Before editing any file inside `src/app/[lang]/[page]/`, read the corresponding `/docs/pages/[page].md` file first to load accurate context.
+
+### After completing any task
+If the task changed the **structure, components, state, props, or business logic** of a page:
+1. Update `/docs/pages/[page].md` to reflect the new state accurately.
+2. The doc must be good enough that a future agent reading ONLY that file has correct, complete context — no "see the code" shortcuts.
+3. Do this BEFORE declaring the task complete.
+
+### What the docs must contain (minimum)
+- Purpose of the page
+- All major components used (with file paths)
+- All significant state variables (name, type, what they hold)
+- Key handlers / derived state (e.g., `useMemo`, `useCallback`)
+- Data fetching and mutation patterns
+- Any non-obvious constraints or gotchas (auth requirements, dedup rules, etc.)

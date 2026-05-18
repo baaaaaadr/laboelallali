@@ -57,6 +57,9 @@ ui-debug.log
 **/dist/
 **/build/
 **/.cache/
+
+# Generated AI context file (regenerate with npm run docs:concat)
+docs/FULL_CONTEXT.md
 **/public/workbox-*.js
 **/public/sw.js
 **/public/fallback-*.js

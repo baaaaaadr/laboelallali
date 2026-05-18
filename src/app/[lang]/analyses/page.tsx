@@ -22,6 +22,8 @@ import { Search, Star, BookOpen, ChevronDown, ChevronUp, ChevronLeft, ChevronRig
 import { useInView } from 'react-intersection-observer';
 import { LAB_CONTACT } from "@/constants/contact";
 import MedicalLoader from "@/components/ui/MedicalLoader";
+import { computeCartView } from "@/lib/cart/cartView";
+import { toggleBilanCompositionExclusion } from "@/lib/cart/cartItem";
 
 const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
 
@@ -485,31 +487,20 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   // Frais de prélèvement fixes (acte de prise de sang)
   const SAMPLING_FEE = 20;
 
-  // Calculate total cost — deduplicated by normalized analysis ID to prevent double-counting
-  const totalCost = useMemo(() => {
-    const seen = new Set<string>();
-    let itemsTotal = 0;
+  // Vue unifiée du panier — source de vérité pour total, lignes, dédup, exclusions
+  const cartView = useMemo(
+    () => computeCartView(selectedItems, normalizedAnalysesMap, SAMPLING_FEE),
+    [selectedItems, normalizedAnalysesMap]
+  );
+  const totalCost = cartView.total;
 
-    for (const item of selectedItems) {
-      if (item.type === 'analyse') {
-        const key = normalizeId(item.item.id);
-        if (!seen.has(key)) {
-          seen.add(key);
-          itemsTotal += item.item.Prix_Dhs;
-        }
-      } else {
-        for (const code of item.item.Composition_Codes) {
-          const key = normalizeId(code);
-          if (!seen.has(key)) {
-            seen.add(key);
-            itemsTotal += normalizedAnalysesMap.get(key)?.Prix_Dhs ?? 0;
-          }
-        }
-      }
-    }
-
-    return selectedItems.length > 0 ? itemsTotal + SAMPLING_FEE : 0;
-  }, [selectedItems, normalizedAnalysesMap]);
+  // Bascule l'exclusion d'un code d'analyse à l'intérieur d'un bilan du panier
+  const handleToggleBilanComposition = useCallback(
+    (bilanId: string, code: string) => {
+      setSelectedItems(prev => toggleBilanCompositionExclusion(prev, bilanId, code));
+    },
+    []
+  );
 
   // NOUVEAU - Auto-close cart modal si panier devient vide
   useEffect(() => {
@@ -1008,20 +999,17 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         <div className="w-[360px] h-full">
           <CartSidePanel
             selectedItems={selectedItems}
-            totalCost={totalCost}
+            cartView={cartView}
             onRemoveItem={removeItemFromCart}
             onClearCart={clearCart}
             onWhatsAppSend={handleWhatsAppSend}
+            onToggleBilanComposition={handleToggleBilanComposition}
             currencyLabel={isArabic ? 'درهم' : 'MAD'}
             isRtl={isArabic}
             normalizedAnalysesMap={normalizedAnalysesMap}
             onViewAnalysisDetails={(analysis) => {
               setSelectedAnalysisForDetails(analysis);
               setAnalysisModalOpen(true);
-            }}
-            onViewBilanDetails={(bilan) => {
-              setSelectedBilanForDetails(bilan);
-              setBilanModalOpen(true);
             }}
           />
         </div>
@@ -1068,10 +1056,11 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         isOpen={isCartModalOpen}
         onClose={() => setIsCartModalOpen(false)}
         selectedItems={selectedItems}
-        totalCost={totalCost}
+        cartView={cartView}
         onRemoveItem={removeItemFromCart}
         onClearCart={clearCart}
         onWhatsAppSend={handleWhatsAppSend}
+        onToggleBilanComposition={handleToggleBilanComposition}
         currencyLabel={isArabic ? 'درهم' : 'MAD'}
         isRtl={isArabic}
         normalizedAnalysesMap={normalizedAnalysesMap}
@@ -1079,10 +1068,6 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         onViewAnalysisDetails={(analysis) => {
           setSelectedAnalysisForDetails(analysis);
           setAnalysisModalOpen(true);
-        }}
-        onViewBilanDetails={(bilan) => {
-          setSelectedBilanForDetails(bilan);
-          setBilanModalOpen(true);
         }}
       />
 
