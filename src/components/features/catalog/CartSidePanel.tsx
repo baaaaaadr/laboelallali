@@ -95,9 +95,13 @@ export function CartSidePanel({
       bilans: bilans.map(item => ({
         name: item.item.Nom_Bilan_FR,
         price: getItemPrice(item),
-        compositionNames: item.item.Composition_Codes.map(code => {
+        composition: item.item.Composition_Codes.map(code => {
           const key = code.replace(/\s+/g, '').toUpperCase();
-          return normalizedAnalysesMap?.get(key)?.Nom_Patient_FR ?? code;
+          const a = normalizedAnalysesMap?.get(key);
+          return {
+            name: a?.Nom_Patient_FR ?? code,
+            price: a?.Prix_Dhs ?? 0,
+          };
         }),
       })),
       analyses: analyses.map(item => ({

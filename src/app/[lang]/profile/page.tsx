@@ -19,12 +19,31 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
   const [phone, setPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day}/${month}/${year}`;
+    }
+    return dateStr;
+  };
 
   useEffect(() => {
     if (!loading && !user) {
       router.push(`/${lang}/login`);
     }
   }, [user, loading, router, lang]);
+
+  useEffect(() => {
+    if (userProfile) {
+      if (userProfile.fullName) setFullName(userProfile.fullName);
+      if (userProfile.dateOfBirth) setDateOfBirth(userProfile.dateOfBirth);
+      if (userProfile.phone) setPhone(userProfile.phone);
+    }
+  }, [userProfile]);
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +62,7 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
         createdAt: new Date().toISOString(),
       });
       await refreshProfile();
+      setIsEditing(false);
     } catch (err: any) {
       console.error("Error saving profile:", err);
       setError(err.message || "Failed to save profile");
@@ -69,7 +89,7 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
   }
 
   // Profile Completion Form
-  if (!userProfile) {
+  if (!userProfile || !userProfile.phone) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
         <div className="max-w-md w-full space-y-8 bg-[var(--background-card)] p-8 rounded-lg shadow-xl border border-[var(--border-default)]">
@@ -188,53 +208,164 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
 
         {/* Profile Details */}
         <div className="card p-8">
-          <h2 className="text-xl font-bold text-[var(--color-bordeaux-primary)] mb-6 border-b border-[var(--border-default)] pb-4">
-            {t('personal_information', 'Informations Personnelles')}
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
-              <div className="mt-1">
-                <User className="text-[var(--color-fuchsia-accent)]" size={20} />
-              </div>
-              <div>
-                <p className="text-sm text-[var(--text-tertiary)] font-medium mb-1">{t('full_name', 'Nom complet')}</p>
-                <p className="text-[var(--text-primary)] font-semibold">{userProfile.fullName}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
-              <div className="mt-1">
-                <Calendar className="text-[var(--color-fuchsia-accent)]" size={20} />
-              </div>
-              <div>
-                <p className="text-sm text-[var(--text-tertiary)] font-medium mb-1">{t('date_of_birth', 'Date de naissance')}</p>
-                <p className="text-[var(--text-primary)] font-semibold">{userProfile.dateOfBirth}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
-              <div className="mt-1">
-                <Mail className="text-[var(--color-fuchsia-accent)]" size={20} />
-              </div>
-              <div>
-                <p className="text-sm text-[var(--text-tertiary)] font-medium mb-1">{t('email', 'Adresse Email')}</p>
-                <p className="text-[var(--text-primary)] font-semibold">{userProfile.email || user.email}</p>
-              </div>
-            </div>
-
-            {userProfile.phone && (
-              <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
-                <div className="mt-1">
-                  <Phone className="text-[var(--color-fuchsia-accent)]" size={20} />
-                </div>
-                <div>
-                  <p className="text-sm text-[var(--text-tertiary)] font-medium mb-1">{t('phone', 'Téléphone')}</p>
-                  <p className="text-[var(--text-primary)] font-semibold">{userProfile.phone}</p>
-                </div>
-              </div>
+          <div className="flex justify-between items-center mb-6 border-b border-[var(--border-default)] pb-4">
+            <h2 className="text-xl font-bold text-[var(--color-bordeaux-primary)]">
+              {t('personal_information', 'Informations Personnelles')}
+            </h2>
+            {!isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 text-sm font-semibold text-[var(--color-fuchsia-accent)] hover:bg-[var(--background-secondary)] rounded-lg transition-colors border border-[var(--color-fuchsia-accent)]"
+              >
+                {t('edit', 'Modifier')}
+              </button>
             )}
           </div>
+          
+          {isEditing ? (
+            <form onSubmit={handleProfileSubmit} className="space-y-6">
+              {error && (
+                <div className="p-3 bg-[var(--status-error)]/10 border border-[var(--status-error)]/30 text-[var(--status-error)] rounded-lg text-sm text-center">
+                  {error}
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--text-secondary)]">{t('full_name', 'Nom complet')}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent sm:text-sm transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--text-secondary)]">{t('date_of_birth', 'Date de naissance')}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Calendar className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="date"
+                      required
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent sm:text-sm transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--text-secondary)]">{t('phone', 'Téléphone')}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Phone className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent sm:text-sm transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--text-secondary)]">{t('email', 'Adresse Email')}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="email"
+                      disabled
+                      value={userProfile.email || user.email || ''}
+                      className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-[var(--border-default)] bg-[var(--background-secondary)] text-[var(--text-secondary)] placeholder-[var(--text-tertiary)] focus:outline-none sm:text-sm transition-colors cursor-not-allowed opacity-75"
+                    />
+                  </div>
+                  <span className="text-xs text-[var(--text-tertiary)]">L'adresse email d'authentification ne peut pas être modifiée.</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border-default)]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setError(null);
+                    if (userProfile) {
+                      setFullName(userProfile.fullName || '');
+                      setDateOfBirth(userProfile.dateOfBirth || '');
+                      setPhone(userProfile.phone || '');
+                    }
+                  }}
+                  className="px-6 py-2.5 border border-[var(--border-default)] text-[var(--text-primary)] rounded-lg hover:bg-[var(--background-secondary)] transition-colors font-medium text-sm"
+                >
+                  {t('cancel', 'Annuler')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2.5 bg-[var(--color-bordeaux-primary)] hover:bg-[var(--color-fuchsia-accent)] text-white rounded-lg transition-colors font-medium text-sm disabled:opacity-50"
+                >
+                  {isSubmitting ? '...' : t('save', 'Enregistrer')}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
+                <div className="mt-1">
+                  <User className="text-[var(--color-fuchsia-accent)]" size={20} />
+                </div>
+                <div>
+                  <p className="text-sm text-[var(--text-tertiary)] font-medium mb-1">{t('full_name', 'Nom complet')}</p>
+                  <p className="text-[var(--text-primary)] font-semibold">{userProfile.fullName}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
+                <div className="mt-1">
+                  <Calendar className="text-[var(--color-fuchsia-accent)]" size={20} />
+                </div>
+                <div>
+                  <p className="text-sm text-[var(--text-tertiary)] font-medium mb-1">{t('date_of_birth', 'Date de naissance')}</p>
+                  <p className="text-[var(--text-primary)] font-semibold">{formatDateDisplay(userProfile.dateOfBirth)}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
+                <div className="mt-1">
+                  <Mail className="text-[var(--color-fuchsia-accent)]" size={20} />
+                </div>
+                <div>
+                  <p className="text-sm text-[var(--text-tertiary)] font-medium mb-1">{t('email', 'Adresse Email')}</p>
+                  <p className="text-[var(--text-primary)] font-semibold">{userProfile.email || user.email}</p>
+                </div>
+              </div>
+
+              {userProfile.phone && (
+                <div className="flex items-start gap-4 p-4 rounded-lg bg-[var(--background-secondary)]">
+                  <div className="mt-1">
+                    <Phone className="text-[var(--color-fuchsia-accent)]" size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-[var(--text-tertiary)] font-medium mb-1">{t('phone', 'Téléphone')}</p>
+                    <p className="text-[var(--text-primary)] font-semibold">{userProfile.phone}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
       </div>
