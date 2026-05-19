@@ -1,36 +1,77 @@
 # Page: /login
 
 ## Purpose
-This page manages patient access, signup, and authentication. It handles email/password logins, email registration, and social login with Google.
+This page manages patient access, signup, and authentication. It handles email/password logins, email registration with inline profile collection, and social login with Google. New users are never redirected to `/profile` to complete their information — everything is collected on this page.
 
 ## Directory & File
 - **Path:** `src/app/[lang]/login/page.tsx`
 - **Type:** Client Component (`"use client"`) using React hooks.
 
-## Context & Key Components
+## Two-Step Onboarding Flow
 
-### 1. State Management
-- `isSignUp` (boolean): Toggles between the Login and Registration screens.
-- `email` (string) & `password` (string): Captures credentials.
-- `error` (string | null): Tracks and displays descriptive error notices.
-- `isSubmitting` (boolean): Controls disabled states and visual spinner feedback during Firebase Auth operations.
+### Step 1 — Auth (`step === 'auth'`)
+Shown to all unauthenticated visitors. Switches between login mode and signup mode via `isSignUp`.
 
-### 2. Authentication Integration (`useAuth`)
-- Queries `useAuth()` to check if a user is already signed in (`user`) or if the initial auth validation is in progress (`loading`).
-- **Loading / Logged In Guard:** If `loading || user` is active, displays a global full-screen medical spinner (`MedicalLoader` style) to prevent page access.
-- **Auto-Redirect:** An active `useEffect` automatically checks if `user` is non-null. When logged in, it redirects the client to their personal profile page at `/${lang}/profile`.
+**Login mode (isSignUp = false):** email + password only.
 
-### 3. Firebase Auth Methods
-All operations use the `getClientAuth()` helper loaded from `@/config/firebase` to ensure correct client-side client configuration:
-- **Email & Password Login:** Calls `signInWithEmailAndPassword(auth, email, password)`.
-- **Account Registration:** Calls `createUserWithEmailAndPassword(auth, email, password)`.
-- **Google Social Login:** Initiates a Google popup flow via `signInWithPopup(auth, new GoogleAuthProvider())`.
+**Signup mode (isSignUp = true):** 5 fields in a single form:
+1. Nom complet (`fullName`)
+2. Email
+3. Mot de passe
+4. Date de naissance (`dateOfBirth`)
+5. Téléphone (`phone`)
 
-## UI Design & Aesthetics
-- Single clean form card styled with premium dark mode compatibility (`bg-[var(--background-card)]`, `.button-bordeaux`, `var(--text-primary)`).
-- Lucide icons: `Mail`, `Lock`, `LogIn`, `UserPlus`.
-- Standard Google brand assets and SVGs.
+On submit: `createUserWithEmailAndPassword` → `setDoc` (saves profile to Firestore) → `refreshProfile` → `router.push(/${lang}/profile)`.
+
+### Step 2 — Profile completion (`step === 'profile'`)
+Shown inline on the same page (no redirect) when a user is authenticated but has no Firestore profile with `phone`. Triggered by a `useEffect` that watches `user` and `userProfile`.
+
+**When this appears:**
+- Google signup: user completes Google popup → `onAuthStateChanged` fires → no Firestore doc found → `setStep('profile')`.
+- Edge case: returning user whose Firestore doc is missing or lacks `phone`.
+
+**Pre-fill:** If the Google user has a `displayName`, it is pre-filled into the `fullName` field.
+
+On submit: `setDoc` (saves to Firestore) → `refreshProfile` → `router.push(/${lang}/profile)`.
+
+## State Management
+
+| State | Type | Purpose |
+|---|---|---|
+| `step` | `'auth' \| 'profile'` | Controls which screen is shown |
+| `isSignUp` | `boolean` | Toggles login vs signup in step 1 |
+| `email`, `password` | `string` | Auth credentials |
+| `fullName`, `dateOfBirth`, `phone` | `string` | Profile fields (used in both signup form and step 2) |
+| `isSubmitting` | `boolean` | Disables button and shows `...` during async ops |
+| `error` | `string \| null` | Inline error display |
+| `isSigningUp` (ref) | `boolean` | Guards against a race where `onAuthStateChanged` fires before the Firestore doc is saved during email signup — prevents `step` from being set to `'profile'` prematurely |
+
+## Redirect Logic
+
+```
+loading          → show spinner
+user + profile.phone  → show spinner (useEffect redirects to /profile)
+step === 'profile'   → show profile completion form
+default          → show auth form (step 1)
+```
+
+`useEffect` #1: redirects to `/${lang}/profile` when `user && userProfile?.phone`.
+`useEffect` #2: sets `step = 'profile'` when `user && !userProfile?.phone && !isSigningUp.current`.
+`useEffect` #3: pre-fills `fullName` from `user.displayName` when entering step 2 (Google users).
+
+## Firebase Auth Methods
+- **Email login:** `signInWithEmailAndPassword`
+- **Email signup:** `createUserWithEmailAndPassword` + immediate `setDoc` to `users/{uid}`
+- **Google:** `signInWithPopup(auth, new GoogleAuthProvider())`
+
+## Firestore Profile Document (`users/{uid}`)
+Saved with these fields:
+```ts
+{ uid, fullName, dateOfBirth, phone, email, createdAt: ISO string }
+```
 
 ## Notes for AI
-- **Profile Enforcements:** Registration does not prompt for phone numbers or dates of birth immediately. The validation is enforced on `/profile` after redirect. If the user completes registration, they will be blocked from downloading devis until they complete their profile details on `/profile`.
-- **Auth Errors:** Displayed errors are mapped from standard Firebase Auth error codes (e.g. `auth/user-not-found`, `auth/wrong-password`) to readable notices.
+- **No redirect to /profile for completion:** All profile data is collected on the login page itself. Do not add a redirect-to-profile-for-completion pattern.
+- **isSigningUp ref:** This ref is critical. Without it, the `useEffect` that sets `step = 'profile'` would fire between `createUserWithEmailAndPassword` and `setDoc`, causing the profile form to flash before saving completes.
+- **Google pre-fill:** `user.displayName` is only available for Google users. The pre-fill `useEffect` only runs when `step === 'profile'` and `fullName` is empty, so it never overwrites user input.
+- **Returning user without profile:** If a user somehow has auth but no Firestore doc (e.g. doc was deleted), the profile step appears after login — same inline flow, no redirect needed.

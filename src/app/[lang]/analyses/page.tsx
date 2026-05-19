@@ -236,7 +236,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     if ('Nom_Patient_FR' in item) {
       // AnalyseItem
       const name = isArabic ? item.Nom_Patient_AR : item.Nom_Patient_FR;
-      const tags = isArabic ? item.Tags_AR : item.Tags_FR;
+      const tags = (isArabic ? item.Tags_AR : item.Tags_FR) ?? [];
       const category = isArabic ? item.Categorie_AR : item.Categorie_FR;
       const description = isArabic ? item.Description_Patient_AR : item.Description_Patient_FR;
 
