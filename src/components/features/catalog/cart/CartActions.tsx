@@ -40,24 +40,28 @@ export function CartActions({
   });
 
   return (
-    <div className="border-t border-[var(--border-default)] px-4 py-3 bg-[var(--background-card)] flex-shrink-0 flex gap-2">
+    <div className="border-t border-[var(--border-default)] px-4 py-3 bg-[var(--background-card)] flex-shrink-0 flex gap-2 w-full">
       <button
         onClick={onWhatsAppSend}
-        className="flex-1 bg-[var(--status-success)] dark:bg-transparent dark:border dark:border-[var(--status-success)] text-white dark:text-[var(--status-success)] hover:brightness-90 dark:hover:bg-[var(--status-success)]/10 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm transition-colors shadow-md dark:shadow-none active:scale-[0.98]"
+        className="flex-1 bg-[var(--status-success)] dark:bg-transparent dark:border dark:border-[var(--status-success)] text-white dark:text-[var(--status-success)] hover:brightness-90 dark:hover:bg-[var(--status-success)]/10 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm transition-all shadow-md dark:shadow-none active:scale-[0.98]"
+        aria-label="WhatsApp"
       >
         <MessageCircle className="h-4 w-4 flex-shrink-0" />
-        {t('analyses_catalog.selection.send_whatsapp', 'Envoyer via WhatsApp')}
+        <span className="truncate">
+          {compact ? 'WhatsApp' : t('analyses_catalog.selection.send_whatsapp', 'Envoyer via WhatsApp')}
+        </span>
       </button>
       <button
         onClick={handleDownloadPdf}
-        className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--background-secondary)] border border-[var(--border-default)] transition-colors active:scale-[0.98] flex-shrink-0"
+        className={`${
+          compact ? 'flex-1' : 'flex-shrink-0 px-4'
+        } flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--background-secondary)] border border-[var(--border-default)] transition-all active:scale-[0.98]`}
         aria-label={tc('cart.download_pdf', 'Télécharger / Imprimer PDF')}
       >
-        <Download className="h-4 w-4" />
-        <span className={compact ? 'hidden sm:inline' : ''}>
-          {tc('cart.download_pdf', 'PDF')}
+        <Download className="h-4 w-4 flex-shrink-0" />
+        <span className="truncate">
+          {compact ? 'PDF' : tc('cart.download_pdf', 'Télécharger / Imprimer PDF')}
         </span>
-        {compact && <span className="sm:hidden">PDF</span>}
       </button>
     </div>
   );
