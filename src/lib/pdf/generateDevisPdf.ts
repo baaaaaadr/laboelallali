@@ -724,7 +724,7 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   drawRichFooter();
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SAUVEGARDE
+  // SAUVEGARDE / TÉLÉCHARGEMENT & PARTAGE
   // ══════════════════════════════════════════════════════════════════════════
   const fileName = `devis-labo-${new Date().toISOString().slice(0, 10)}.pdf`;
   const blob = doc.output('blob');
@@ -738,20 +738,40 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   const isMobile = typeof navigator !== 'undefined' &&
     /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
-  if (isMobile && nav?.canShare && nav.canShare({ files: [file] }) && nav.share) {
-    try {
-      await nav.share({
-        files: [file],
-        title: 'Devis Laboratoire El Allali',
-        text: 'Voici votre fiche de préparation.',
-      });
-    } catch (error) {
-      const err = error as { name?: string };
-      if (err?.name !== 'AbortError') {
-        doc.save(fileName);
+  // Helper moderne et propre pour déclencher le téléchargement direct sans ouvrir de page blanche sur iOS Safari
+  const triggerDirectDownload = () => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Délai court pour s'assurer que le navigateur a initié le téléchargement avant de révoquer l'URL
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 250);
+  };
+
+  if (isMobile) {
+    // 1. Toujours télécharger le fichier en premier
+    triggerDirectDownload();
+
+    // 2. Si le partage est supporté sur mobile, proposer également de le partager
+    if (nav?.canShare && nav.canShare({ files: [file] }) && nav.share) {
+      try {
+        await nav.share({
+          files: [file],
+          title: 'Devis Laboratoire El Allali',
+          text: 'Voici votre fiche de préparation.',
+        });
+      } catch (error) {
+        // Ignorer l'erreur AbortError (lorsque l'utilisateur annule le partage)
       }
     }
   } else {
-    doc.save(fileName);
+    // Sur desktop, utiliser le téléchargement direct propre (évite les failles de doc.save() sur Safari)
+    triggerDirectDownload();
   }
 }
