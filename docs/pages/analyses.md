@@ -83,9 +83,8 @@ Immutable helpers:
 - Protected by auth via `useCartPdfHandler` (shared hook). Both CartSidePanel (desktop) and CartDetailsModal (mobile) use the same hook — no divergence possible.
 - If unauthenticated or profile lacks `phone`: calls `onAuthFail()` (closes modal) then redirects to `/login` or `/profile`.
 - PDF generation: `src/lib/pdf/generateDevisPdf.ts`. Uses `computeCartView` output; excluded/duplicate analyses are filtered before being sent to the PDF renderer.
-- Download & Share Behavior:
-  - On both mobile and desktop, it triggers a clean direct download via a modern hidden anchor tag with Blob URL (bypassing jsPDF's legacy `window.open` routines to ensure no blank tabs/pages are left open on iOS Safari).
-  - On mobile (iOS/Android), after initiating the download, it also invokes the Web Share API (`navigator.share`) to allow immediate sharing of the PDF document.
+- Download Behavior:
+  - On all environments (mobile and desktop), it triggers a clean direct download via a modern hidden anchor tag with Blob URL (bypassing jsPDF's legacy `window.open` routines to ensure no blank tabs/pages are left open on iOS Safari). This keeps the download fast and local, allowing the user to view the PDF first without triggering forced share dialogs or leaking internal blob links.
 
 ## Notes for AI
 - **Single source of truth:** All pricing and dedup logic lives in `computeCartView`. Never recompute prices inline in components — always derive from `cartView`.

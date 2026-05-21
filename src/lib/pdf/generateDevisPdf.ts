@@ -724,19 +724,10 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
   drawRichFooter();
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SAUVEGARDE / TÉLÉCHARGEMENT & PARTAGE
+  // SAUVEGARDE / TÉLÉCHARGEMENT DIRECT UNIQUEMENT
   // ══════════════════════════════════════════════════════════════════════════
   const fileName = `devis-labo-${new Date().toISOString().slice(0, 10)}.pdf`;
   const blob = doc.output('blob');
-  const file = new File([blob], fileName, { type: 'application/pdf' });
-
-  const nav = typeof navigator !== 'undefined' ? (navigator as Navigator & {
-    canShare?: (data: { files?: File[] }) => boolean;
-    share?: (data: { files?: File[]; title?: string; text?: string }) => Promise<void>;
-  }) : null;
-
-  const isMobile = typeof navigator !== 'undefined' &&
-    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
   // Helper moderne et propre pour déclencher le téléchargement direct sans ouvrir de page blanche sur iOS Safari
   const triggerDirectDownload = () => {
@@ -754,24 +745,6 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
     }, 250);
   };
 
-  if (isMobile) {
-    // 1. Toujours télécharger le fichier en premier
-    triggerDirectDownload();
-
-    // 2. Si le partage est supporté sur mobile, proposer également de le partager
-    if (nav?.canShare && nav.canShare({ files: [file] }) && nav.share) {
-      try {
-        await nav.share({
-          files: [file],
-          title: 'Devis Laboratoire El Allali',
-          text: 'Voici votre fiche de préparation.',
-        });
-      } catch (error) {
-        // Ignorer l'erreur AbortError (lorsque l'utilisateur annule le partage)
-      }
-    }
-  } else {
-    // Sur desktop, utiliser le téléchargement direct propre (évite les failles de doc.save() sur Safari)
-    triggerDirectDownload();
-  }
+  // Déclencher le téléchargement direct sur tous les environnements (mobile et desktop)
+  triggerDirectDownload();
 }
