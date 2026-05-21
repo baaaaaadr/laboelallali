@@ -168,8 +168,9 @@ const Header = () => {
   };
 
   return (
-    <header className="header-main shadow-md sticky top-0 z-50 w-full overflow-hidden">
-      <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
+    <>
+      <header className="header-main shadow-md sticky top-0 z-50 w-full">
+        <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
         <div className="flex items-center justify-between transition-all text-white h-[64px]">
           {/* Logo and name */}
           <Link href={currentLanguagePath} className="flex items-center h-full">
@@ -258,10 +259,11 @@ const Header = () => {
           </div>
         </div>
       </div>
+    </header>
 
       {/* Mobile Menu Overlay and Container */}
       <div
-        className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[100] lg:hidden transition-opacity duration-300 ${
           isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         style={{
@@ -283,7 +285,7 @@ const Header = () => {
         
         {/* Menu Panel */}
         <div 
-          className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-[var(--background-default)] shadow-lg z-50 flex flex-col"
+          className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-[var(--background-default)] shadow-lg z-[100] flex flex-col"
           style={{
             transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
             opacity: isMenuOpen ? 1 : 0.7,
@@ -474,7 +476,7 @@ const Header = () => {
         onClose={() => setIsSearchOpen(false)}
         lang={urlLang}
       />
-    </header>
+    </>
   );
 };
 
