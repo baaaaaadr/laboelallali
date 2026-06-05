@@ -37,8 +37,9 @@ A sub-component responsible for running parallel Firestore queries to fetch the 
 - **CartCompositionItem.tsx**: One composition analysis with a checkbox. Four visual states: normal (✓ enabled), excluded by user (✗ enabled, grey italic, strikethrough), duplicate from another item (✓ disabled, grey italic, strikethrough, source tag), duplicate+excluded (✗ enabled, same grey treatment).
 - **CartTotalsBreakdown.tsx**: Encadré showing sub-total / frais de prélèvement / **Total** based on `cartView`.
 - **CartPreparation.tsx**: Shared content for the "Ma Préparation" tab — administrative documents, sample types, special instructions, fasting warning, result delay + total.
-- **CartActions.tsx**: Shared footer — WhatsApp button + PDF download button (delegates to `useCartPdfHandler`).
-- **useCartPdfHandler.ts**: Shared hook encapsulating PDF auth check + generation. Accepts optional `onAuthFail()` callback (used by CartDetailsModal to close itself before redirecting to login).
+- **CartActions.tsx**: Shared footer — WhatsApp button + PDF button (delegates to `useCartPdfHandler`). The PDF button shows a spinner (`Loader2`) and is disabled while a PDF is being generated (`isGeneratingPdf`). Renders `<PdfPreviewModal>` for the desktop preview flow. Accepts an optional `isRtl` prop (forwarded by CartSidePanel / CartDetailsModal) to set the preview modal direction.
+- **PdfPreviewModal.tsx** (`src/components/features/catalog/cart/PdfPreviewModal.tsx`): Large Headless UI `<Dialog>` (`z-[60]`, `max-w-5xl h-[92vh]`) that previews the generated PDF in an `<iframe>` (browser-native PDF viewer via a blob object URL). Footer has a "Fermer" button and a `.button-bordeaux` "Télécharger" button. **Desktop only** — never mounted with content on mobile (mobile downloads directly). Props: `isOpen`, `onClose`, `pdfUrl` (blob URL | null), `onDownload`, `isRtl`.
+- **useCartPdfHandler.ts**: Shared hook encapsulating PDF auth check + generation + the adaptive download/preview behavior. Accepts optional `onAuthFail()` callback (used by CartDetailsModal to close itself before redirecting to login). Detects mobile vs PC (same heuristic as `/contact`: mobile UA OR `window.innerWidth < 768`). Returns `{ handleDownloadPdf, isAuthReady, isGeneratingPdf, pdfPreview, closePdfPreview, downloadFromPreview }`. Manages the preview object URL via a ref and revokes it on close/unmount.
 
 #### Floating UI
 - **TotalCalculator:** A floating cart counter showing selected tests count and total cost. Clicking it opens CartDetailsModal.
@@ -83,8 +84,10 @@ Immutable helpers:
 - Protected by auth via `useCartPdfHandler` (shared hook). Both CartSidePanel (desktop) and CartDetailsModal (mobile) use the same hook — no divergence possible.
 - If unauthenticated or profile lacks `phone`: calls `onAuthFail()` (closes modal) then redirects to `/login` or `/profile`.
 - PDF generation: `src/lib/pdf/generateDevisPdf.ts`. Uses `computeCartView` output; excluded/duplicate analyses are filtered before being sent to the PDF renderer.
-- Download Behavior:
-  - On all environments (mobile and desktop), it triggers a clean direct download via a modern hidden anchor tag with Blob URL (bypassing jsPDF's legacy `window.open` routines to ensure no blank tabs/pages are left open on iOS Safari). This keeps the download fast and local, allowing the user to view the PDF first without triggering forced share dialogs or leaking internal blob links.
+- `generateDevisPdf(opts)` returns `{ blob, fileName }`. It accepts an optional `download` flag (default `true`). When `download: true` it triggers the direct download itself (hidden anchor + blob URL); when `download: false` it only generates and returns the blob so the caller can preview it.
+- **Adaptive Download Behavior (device-aware):**
+  - **Mobile** (mobile UA OR width `< 768`): `generateDevisPdf({ download: true })` → clean direct download via a hidden anchor tag with a Blob URL (bypassing jsPDF's legacy `window.open` routines so no blank tabs/pages are left open on iOS Safari). Unchanged behavior.
+  - **PC / Desktop:** `generateDevisPdf({ download: false })` → the returned blob is turned into an object URL and shown first in a large preview modal (`PdfPreviewModal`, rendered via `<iframe>`). The user reviews the document, then clicks "Télécharger" (`downloadFromPreview`) to actually save it. While generating, the button is disabled and shows a spinner (`isGeneratingPdf`). The object URL is revoked on close/unmount to avoid leaks.
 
 ## Notes for AI
 - **Single source of truth:** All pricing and dedup logic lives in `computeCartView`. Never recompute prices inline in components — always derive from `cartView`.

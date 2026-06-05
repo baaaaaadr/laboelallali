@@ -13,6 +13,13 @@ export interface GenerateDevisPdfOptions {
   specialInstructions: string[];
   patientName?: string;
   patientPhone?: string;
+  /**
+   * Si `false`, le téléchargement direct n'est PAS déclenché : la fonction
+   * se contente de générer et de renvoyer le `{ blob, fileName }` pour que
+   * l'appelant l'affiche (ex. aperçu modale sur PC).
+   * Par défaut `true` (comportement historique : téléchargement direct).
+   */
+  download?: boolean;
 }
 
 // ── Palette M3 ───────────────────────────────────────────────────────────────
@@ -55,13 +62,16 @@ const URLS = {
   email:    'mailto:laboelallali@gmail.com',
 };
 
-export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<void> {
+export async function generateDevisPdf(
+  opts: GenerateDevisPdfOptions
+): Promise<{ blob: Blob; fileName: string }> {
   const { jsPDF } = await import('jspdf');
   const QRCode = (await import('qrcode')).default;
   const {
     bilans, analyses, totalCost, currencyLabel,
     maxJeune, maxDRR, sampleTypes,
     patientName, patientPhone,
+    download = true,
   } = opts;
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
@@ -745,6 +755,12 @@ export async function generateDevisPdf(opts: GenerateDevisPdfOptions): Promise<v
     }, 250);
   };
 
-  // Déclencher le téléchargement direct sur tous les environnements (mobile et desktop)
-  triggerDirectDownload();
+  // Déclencher le téléchargement direct seulement si demandé.
+  // Sur PC, l'appelant passe `download: false` pour afficher d'abord un aperçu
+  // dans une modale, puis déclenche le téléchargement via le blob renvoyé.
+  if (download) {
+    triggerDirectDownload();
+  }
+
+  return { blob, fileName };
 }

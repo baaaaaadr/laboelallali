@@ -56,7 +56,11 @@
     "analyses_skipped_in_bilan": "تم تجاهل {{count}} تحليل/تحاليل، مشمولة بالفعل في إحدى الباقات في سلتك.",
     "tab_devis": "عرضي التقديري",
     "tab_preparation": "تحضيري",
-    "download_pdf": "تنزيل / طباعة PDF"
+    "download_pdf": "تنزيل / طباعة PDF",
+    "pdf_preview_title": "معاينة عرضك التقديري",
+    "download": "تنزيل",
+    "close": "إغلاق",
+    "pdf_error": "حدث خطأ أثناء إنشاء ملف PDF."
   },
   "preparation_summary": {
     "open_btn": "تحضيري",

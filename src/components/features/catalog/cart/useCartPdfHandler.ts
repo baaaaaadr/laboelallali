@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -17,12 +17,22 @@ interface UseCartPdfHandlerOptions {
   onAuthFail?: () => void;
 }
 
+/** Aperçu PDF actuellement affiché (PC uniquement). */
+export interface PdfPreview {
+  url: string;
+  fileName: string;
+}
+
 /**
- * Hook partagé pour le téléchargement PDF du devis.
+ * Hook partagé pour le téléchargement / aperçu PDF du devis.
  * Encapsule :
  *   - le check d'authentification (user + profile complétés)
  *   - la redirection vers /login si non auth
  *   - la construction des données PDF à partir du cartView (exclusions filtrées)
+ *   - le comportement adaptatif :
+ *       • Mobile  → téléchargement direct (comportement historique).
+ *       • PC      → génère le PDF, l'affiche d'abord dans une grande modale
+ *                   d'aperçu, puis laisse l'utilisateur télécharger.
  */
 export function useCartPdfHandler({
   cartView,
@@ -35,24 +45,41 @@ export function useCartPdfHandler({
   const params = useParams<{ lang: string }>();
   const { user, userProfile, loading: authLoading } = useAuth();
 
-  const handleDownloadPdf = useCallback(() => {
-    if (authLoading) {
-      toast(tc('cart.session_loading', 'Vérification de votre session…'));
-      return;
-    }
-    if (!user || !userProfile) {
-      onAuthFail?.();
-      toast.error(
-        tc(
-          'cart.login_required_for_pdf',
-          'Créez un compte gratuit pour télécharger votre devis PDF !'
-        )
-      );
-      router.push(`/${params?.lang ?? 'fr'}/login`);
-      return;
-    }
+  // Détection mobile vs PC (même heuristique que /contact et la page d'accueil).
+  const [isMobile, setIsMobile] = useState(true);
+  useEffect(() => {
+    const checkMobile = () => {
+      const uaMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const widthMobile = window.innerWidth < 768;
+      setIsMobile(uaMobile || widthMobile);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-    // Construction des inputs PDF depuis le cartView (exclus filtrés)
+  // État de l'aperçu PDF (PC uniquement).
+  const [pdfPreview, setPdfPreview] = useState<PdfPreview | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const previewUrlRef = useRef<string | null>(null);
+
+  // Révoque l'object URL quand on ferme l'aperçu ou au démontage.
+  const revokePreviewUrl = useCallback(() => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => () => revokePreviewUrl(), [revokePreviewUrl]);
+
+  const closePdfPreview = useCallback(() => {
+    revokePreviewUrl();
+    setPdfPreview(null);
+  }, [revokePreviewUrl]);
+
+  /** Construit les inputs PDF depuis le cartView (exclus filtrés). */
+  const buildPdfOptions = useCallback(() => {
     const bilans = cartView.lines
       .filter(line => line.type === 'bilan')
       .map(line => ({
@@ -70,7 +97,7 @@ export function useCartPdfHandler({
         price: line.cartItem.type === 'analyse' ? line.cartItem.item.Prix_Dhs : 0,
       }));
 
-    void generateDevisPdf({
+    return {
       bilans,
       analyses,
       totalCost: cartView.total,
@@ -79,21 +106,83 @@ export function useCartPdfHandler({
       maxDRR: preparationRules.maxDRR,
       sampleTypes: preparationRules.sampleTypes,
       specialInstructions: preparationRules.specialInstructions,
-      patientName: userProfile.fullName,
-      patientPhone: userProfile.phone,
-    });
+      patientName: userProfile?.fullName,
+      patientPhone: userProfile?.phone,
+    };
+  }, [cartView, preparationRules, currencyLabel, userProfile]);
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (authLoading) {
+      toast(tc('cart.session_loading', 'Vérification de votre session…'));
+      return;
+    }
+    if (!user || !userProfile) {
+      onAuthFail?.();
+      toast.error(
+        tc(
+          'cart.login_required_for_pdf',
+          'Créez un compte gratuit pour télécharger votre devis PDF !'
+        )
+      );
+      router.push(`/${params?.lang ?? 'fr'}/login`);
+      return;
+    }
+
+    // Mobile : téléchargement direct, comme avant.
+    if (isMobile) {
+      void generateDevisPdf({ ...buildPdfOptions(), download: true });
+      return;
+    }
+
+    // PC : génère le PDF puis l'affiche dans une modale d'aperçu.
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    try {
+      const { blob, fileName } = await generateDevisPdf({
+        ...buildPdfOptions(),
+        download: false,
+      });
+      revokePreviewUrl();
+      const url = URL.createObjectURL(blob);
+      previewUrlRef.current = url;
+      setPdfPreview({ url, fileName });
+    } catch {
+      toast.error(tc('cart.pdf_error', 'Une erreur est survenue lors de la génération du PDF.'));
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   }, [
     authLoading,
     user,
     userProfile,
-    cartView,
-    preparationRules,
-    currencyLabel,
+    isMobile,
+    isGeneratingPdf,
+    buildPdfOptions,
+    revokePreviewUrl,
     onAuthFail,
     router,
     params,
     tc,
   ]);
 
-  return { handleDownloadPdf, isAuthReady: !authLoading };
+  /** Déclenche le téléchargement du PDF actuellement affiché dans l'aperçu. */
+  const downloadFromPreview = useCallback(() => {
+    if (!pdfPreview) return;
+    const a = document.createElement('a');
+    a.href = pdfPreview.url;
+    a.download = pdfPreview.fileName;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, [pdfPreview]);
+
+  return {
+    handleDownloadPdf,
+    isAuthReady: !authLoading,
+    isGeneratingPdf,
+    pdfPreview,
+    closePdfPreview,
+    downloadFromPreview,
+  };
 }

@@ -125,6 +125,7 @@ export function CartSidePanel({
           preparationRules={preparationRules}
           currencyLabel={currencyLabel}
           onWhatsAppSend={onWhatsAppSend}
+          isRtl={isRtl}
           compact
         />
       )}

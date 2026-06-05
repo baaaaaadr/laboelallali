@@ -56,7 +56,11 @@
     "analyses_skipped_in_bilan": "{{count}} analyse(s) ignorée(s), déjà couvertes par un bilan dans votre panier.",
     "tab_devis": "Mon Devis",
     "tab_preparation": "Ma Préparation",
-    "download_pdf": "Télécharger / Imprimer PDF"
+    "download_pdf": "Télécharger / Imprimer PDF",
+    "pdf_preview_title": "Aperçu de votre devis",
+    "download": "Télécharger",
+    "close": "Fermer",
+    "pdf_error": "Une erreur est survenue lors de la génération du PDF."
   },
   "preparation_summary": {
     "open_btn": "Ma préparation",

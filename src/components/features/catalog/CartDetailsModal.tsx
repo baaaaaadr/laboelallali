@@ -154,6 +154,7 @@ export function CartDetailsModal({
                   currencyLabel={currencyLabel}
                   onWhatsAppSend={onWhatsAppSend}
                   onAuthFail={onClose}
+                  isRtl={isRtl}
                   compact
                 />
               )}
