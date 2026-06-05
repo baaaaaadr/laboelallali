@@ -7,7 +7,7 @@ This page manages patient access, signup, and authentication. It handles email/p
 - **Path:** `src/app/[lang]/login/page.tsx`
 - **Type:** Client Component (`"use client"`) using React hooks.
 
-## Two-Step Onboarding Flow
+## Three-Step Auth & Onboarding Flow
 
 ### Step 1 — Auth (`step === 'auth'`)
 Shown to all unauthenticated visitors. Switches between login mode and signup mode via `isSignUp`.
@@ -22,6 +22,12 @@ Shown to all unauthenticated visitors. Switches between login mode and signup mo
 5. Téléphone (`phone`)
 
 On submit: `createUserWithEmailAndPassword` → `setDoc` (saves profile to Firestore) → `refreshProfile` → `router.push(/${lang}/profile)`.
+
+### Step 1.5 — Password Reset (`step === 'forgot_password'`)
+Shown when the user clicks the "Mot de passe oublié ?" link in the login form. 
+* Prompts for the user's `email`.
+* On submit: Calls `sendPasswordResetEmail` → Sets `resetSent = true` which displays a confirmation message.
+* Provides a "Retour à la connexion" button to return to the standard login screen.
 
 ### Step 2 — Profile completion (`step === 'profile'`)
 Shown inline on the same page (no redirect) when a user is authenticated but has no Firestore profile with `phone`. Triggered by a `useEffect` that watches `user` and `userProfile`.
@@ -38,21 +44,23 @@ On submit: `setDoc` (saves to Firestore) → `refreshProfile` → `router.push(/
 
 | State | Type | Purpose |
 |---|---|---|
-| `step` | `'auth' \| 'profile'` | Controls which screen is shown |
+| `step` | `'auth' \| 'profile' \| 'forgot_password'` | Controls which screen is shown |
 | `isSignUp` | `boolean` | Toggles login vs signup in step 1 |
 | `email`, `password` | `string` | Auth credentials |
 | `fullName`, `dateOfBirth`, `phone` | `string` | Profile fields (used in both signup form and step 2) |
 | `isSubmitting` | `boolean` | Disables button and shows `...` during async ops |
 | `error` | `string \| null` | Inline error display |
+| `resetSent` | `boolean` | Indicates if password reset email was sent successfully |
 | `isSigningUp` (ref) | `boolean` | Guards against a race where `onAuthStateChanged` fires before the Firestore doc is saved during email signup — prevents `step` from being set to `'profile'` prematurely |
 
 ## Redirect Logic
 
 ```
-loading          → show spinner
+loading               → show spinner
 user + profile.phone  → show spinner (useEffect redirects to /profile)
-step === 'profile'   → show profile completion form
-default          → show auth form (step 1)
+step === 'profile'    → show profile completion form
+step === 'forgot_password' → show password reset request form
+default               → show auth form (step 1)
 ```
 
 `useEffect` #1: redirects to `/${lang}/profile` when `user && userProfile?.phone`.
@@ -63,6 +71,7 @@ default          → show auth form (step 1)
 - **Email login:** `signInWithEmailAndPassword`
 - **Email signup:** `createUserWithEmailAndPassword` + immediate `setDoc` to `users/{uid}`
 - **Google:** `signInWithPopup(auth, new GoogleAuthProvider())`
+- **Password reset:** `sendPasswordResetEmail`
 
 ## Firestore Profile Document (`users/{uid}`)
 Saved with these fields:

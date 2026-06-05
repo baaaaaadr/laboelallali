@@ -4,16 +4,24 @@ import React, { useState, useEffect, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { getClientAuth } from '@/config/firebase';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { Mail, Lock, LogIn, UserPlus, User, Calendar, Phone, CheckCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, UserPlus, User, Calendar, Phone, CheckCircle, ArrowLeft } from 'lucide-react';
 
 const inputClass =
   'appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent sm:text-sm transition-colors';
 
 const labelClass = 'block text-sm font-medium text-[var(--text-secondary)] mb-1';
+
+const getErrorMessage = (err: unknown): string => {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
+    return (err as { message: string }).message;
+  }
+  return String(err);
+};
 
 export default function LoginPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params);
@@ -22,7 +30,8 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
   const { user, userProfile, loading, refreshProfile } = useAuth();
 
   // Step 1: auth form — Step 2: profile completion (Google new users)
-  const [step, setStep] = useState<'auth' | 'profile'>('auth');
+  const [step, setStep] = useState<'auth' | 'profile' | 'forgot_password'>('auth');
+  const [resetSent, setResetSent] = useState(false);
 
   // Auth fields
   const [isSignUp, setIsSignUp] = useState(false);
@@ -80,9 +89,9 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       if (!auth) throw new Error('Auth not initialized');
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || t('error_google_login', 'Échec de la connexion avec Google'));
+      setError(getErrorMessage(err) || t('error_google_login', 'Échec de la connexion avec Google'));
     }
   };
 
@@ -104,10 +113,10 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       isSigningUp.current = false;
       console.error(err);
-      setError(err.message || t('error_auth', "Échec de l'authentification"));
+      setError(getErrorMessage(err) || t('error_auth', "Échec de l'authentification"));
     } finally {
       setIsSubmitting(false);
     }
@@ -122,9 +131,26 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       await persistProfile(user.uid, user.email);
       await refreshProfile();
       router.push(`/${lang}/profile`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || t('error_save_profile', 'Échec de la sauvegarde du profil'));
+      setError(getErrorMessage(err) || t('error_save_profile', 'Échec de la sauvegarde du profil'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      const auth = await getClientAuth();
+      if (!auth) throw new Error('Auth not initialized');
+      await sendPasswordResetEmail(auth, email);
+      setResetSent(true);
+    } catch (err: unknown) {
+      console.error(err);
+      setError(getErrorMessage(err) || t('error_reset_password', "Échec de l'envoi de l'e-mail de réinitialisation"));
     } finally {
       setIsSubmitting(false);
     }
@@ -142,6 +168,98 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--background-default)]">
         <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent" />
+      </div>
+    );
+  }
+
+  // ── Step: Forgot Password ──────────────────────────────────────────────────
+  if (step === 'forgot_password') {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
+        <div className="max-w-md w-full space-y-8 bg-[var(--background-card)] p-8 rounded-lg shadow-xl border border-[var(--border-default)]">
+          <div>
+            <div className="mx-auto h-12 w-12 bg-[var(--color-bordeaux-primary)] text-white rounded-lg flex items-center justify-center">
+              <Lock size={24} />
+            </div>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-[var(--text-primary)]">
+              {t('forgot_password', 'Mot de passe oublié ?')}
+            </h2>
+            <p className="mt-2 text-center text-sm text-[var(--text-secondary)]">
+              {resetSent
+                ? t('reset_email_sent', 'Un e-mail de réinitialisation a été envoyé. Veuillez vérifier votre boîte de réception.')
+                : t('forgot_password_desc', 'Saisissez votre e-mail pour recevoir un lien de réinitialisation.')}
+            </p>
+          </div>
+
+          {resetSent ? (
+            <div className="mt-8">
+              <button
+                onClick={() => {
+                  setStep('auth');
+                  setError(null);
+                  setResetSent(false);
+                }}
+                className="group relative w-full button-bordeaux justify-center flex items-center gap-2"
+              >
+                <ArrowLeft className="h-5 w-5 text-white" />
+                {t('back_to_login', 'Retour à la connexion')}
+              </button>
+            </div>
+          ) : (
+            <form className="mt-8 space-y-5" onSubmit={handleForgotPassword}>
+              {error && (
+                <div className="p-3 bg-[var(--status-error)]/10 border border-[var(--status-error)]/30 text-[var(--status-error)] rounded-lg text-sm text-center">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="reset-email" className={labelClass}>
+                  {t('email', 'Adresse Email')}
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={inputClass}
+                    placeholder="exemple@email.com"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="group relative w-full button-bordeaux justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                    <CheckCircle className="h-5 w-5 text-white/70 group-hover:text-white" />
+                  </span>
+                  {isSubmitting ? '...' : t('reset_password', 'Réinitialiser le mot de passe')}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('auth');
+                    setError(null);
+                  }}
+                  className="group relative w-full button-outline justify-center flex items-center gap-2"
+                >
+                  <ArrowLeft className="h-5 w-5 text-[var(--color-bordeaux-primary)]" />
+                  {t('back_to_login', 'Retour à la connexion')}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     );
   }
@@ -317,9 +435,24 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
 
           {/* Password */}
           <div>
-            <label htmlFor="s1-password" className={labelClass}>
-              {t('password', 'Mot de passe')}
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="s1-password" className="block text-sm font-medium text-[var(--text-secondary)]">
+                {t('password', 'Mot de passe')}
+              </label>
+              {!isSignUp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('forgot_password');
+                    setError(null);
+                    setResetSent(false);
+                  }}
+                  className="text-xs font-medium text-[var(--color-bordeaux-primary)] hover:text-[var(--color-fuchsia-accent)] transition-colors cursor-pointer"
+                >
+                  {t('forgot_password', 'Mot de passe oublié ?')}
+                </button>
+              )}
+            </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
