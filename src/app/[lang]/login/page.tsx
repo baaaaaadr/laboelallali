@@ -38,19 +38,6 @@ const getErrorMessage = (err: unknown): string => {
   return String(err);
 };
 
-const isStandaloneApp = () => {
-  if (typeof window === 'undefined') return false;
-  const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
-  return window.matchMedia('(display-mode: standalone)').matches || navigatorWithStandalone.standalone === true;
-};
-
-const shouldUseGoogleRedirect = () => {
-  if (typeof window === 'undefined') return false;
-  const ua = window.navigator.userAgent.toLowerCase();
-  const isMobile = /android|iphone|ipad|ipod|mobile/.test(ua) || window.innerWidth < 768;
-  return isMobile && !isStandaloneApp();
-};
-
 export default function LoginPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params);
   const { t } = useTranslation('common');
@@ -174,16 +161,12 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       if (!auth) throw new Error('Auth not initialized');
       const provider = new GoogleAuthProvider();
 
-      if (shouldUseGoogleRedirect()) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-
       try {
         await signInWithPopup(auth, provider);
       } catch (popupErr: unknown) {
-        const code = getFirebaseErrorCode(popupErr);
-        if (code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request') {
+        // Popup blocked by the browser → fall back to a full-page redirect.
+        // Reliable now that authDomain is the app's own domain (no cross-domain relay).
+        if (getFirebaseErrorCode(popupErr) === 'auth/popup-blocked') {
           await signInWithRedirect(auth, provider);
           return;
         }

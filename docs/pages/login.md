@@ -3,9 +3,7 @@
 ## Purpose
 This page manages patient access, signup, and authentication. It handles email/password login, email registration with inline profile collection, password reset, and Google social login. New users are never redirected away to `/profile` to complete their information; missing profile details are collected inline on this page.
 
-Google auth is adaptive:
-- Desktop browser and installed PWA contexts use `signInWithPopup`.
-- Mobile browser contexts use `signInWithRedirect` to avoid fragile popup behavior in Chrome/Safari mobile.
+Google auth uses `signInWithPopup` as the primary flow on desktop, mobile browser, and installed PWA contexts. `signInWithRedirect` is used as a fallback only when the browser blocks the popup (`auth/popup-blocked`). Both flows are first-party and reliable because `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` is set to the app's own domain (`laboelallali.com`, served by Firebase Hosting), so there is no cross-domain auth relay and no third-party-cookie failure.
 
 ## Directory & File
 - **Path:** `src/app/[lang]/login/page.tsx`
@@ -31,9 +29,9 @@ On email login submit: `signInWithEmailAndPassword`. The auth context loads the 
 
 Google submit:
 - Creates `new GoogleAuthProvider()`.
-- If `shouldUseGoogleRedirect()` is true, calls `signInWithRedirect(auth, provider)`.
-- Otherwise tries `signInWithPopup(auth, provider)`.
-- If popup setup is blocked/cancelled by the browser (`auth/popup-blocked` or `auth/cancelled-popup-request`), falls back to `signInWithRedirect`.
+- Tries `signInWithPopup(auth, provider)` first.
+- If the browser blocks the popup (`auth/popup-blocked`), falls back to `signInWithRedirect`.
+- Any other popup error (e.g. the user closed the popup) is mapped to a readable message and displayed inline.
 
 ### Step 1.5 - Password Reset (`step === 'forgot_password'`)
 Shown when the user clicks the "Mot de passe oublie ?" link in the login form.
@@ -74,10 +72,8 @@ On submit: `setDoc` to `users/{uid}` -> `refreshProfile` -> `router.push(/${lang
 - `getFirebaseErrorCode(err)`: Extracts a Firebase Auth `code` from an unknown error object.
 - `getErrorMessage(err)`: Extracts a generic readable message from unknown errors.
 - `getAuthErrorMessage(err, fallbackKey, fallbackMessage)`: `useCallback` that maps common Firebase Auth codes to localized i18n keys (`auth_error_*`) before falling back to the generic error message.
-- `isStandaloneApp()`: Detects installed PWA contexts through `display-mode: standalone` and iOS `navigator.standalone`.
-- `shouldUseGoogleRedirect()`: Returns true for mobile UA or narrow viewport browser sessions that are not installed PWAs.
 - `persistProfile(uid, userEmail)`: Writes the profile document to `users/{uid}`.
-- Google redirect resolution effect: on mount, calls `getRedirectResult(auth)` so mobile redirect responses are consumed and redirect errors are displayed inline.
+- Google redirect resolution effect: on mount, calls `getRedirectResult(auth)` so redirect fallback responses are consumed and redirect errors are displayed inline.
 
 ## Redirect Logic
 
@@ -93,13 +89,13 @@ Effects:
 - Redirects to `/${lang}/profile` when `user && userProfile?.phone`.
 - Sets `step = 'profile'` when `user && !userProfile?.phone && !isSigningUp.current`.
 - Pre-fills `fullName` from `user.displayName` when entering step 2.
-- Resolves Google redirect results through `getRedirectResult(auth)`.
+- Resolves Google redirect results through `getRedirectResult(auth)` for the redirect fallback flow.
 
 ## Firebase Auth Methods
 - **Email login:** `signInWithEmailAndPassword`
 - **Email signup:** `createUserWithEmailAndPassword` + immediate `setDoc` to `users/{uid}`
-- **Google desktop/PWA:** `signInWithPopup(auth, new GoogleAuthProvider())`
-- **Google mobile browser:** `signInWithRedirect(auth, provider)` + `getRedirectResult(auth)`
+- **Google primary flow:** `signInWithPopup(auth, new GoogleAuthProvider())`
+- **Google fallback:** `signInWithRedirect(auth, provider)` + `getRedirectResult(auth)`, used when the browser blocks the popup
 - **Password reset:** `sendPasswordResetEmail`
 
 ## Firebase Client Auth Initialization
@@ -134,3 +130,4 @@ Auth errors use `public/locales/[lang]/common.json` keys:
 - **Google pre-fill:** `user.displayName` is only available for Google users. The pre-fill effect only runs when `step === 'profile'` and `fullName` is empty.
 - **Returning user without profile:** If a user somehow has auth but no Firestore doc, the profile step appears after login; same inline flow, no redirect needed.
 - **Authorized domains:** Firebase Auth requires every production host used by patients (`laboelallali.com`, `www.laboelallali.com` if used, Firebase/Vercel hosts if still reachable) to be present in Firebase Console -> Authentication -> Settings -> Authorized domains. Missing domains produce `auth/unauthorized-domain`, now mapped to a readable inline message.
+- **authDomain = app domain:** `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` is `laboelallali.com` (served by Firebase Hosting at `/__/auth/handler`, confirmed via `/__/firebase/init.json`). This keeps Google auth first-party, so both popup and redirect work without the third-party-cookie failure that previously returned from account selection with no signed-in user. If the app is ever served from a domain that does NOT serve `/__/auth/handler`, revert authDomain to `labo-el-allali-pwa.firebaseapp.com` and use popup only.

@@ -54,6 +54,19 @@ export default function TotalCalculator({
     prevCountRef.current = selectedCount;
   }, [selectedCount]);
 
+  useEffect(() => {
+    if (selectedCount === 0) {
+      document.body.classList.remove('has-mobile-sticky-cart');
+      return;
+    }
+
+    document.body.classList.add('has-mobile-sticky-cart');
+
+    return () => {
+      document.body.classList.remove('has-mobile-sticky-cart');
+    };
+  }, [selectedCount]);
+
   const { t, i18n } = useTranslation('common');
 
   const isRtlDirection = isRtl || i18n.language === 'ar';
@@ -155,7 +168,7 @@ export default function TotalCalculator({
         aria-live="polite"
         data-testid="total-calculator-mobile"
         style={{
-          bottom: '70px'
+          bottom: 'var(--mobile-bottom-nav-offset)'
         }}
       >
         {/* Left section - Count badge + Total (CLIQUABLE) */}

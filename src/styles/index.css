@@ -59,6 +59,19 @@ html, body {
   padding: 0;
 }
 
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: var(--mobile-bottom-nav-offset, calc(64px + env(safe-area-inset-bottom, 0px)));
+  }
+
+  body.has-mobile-sticky-cart {
+    padding-bottom: calc(
+      var(--mobile-bottom-nav-offset, calc(64px + env(safe-area-inset-bottom, 0px))) +
+      var(--mobile-sticky-cart-height, 64px)
+    );
+  }
+}
+
 /* Global theme transition: all elements inherit slow color fades when dark/light toggles.
    Specificity is (0,0,0) so any explicit `transition` on a class (0,1,0+) overrides this,
    keeping hover/interactive animations snappy at their own durations. */
