@@ -67,8 +67,29 @@ const getClientAuth = async (): Promise<Auth | null> => {
   if (typeof window !== 'undefined' && app) {
     if (!authInstance) {
       try {
-        const { getAuth } = await import('firebase/auth');
-        authInstance = getAuth(app);
+        const {
+          browserLocalPersistence,
+          browserPopupRedirectResolver,
+          browserSessionPersistence,
+          getAuth,
+          indexedDBLocalPersistence,
+          initializeAuth,
+          inMemoryPersistence,
+        } = await import('firebase/auth');
+
+        try {
+          authInstance = initializeAuth(app, {
+            persistence: [
+              indexedDBLocalPersistence,
+              browserLocalPersistence,
+              browserSessionPersistence,
+              inMemoryPersistence,
+            ],
+            popupRedirectResolver: browserPopupRedirectResolver,
+          });
+        } catch {
+          authInstance = getAuth(app);
+        }
       } catch (e) {
         if (process.env.NODE_ENV === 'development') {
           console.error("[Firebase] Error initializing Auth:", e);

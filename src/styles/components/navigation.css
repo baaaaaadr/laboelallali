@@ -361,6 +361,7 @@
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 40;
 }
 
@@ -416,6 +417,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 80px;
+}
+
+.ios-install-banner {
+  position: fixed;
+  left: max(0.75rem, env(safe-area-inset-left, 0px));
+  right: max(0.75rem, env(safe-area-inset-right, 0px));
+  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  border-radius: var(--radius-lg);
+}
+
+@media (min-width: 1024px) {
+  .ios-install-banner {
+    left: 50%;
+    right: auto;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    width: min(calc(100vw - 2rem), 42rem);
+    transform: translateX(-50%);
+  }
 }
 
 /* Dark Mode Adjustments */

@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef, use } from 'react';
+import React, { useState, useEffect, useRef, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { getClientAuth } from '@/config/firebase';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  getRedirectResult,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+} from 'firebase/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -15,12 +23,32 @@ const inputClass =
 
 const labelClass = 'block text-sm font-medium text-[var(--text-secondary)] mb-1';
 
+const getFirebaseErrorCode = (err: unknown): string | null => {
+  if (err && typeof err === 'object' && 'code' in err && typeof (err as { code: unknown }).code === 'string') {
+    return (err as { code: string }).code;
+  }
+  return null;
+};
+
 const getErrorMessage = (err: unknown): string => {
   if (err instanceof Error) return err.message;
   if (err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
     return (err as { message: string }).message;
   }
   return String(err);
+};
+
+const isStandaloneApp = () => {
+  if (typeof window === 'undefined') return false;
+  const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+  return window.matchMedia('(display-mode: standalone)').matches || navigatorWithStandalone.standalone === true;
+};
+
+const shouldUseGoogleRedirect = () => {
+  if (typeof window === 'undefined') return false;
+  const ua = window.navigator.userAgent.toLowerCase();
+  const isMobile = /android|iphone|ipad|ipod|mobile/.test(ua) || window.innerWidth < 768;
+  return isMobile && !isStandaloneApp();
 };
 
 export default function LoginPage({ params }: { params: Promise<{ lang: string }> }) {
@@ -49,6 +77,39 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
   // Guards against a race where onAuthStateChanged fires before the profile is saved
   const isSigningUp = useRef(false);
 
+  const getAuthErrorMessage = useCallback(
+    (err: unknown, fallbackKey: string, fallbackMessage: string) => {
+      const code = getFirebaseErrorCode(err);
+
+      switch (code) {
+        case 'auth/unauthorized-domain':
+          return t('auth_error_unauthorized_domain', "La connexion n'est pas autorisee sur ce domaine. Veuillez contacter le laboratoire.");
+        case 'auth/network-request-failed':
+          return t('auth_error_network', 'Connexion reseau impossible. Verifiez votre connexion puis reessayez.');
+        case 'auth/popup-blocked':
+          return t('auth_error_popup_blocked', 'La fenetre Google a ete bloquee. Reessayez ou autorisez les popups pour ce site.');
+        case 'auth/popup-closed-by-user':
+        case 'auth/cancelled-popup-request':
+          return t('auth_error_google_cancelled', 'Connexion Google annulee.');
+        case 'auth/invalid-email':
+          return t('auth_error_invalid_email', "L'adresse email est invalide.");
+        case 'auth/invalid-credential':
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          return t('auth_error_invalid_credentials', 'Email ou mot de passe incorrect.');
+        case 'auth/email-already-in-use':
+          return t('auth_error_email_in_use', 'Un compte existe deja avec cette adresse email.');
+        case 'auth/weak-password':
+          return t('auth_error_weak_password', 'Le mot de passe doit contenir au moins 6 caracteres.');
+        case 'auth/too-many-requests':
+          return t('auth_error_too_many_requests', 'Trop de tentatives. Veuillez patienter avant de reessayer.');
+        default:
+          return getErrorMessage(err) || t(fallbackKey, fallbackMessage);
+      }
+    },
+    [t]
+  );
+
   // Redirect users who are fully logged in with a complete profile
   useEffect(() => {
     if (!loading && user && userProfile?.phone) {
@@ -70,6 +131,29 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
     }
   }, [step, user?.displayName]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    let mounted = true;
+
+    const resolveGoogleRedirect = async () => {
+      try {
+        const auth = await getClientAuth();
+        if (!auth) return;
+        await getRedirectResult(auth);
+      } catch (err: unknown) {
+        console.error(err);
+        if (mounted) {
+          setError(getAuthErrorMessage(err, 'error_google_login', 'Echec de la connexion avec Google'));
+        }
+      }
+    };
+
+    resolveGoogleRedirect();
+
+    return () => {
+      mounted = false;
+    };
+  }, [getAuthErrorMessage]);
+
   const persistProfile = async (uid: string, userEmail: string | null) => {
     if (!db) throw new Error('DB not initialized');
     await setDoc(doc(db, 'users', uid), {
@@ -84,14 +168,32 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
 
   const handleGoogleLogin = async () => {
     try {
+      setIsSubmitting(true);
       setError(null);
       const auth = await getClientAuth();
       if (!auth) throw new Error('Auth not initialized');
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+
+      if (shouldUseGoogleRedirect()) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (popupErr: unknown) {
+        const code = getFirebaseErrorCode(popupErr);
+        if (code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request') {
+          await signInWithRedirect(auth, provider);
+          return;
+        }
+        throw popupErr;
+      }
     } catch (err: unknown) {
       console.error(err);
-      setError(getErrorMessage(err) || t('error_google_login', 'Échec de la connexion avec Google'));
+      setError(getAuthErrorMessage(err, 'error_google_login', 'Echec de la connexion avec Google'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -116,7 +218,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
     } catch (err: unknown) {
       isSigningUp.current = false;
       console.error(err);
-      setError(getErrorMessage(err) || t('error_auth', "Échec de l'authentification"));
+      setError(getAuthErrorMessage(err, 'error_auth', "Echec de l'authentification"));
     } finally {
       setIsSubmitting(false);
     }
@@ -133,7 +235,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       router.push(`/${lang}/profile`);
     } catch (err: unknown) {
       console.error(err);
-      setError(getErrorMessage(err) || t('error_save_profile', 'Échec de la sauvegarde du profil'));
+      setError(getAuthErrorMessage(err, 'error_save_profile', 'Echec de la sauvegarde du profil'));
     } finally {
       setIsSubmitting(false);
     }
@@ -150,7 +252,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       setResetSent(true);
     } catch (err: unknown) {
       console.error(err);
-      setError(getErrorMessage(err) || t('error_reset_password', "Échec de l'envoi de l'e-mail de réinitialisation"));
+      setError(getAuthErrorMessage(err, 'error_reset_password', "Echec de l'envoi de l'e-mail de reinitialisation"));
     } finally {
       setIsSubmitting(false);
     }
@@ -542,8 +644,10 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
 
           <div className="mt-6">
             <button
+              type="button"
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center px-4 py-3 border border-[var(--border-default)] rounded-lg shadow-sm bg-[var(--background-default)] text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--background-tertiary)] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-fuchsia-accent)]"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center px-4 py-3 border border-[var(--border-default)] rounded-lg shadow-sm bg-[var(--background-default)] text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--background-tertiary)] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-fuchsia-accent)] disabled:opacity-70 disabled:cursor-not-allowed"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
