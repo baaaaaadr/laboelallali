@@ -15,6 +15,9 @@ import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import next from "next";
 
+// Patient results bridge (CyberLab) — see docs/integrations/cyberlab-results-api.md
+export { fetchResults } from "./cyberlab/fetchResults";
+
 // For SendGrid email functionality
 import * as sgMail from "@sendgrid/mail";
 import { getStorage } from "firebase-admin/storage";
