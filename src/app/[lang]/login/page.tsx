@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { getClientAuth } from '@/config/firebase';
 import {
@@ -47,6 +48,8 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
   // Step 1: auth form — Step 2: profile completion (Google new users)
   const [step, setStep] = useState<'auth' | 'profile' | 'forgot_password'>('auth');
   const [resetSent, setResetSent] = useState(false);
+  // CNDP / loi 09-08: explicit consent required at registration.
+  const [consentAccepted, setConsentAccepted] = useState(false);
 
   // Auth fields
   const [isSignUp, setIsSignUp] = useState(false);
@@ -143,14 +146,22 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
 
   const persistProfile = async (uid: string, userEmail: string | null) => {
     if (!db) throw new Error('DB not initialized');
-    await setDoc(doc(db, 'users', uid), {
-      uid,
-      fullName,
-      dateOfBirth,
-      phone,
-      email: userEmail,
-      createdAt: new Date().toISOString(),
-    });
+    // merge:true so we never wipe fields set elsewhere (e.g. requester_id/type/role
+    // written by the admin space). Records the CNDP consent given at registration.
+    await setDoc(
+      doc(db, 'users', uid),
+      {
+        uid,
+        fullName,
+        dateOfBirth,
+        phone,
+        email: userEmail,
+        createdAt: new Date().toISOString(),
+        consentAccepted: true,
+        consentAcceptedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
   };
 
   const handleGoogleLogin = async () => {
@@ -182,6 +193,10 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSignUp && !consentAccepted) {
+      setError(t('consent_error', 'Vous devez accepter la politique de confidentialité pour continuer.'));
+      return;
+    }
     try {
       setIsSubmitting(true);
       setError(null);
@@ -210,6 +225,10 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!consentAccepted) {
+      setError(t('consent_error', 'Vous devez accepter la politique de confidentialité pour continuer.'));
+      return;
+    }
     try {
       setIsSubmitting(true);
       setError(null);
@@ -240,6 +259,28 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       setIsSubmitting(false);
     }
   };
+
+  const consentCheckbox = (
+    <label className="flex items-start gap-2 text-sm text-[var(--text-secondary)] cursor-pointer">
+      <input
+        type="checkbox"
+        checked={consentAccepted}
+        onChange={(e) => setConsentAccepted(e.target.checked)}
+        className="mt-0.5 h-4 w-4 accent-[var(--color-bordeaux-primary)] flex-shrink-0"
+      />
+      <span>
+        {t('consent_prefix', "J'ai lu et j'accepte la ")}
+        <Link
+          href={`/${lang}/confidentialite`}
+          target="_blank"
+          className="text-[var(--color-bordeaux-primary)] underline hover:text-[var(--color-fuchsia-accent)]"
+        >
+          {t('consent_link', 'politique de confidentialité')}
+        </Link>
+        {t('consent_suffix', '.')}
+      </span>
+    </label>
+  );
 
   if (loading) {
     return (
@@ -432,6 +473,8 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
               </div>
             </div>
 
+            {consentCheckbox}
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -598,6 +641,8 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
               </div>
             </>
           )}
+
+          {isSignUp && consentCheckbox}
 
           <button
             type="submit"

@@ -12,6 +12,14 @@ export interface UserProfile {
   email: string | null;
   createdAt: string;
   phone?: string;
+  // Set by the admin space (adminSetRequester) — the CyberLab identity.
+  requester_id?: string;
+  type?: 'patient' | 'medecin' | 'correspondant';
+  // 'admin' grants access to the /admin staff space.
+  role?: string;
+  // CNDP consent captured at registration.
+  consentAccepted?: boolean;
+  consentAcceptedAt?: string;
 }
 
 interface AuthContextType {

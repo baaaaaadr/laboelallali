@@ -16,14 +16,15 @@ Shown to all unauthenticated visitors. Switches between login mode and signup mo
 
 **Login mode (`isSignUp = false`):** email + password only.
 
-**Signup mode (`isSignUp = true`):** 5 fields in a single form:
+**Signup mode (`isSignUp = true`):** 5 fields + a mandatory consent checkbox in a single form:
 1. Nom complet (`fullName`)
 2. Email
 3. Mot de passe
 4. Date de naissance (`dateOfBirth`)
 5. Telephone (`phone`)
+6. **Consent checkbox (CNDP / loi 09-08)** — `consentAccepted`, links to `/[lang]/confidentialite` (opens in a new tab). Signup is blocked (inline `consent_error`) until it is checked. The same checkbox is also shown in the Step 2 profile-completion form for Google users.
 
-On email signup submit: `createUserWithEmailAndPassword` -> `setDoc` to `users/{uid}` -> `refreshProfile` -> `router.push(/${lang}/profile)`.
+On email signup submit: consent guard -> `createUserWithEmailAndPassword` -> `persistProfile` (`setDoc` merge) -> `refreshProfile` -> `router.push(/${lang}/profile)`.
 
 On email login submit: `signInWithEmailAndPassword`. The auth context loads the Firestore profile; completed profiles are redirected to `/${lang}/profile`, incomplete profiles stay on `/login` and show step 2.
 
@@ -72,7 +73,7 @@ On submit: `setDoc` to `users/{uid}` -> `refreshProfile` -> `router.push(/${lang
 - `getFirebaseErrorCode(err)`: Extracts a Firebase Auth `code` from an unknown error object.
 - `getErrorMessage(err)`: Extracts a generic readable message from unknown errors.
 - `getAuthErrorMessage(err, fallbackKey, fallbackMessage)`: `useCallback` that maps common Firebase Auth codes to localized i18n keys (`auth_error_*`) before falling back to the generic error message.
-- `persistProfile(uid, userEmail)`: Writes the profile document to `users/{uid}`.
+- `persistProfile(uid, userEmail)`: Writes the profile document to `users/{uid}` with **`{ merge: true }`** — it never wipes fields set elsewhere (`requester_id`/`type`/`role` from the admin space). Also records CNDP consent (`consentAccepted: true`, `consentAcceptedAt`).
 - Google redirect resolution effect: on mount, calls `getRedirectResult(auth)` so redirect fallback responses are consumed and redirect errors are displayed inline.
 
 ## Redirect Logic
@@ -106,11 +107,14 @@ Effects:
 - Fallback to `getAuth(app)` if Auth was already initialized elsewhere
 
 ## Firestore Profile Document (`users/{uid}`)
-Saved with these fields:
+Written with `{ merge: true }` (both here and on the profile page), so it is never fully overwritten. Fields written by the auth/profile flow:
 
 ```ts
-{ uid, fullName, dateOfBirth, phone, email, createdAt: ISO string }
+{ uid, fullName, dateOfBirth, phone, email, createdAt: ISO string,
+  consentAccepted: true, consentAcceptedAt: ISO string }
 ```
+
+Other fields on the same doc, written by the **admin space** (`/[lang]/admin` → `adminSetRequester` Cloud Function): `requester_id`, `type` (`patient` | `medecin` | `correspondant`), and `role` (`'admin'` for staff). These MUST survive profile edits — hence `merge: true` everywhere.
 
 ## Translations
 Auth errors use `public/locales/[lang]/common.json` keys:
@@ -125,6 +129,8 @@ Auth errors use `public/locales/[lang]/common.json` keys:
 - `auth_error_too_many_requests`
 
 ## Notes for AI
+- **Never use `setDoc` without `{ merge: true }` on `users/{uid}`:** the doc also holds admin-set fields (`requester_id`/`type`/`role`) and consent flags. A non-merge write wipes them and breaks the results/admin flow.
+- **Consent is mandatory at registration:** `consentAccepted` gates both email signup and the Google profile-completion step. Do not remove the checkbox or its guards (CNDP / loi 09-08 requirement).
 - **No redirect to /profile for completion:** All profile data is collected on the login page itself. Do not add a redirect-to-profile-for-completion pattern.
 - **isSigningUp ref:** This ref is critical. Without it, the `useEffect` that sets `step = 'profile'` would fire between `createUserWithEmailAndPassword` and `setDoc`, causing the profile form to flash before saving completes.
 - **Google pre-fill:** `user.displayName` is only available for Google users. The pre-fill effect only runs when `step === 'profile'` and `fullName` is empty.

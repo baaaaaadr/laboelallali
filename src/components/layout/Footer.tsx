@@ -163,6 +163,12 @@ const Footer = () => {
                   <span>{t('faq')}</span>
                 </Link>
               </li>
+              <li>
+                <Link href={`/${i18n.language}/confidentialite`} className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('confidentialite.nav')}</span>
+                </Link>
+              </li>
             </ul>
           </div>
 

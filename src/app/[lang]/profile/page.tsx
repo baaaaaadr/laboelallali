@@ -53,14 +53,15 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
       setIsSubmitting(true);
       setError(null);
       const userRef = doc(db, 'users', user.uid);
+      // merge:true so editing the profile never wipes fields set elsewhere
+      // (requester_id/type/role from the admin space, consent flags, createdAt).
       await setDoc(userRef, {
         uid: user.uid,
         fullName,
         dateOfBirth,
         phone,
         email: user.email,
-        createdAt: new Date().toISOString(),
-      });
+      }, { merge: true });
       await refreshProfile();
       setIsEditing(false);
     } catch (err: any) {

@@ -37,8 +37,9 @@ Uses the `useAuth()` custom context hook to access:
 
 ## Data Fetching & Mutations
 - **Read:** Integrated with `useAuth` which loads user profile documents from the `users` Firestore collection on auth state changes.
-- **Write:** Updates are written via `setDoc(doc(db, 'users', user.uid))` to Firestore. Submitting also calls `refreshProfile()` to sync the context state.
+- **Write:** Updates are written via `setDoc(doc(db, 'users', user.uid), {...}, { merge: true })` to Firestore. **`merge: true` is required** so a profile edit never wipes fields set elsewhere on the same doc (`requester_id`/`type`/`role` from the admin space, `consentAccepted*`, `createdAt`). Submitting also calls `refreshProfile()` to sync the context state.
 
 ## Notes for AI
+- **Always write with `{ merge: true }`:** the `users/{uid}` doc also holds `requester_id`/`type`/`role` (admin space) and consent flags. A non-merge `setDoc` wipes them and breaks the results/admin flow.
 - **Mandatory Phone Field:** The `phone` field is strictly required to successfully create or update a profile. Legacy profiles without a phone number will be redirected to complete it.
 - **Auth Email Constraints:** Do not attempt to add editing capabilities for the `email` field inside this profile component, as email updates must be done with Firebase Auth credentials reauthentication.

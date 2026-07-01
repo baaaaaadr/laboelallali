@@ -4,6 +4,7 @@ import { getFirestore as getFirestoreImpl, Firestore } from 'firebase/firestore'
 import type { Auth } from 'firebase/auth';
 import type { FirebaseStorage } from 'firebase/storage';
 import type { Analytics as FirebaseAnalytics } from 'firebase/analytics';
+import type { Functions } from 'firebase/functions';
 
 // Firebase configuration from environment variables
 // These MUST be set in .env.local file (see .env.example)
@@ -147,11 +148,45 @@ const getClientAnalytics = async (): Promise<FirebaseAnalytics | null> => {
   return null;
 };
 
+// Cloud Functions (callable) — lazy, browser-only.
+// Region MUST match the deployed functions (europe-southwest1).
+// When NEXT_PUBLIC_USE_FUNCTIONS_EMULATOR=true, routes callables to the local
+// Functions emulator (127.0.0.1:5001) instead of production.
+let functionsInstance: Functions | null = null;
+let functionsEmulatorConnected = false;
+const getClientFunctions = async (): Promise<Functions | null> => {
+  if (typeof window !== 'undefined' && app) {
+    if (!functionsInstance) {
+      try {
+        const { getFunctions, connectFunctionsEmulator } = await import('firebase/functions');
+        functionsInstance = getFunctions(app, 'europe-southwest1');
+        if (
+          !functionsEmulatorConnected &&
+          process.env.NEXT_PUBLIC_USE_FUNCTIONS_EMULATOR === 'true'
+        ) {
+          connectFunctionsEmulator(functionsInstance, '127.0.0.1', 5001);
+          functionsEmulatorConnected = true;
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Firebase] Callables routed to Functions emulator 127.0.0.1:5001');
+          }
+        }
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[Firebase] Error initializing Functions:', e);
+        }
+      }
+    }
+    return functionsInstance;
+  }
+  return null;
+};
+
 export {
   app,
   db,
   getClientAuth,
   getClientStorage,
   getClientAnalytics,
+  getClientFunctions,
   storage, // Added storage export for rendez-vous page
 };

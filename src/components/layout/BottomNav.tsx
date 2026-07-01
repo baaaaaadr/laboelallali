@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, FlaskConical, CalendarDays, Phone } from 'lucide-react';
+import { Home, FlaskConical, CalendarDays, Phone, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 // Helper function to extract language from pathname
@@ -53,6 +53,13 @@ const BottomNav = () => {
       icon: CalendarDays,
       href: `/${currentLang}/rendez-vous`,
       activePath: '/rendez-vous',
+    },
+    {
+      key: 'resultats',
+      label: t('resultats.nav'),
+      icon: FileText,
+      href: `/${currentLang}/resultats`,
+      activePath: '/resultats',
     },
     {
       key: 'contact',

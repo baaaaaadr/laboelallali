@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -198,6 +198,9 @@ const Header = () => {
             <Link href={`${currentLanguagePath}/medecins`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base">
               {t('navigation.medecins', { ns: 'common', defaultValue: "Médecins" })}
             </Link>
+            <Link href={`${currentLanguagePath}/resultats`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base">
+              {t('resultats.nav', { defaultValue: "Résultats" })}
+            </Link>
             <Link href={`${currentLanguagePath}/contact`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded text-sm lg:text-base">
               {t('contact')}
             </Link>
@@ -392,6 +395,20 @@ const Header = () => {
               <Stethoscope size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
               <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
                 {t('navigation.medecins', { ns: 'common', defaultValue: 'Médecins' })}
+              </span>
+            </Link>
+
+            <Link
+              href={`${currentLanguagePath}/resultats`}
+              style={{
+                ...menuStyles.navLink,
+                ...(isDarkMode ? menuStyles.navLinkDark : {}),
+              }}
+              onClick={toggleMenu}
+            >
+              <FileText size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                {t('resultats.nav', { defaultValue: 'Résultats' })}
               </span>
             </Link>
 

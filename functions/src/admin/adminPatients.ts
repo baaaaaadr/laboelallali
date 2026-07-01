@@ -1,0 +1,199 @@
+/**
+ * Admin space callables — manage patient CyberLab identities AND staff roles.
+ *
+ * Role hierarchy (single `role` field on users/{uid}); higher does all of lower:
+ *   staff (1): encode requester_id/type on a patient.
+ *   admin (2): staff + add/remove staff (stagiaires).
+ *   owner (3): admin + add/remove admins.
+ *
+ * Security: every call re-checks the caller's role server-side (never trusts the
+ * client). Writes use the Admin SDK, which bypasses Firestore rules — so no broad
+ * client write permission on the users collection is needed.
+ */
+import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
+import * as admin from "firebase-admin";
+
+const REGION = "europe-southwest1";
+const VALID_TYPES = ["patient", "medecin", "correspondant"] as const;
+type RequesterType = (typeof VALID_TYPES)[number];
+
+const LEVEL: Record<string, number> = { owner: 3, admin: 2, staff: 1 };
+function levelOf(role?: string): number {
+  return (role && LEVEL[role]) || 0;
+}
+
+/** Throws unless the caller is authenticated and at least `min` level. */
+async function requireLevel(
+  request: CallableRequest,
+  min: number
+): Promise<{ uid: string; level: number }> {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentification requise.");
+  }
+  const uid = request.auth.uid;
+  const snap = await admin.firestore().doc(`users/${uid}`).get();
+  const level = levelOf(snap.data()?.role);
+  if (level < min) {
+    throw new HttpsError(
+      "permission-denied",
+      "Accès réservé au personnel du laboratoire."
+    );
+  }
+  return { uid, level };
+}
+
+async function getUidByEmail(email: string, subject: string): Promise<string> {
+  try {
+    const rec = await admin.auth().getUserByEmail(email);
+    return rec.uid;
+  } catch {
+    throw new HttpsError(
+      "not-found",
+      `Aucun compte pour cet email. ${subject} doit se connecter une fois à l'application d'abord.`
+    );
+  }
+}
+
+// ── Encode requester_id / type (staff and up) ────────────────────────────────
+interface LookupData {
+  email?: string;
+}
+export const adminLookupPatient = onCall(
+  { region: REGION },
+  async (request: CallableRequest<LookupData>) => {
+    await requireLevel(request, LEVEL.staff);
+    const email = (request.data?.email || "").trim();
+    if (!email) throw new HttpsError("invalid-argument", "Email requis.");
+    let rec;
+    try {
+      rec = await admin.auth().getUserByEmail(email);
+    } catch {
+      return { found: false };
+    }
+    const uid = rec.uid;
+    const doc = await admin.firestore().doc(`users/${uid}`).get();
+    const d = doc.data() || {};
+    return {
+      found: true,
+      uid,
+      email: rec.email || null,
+      hasProfile: doc.exists,
+      fullName: d.fullName || "",
+      phone: d.phone || "",
+      requester_id: d.requester_id || "",
+      type: d.type || "",
+      role: d.role || "",
+    };
+  }
+);
+
+interface SetData {
+  email?: string;
+  requester_id?: string;
+  type?: string;
+}
+export const adminSetRequester = onCall(
+  { region: REGION },
+  async (request: CallableRequest<SetData>) => {
+    await requireLevel(request, LEVEL.staff);
+    const email = (request.data?.email || "").trim();
+    const requesterId = (request.data?.requester_id || "").trim();
+    const type = (request.data?.type || "").trim();
+    if (!email) throw new HttpsError("invalid-argument", "Email requis.");
+    if (!requesterId) {
+      throw new HttpsError("invalid-argument", "Identifiant patient requis.");
+    }
+    if (!VALID_TYPES.includes(type as RequesterType)) {
+      throw new HttpsError("invalid-argument", "Type invalide.");
+    }
+    const uid = await getUidByEmail(email, "Le patient");
+    await admin
+      .firestore()
+      .doc(`users/${uid}`)
+      .set({ requester_id: requesterId, type }, { merge: true });
+    const doc = await admin.firestore().doc(`users/${uid}`).get();
+    const d = doc.data() || {};
+    return {
+      success: true,
+      uid,
+      fullName: d.fullName || "",
+      requester_id: d.requester_id || "",
+      type: d.type || "",
+    };
+  }
+);
+
+// ── Team / role management ───────────────────────────────────────────────────
+interface RoleData {
+  email?: string;
+  grant?: boolean;
+}
+
+/** Grant/revoke STAFF (stagiaire). Requires admin (>=2). Cannot touch admin/owner. */
+export const adminSetStaff = onCall(
+  { region: REGION },
+  async (request: CallableRequest<RoleData>) => {
+    await requireLevel(request, LEVEL.admin);
+    const email = (request.data?.email || "").trim();
+    const grant = request.data?.grant !== false;
+    if (!email) throw new HttpsError("invalid-argument", "Email requis.");
+    const uid = await getUidByEmail(email, "La personne");
+    const ref = admin.firestore().doc(`users/${uid}`);
+    const cur = (await ref.get()).data()?.role;
+    if (cur === "owner" || cur === "admin") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Cette personne est admin ou propriétaire ; seul un propriétaire peut changer son rôle."
+      );
+    }
+    await ref.set({ role: grant ? "staff" : null }, { merge: true });
+    return { success: true, uid, email: email, role: grant ? "staff" : "" };
+  }
+);
+
+/** Grant/revoke ADMIN. Requires owner (>=3). Cannot touch another owner. */
+export const adminSetAdmin = onCall(
+  { region: REGION },
+  async (request: CallableRequest<RoleData>) => {
+    await requireLevel(request, LEVEL.owner);
+    const email = (request.data?.email || "").trim();
+    const grant = request.data?.grant !== false;
+    if (!email) throw new HttpsError("invalid-argument", "Email requis.");
+    const uid = await getUidByEmail(email, "La personne");
+    const ref = admin.firestore().doc(`users/${uid}`);
+    const cur = (await ref.get()).data()?.role;
+    if (cur === "owner") {
+      throw new HttpsError("failed-precondition", "Impossible de modifier un propriétaire.");
+    }
+    await ref.set({ role: grant ? "admin" : null }, { merge: true });
+    return { success: true, uid, email: email, role: grant ? "admin" : "" };
+  }
+);
+
+/** List all team members (staff/admin/owner). Requires admin (>=2). */
+export const adminListStaff = onCall(
+  { region: REGION },
+  async (request: CallableRequest) => {
+    const { level } = await requireLevel(request, LEVEL.admin);
+    const snap = await admin
+      .firestore()
+      .collection("users")
+      .where("role", "in", ["owner", "admin", "staff"])
+      .limit(200)
+      .get();
+    const members = snap.docs.map((doc) => {
+      const d = doc.data();
+      return {
+        uid: doc.id,
+        email: d.email || "",
+        fullName: d.fullName || "",
+        role: d.role || "",
+      };
+    });
+    // Sort: owner, admin, staff, then by name.
+    members.sort(
+      (a, b) => levelOf(b.role) - levelOf(a.role) || a.fullName.localeCompare(b.fullName)
+    );
+    return { members, callerLevel: level };
+  }
+);

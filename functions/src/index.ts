@@ -18,6 +18,15 @@ import next from "next";
 // Patient results bridge (CyberLab) — see docs/integrations/cyberlab-results-api.md
 export { fetchResults } from "./cyberlab/fetchResults";
 
+// Admin space callables (staff attach requester_id/type; owner/admin manage roles).
+export {
+  adminLookupPatient,
+  adminSetRequester,
+  adminSetStaff,
+  adminSetAdmin,
+  adminListStaff,
+} from "./admin/adminPatients";
+
 // For SendGrid email functionality
 import * as sgMail from "@sendgrid/mail";
 import { getStorage } from "firebase-admin/storage";
@@ -28,10 +37,16 @@ if (admin.apps.length === 0) {
   admin.initializeApp();
 }
 
-// Define environment parameters for SendGrid
-const sendgridApiKey = defineString("sendgrid.key");
-const sendgridSenderEmail = defineString("sendgrid.sender");
-const labEmailAddress = defineString("lab.email");
+// Define environment parameters for SendGrid.
+// Param names MUST be uppercase/underscore — Firebase rejects dotted names in
+// .env files (it even rejects the .env.local it auto-writes from prompts), which
+// blocks the whole codebase from loading in the emulator. Local dev values live
+// in functions/.env.local (emulator-only, gitignored, NOT used at deploy). These
+// params are only used by sendAppointmentRequestEmail, not by fetchResults.
+// NOTE: provide real values (via .env / secrets) before deploying the email fn.
+const sendgridApiKey = defineString("SENDGRID_API_KEY");
+const sendgridSenderEmail = defineString("SENDGRID_SENDER_EMAIL");
+const labEmailAddress = defineString("LAB_EMAIL");
 
 const isDev = process.env.NODE_ENV !== "production";
 
