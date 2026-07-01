@@ -10,10 +10,11 @@ Authenticated patient results viewer. It fetches the patient's lab results on de
 ## Context & Key Components
 
 ### 1. State Management
-- `status` (`'loading' | 'error' | 'empty' | 'ready'`): drives which block renders.
+- `status` (`'loading' | 'error' | 'empty' | 'ready' | 'need_access'`): drives which block renders. `need_access` = patient has no `requester_id` yet → self-service access-request card.
 - `results` (`CyberlabResult[]`): the fetched dossiers, held in memory only. Never written anywhere.
 - `errorMsg` (string | null): user-facing (generic) error text.
 - `viewer` (`{ url: string; dossierId: string } | null`): the currently open PDF viewer; `url` is an in-memory `blob:` URL.
+- `accessStatus` (`'checking' | 'none' | 'pending' | 'rejected'`) + `requesting` (bool): drive the access-request card in the `need_access` state.
 
 ### 2. Authentication Integration (`useAuth`)
 - `user`, `loading` (aliased to `authLoading`). Unauthenticated visitors are redirected to `/${lang}/login` (same pattern as `/profile`). While `authLoading || !user`, a bordeaux spinner renders.
@@ -23,7 +24,8 @@ Authenticated patient results viewer. It fetches the patient's lab results on de
 
 ### 4. Key handlers / derived logic
 - `loadResults` (useCallback): `getClientFunctions()` → `httpsCallable('fetchResults')` → sets `results` + `status`. Runs automatically once `!authLoading && user`, and on the "Actualiser"/"Réessayer" buttons.
-- Error mapping: callable `not-found` → `empty` state (not an error); `failed-precondition` → profile-incomplete message; anything else → generic message. The backend already returns generic French `HttpsError` messages.
+- Error mapping: callable `not-found` → `empty` state (not an error); `failed-precondition` → **`need_access`** state (no `requester_id` yet), which calls `loadAccessStatus`; anything else → generic message.
+- **Self-service access** (`need_access`): `loadAccessStatus` (`myAccessRequest` callable) checks if a request is already pending; `handleRequestAccess` (`requestResultsAccess` callable) creates one. The card shows a "Demander l'accès" button or a "pending" badge. Staff activates it from `/admin` (attaches `requester_id`) → results then load normally.
 - `base64ToPdfBlob`: decodes `pdf_base64` → in-memory `application/pdf` Blob.
 - `openViewer` / `closeViewer`: manage the modal; a single `useEffect` keyed on `viewer?.url` revokes the `blob:` URL whenever it changes or the component unmounts (no PDF lingers).
 - `downloadPdf`: creates a blob URL, clicks a temporary `<a download>` (user-initiated save), revokes after 15s.
@@ -40,7 +42,7 @@ Authenticated patient results viewer. It fetches the patient's lab results on de
 
 ## Notes for AI
 - **Never persist results.** Do not add caching, localStorage, Firestore writes, or file writes for results/PDFs. Keep them in memory and revoke blob URLs on close.
-- **Requires a seeded profile.** The callable needs `users/{uid}` to contain `requester_id` + `type ∈ {patient,medecin,correspondant}`. For local testing seed it with `functions/scripts/seed-requester.js <email> [requester_id] [type]`.
-- **Dev wiring:** the callable runs against the local Functions emulator when `NEXT_PUBLIC_USE_FUNCTIONS_EMULATOR=true` (root `.env.local`); the emulator process needs `NODE_OPTIONS=--use-system-ca` (system TLS interception) and `GOOGLE_APPLICATION_CREDENTIALS` (to read prod Firestore). Otherwise it hits the deployed function.
-- **Not built yet:** `/admin` (staff encode `requester_id`/`type`) and the consent checkbox + `/confidentialite` page are intentionally out of scope for now.
-- This page is not yet linked from the nav (`Header`/`BottomNav`); reach it directly at `/{lang}/resultats`.
+- **Access is granted, not seeded.** A patient without `requester_id` gets the `need_access` card and requests access (`requestResultsAccess`); staff activates it from `/admin` (`docs/pages/admin.md`). Local shortcut still exists: `functions/scripts/seed-requester.js <email> [requester_id] [type]`.
+- **Dev wiring:** callable → local emulator when `NEXT_PUBLIC_USE_FUNCTIONS_EMULATOR=true` (root `.env.local`; forced `false` for prod builds via `.env.production.local`). Emulator needs `NODE_OPTIONS=--use-system-ca` + `GOOGLE_APPLICATION_CREDENTIALS`. **In prod, gen2 callables MUST have `allUsers` Cloud Run invoker** or the browser gets a CORS/403 (set via the Cloud Run IAM API — firebase deploy did not always apply it).
+- **Linked from the nav** (Header + BottomNav → "Résultats").
+- **Perf caveat:** the lab server returns all PDFs inline (~8 s for 3 dossiers). For many dossiers this is slow / risks timeout + payload limits — planned fix is a two-step list-then-PDF-on-demand flow needing a server-side change.

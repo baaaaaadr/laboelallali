@@ -1,9 +1,10 @@
 # Page: /admin
 
 ## Purpose
-Staff space with two jobs:
-1. **Encode a patient's CyberLab identity** (`requester_id` + `type`) by email — the browser equivalent of `functions/scripts/seed-requester.js`.
-2. **Manage the team** (roles) — owners add/remove admins; owners and admins add/remove staff (stagiaires).
+Staff space with three jobs:
+1. **Fulfill patient access requests** — the "Demandes d'accès en attente" section lists patients who tapped "Demander l'accès" on `/resultats`; staff verifies identity (face-to-face) and attaches `requester_id` + `type` to activate access.
+2. **Encode a patient's CyberLab identity by email** — same thing, manual/edge case (browser equivalent of `functions/scripts/seed-requester.js`).
+3. **Manage the team** (roles) — owners add/remove admins; owners and admins add/remove staff (stagiaires).
 
 It does NOT create patient accounts (patients sign up themselves) and never shows medical results.
 
@@ -39,6 +40,14 @@ All region `europe-southwest1`, all guarded by `requireLevel`:
 - `adminSetStaff(email, grant)` (≥admin) → set `role: 'staff'` / remove. Refuses if target is admin/owner.
 - `adminSetAdmin(email, grant)` (owner only) → set `role: 'admin'` / remove. Refuses if target is owner.
 - `adminListStaff()` (≥admin) → `{ members: [{uid,email,fullName,role}], callerLevel }`, sorted owner→admin→staff.
+
+Access requests (`resultAccessRequests/{uid}`, only touched via callables):
+- `adminListAccessRequests()` (≥staff) → pending requests (`{uid, fullName, email, phone, createdAt}`).
+- `adminFulfillAccessRequest(uid, requester_id, type)` (≥staff) → merges identity onto `users/{uid}` + marks the request `fulfilled` (records `fulfilledBy`/`fulfilledAt`).
+- `adminRejectAccessRequest(uid)` (≥staff) → marks the request `rejected`.
+- Patient-side (not admin-gated): `requestResultsAccess()` creates a `pending` request; `myAccessRequest()` returns its status (used by `/resultats`).
+
+**Deploy note:** gen2 callables need `allUsers` as Cloud Run invoker (auth is enforced in-function). `firebase deploy` did not always apply it → the browser gets a CORS/403; grant it via the Cloud Run IAM API (see `functions/scripts` / conversation).
 
 ## Bootstrapping owners
 An owner must exist before the UI can manage roles. First owners set out-of-band with `functions/scripts/make-admin.js <email> owner` (Admin SDK, needs `GOOGLE_APPLICATION_CREDENTIALS`). `role` lives on `users/{uid}` and survives profile edits because all `users/{uid}` writes use `{ merge: true }`.

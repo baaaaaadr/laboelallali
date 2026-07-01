@@ -28,6 +28,9 @@ import {
   Inbox,
   AlertCircle,
   ShieldCheck,
+  KeyRound,
+  Send,
+  Clock,
 } from 'lucide-react';
 
 // Mirrors the lab API response (functions/src/cyberlab/client.ts). For type
@@ -47,7 +50,7 @@ interface CyberlabResponse {
   results: CyberlabResult[];
 }
 
-type Status = 'loading' | 'error' | 'empty' | 'ready';
+type Status = 'loading' | 'error' | 'empty' | 'ready' | 'need_access';
 
 /** base64 → in-memory PDF Blob (never persisted to disk). */
 function base64ToPdfBlob(b64: string): Blob {
@@ -68,6 +71,8 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const [results, setResults] = useState<CyberlabResult[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ url: string; dossierId: string } | null>(null);
+  const [accessStatus, setAccessStatus] = useState<'checking' | 'none' | 'pending' | 'rejected'>('checking');
+  const [requesting, setRequesting] = useState(false);
 
   const isArabic = lang === 'ar';
 
@@ -75,6 +80,19 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   useEffect(() => {
     if (!authLoading && !user) router.push(`/${lang}/login`);
   }, [user, authLoading, router, lang]);
+
+  const loadAccessStatus = useCallback(async () => {
+    setAccessStatus('checking');
+    try {
+      const functions = await getClientFunctions();
+      if (!functions) throw new Error('functions-unavailable');
+      const fn = httpsCallable<Record<string, never>, { status: string | null }>(functions, 'myAccessRequest');
+      const s = (await fn()).data?.status;
+      setAccessStatus(s === 'pending' ? 'pending' : s === 'rejected' ? 'rejected' : 'none');
+    } catch {
+      setAccessStatus('none');
+    }
+  }, []);
 
   const loadResults = useCallback(async () => {
     setStatus('loading');
@@ -99,17 +117,44 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
         setStatus('empty');
         return;
       }
-      // The Cloud Function already returns generic French messages; show a
-      // profile-specific hint for failed-precondition, else a generic message.
-      const backendMsg = (err as { message?: string })?.message;
+      // No requester_id yet → offer the patient to request online access.
+      if (code === 'failed-precondition') {
+        setStatus('need_access');
+        loadAccessStatus();
+        return;
+      }
       setErrorMsg(
-        code === 'failed-precondition'
-          ? backendMsg || t('resultats.error_profile', 'Profil patient incomplet. Veuillez contacter le laboratoire.')
-          : t('resultats.error_generic', 'Impossible de récupérer vos résultats pour le moment. Veuillez réessayer plus tard.')
+        t('resultats.error_generic', 'Impossible de récupérer vos résultats pour le moment. Veuillez réessayer plus tard.')
       );
       setStatus('error');
     }
-  }, [t]);
+  }, [t, loadAccessStatus]);
+
+  const handleRequestAccess = useCallback(async () => {
+    setRequesting(true);
+    setErrorMsg(null);
+    try {
+      const functions = await getClientFunctions();
+      if (!functions) throw new Error('functions-unavailable');
+      const fn = httpsCallable<Record<string, never>, { status: string }>(functions, 'requestResultsAccess');
+      const res = await fn();
+      if (res.data?.status === 'already_granted') {
+        loadResults();
+        return;
+      }
+      setAccessStatus('pending');
+    } catch (err: unknown) {
+      const code = ((err as { code?: string })?.code || '').replace('functions/', '');
+      const msg = (err as { message?: string })?.message;
+      setErrorMsg(
+        code === 'failed-precondition'
+          ? msg || t('resultats.access_need_profile', "Complétez d'abord votre profil (nom et téléphone).")
+          : t('resultats.error_generic', 'Impossible de récupérer vos résultats pour le moment. Veuillez réessayer plus tard.')
+      );
+    } finally {
+      setRequesting(false);
+    }
+  }, [t, loadResults]);
 
   // Fetch on the fly once we know the user is authenticated.
   useEffect(() => {
@@ -209,6 +254,50 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             <button onClick={loadResults} className="button-bordeaux justify-center">
               {t('resultats.retry', 'Réessayer')}
             </button>
+          </div>
+        )}
+
+        {/* Need access — patient can request online access */}
+        {status === 'need_access' && (
+          <div className="card p-8 flex flex-col items-center justify-center gap-4 text-center">
+            <div className="h-14 w-14 rounded-lg bg-[var(--color-bordeaux-primary)]/10 text-[var(--color-bordeaux-primary)] flex items-center justify-center">
+              <KeyRound size={28} />
+            </div>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+              {t('resultats.access_title', 'Accédez à vos résultats en ligne')}
+            </h2>
+            {accessStatus === 'pending' ? (
+              <div className="flex flex-col items-center gap-2">
+                <span className="inline-flex items-center gap-2 text-sm font-semibold px-3 py-1.5 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)]">
+                  <Clock size={16} /> {t('resultats.access_pending_badge', 'Demande en attente')}
+                </span>
+                <p className="text-[var(--text-secondary)] max-w-md">
+                  {t('resultats.access_pending_desc', 'Votre demande a bien été envoyée. Le laboratoire activera votre accès lors de votre prochain passage ou sous peu.')}
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-[var(--text-secondary)] max-w-md">
+                  {t('resultats.access_desc', "Demandez l'activation de l'accès à vos résultats. Un membre du laboratoire vérifiera votre identité avant de l'activer.")}
+                </p>
+                {accessStatus === 'rejected' && (
+                  <p className="text-sm text-[var(--status-error)] max-w-md">
+                    {t('resultats.access_rejected', "Votre précédente demande n'a pas été validée. Vous pouvez en renvoyer une ou contacter le laboratoire.")}
+                  </p>
+                )}
+                {errorMsg && <p className="text-sm text-[var(--status-error)] max-w-md">{errorMsg}</p>}
+                <button
+                  onClick={handleRequestAccess}
+                  disabled={requesting || accessStatus === 'checking'}
+                  className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-60"
+                >
+                  <Send size={18} />
+                  {requesting
+                    ? t('resultats.access_requesting', 'Envoi…')
+                    : t('resultats.access_request', "Demander l'accès à mes résultats")}
+                </button>
+              </>
+            )}
           </div>
         )}
 

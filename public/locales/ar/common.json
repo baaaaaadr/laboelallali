@@ -256,6 +256,14 @@
     "close": "إغلاق",
     "count_one": "نتيجة واحدة",
     "count_other": "{{count}} نتائج",
+    "access_title": "اطّلع على نتائجك عبر الإنترنت",
+    "access_desc": "اطلب تفعيل الوصول إلى نتائجك. سيتحقق أحد أعضاء المختبر من هويتك قبل التفعيل.",
+    "access_request": "اطلب الوصول إلى نتائجي",
+    "access_requesting": "جارٍ الإرسال…",
+    "access_pending_badge": "طلب قيد الانتظار",
+    "access_pending_desc": "تم إرسال طلبك بنجاح. سيفعّل المختبر وصولك عند زيارتك القادمة أو قريباً.",
+    "access_rejected": "لم تتم الموافقة على طلبك السابق. يمكنك إرسال طلب جديد أو التواصل مع المختبر.",
+    "access_need_profile": "أكمل ملفك أولاً (الاسم والهاتف).",
     "viewer_title": "النتيجة — الملف {{id}}"
   },
   "confidentialite": {
@@ -312,7 +320,12 @@
     "team_staff_placeholder": "البريد الإلكتروني للمتدرب",
     "team_admin_placeholder": "البريد الإلكتروني للمدير",
     "team_added": "تمت إضافة {{email}} إلى الفريق.",
-    "team_removed": "تمت إزالة {{email}} من الفريق."
+    "team_removed": "تمت إزالة {{email}} من الفريق.",
+    "req_title": "طلبات الوصول قيد الانتظار",
+    "req_validate": "تفعيل الوصول",
+    "req_reject": "رفض",
+    "req_fulfilled": "تم تفعيل الوصول لـ {{name}}.",
+    "req_rejected": "تم رفض طلب {{name}}."
   },
   "theme": {
     "toggle": "تغيير المظهر",

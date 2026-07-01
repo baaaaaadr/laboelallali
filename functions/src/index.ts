@@ -25,6 +25,12 @@ export {
   adminSetStaff,
   adminSetAdmin,
   adminListStaff,
+  // Patient results-access requests (self-service) + staff fulfillment.
+  requestResultsAccess,
+  myAccessRequest,
+  adminListAccessRequests,
+  adminFulfillAccessRequest,
+  adminRejectAccessRequest,
 } from "./admin/adminPatients";
 
 // For SendGrid email functionality

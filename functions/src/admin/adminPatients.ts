@@ -197,3 +197,148 @@ export const adminListStaff = onCall(
     return { members, callerLevel: level };
   }
 );
+
+// ── Patient results-access requests ──────────────────────────────────────────
+// A patient asks the lab to activate online results access; staff fulfills it
+// (attaches requester_id) after verifying identity, typically face-to-face.
+// Requests live in resultAccessRequests/{uid} (one per patient), only touched
+// via these callables (Admin SDK) — clients never read/write them directly.
+
+/** Patient: create/refresh my access request (pending). Auth only. */
+export const requestResultsAccess = onCall(
+  { region: REGION },
+  async (request: CallableRequest) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentification requise.");
+    }
+    const uid = request.auth.uid;
+    const u = (await admin.firestore().doc(`users/${uid}`).get()).data() || {};
+    if (!u.fullName || !u.phone) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Complétez d'abord votre profil (nom et téléphone)."
+      );
+    }
+    if (u.requester_id) return { status: "already_granted" };
+
+    const ref = admin.firestore().doc(`resultAccessRequests/${uid}`);
+    if ((await ref.get()).data()?.status === "pending") return { status: "pending" };
+    await ref.set(
+      {
+        uid,
+        fullName: u.fullName,
+        email: u.email || request.auth.token?.email || null,
+        phone: u.phone,
+        status: "pending",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        fulfilledBy: admin.firestore.FieldValue.delete(),
+        fulfilledAt: admin.firestore.FieldValue.delete(),
+      },
+      { merge: true }
+    );
+    return { status: "pending" };
+  }
+);
+
+/** Patient: my current access-request status. Auth only. */
+export const myAccessRequest = onCall(
+  { region: REGION },
+  async (request: CallableRequest) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentification requise.");
+    }
+    const snap = await admin
+      .firestore()
+      .doc(`resultAccessRequests/${request.auth.uid}`)
+      .get();
+    return { status: snap.data()?.status || null };
+  }
+);
+
+/** Staff: list pending access requests (oldest first). */
+export const adminListAccessRequests = onCall(
+  { region: REGION },
+  async (request: CallableRequest) => {
+    await requireLevel(request, LEVEL.staff);
+    const snap = await admin
+      .firestore()
+      .collection("resultAccessRequests")
+      .where("status", "==", "pending")
+      .limit(200)
+      .get();
+    const requests = snap.docs.map((doc) => {
+      const d = doc.data();
+      return {
+        uid: doc.id,
+        fullName: d.fullName || "",
+        email: d.email || "",
+        phone: d.phone || "",
+        createdAt: d.createdAt?.toMillis ? d.createdAt.toMillis() : null,
+      };
+    });
+    requests.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    return { requests };
+  }
+);
+
+/** Staff: fulfill a request — attach requester_id/type + mark fulfilled. */
+export const adminFulfillAccessRequest = onCall(
+  { region: REGION },
+  async (
+    request: CallableRequest<{ uid?: string; requester_id?: string; type?: string }>
+  ) => {
+    const { uid: adminUid } = await requireLevel(request, LEVEL.staff);
+    const targetUid = (request.data?.uid || "").trim();
+    const requesterId = (request.data?.requester_id || "").trim();
+    const type = (request.data?.type || "").trim();
+    if (!targetUid) throw new HttpsError("invalid-argument", "Patient requis.");
+    if (!requesterId) {
+      throw new HttpsError("invalid-argument", "Identifiant patient requis.");
+    }
+    if (!VALID_TYPES.includes(type as RequesterType)) {
+      throw new HttpsError("invalid-argument", "Type invalide.");
+    }
+    await admin
+      .firestore()
+      .doc(`users/${targetUid}`)
+      .set({ requester_id: requesterId, type }, { merge: true });
+    await admin
+      .firestore()
+      .doc(`resultAccessRequests/${targetUid}`)
+      .set(
+        {
+          status: "fulfilled",
+          requester_id: requesterId,
+          type,
+          fulfilledBy: adminUid,
+          fulfilledByEmail: request.auth?.token?.email || null,
+          fulfilledAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    return { success: true };
+  }
+);
+
+/** Staff: reject a pending request. */
+export const adminRejectAccessRequest = onCall(
+  { region: REGION },
+  async (request: CallableRequest<{ uid?: string }>) => {
+    const { uid: adminUid } = await requireLevel(request, LEVEL.staff);
+    const targetUid = (request.data?.uid || "").trim();
+    if (!targetUid) throw new HttpsError("invalid-argument", "Patient requis.");
+    await admin
+      .firestore()
+      .doc(`resultAccessRequests/${targetUid}`)
+      .set(
+        {
+          status: "rejected",
+          fulfilledBy: adminUid,
+          fulfilledByEmail: request.auth?.token?.email || null,
+          fulfilledAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    return { success: true };
+  }
+);

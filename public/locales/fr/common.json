@@ -180,6 +180,14 @@
     "close": "Fermer",
     "count_one": "{{count}} résultat",
     "count_other": "{{count}} résultats",
+    "access_title": "Accédez à vos résultats en ligne",
+    "access_desc": "Demandez l'activation de l'accès à vos résultats. Un membre du laboratoire vérifiera votre identité avant de l'activer.",
+    "access_request": "Demander l'accès à mes résultats",
+    "access_requesting": "Envoi…",
+    "access_pending_badge": "Demande en attente",
+    "access_pending_desc": "Votre demande a bien été envoyée. Le laboratoire activera votre accès lors de votre prochain passage ou sous peu.",
+    "access_rejected": "Votre précédente demande n'a pas été validée. Vous pouvez en renvoyer une ou contacter le laboratoire.",
+    "access_need_profile": "Complétez d'abord votre profil (nom et téléphone).",
     "viewer_title": "Résultat — dossier {{id}}"
   },
   "confidentialite": {
@@ -236,7 +244,12 @@
     "team_staff_placeholder": "email du stagiaire",
     "team_admin_placeholder": "email de l'admin",
     "team_added": "{{email}} ajouté à l'équipe.",
-    "team_removed": "{{email}} retiré de l'équipe."
+    "team_removed": "{{email}} retiré de l'équipe.",
+    "req_title": "Demandes d'accès en attente",
+    "req_validate": "Valider l'accès",
+    "req_reject": "Refuser",
+    "req_fulfilled": "Accès activé pour {{name}}.",
+    "req_rejected": "Demande de {{name}} refusée."
   },
   "theme": {
     "toggle": "Changer le thème",

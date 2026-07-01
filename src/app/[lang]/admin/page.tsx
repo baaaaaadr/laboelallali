@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
 import { getClientFunctions } from '@/config/firebase';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown } from 'lucide-react';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
@@ -35,6 +35,7 @@ interface LookupResult {
 interface SetResult { success: boolean; uid: string; fullName: string; requester_id: string; type: string; }
 interface Member { uid: string; email: string; fullName: string; role: string; }
 interface ListResult { members: Member[]; callerLevel: number; }
+interface AccessRequest { uid: string; fullName: string; email: string; phone: string; createdAt: number | null; }
 
 async function callFn<T>(name: string, data: object): Promise<T> {
   const functions = await getClientFunctions();
@@ -71,6 +72,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [newStaffEmail, setNewStaffEmail] = useState('');
   const [newAdminEmail, setNewAdminEmail] = useState('');
 
+  // Access requests section
+  const [accessReqs, setAccessReqs] = useState<AccessRequest[]>([]);
+  const [arInputs, setArInputs] = useState<Record<string, { requester_id: string; type: RequesterType }>>({});
+  const [arBusy, setArBusy] = useState<string | false>(false);
+  const [arMsg, setArMsg] = useState<string | null>(null);
+  const [arError, setArError] = useState<string | null>(null);
+
   const errMsg = useCallback(
     (err: unknown): string =>
       (err as { message?: string })?.message || t('admin.error', 'Une erreur est survenue. Réessayez.'),
@@ -93,6 +101,56 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   useEffect(() => {
     if (!loading && isManager) loadTeam();
   }, [loading, isManager, loadTeam]);
+
+  const loadAccessReqs = useCallback(async () => {
+    try {
+      const res = await callFn<{ requests: AccessRequest[] }>('adminListAccessRequests', {});
+      setAccessReqs(res.requests || []);
+    } catch (err: unknown) {
+      setArError(errMsg(err));
+    }
+  }, [errMsg]);
+
+  useEffect(() => {
+    if (!loading && isStaff) loadAccessReqs();
+  }, [loading, isStaff, loadAccessReqs]);
+
+  const setArInput = (uid: string, patch: Partial<{ requester_id: string; type: RequesterType }>) =>
+    setArInputs((m) => {
+      const cur = m[uid] || { requester_id: '', type: 'patient' as RequesterType };
+      return { ...m, [uid]: { ...cur, ...patch } };
+    });
+
+  const fulfillReq = async (req: AccessRequest) => {
+    const inp = arInputs[req.uid] || { requester_id: '', type: 'patient' as RequesterType };
+    setArError(null);
+    setArMsg(null);
+    setArBusy(req.uid);
+    try {
+      await callFn('adminFulfillAccessRequest', { uid: req.uid, requester_id: inp.requester_id.trim(), type: inp.type });
+      setArMsg(t('admin.req_fulfilled', { name: req.fullName || req.email }));
+      await loadAccessReqs();
+    } catch (err: unknown) {
+      setArError(errMsg(err));
+    } finally {
+      setArBusy(false);
+    }
+  };
+
+  const rejectReq = async (req: AccessRequest) => {
+    setArError(null);
+    setArMsg(null);
+    setArBusy(req.uid);
+    try {
+      await callFn('adminRejectAccessRequest', { uid: req.uid });
+      setArMsg(t('admin.req_rejected', { name: req.fullName || req.email }));
+      await loadAccessReqs();
+    } catch (err: unknown) {
+      setArError(errMsg(err));
+    } finally {
+      setArBusy(false);
+    }
+  };
 
   // ── Encode handlers ─────────────────────────────────────────────────────────
   const handleSearch = async (e: React.FormEvent) => {
@@ -222,6 +280,82 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             {t('admin.subtitle', 'Associer un identifiant de résultats à un compte patient.')}
           </p>
         </div>
+
+        {/* ── Pending access requests ─────────────────────────────────────── */}
+        {accessReqs.length > 0 && (
+          <div className="card p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+              <Inbox size={20} className="text-[var(--color-bordeaux-primary)]" />
+              {t('admin.req_title', "Demandes d'accès en attente")}
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-[var(--color-bordeaux-primary)] text-white">
+                {accessReqs.length}
+              </span>
+            </h2>
+            {arError && (
+              <div className="flex items-center gap-2 text-sm text-[var(--status-error)]">
+                <AlertCircle size={16} /> <span>{arError}</span>
+              </div>
+            )}
+            {arMsg && (
+              <div className="flex items-center gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+                <CheckCircle size={16} /> <span>{arMsg}</span>
+              </div>
+            )}
+            <div className="space-y-4">
+              {accessReqs.map((req) => {
+                const inp = arInputs[req.uid] || { requester_id: '', type: 'patient' as RequesterType };
+                return (
+                  <div key={req.uid} className="rounded-lg border border-[var(--border-default)] p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] flex items-center justify-center flex-shrink-0">
+                        <User size={20} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[var(--text-primary)] truncate">{req.fullName || '—'}</p>
+                        <p className="text-sm text-[var(--text-secondary)] truncate">{req.email}</p>
+                        {req.phone && <p className="text-sm text-[var(--text-secondary)]">{req.phone}</p>}
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        value={inp.requester_id}
+                        onChange={(e) => setArInput(req.uid, { requester_id: e.target.value })}
+                        placeholder={t('admin.requester_id_label', 'Identifiant patient (requester_id)')}
+                        className="flex-1 rounded-lg px-3 py-2.5 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
+                      />
+                      <select
+                        value={inp.type}
+                        onChange={(e) => setArInput(req.uid, { type: e.target.value as RequesterType })}
+                        className="rounded-lg px-3 py-2.5 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
+                      >
+                        <option value="patient">{t('admin.type_patient', 'Patient')}</option>
+                        <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
+                        <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => fulfillReq(req)}
+                        disabled={arBusy === req.uid || !inp.requester_id.trim()}
+                        className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-60"
+                      >
+                        <Check size={16} /> {t('admin.req_validate', "Valider l'accès")}
+                      </button>
+                      <button
+                        onClick={() => rejectReq(req)}
+                        disabled={arBusy === req.uid}
+                        className="button-outline justify-center flex items-center gap-2 disabled:opacity-60"
+                      >
+                        <X size={16} /> {t('admin.req_reject', 'Refuser')}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── Encode requester_id ─────────────────────────────────────────── */}
         <form onSubmit={handleSearch} className="card p-6 space-y-4">
