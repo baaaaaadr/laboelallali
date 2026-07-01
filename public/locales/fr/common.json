@@ -214,6 +214,7 @@
     "contact_text": "Pour toute question ou pour exercer vos droits, contactez le laboratoire à contact@laboelallali.ma ou par téléphone."
   },
   "admin": {
+    "nav": "Admin",
     "title": "Espace administrateur",
     "subtitle": "Associer un identifiant de résultats à un compte patient.",
     "access_denied_title": "Accès refusé",

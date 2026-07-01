@@ -290,6 +290,7 @@
     "contact_text": "لأي سؤال أو لممارسة حقوقك، اتصل بالمختبر على contact@laboelallali.ma أو هاتفياً."
   },
   "admin": {
+    "nav": "الإدارة",
     "title": "مساحة المدير",
     "subtitle": "ربط مُعرّف النتائج بحساب مريض.",
     "access_denied_title": "الوصول مرفوض",

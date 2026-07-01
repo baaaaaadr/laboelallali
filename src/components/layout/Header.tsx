@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -80,7 +80,7 @@ const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const mobileLangDropdownRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -122,6 +122,13 @@ const Header = () => {
   }, []);
 
   const currentLanguagePath = `/${urlLang}`;
+  const isStaff = ['owner', 'admin', 'staff'].includes(userProfile?.role || '');
+
+  const handleLogout = async () => {
+    setIsMenuOpen(false);
+    await logout();
+    router.push(`/${urlLang}`);
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -204,6 +211,11 @@ const Header = () => {
             <Link href={`${currentLanguagePath}/contact`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded text-sm lg:text-base">
               {t('contact')}
             </Link>
+            {isStaff && (
+              <Link href={`${currentLanguagePath}/admin`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base flex items-center gap-1">
+                <UserCog size={16} /> {t('admin.nav', 'Admin')}
+              </Link>
+            )}
           </nav>
 
           {/* Action Buttons */}
@@ -245,12 +257,24 @@ const Header = () => {
               <Search size={20} className="text-white" />
             </button>
             {/* User Icon - Desktop only */}
-            <Link 
+            <Link
               href={`${currentLanguagePath}/${user ? 'profile' : 'login'}`}
               className="hidden lg:flex p-2 lg:p-3 rounded-lg min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors"
+              aria-label={user ? t('personal_information', 'Profil') : t('sign_in', 'Se connecter')}
             >
               <User size={20} className="text-white" />
             </Link>
+            {/* Logout - Desktop only, when logged in */}
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="hidden lg:flex p-2 lg:p-3 rounded-lg min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors"
+                aria-label={t('logout', 'Déconnexion')}
+                title={t('logout', 'Déconnexion')}
+              >
+                <LogOut size={20} className="text-white" />
+              </button>
+            )}
             {/* Hamburger Menu - Mobile/Tablet only */}
             <button
               className="mobile-menu-toggle lg:hidden p-1.5 sm:p-2 lg:p-3 rounded-lg min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] flex items-center justify-center transition-colors"
@@ -437,9 +461,36 @@ const Header = () => {
             >
               <User size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
               <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
-                Profil
+                {user ? t('personal_information', 'Profil') : t('sign_in', 'Se connecter')}
               </span>
             </Link>
+
+            {/* Admin Link - Mobile, staff only */}
+            {isStaff && (
+              <Link
+                href={`${currentLanguagePath}/admin`}
+                style={{ ...menuStyles.navLink, ...(isDarkMode ? menuStyles.navLinkDark : {}) }}
+                onClick={toggleMenu}
+              >
+                <UserCog size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+                <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                  {t('admin.nav', 'Admin')}
+                </span>
+              </Link>
+            )}
+
+            {/* Logout - Mobile, when logged in */}
+            {user && (
+              <button
+                onClick={handleLogout}
+                style={{ ...menuStyles.navLink, ...(isDarkMode ? menuStyles.navLinkDark : {}), border: 'none', cursor: 'pointer' }}
+              >
+                <LogOut size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
+                <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                  {t('logout', 'Déconnexion')}
+                </span>
+              </button>
+            )}
           </nav>
           
           {/* Action Buttons Section - Stuck to Bottom */}
