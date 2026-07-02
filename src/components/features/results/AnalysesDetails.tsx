@@ -24,8 +24,11 @@ export default function AnalysesDetails({
   const [map, setMap] = useState<Map<string, AnalyseItem> | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // The lab's real separator isn't always a comma (the spec example was misleading):
+  // split on any run of comma / semicolon / pipe / whitespace. Lab codes are terse
+  // abbreviations without internal spaces, so this is safe.
   const codes = (summary || '')
-    .split(',')
+    .split(/[\s,;|]+/)
     .map((c) => c.trim())
     .filter(Boolean);
   if (!codes.length) return null;
