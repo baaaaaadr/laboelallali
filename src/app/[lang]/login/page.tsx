@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
+import MedicalLoader from '@/components/ui/MedicalLoader';
 import { Mail, Lock, LogIn, UserPlus, User, Calendar, Phone, CheckCircle, ArrowLeft } from 'lucide-react';
 
 const inputClass =
@@ -285,7 +286,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--background-default)]">
-        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent" />
+        <MedicalLoader />
       </div>
     );
   }
@@ -293,7 +294,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
   if (user && userProfile?.phone) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--background-default)]">
-        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent" />
+        <MedicalLoader />
       </div>
     );
   }

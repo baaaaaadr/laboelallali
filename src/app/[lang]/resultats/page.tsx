@@ -13,12 +13,13 @@
  *  - The callable already responds with `Cache-Control: no-store`.
  */
 
-import React, { useState, useEffect, useCallback, use } from 'react';
+import React, { useState, useEffect, useCallback, use, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
 import { getClientFunctions } from '@/config/firebase';
+import MedicalLoader from '@/components/ui/MedicalLoader';
 import {
   FileText,
   Download,
@@ -31,7 +32,22 @@ import {
   KeyRound,
   Send,
   Clock,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
+
+// PDF rendering via pdf.js (react-pdf): renders on a <canvas>, so "Voir" works on
+// Android too — where the native <iframe> inline PDF view is unsupported (it only
+// offers an "Open" button). Lazy-loaded to avoid SSR issues (no DOMMatrix on server).
+const LazyDocument = lazy(() =>
+  import('react-pdf').then((mod) => {
+    mod.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${mod.pdfjs.version}/build/pdf.worker.min.mjs`;
+    return { default: mod.Document };
+  })
+);
+const LazyPage = lazy(() => import('react-pdf').then((mod) => ({ default: mod.Page })));
 
 // Mirrors the lab API response (functions/src/cyberlab/client.ts). For type
 // "patient", patient_nom / patient_prenom come back empty (data minimisation).
@@ -73,6 +89,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const [viewer, setViewer] = useState<{ url: string; dossierId: string } | null>(null);
   const [accessStatus, setAccessStatus] = useState<'checking' | 'none' | 'pending' | 'rejected'>('checking');
   const [requesting, setRequesting] = useState(false);
+  const [pdfPages, setPdfPages] = useState(0);
+  const [pdfPage, setPdfPage] = useState(1);
+  const [pdfScale, setPdfScale] = useState(1.0);
 
   const isArabic = lang === 'ar';
 
@@ -171,6 +190,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
 
   const openViewer = useCallback((r: CyberlabResult) => {
     const url = URL.createObjectURL(base64ToPdfBlob(r.pdf_base64));
+    setPdfPage(1);
+    setPdfPages(0);
+    setPdfScale(1.0);
     setViewer({ url, dossierId: r.dossier_id });
   }, []);
 
@@ -203,7 +225,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--background-default)]">
-        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[var(--color-bordeaux-primary)] border-t-transparent" />
+        <MedicalLoader />
       </div>
     );
   }
@@ -240,9 +262,8 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
 
         {/* Loading */}
         {status === 'loading' && (
-          <div className="card p-12 flex flex-col items-center justify-center gap-4 text-center">
-            <div className="animate-spin rounded-lg h-10 w-10 border-4 border-[var(--color-bordeaux-primary)] border-t-transparent" />
-            <p className="text-[var(--text-secondary)]">{t('resultats.loading', 'Récupération de vos résultats…')}</p>
+          <div className="card">
+            <MedicalLoader label={t('resultats.loading', 'Récupération de vos résultats…')} />
           </div>
         )}
 
@@ -386,6 +407,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             className="bg-[var(--background-card)] rounded-lg shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Header */}
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--border-default)]">
               <p className="font-semibold text-[var(--text-primary)] truncate">
                 {t('resultats.viewer_title', 'Résultat — dossier {{id}}', { id: viewer.dossierId })}
@@ -398,11 +420,73 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                 <X size={20} />
               </button>
             </div>
-            <iframe
-              src={viewer.url}
-              title={t('resultats.viewer_title', 'Résultat — dossier {{id}}', { id: viewer.dossierId })}
-              className="flex-1 w-full bg-white"
-            />
+
+            {/* Toolbar: page navigation + zoom */}
+            <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-[var(--border-default)] bg-[var(--background-secondary)]">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPdfPage((p) => Math.max(1, p - 1))}
+                  disabled={pdfPage <= 1}
+                  aria-label={t('resultats.pdf_prev', 'Page précédente')}
+                  className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--background-tertiary)] disabled:opacity-30"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <span className="text-sm text-[var(--text-secondary)] min-w-[70px] text-center">
+                  {pdfPage} / {pdfPages || '…'}
+                </span>
+                <button
+                  onClick={() => setPdfPage((p) => Math.min(pdfPages, p + 1))}
+                  disabled={pdfPage >= pdfPages}
+                  aria-label={t('resultats.pdf_next', 'Page suivante')}
+                  className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--background-tertiary)] disabled:opacity-30"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPdfScale((s) => Math.max(0.6, +(s - 0.2).toFixed(2)))}
+                  aria-label={t('resultats.pdf_zoom_out', 'Dézoomer')}
+                  className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--background-tertiary)]"
+                >
+                  <ZoomOut size={18} />
+                </button>
+                <span className="text-xs text-[var(--text-secondary)] min-w-[42px] text-center">{Math.round(pdfScale * 100)}%</span>
+                <button
+                  onClick={() => setPdfScale((s) => Math.min(3, +(s + 0.2).toFixed(2)))}
+                  aria-label={t('resultats.pdf_zoom_in', 'Zoomer')}
+                  className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--background-tertiary)]"
+                >
+                  <ZoomIn size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* PDF rendered on a <canvas> via pdf.js — works on Android + iOS + desktop */}
+            <div className="flex-1 overflow-auto flex justify-center p-4 bg-[var(--background-tertiary)]">
+              <Suspense fallback={<div className="py-16"><MedicalLoader size="sm" /></div>}>
+                <LazyDocument
+                  file={viewer.url}
+                  onLoadSuccess={({ numPages }: { numPages: number }) => setPdfPages(numPages)}
+                  loading={<div className="py-16"><MedicalLoader size="sm" /></div>}
+                  error={
+                    <div className="flex flex-col items-center justify-center py-16 text-[var(--text-secondary)] text-center px-6">
+                      <FileText size={44} className="mb-3" />
+                      <p className="text-sm">{t('resultats.pdf_error', "Impossible d'afficher le PDF ici. Utilisez le bouton « Télécharger ».")}</p>
+                    </div>
+                  }
+                >
+                  <LazyPage
+                    pageNumber={pdfPage}
+                    scale={pdfScale}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                    className="shadow-xl rounded-lg overflow-hidden"
+                  />
+                </LazyDocument>
+              </Suspense>
+            </div>
           </div>
         </div>
       )}

@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
 import { getClientFunctions } from '@/config/firebase';
+import MedicalLoader from '@/components/ui/MedicalLoader';
 import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
@@ -237,7 +238,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--background-default)]">
-        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[var(--color-bordeaux-primary)] border-t-transparent" />
+        <MedicalLoader />
       </div>
     );
   }

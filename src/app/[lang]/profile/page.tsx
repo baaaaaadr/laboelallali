@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
+import MedicalLoader from '@/components/ui/MedicalLoader';
 import { User, Calendar, Mail, LogOut, CheckCircle, Phone } from 'lucide-react';
 
 export default function ProfilePage({ params }: { params: Promise<{ lang: string }> }) {
@@ -80,7 +81,7 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--background-default)]">
-        <div className="animate-spin rounded-lg h-12 w-12 border-4 border-[#E3004F] border-t-transparent"></div>
+        <MedicalLoader />
       </div>
     );
   }

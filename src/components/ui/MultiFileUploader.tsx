@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, lazy, Suspense } from 'react';
 import { FileText, X, Eye, Image as ImageIcon, File as FileIcon, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import MedicalLoader from './MedicalLoader';
 
 // Lazy-load react-pdf to avoid SSR issues (DOMMatrix not defined)
 const LazyDocument = lazy(() => import('react-pdf').then(mod => {
@@ -384,7 +385,7 @@ export default function MultiFileUploader({
                 <div className="overflow-auto max-h-[75vh] w-full flex justify-center p-4">
                   <Suspense fallback={
                     <div className="flex items-center justify-center py-20">
-                      <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-lg animate-spin" />
+                      <MedicalLoader size="sm" />
                     </div>
                   }>
                     <LazyDocument 
@@ -392,7 +393,7 @@ export default function MultiFileUploader({
                       onLoadSuccess={({ numPages }: { numPages: number }) => setPdfPages(numPages)}
                       loading={
                         <div className="flex items-center justify-center py-20">
-                          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-lg animate-spin" />
+                          <MedicalLoader size="sm" />
                         </div>
                       }
                       error={

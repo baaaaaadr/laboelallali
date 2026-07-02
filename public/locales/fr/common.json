@@ -188,6 +188,11 @@
     "access_pending_desc": "Votre demande a bien été envoyée. Le laboratoire activera votre accès lors de votre prochain passage ou sous peu.",
     "access_rejected": "Votre précédente demande n'a pas été validée. Vous pouvez en renvoyer une ou contacter le laboratoire.",
     "access_need_profile": "Complétez d'abord votre profil (nom et téléphone).",
+    "pdf_error": "Impossible d'afficher le PDF ici. Utilisez le bouton « Télécharger ».",
+    "pdf_prev": "Page précédente",
+    "pdf_next": "Page suivante",
+    "pdf_zoom_in": "Zoomer",
+    "pdf_zoom_out": "Dézoomer",
     "viewer_title": "Résultat — dossier {{id}}"
   },
   "confidentialite": {
