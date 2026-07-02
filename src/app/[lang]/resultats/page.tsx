@@ -557,8 +557,10 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
               </button>
             </div>
 
-            {/* Toolbar: page navigation + zoom */}
-            <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-[var(--border-default)] bg-[var(--background-secondary)]">
+            {/* Toolbar: page navigation + zoom. Forced LTR: it's an icon toolbar, so
+                "◀ prev / next ▶" and "− / +" must keep a fixed direction — under RTL
+                (Arabic) the flex row reversed and the arrows looked inverted. */}
+            <div dir="ltr" className="flex items-center justify-between gap-2 px-3 py-2 border-b border-[var(--border-default)] bg-[var(--background-secondary)]">
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setPdfPage((p) => Math.max(1, p - 1))}
