@@ -14,6 +14,7 @@ import SplashRemover from '@/components/ui/SplashRemover';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ToastProvider from '@/components/providers/ToastProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ResultsProvider } from '@/contexts/ResultsContext';
 
 // Font is defined but not used in this layout - if needed, uncomment and apply to elements
 // import { Inter } from 'next/font/google';
@@ -150,6 +151,7 @@ export default async function LangLayout({
           resources={resources}
         >
           <AuthProvider>
+            <ResultsProvider>
             <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow w-full main-content-mobile-padding">
@@ -173,6 +175,7 @@ export default async function LangLayout({
               `}
             </Script>
           </div>
+            </ResultsProvider>
           </AuthProvider>
         </TranslationsProvider>
       </ThemeProvider>

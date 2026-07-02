@@ -18,7 +18,9 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
+import { useResults } from '@/contexts/ResultsContext';
 import { getClientFunctions } from '@/config/firebase';
+import type { CyberlabResult } from '@/types/cyberlab';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import {
   FileText,
@@ -49,25 +51,6 @@ const LazyDocument = lazy(() =>
 );
 const LazyPage = lazy(() => import('react-pdf').then((mod) => ({ default: mod.Page })));
 
-// Mirrors the lab API response (functions/src/cyberlab/client.ts). For type
-// "patient", patient_nom / patient_prenom come back empty (data minimisation).
-interface CyberlabResult {
-  dossier_id: string;
-  patient_nom: string;
-  patient_prenom: string;
-  date_dossier: string;
-  etat: string;
-  analyses_summary: string;
-  pdf_base64: string;
-}
-interface CyberlabResponse {
-  type: string;
-  requester_id: string;
-  results: CyberlabResult[];
-}
-
-type Status = 'loading' | 'error' | 'empty' | 'ready' | 'need_access';
-
 /** base64 → in-memory PDF Blob (never persisted to disk). */
 function base64ToPdfBlob(b64: string): Blob {
   const clean = (b64 || '').replace(/\s+/g, '');
@@ -82,9 +65,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const { t } = useTranslation('common');
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  // Results come from the shared context (prefetched in the background at login).
+  const { results, status, ensureLoaded, refresh } = useResults();
 
-  const [status, setStatus] = useState<Status>('loading');
-  const [results, setResults] = useState<CyberlabResult[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ url: string; dossierId: string } | null>(null);
   const [accessStatus, setAccessStatus] = useState<'checking' | 'none' | 'pending' | 'rejected'>('checking');
@@ -116,41 +99,11 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     }
   }, []);
 
-  const loadResults = useCallback(async () => {
-    setStatus('loading');
-    setErrorMsg(null);
-    try {
-      const functions = await getClientFunctions();
-      if (!functions) throw new Error('functions-unavailable');
-      const callFetchResults = httpsCallable<Record<string, never>, CyberlabResponse>(
-        functions,
-        'fetchResults'
-      );
-      const res = await callFetchResults();
-      const list = Array.isArray(res.data?.results) ? res.data.results : [];
-      setResults(list);
-      setStatus(list.length ? 'ready' : 'empty');
-    } catch (err: unknown) {
-      const rawCode = (err as { code?: string })?.code || '';
-      const code = rawCode.replace('functions/', '');
-      // The backend maps "no results" to not-found → treat it as the empty state.
-      if (code === 'not-found') {
-        setResults([]);
-        setStatus('empty');
-        return;
-      }
-      // No requester_id yet → offer the patient to request online access.
-      if (code === 'failed-precondition') {
-        setStatus('need_access');
-        loadAccessStatus();
-        return;
-      }
-      setErrorMsg(
-        t('resultats.error_generic', 'Impossible de récupérer vos résultats pour le moment. Veuillez réessayer plus tard.')
-      );
-      setStatus('error');
-    }
-  }, [t, loadAccessStatus]);
+  // When the (prefetched) fetch reports no online access yet, check whether the
+  // patient already has a pending / rejected access request to show the right UI.
+  useEffect(() => {
+    if (status === 'need_access') loadAccessStatus();
+  }, [status, loadAccessStatus]);
 
   const handleRequestAccess = useCallback(async () => {
     setRequesting(true);
@@ -161,7 +114,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
       const fn = httpsCallable<Record<string, never>, { status: string }>(functions, 'requestResultsAccess');
       const res = await fn();
       if (res.data?.status === 'already_granted') {
-        loadResults();
+        refresh();
         return;
       }
       setAccessStatus('pending');
@@ -176,12 +129,13 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     } finally {
       setRequesting(false);
     }
-  }, [t, loadResults]);
+  }, [t, refresh]);
 
-  // Fetch on the fly once we know the user is authenticated.
+  // If the background prefetch hasn't run/finished, make sure we load once the page
+  // is open and the user is known (idempotent — the context de-dupes).
   useEffect(() => {
-    if (!authLoading && user) loadResults();
-  }, [authLoading, user, loadResults]);
+    if (!authLoading && user) ensureLoaded();
+  }, [authLoading, user, ensureLoaded]);
 
   // Revoke the current blob: URL whenever it changes or the page unmounts —
   // no result PDF lingers in memory once the viewer is closed.
@@ -386,7 +340,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             </p>
           </div>
           <button
-            onClick={loadResults}
+            onClick={refresh}
             disabled={status === 'loading'}
             className="flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[var(--border-default)] text-[var(--text-primary)] rounded-lg hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
           >
@@ -401,8 +355,8 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           <span>{t('resultats.privacy_note', "Vos résultats sont récupérés à la demande et ne sont jamais conservés par l'application.")}</span>
         </div>
 
-        {/* Loading */}
-        {status === 'loading' && (
+        {/* Loading (idle = prefetch not resolved yet → also show the loader) */}
+        {(status === 'loading' || status === 'idle') && (
           <div className="card">
             <MedicalLoader label={t('resultats.loading', 'Récupération de vos résultats…')} />
           </div>
@@ -412,8 +366,10 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
         {status === 'error' && (
           <div className="card p-8 flex flex-col items-center justify-center gap-4 text-center">
             <AlertCircle size={40} className="text-[var(--status-error)]" />
-            <p className="text-[var(--text-primary)] font-medium max-w-md">{errorMsg}</p>
-            <button onClick={loadResults} className="button-bordeaux justify-center">
+            <p className="text-[var(--text-primary)] font-medium max-w-md">
+              {t('resultats.error_generic', 'Impossible de récupérer vos résultats pour le moment. Veuillez réessayer plus tard.')}
+            </p>
+            <button onClick={refresh} className="button-bordeaux justify-center">
               {t('resultats.retry', 'Réessayer')}
             </button>
           </div>
