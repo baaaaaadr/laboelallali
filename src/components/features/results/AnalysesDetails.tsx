@@ -24,11 +24,12 @@ export default function AnalysesDetails({
   const [map, setMap] = useState<Map<string, AnalyseItem> | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // The lab's real separator is a caret "^" (the spec's comma example was
-  // misleading). Split on any run of caret / comma / semicolon / pipe / whitespace —
-  // lab codes are terse abbreviations without internal spaces, so this is safe.
+  // The lab's real separator is a caret "^" (e.g. "C HBA1^C U^C CR^EZALAT"). Codes
+  // are the FULL prefixed ids and DO contain internal spaces ("C HBA1"), so we must
+  // NOT split on whitespace — only on ^ / , / ; / | . Lookup normalization strips the
+  // spaces so "C HBA1" matches the catalog id "C  HBA1".
   const codes = (summary || '')
-    .split(/[\s,;|^]+/)
+    .split(/[\^,;|]+/)
     .map((c) => c.trim())
     .filter(Boolean);
   if (!codes.length) return null;
