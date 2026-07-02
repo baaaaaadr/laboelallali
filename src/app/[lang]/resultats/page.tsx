@@ -91,7 +91,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const [requesting, setRequesting] = useState(false);
   const [pdfPages, setPdfPages] = useState(0);
   const [pdfPage, setPdfPage] = useState(1);
-  const [pdfScale, setPdfScale] = useState(1.0);
+  // zoom = 1 means "fit the PDF to the viewer width". The patient zooms in from there.
+  const [zoom, setZoom] = useState(1);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   const isArabic = lang === 'ar';
 
@@ -192,7 +194,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     const url = URL.createObjectURL(base64ToPdfBlob(r.pdf_base64));
     setPdfPage(1);
     setPdfPages(0);
-    setPdfScale(1.0);
+    setZoom(1);
     setViewer({ url, dossierId: r.dossier_id });
   }, []);
 
@@ -226,17 +228,31 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   // two-finger gesture — pinch jumped ~1% then stalled. preventDefault requires
   // non-passive native listeners, so they're wired here in an effect.
   const pdfScrollRef = useRef<HTMLDivElement>(null);
-  const pdfScaleRef = useRef(pdfScale);
+  const zoomRef = useRef(zoom);
   useEffect(() => {
-    pdfScaleRef.current = pdfScale;
-  }, [pdfScale]);
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  // Keep the "fit-to-width" base in sync with the viewer's real width
+  // (initial open + rotation / resize).
+  useEffect(() => {
+    if (!viewer) return;
+    const el = pdfScrollRef.current;
+    if (!el) return;
+    const measure = () => setContainerWidth(el.clientWidth);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [viewer]);
 
   useEffect(() => {
     const el = pdfScrollRef.current;
     if (!el || !viewer) return;
     let mode: 'none' | 'pan' | 'pinch' = 'none';
     let startDist = 0;
-    let startScale = 1;
+    let startZoom = 1;
     let lastX = 0;
     let lastY = 0;
     const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
@@ -245,7 +261,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
       if (e.touches.length === 2) {
         mode = 'pinch';
         startDist = dist(e.touches);
-        startScale = pdfScaleRef.current;
+        startZoom = zoomRef.current;
       } else if (e.touches.length === 1) {
         mode = 'pan';
         lastX = e.touches[0].clientX;
@@ -256,7 +272,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
       if (mode === 'pinch' && e.touches.length === 2 && startDist > 0) {
         e.preventDefault();
         const ratio = dist(e.touches) / startDist;
-        setPdfScale(Math.min(3, Math.max(0.5, +(startScale * ratio).toFixed(2))));
+        setZoom(Math.min(5, Math.max(0.5, +(startZoom * ratio).toFixed(2))));
       } else if (mode === 'pan' && e.touches.length === 1) {
         e.preventDefault();
         el.scrollLeft -= e.touches[0].clientX - lastX;
@@ -464,15 +480,10 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
       {/* PDF viewer modal — in-memory blob, revoked on close */}
       {viewer && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
-          onClick={closeViewer}
+          className="fixed inset-0 z-50 bg-[var(--background-card)] flex flex-col"
           role="dialog"
           aria-modal="true"
         >
-          <div
-            className="bg-[var(--background-card)] rounded-lg shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
             {/* Header */}
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--border-default)]">
               <p className="font-semibold text-[var(--text-primary)] truncate">
@@ -512,15 +523,15 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setPdfScale((s) => Math.max(0.6, +(s - 0.2).toFixed(2)))}
+                  onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)))}
                   aria-label={t('resultats.pdf_zoom_out', 'Dézoomer')}
                   className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--background-tertiary)]"
                 >
                   <ZoomOut size={18} />
                 </button>
-                <span className="text-xs text-[var(--text-secondary)] min-w-[42px] text-center">{Math.round(pdfScale * 100)}%</span>
+                <span className="text-xs text-[var(--text-secondary)] min-w-[42px] text-center">{Math.round(zoom * 100)}%</span>
                 <button
-                  onClick={() => setPdfScale((s) => Math.min(3, +(s + 0.2).toFixed(2)))}
+                  onClick={() => setZoom((z) => Math.min(5, +(z + 0.25).toFixed(2)))}
                   aria-label={t('resultats.pdf_zoom_in', 'Zoomer')}
                   className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--background-tertiary)]"
                 >
@@ -529,12 +540,16 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
               </div>
             </div>
 
-            {/* PDF rendered on a <canvas> via pdf.js — works on Android + iOS + desktop */}
+            {/* PDF rendered on a <canvas> via pdf.js — works on Android + iOS + desktop.
+                touch-action:none must cover the <canvas> descendants too, else the
+                browser hijacks the two-finger gesture and our preventDefault is ignored
+                (pinch jumped ~1% then stalled). Hence the style rule below. */}
             <div
               ref={pdfScrollRef}
-              className="flex-1 overflow-auto p-4 bg-[var(--background-tertiary)]"
+              className="pdf-touch-surface flex-1 overflow-auto p-2 bg-[var(--background-tertiary)]"
               style={{ touchAction: 'none' }}
             >
+              <style>{`.pdf-touch-surface, .pdf-touch-surface * { touch-action: none; }`}</style>
               {/* w-max + mx-auto: centers when the page fits, but stays fully
                   scrollable from the LEFT when it's wider than the viewport
                   (flex justify-center would clip the left side — unreachable). */}
@@ -551,9 +566,10 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                     </div>
                   }
                 >
+                  {/* width (not scale) so zoom=1 fits the viewer width; zoom scales from there. */}
                   <LazyPage
                     pageNumber={pdfPage}
-                    scale={pdfScale}
+                    width={Math.max(120, ((containerWidth || 360) - 16) * zoom)}
                     renderTextLayer={false}
                     renderAnnotationLayer={false}
                     className="shadow-xl rounded-lg overflow-hidden"
@@ -562,7 +578,6 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
               </Suspense>
               </div>
             </div>
-          </div>
         </div>
       )}
     </div>
