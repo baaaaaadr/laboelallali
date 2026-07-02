@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useResults } from '@/contexts/ResultsContext';
 import { getClientFunctions } from '@/config/firebase';
 import type { CyberlabResult } from '@/types/cyberlab';
+import AnalysesDetails from '@/components/features/results/AnalysesDetails';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import {
   FileText,
@@ -461,12 +462,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                   </div>
 
                   {r.analyses_summary && (
-                    <div className="text-sm">
-                      <span className="text-[var(--text-tertiary)] font-medium">
-                        {t('resultats.analyses_label', 'Analyses')}:{' '}
-                      </span>
-                      <span className="text-[var(--text-primary)]">{r.analyses_summary}</span>
-                    </div>
+                    <AnalysesDetails summary={r.analyses_summary} isArabic={isArabic} />
                   )}
 
                   <div className="flex flex-wrap gap-3 pt-1">

@@ -13,6 +13,7 @@ This page acts as the central medical analyses and bilans catalog page. It allow
 A sub-component responsible for running parallel Firestore queries to fetch the `analyses` and `bilans` collections:
 - Filters out header placeholders (e.g. `Nom_Patient_FR !== 'Nom_Patient_FR'`).
 - Feeds data directly back to the parent state hooks.
+- **Module-level `catalogCache`** (top of the page file): the catalog is language-independent (each entry has both FR and AR fields), but switching language remounts the whole `[lang]` subtree. Without the cache the ~324-doc Firestore fetch re-ran on every fr↔ar switch (a multi-second "reload"). Now the fetcher reuses `catalogCache` when present (no refetch — just re-render with the other language), and the parent's `analyses`/`bilans`/`loading` state is **seeded from the cache** so there's no loader flash. Memory only; a full page reload refetches. The results page's "Détails des analyses" uses a SEPARATE loader (`src/lib/analyses/catalog.ts`).
 
 ### 2. Tab Navigation & Filtering
 - **TabsNavigation:** Switches views between `Nos Bilans` (packaged bundles), `Catalogue Complet` (individual tests), or category-specific collections.

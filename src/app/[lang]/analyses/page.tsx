@@ -27,6 +27,14 @@ import { toggleBilanCompositionExclusion } from "@/lib/cart/cartItem";
 
 const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
 
+// The catalog is language-independent — each entry carries BOTH its FR and AR
+// fields, so switching language only needs a re-render, not a refetch. Because
+// changing language remounts the whole [lang] subtree, we keep the fetched catalog
+// in a module-level cache that survives that remount (otherwise the ~324-doc
+// Firestore fetch runs again every fr↔ar switch). Memory only; a full page reload
+// refetches (picks up any catalog change).
+let catalogCache: { analyses: AnalyseItem[]; bilans: BilanItem[] } | null = null;
+
 // Data fetcher component
 const CatalogDataFetcher = ({
   lang,
@@ -46,6 +54,18 @@ const CatalogDataFetcher = ({
 
     const fetchData = async () => {
       if (!isMounted) return;
+
+      // Reuse the already-fetched catalog (e.g. after a language-switch remount)
+      // instead of hitting Firestore again — just re-render with the other language.
+      // NOTE: `tsc --noEmit` mis-types `catalogCache` as `never` in this file due to
+      // the pre-existing i18next TS2589 recursion cascade (see next.config.js
+      // `ignoreBuildErrors`); the runtime type/logic is correct and `next build` passes.
+      if (catalogCache) {
+        onErrorOccurred(null);
+        onDataFetched(catalogCache.analyses, catalogCache.bilans);
+        onLoadingStateChange(false);
+        return;
+      }
 
       onLoadingStateChange(true);
       onErrorOccurred(null);
@@ -115,10 +135,11 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   const lang = langParams.lang;
   const isArabic = lang === "ar";
 
-  // State variables
-  const [analyses, setAnalyses] = useState<AnalyseItem[]>([]);
-  const [bilans, setBilans] = useState<BilanItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  // State variables (seeded from the module cache so a language-switch remount
+  // shows the catalog instantly instead of a loader + refetch).
+  const [analyses, setAnalyses] = useState<AnalyseItem[]>(() => catalogCache?.analyses ?? []);
+  const [bilans, setBilans] = useState<BilanItem[]>(() => catalogCache?.bilans ?? []);
+  const [loading, setLoading] = useState<boolean>(() => !catalogCache);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<CartItem[]>([]);

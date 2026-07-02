@@ -30,7 +30,12 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 - `user`, `loading` (aliased to `authLoading`). Unauthenticated visitors are redirected to `/${lang}/login` (same pattern as `/profile`). While `authLoading || !user`, a bordeaux spinner renders.
 
 ### 3. Data type — `src/types/cyberlab.ts` (mirrors the lab API — `functions/src/cyberlab/client.ts`)
-`CyberlabResult`: `dossier_id`, `patient_nom`, `patient_prenom`, `date_dossier` (ISO), `etat`, `analyses_summary`, `pdf_base64`. For `type: "patient"`, `patient_nom` / `patient_prenom` come back **empty** (data minimisation), so the UI intentionally does not show them. (Shared by the page AND `ResultsContext`.)
+`CyberlabResult`: `dossier_id`, `patient_nom`, `patient_prenom`, `date_dossier` (ISO), `etat`, `analyses_summary`, `pdf_base64`. For `type: "patient"`, `patient_nom` / `patient_prenom` come back **empty** (data minimisation), so the UI intentionally does not show them. (Shared by the page AND `ResultsContext`.) `analyses_summary` is a comma-separated list of the lab's terse internal codes (e.g. `"NFS, GLY, HBA1C, U, CR"`), passed through verbatim — see §4c.
+
+### 4c. "Détails des analyses" (code → name) — `src/components/features/results/AnalysesDetails.tsx`
+- Per result card, `analyses_summary` is rendered as a **collapsed** "Détails des analyses (N)" toggle. On first expand it **lazy-loads** the analyses catalog (Firestore `analyses`, ~324 docs) via `src/lib/analyses/catalog.ts` and lists each code resolved to its patient-facing name; unknown codes are shown **as-is**.
+- **Code matching gotcha:** catalog ids carry a category prefix (`"H  NFS"`, `"C  GLY"`) but the lab summary sends the **bare** code (`"NFS"`, `"GLY"`). `buildCodeMap` indexes both the full normalized id (`HNFS`) and the prefix-stripped bare code (`NFS`); a bare code shared by ≥2 analyses is **ambiguous → dropped** (show the raw code rather than risk a wrong medical name). No fuzzy/tag matching for the same reason (so e.g. `HBA1C` vs catalog `HBA1` stays a code).
+- The catalog loader (`loadAnalysesCatalog`) caches at module scope + de-dupes in-flight; it's a SEPARATE cache from the analyses page's (acceptable — small, public data).
 
 ### 4. Key handlers / derived logic
 - Fetching lives in `ResultsContext` now (§1.1). The page calls `ensureLoaded()` once `!authLoading && user` (idempotent), and `refresh()` from the "Actualiser"/"Réessayer" buttons and after `already_granted`.
