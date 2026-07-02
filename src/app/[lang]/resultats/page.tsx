@@ -13,7 +13,7 @@
  *  - The callable already responds with `Cache-Control: no-store`.
  */
 
-import React, { useState, useEffect, useCallback, use, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, use, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { httpsCallable } from 'firebase/functions';
@@ -219,6 +219,30 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  // Pinch-to-zoom on the PDF. `touch-action: pan-x pan-y` keeps one-finger
+  // scrolling and disables native pinch, so we drive pdfScale from the two-finger
+  // distance ourselves (no preventDefault / non-passive listener needed).
+  const pinchRef = useRef<{ dist: number; scale: number } | null>(null);
+  const touchDistance = (touches: React.TouchList) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  };
+  const onPdfTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      pinchRef.current = { dist: touchDistance(e.touches), scale: pdfScale };
+    }
+  };
+  const onPdfTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchRef.current && pinchRef.current.dist > 0) {
+      const ratio = touchDistance(e.touches) / pinchRef.current.dist;
+      setPdfScale(Math.min(3, Math.max(0.5, +(pinchRef.current.scale * ratio).toFixed(2))));
+    }
+  };
+  const onPdfTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length < 2) pinchRef.current = null;
   };
 
   // ── Auth gate (spinner while resolving / before redirect) ────────────────────
@@ -464,7 +488,17 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             </div>
 
             {/* PDF rendered on a <canvas> via pdf.js — works on Android + iOS + desktop */}
-            <div className="flex-1 overflow-auto flex justify-center p-4 bg-[var(--background-tertiary)]">
+            <div
+              className="flex-1 overflow-auto p-4 bg-[var(--background-tertiary)]"
+              style={{ touchAction: 'pan-x pan-y' }}
+              onTouchStart={onPdfTouchStart}
+              onTouchMove={onPdfTouchMove}
+              onTouchEnd={onPdfTouchEnd}
+            >
+              {/* w-max + mx-auto: centers when the page fits, but stays fully
+                  scrollable from the LEFT when it's wider than the viewport
+                  (flex justify-center would clip the left side — unreachable). */}
+              <div className="w-max mx-auto">
               <Suspense fallback={<div className="py-16"><MedicalLoader size="sm" /></div>}>
                 <LazyDocument
                   file={viewer.url}
@@ -486,6 +520,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                   />
                 </LazyDocument>
               </Suspense>
+              </div>
             </div>
           </div>
         </div>
