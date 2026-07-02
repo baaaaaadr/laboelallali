@@ -91,8 +91,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const [requesting, setRequesting] = useState(false);
   const [pdfPages, setPdfPages] = useState(0);
   const [pdfPage, setPdfPage] = useState(1);
-  // zoom = 1 means "fit the PDF to the viewer width". The patient zooms in from there.
-  const [zoom, setZoom] = useState(1);
+  // zoom = 1 means "fit the PDF to the viewer width"; we open at 1.6 (160%) so the
+  // left column (test names + results) is readable straight away.
+  const [zoom, setZoom] = useState(1.6);
   const [containerWidth, setContainerWidth] = useState(0);
 
   const isArabic = lang === 'ar';
@@ -194,7 +195,8 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     const url = URL.createObjectURL(base64ToPdfBlob(r.pdf_base64));
     setPdfPage(1);
     setPdfPages(0);
-    setZoom(1);
+    setZoom(1.6);
+    pendingScrollRef.current = { left: 0, top: 0 }; // land on the top-left (readable column)
     setViewer({ url, dossierId: r.dossier_id });
   }, []);
 
@@ -223,12 +225,14 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     });
   };
 
-  // Pinch-to-zoom + one-finger pan on the PDF. We take FULL manual control
-  // (touch-action: none): letting the browser keep panning made it hijack the
-  // two-finger gesture — pinch jumped ~1% then stalled. preventDefault requires
-  // non-passive native listeners, so they're wired here in an effect.
-  const pdfScrollRef = useRef<HTMLDivElement>(null);
+  // Pinch-to-zoom + one-finger pan on the PDF (touch-action: none so the browser
+  // never steals the gesture; preventDefault needs non-passive native listeners).
+  const pdfScrollRef = useRef<HTMLDivElement>(null); // scroll viewport
+  const pdfWrapRef = useRef<HTMLDivElement>(null);   // the page box we scale live
   const zoomRef = useRef(zoom);
+  // Scroll position we want AFTER the next real (width) re-render — applied in the
+  // Page's onRenderSuccess so it isn't clamped against the still-old canvas size.
+  const pendingScrollRef = useRef<{ left: number; top: number } | null>(null);
   useEffect(() => {
     zoomRef.current = zoom;
   }, [zoom]);
@@ -247,21 +251,51 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     return () => ro.disconnect();
   }, [viewer]);
 
+  const applyPendingScroll = useCallback(() => {
+    const el = pdfScrollRef.current;
+    const p = pendingScrollRef.current;
+    if (el && p) {
+      el.scrollLeft = p.left;
+      el.scrollTop = p.top;
+      pendingScrollRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     const el = pdfScrollRef.current;
     if (!el || !viewer) return;
     let mode: 'none' | 'pan' | 'pinch' = 'none';
     let startDist = 0;
     let startZoom = 1;
+    let startScrollLeft = 0;
+    let startScrollTop = 0;
+    let originX = 0; // pinch focus, in the page box's own coordinates
+    let originY = 0;
+    let liveScale = 1;
     let lastX = 0;
     let lastY = 0;
     const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
 
+    const beginPinch = (e: TouchEvent) => {
+      const wrap = pdfWrapRef.current;
+      if (!wrap) return;
+      mode = 'pinch';
+      startDist = dist(e.touches);
+      startZoom = zoomRef.current;
+      startScrollLeft = el.scrollLeft;
+      startScrollTop = el.scrollTop;
+      liveScale = 1;
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const r = wrap.getBoundingClientRect();
+      originX = midX - r.left;
+      originY = midY - r.top;
+      wrap.style.transformOrigin = `${originX}px ${originY}px`;
+    };
+
     const onStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
-        mode = 'pinch';
-        startDist = dist(e.touches);
-        startZoom = zoomRef.current;
+        beginPinch(e);
       } else if (e.touches.length === 1) {
         mode = 'pan';
         lastX = e.touches[0].clientX;
@@ -271,8 +305,14 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     const onMove = (e: TouchEvent) => {
       if (mode === 'pinch' && e.touches.length === 2 && startDist > 0) {
         e.preventDefault();
-        const ratio = dist(e.touches) / startDist;
-        setZoom(Math.min(5, Math.max(0.5, +(startZoom * ratio).toFixed(2))));
+        const wrap = pdfWrapRef.current;
+        if (!wrap) return;
+        // Clamp so the *committed* zoom will stay within [0.5, 5].
+        const raw = dist(e.touches) / startDist;
+        liveScale = Math.min(5 / startZoom, Math.max(0.5 / startZoom, raw));
+        // Cheap GPU transform during the gesture — NO react-pdf re-render (that
+        // redraws the canvas mid-pinch and cancels the touch sequence).
+        wrap.style.transform = `scale(${liveScale})`;
       } else if (mode === 'pan' && e.touches.length === 1) {
         e.preventDefault();
         el.scrollLeft -= e.touches[0].clientX - lastX;
@@ -281,7 +321,26 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
         lastY = e.touches[0].clientY;
       }
     };
+    const commitPinch = () => {
+      const wrap = pdfWrapRef.current;
+      if (!wrap) return;
+      wrap.style.transform = '';
+      const next = +(startZoom * liveScale).toFixed(3);
+      // Only when the committed zoom truly changes (else no re-render fires and a
+      // stashed scroll would apply later by mistake).
+      if (next !== startZoom) {
+        // Keep the pinch focus point stationary AFTER the real (width) re-render:
+        // stash the target scroll, applied in onRenderSuccess (see applyPendingScroll).
+        pendingScrollRef.current = {
+          left: startScrollLeft + originX * (liveScale - 1),
+          top: startScrollTop + originY * (liveScale - 1),
+        };
+        setZoom(next);
+      }
+      liveScale = 1;
+    };
     const onEnd = (e: TouchEvent) => {
+      if (mode === 'pinch' && e.touches.length < 2) commitPinch();
       if (e.touches.length === 1) {
         mode = 'pan';
         lastX = e.touches[0].clientX;
@@ -546,14 +605,15 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                 (pinch jumped ~1% then stalled). Hence the style rule below. */}
             <div
               ref={pdfScrollRef}
+              dir="ltr"
               className="pdf-touch-surface flex-1 overflow-auto p-2 bg-[var(--background-tertiary)]"
               style={{ touchAction: 'none' }}
             >
               <style>{`.pdf-touch-surface, .pdf-touch-surface * { touch-action: none; }`}</style>
-              {/* w-max + mx-auto: centers when the page fits, but stays fully
-                  scrollable from the LEFT when it's wider than the viewport
-                  (flex justify-center would clip the left side — unreachable). */}
-              <div className="w-max mx-auto">
+              {/* w-max (left-aligned, NOT centered) so the LEFT edge is always the
+                  first thing reached when scrolled to 0 — the readable column the
+                  patient wants. This box is the live-scale target during a pinch. */}
+              <div ref={pdfWrapRef} className="w-max will-change-transform">
               <Suspense fallback={<div className="py-16"><MedicalLoader size="sm" /></div>}>
                 <LazyDocument
                   file={viewer.url}
@@ -572,6 +632,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                     width={Math.max(120, ((containerWidth || 360) - 16) * zoom)}
                     renderTextLayer={false}
                     renderAnnotationLayer={false}
+                    onRenderSuccess={applyPendingScroll}
                     className="shadow-xl rounded-lg overflow-hidden"
                   />
                 </LazyDocument>
