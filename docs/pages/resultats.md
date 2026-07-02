@@ -20,8 +20,9 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 
 ### 1.1 Results prefetch — `src/contexts/ResultsContext.tsx`
 - `ResultsProvider` is mounted in `src/app/[lang]/layout.tsx` **inside `AuthProvider`** (it needs `useAuth`). Exposes `{ results, status, ensureLoaded, refresh }` via `useResults()`.
-- **Background prefetch:** an effect fires `load()` as soon as `user && userProfile?.requester_id && status === 'idle'` — i.e. the slow (~10 s) fetch starts at **login**, so the page is usually already `ready` when opened (Aziz's idea). Only patients who already have access (`requester_id`) prefetch, to avoid pointless failing calls.
-- `loadedForUidRef` (set only on `ready`/`empty`) de-dupes reloads while still retrying after `error`/`need_access`; `loadingRef` guards concurrent calls; a `prevUidRef` effect resets everything on login/logout/**account switch**.
+- **Background prefetch:** an effect fires `load()` as soon as `user && userProfile?.requester_id && status === 'idle'`. Because `ResultsProvider` sits in the global layout and Firebase restores the session, this runs **at app open on ANY screen** (not tied to the login action) — the slow (~10 s) fetch is usually done before the patient opens /resultats (Aziz's idea). Only patients who already have access (`requester_id`) prefetch, so staff / not-yet-granted users don't fire pointless calls on every launch.
+- **Cold-start auto-retry:** on a generic/network error (common at PWA launch before the network is ready), the *background* load retries up to 2× (4 s, 8 s), guarded by `currentUidRef` so a stale timer never fetches for a signed-out / switched account. `bgRetryRef` counts retries; reset on success, account switch, and manual `refresh`.
+- `loadedForUidRef` (set only on `ready`/`empty`) de-dupes reloads while still retrying after `error`/`need_access`; `loadingRef` guards concurrent calls; the account-switch effect (keyed on `user?.uid`) resets everything on login/logout/**account switch**.
 - Same error mapping as before: `not-found` → `empty`, `failed-precondition` → `need_access`, else `error`.
 - **Still in-memory only** (React state) — never localStorage/IndexedDB/SW. Cleared on logout. This does **not** reduce total load (everything is still fetched at once); it only moves it earlier.
 

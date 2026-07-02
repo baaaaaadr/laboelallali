@@ -55,6 +55,8 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
   // while still retrying after an error / need_access.
   const loadedForUidRef = useRef<string | null>(null);
   const loadingRef = useRef(false); // reliable concurrent-call guard (state is async)
+  const currentUidRef = useRef<string | null>(null); // the signed-in uid, for stale-timer guards
+  const bgRetryRef = useRef(0); // background prefetch auto-retries used so far
 
   const load = useCallback(
     async (force: boolean) => {
@@ -72,6 +74,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
         const res = await call();
         const list = Array.isArray(res.data?.results) ? res.data.results : [];
         loadedForUidRef.current = current.uid;
+        bgRetryRef.current = 0;
         setResults(list);
         setStatus(list.length ? 'ready' : 'empty');
       } catch (err: unknown) {
@@ -79,6 +82,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
         if (code === 'not-found') {
           // Backend maps "no results" to not-found → treat as the empty state.
           loadedForUidRef.current = current.uid;
+          bgRetryRef.current = 0;
           setResults([]);
           setStatus('empty');
         } else if (code === 'failed-precondition') {
@@ -87,6 +91,21 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
           setStatus('need_access');
         } else {
           setStatus('error');
+          // At app launch the network is often not ready yet — self-heal a couple
+          // of times so a cold-start blip doesn't leave the prefetch stuck.
+          if (!force && bgRetryRef.current < 2) {
+            bgRetryRef.current += 1;
+            const uidAtCall = current.uid;
+            setTimeout(() => {
+              if (
+                currentUidRef.current === uidAtCall &&
+                loadedForUidRef.current !== uidAtCall &&
+                !loadingRef.current
+              ) {
+                void load(false);
+              }
+            }, 4000 * bgRetryRef.current);
+          }
         }
       } finally {
         loadingRef.current = false;
@@ -96,20 +115,23 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Reset everything on login / logout / account switch.
-  const prevUidRef = useRef<string | null>(null);
   useEffect(() => {
     const uid = user?.uid ?? null;
-    if (prevUidRef.current !== uid) {
-      prevUidRef.current = uid;
+    if (currentUidRef.current !== uid) {
+      currentUidRef.current = uid;
       loadedForUidRef.current = null;
       loadingRef.current = false;
+      bgRetryRef.current = 0;
       setResults([]);
       setStatus('idle');
     }
   }, [user?.uid]);
 
-  // Background prefetch: only for patients who already have access (requester_id),
-  // so we never fire pointless failing calls for everyone who signs in.
+  // Background prefetch — fires the moment the app has an authenticated user (any
+  // screen, restored session included) AND they already have access (requester_id),
+  // so results are usually ready before the patient opens /resultats. We keep the
+  // requester_id gate so we never fire pointless calls for staff / not-yet-granted
+  // users on every launch.
   useEffect(() => {
     if (user && userProfile?.requester_id && status === 'idle') {
       void load(false);
@@ -117,7 +139,10 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
   }, [user, userProfile?.requester_id, status, load]);
 
   const ensureLoaded = useCallback(() => void load(false), [load]);
-  const refresh = useCallback(() => void load(true), [load]);
+  const refresh = useCallback(() => {
+    bgRetryRef.current = 0;
+    void load(true);
+  }, [load]);
 
   const value = useMemo<ResultsContextValue>(
     () => ({ results, status, ensureLoaded, refresh }),
