@@ -196,6 +196,7 @@
     "pdf_zoom_out": "Dézoomer",
     "viewer_title": "Résultat — dossier {{id}}",
     "latest_badge": "Dernier résultat",
+    "etat_final": "Finalisé",
     "pdf_loading": "Chargement du PDF…",
     "pdf_loading_short": "Chargement…",
     "pdf_load_error": "Échec du chargement du PDF."

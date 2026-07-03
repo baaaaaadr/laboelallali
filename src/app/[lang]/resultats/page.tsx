@@ -64,6 +64,12 @@ function base64ToPdfBlob(b64: string): Blob {
   return new Blob([bytes], { type: 'application/pdf' });
 }
 
+// Lab statuses (`etat`) come from CyberLab in English (e.g. "Final"); map the known
+// ones to i18n keys and pass through any unknown value verbatim.
+const ETAT_LABEL_KEYS: Record<string, string> = {
+  final: 'resultats.etat_final',
+};
+
 export default function ResultatsPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params);
   const { t } = useTranslation('common');
@@ -199,6 +205,12 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  // Localize a lab status if we know it; otherwise show it as-is.
+  const etatLabel = (raw: string) => {
+    const key = ETAT_LABEL_KEYS[raw.trim().toLowerCase()];
+    return key ? t(key) : raw;
   };
 
   // Pinch-to-zoom + one-finger pan on the PDF (touch-action: none so the browser
@@ -502,7 +514,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                       </div>
                       {r.etat && (
                         <span className="flex-shrink-0 text-xs font-semibold px-3 py-1 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)]">
-                          {r.etat}
+                          {etatLabel(r.etat)}
                         </span>
                       )}
                     </div>

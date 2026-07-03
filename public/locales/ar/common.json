@@ -276,6 +276,7 @@
     "pdf_zoom_out": "تصغير",
     "viewer_title": "النتيجة — الملف {{id}}",
     "latest_badge": "أحدث نتيجة",
+    "etat_final": "نهائي",
     "pdf_loading": "جارٍ تحميل ملف PDF…",
     "pdf_loading_short": "جارٍ التحميل…",
     "pdf_load_error": "تعذّر تحميل ملف PDF."
