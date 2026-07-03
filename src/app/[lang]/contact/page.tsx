@@ -196,21 +196,15 @@ export default function ContactPage({
           {t('practical_info')}
         </h2>
         
+        {/* "Coordonnées du Laboratoire" card removed here — it duplicated the
+            "Comment nous trouver" block above (same find_us_text). */}
         <div className="card p-6 md:p-8 bg-[var(--background-card)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-4">{t('glabo:analysis_tips')}</h3>
-              <ul className={`space-y-3 text-[var(--text-secondary)] ${isRTL ? 'list-disc pr-5' : 'list-disc pl-5'}`}>
-                <li>{t('glabo:fasting_recommendation')}</li>
-                <li>{t('glabo:documents_to_bring')}</li>
-              </ul>
-            </div>
-            <div className="bg-[var(--background-secondary)] p-6 rounded-xl border border-[var(--border-default)]">
-              <h3 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">{t('lab_coordinates')}</h3>
-              <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
-                {t('find_us_text')}
-              </p>
-            </div>
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-4">{t('glabo:analysis_tips')}</h3>
+            <ul className={`space-y-3 text-[var(--text-secondary)] ${isRTL ? 'list-disc pr-5' : 'list-disc pl-5'}`}>
+              <li>{t('glabo:fasting_recommendation')}</li>
+              <li>{t('glabo:documents_to_bring')}</li>
+            </ul>
           </div>
         </div>
       </section>

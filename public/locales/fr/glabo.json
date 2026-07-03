@@ -1,7 +1,7 @@
 {
   "fullName": "Nom complet",
   "phoneNumber": "Numéro de téléphone",
-  "email": "Adresse email (optionnel)",
+  "email": "Adresse email",
   "address": "Adresse",
   "location_type": "Type de lieu",
   "home": "Domicile",
@@ -14,7 +14,7 @@
   "prescription": "Avez-vous une ordonnance ?",
   "yes": "OUI",
   "no": "NON",
-  "comments": "Notes ou commentaires supplémentaires (optionnel)",
+  "comments": "Notes ou commentaires supplémentaires",
   "comments_placeholder": "Ex: Prise de sang à jeun...",
   "requestByEmail": "Demander par email",
   "requestByWhatsApp": "Demander par WhatsApp",

@@ -32,7 +32,7 @@
   "card": {
     "category_label": "التصنيف:",
     "delay_label": "المدة:",
-    "price_currency": "السعر",
+    "price_currency": "درهم",
     "show_preparation": "عرض التحضير",
     "hide_preparation": "إخفاء التحضير",
     "preparation_label": "تعليمات التحضير:",

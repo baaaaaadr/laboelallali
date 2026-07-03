@@ -32,7 +32,7 @@
   "card": {
     "category_label": "Catégorie:",
     "delay_label": "Délai:",
-    "price_currency": "Prix",
+    "price_currency": "DH",
     "show_preparation": "Voir Préparation",
     "hide_preparation": "Masquer Préparation",
     "preparation_label": "Instructions de préparation:",
