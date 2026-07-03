@@ -279,6 +279,7 @@
     "pdf_zoom_out": "تصغير",
     "viewer_title": "النتيجة — الملف {{id}}",
     "latest_badge": "أحدث نتيجة",
+    "year_unknown": "بدون تاريخ",
     "etat_final": "نهائي",
     "updated_ago": "آخر تحديث {{ago}}",
     "updated_seconds": "آخر تحديث منذ لحظات",

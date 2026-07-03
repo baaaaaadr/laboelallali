@@ -199,6 +199,7 @@
     "pdf_zoom_out": "Dézoomer",
     "viewer_title": "Résultat — dossier {{id}}",
     "latest_badge": "Dernier résultat",
+    "year_unknown": "Sans date",
     "etat_final": "Finalisé",
     "updated_ago": "Actualisé {{ago}}",
     "updated_seconds": "Actualisé il y a quelques secondes",

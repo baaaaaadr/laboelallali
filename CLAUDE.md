@@ -31,14 +31,14 @@ Le propriétaire de ce projet **n'est pas développeur**. Adapte-toi à lui :
 
 ## Commands
 
-There is **no root `test` script** and no automated test suite/CI (see Testing). Deploy/test scripts assume **Windows `cmd.exe`** (npm's default shell on Windows): they use `set NODE_OPTIONS=--use-system-ca && ...`, which does NOT work in PowerShell or bash. Run these via `npm run <script>` (which invokes cmd.exe), not by pasting the inner command into PowerShell.
+There is **no root `test` script** and no automated test suite/CI (see Testing). The deploy scripts are plain `npm run build && firebase deploy ...` (no shell-specific prefix), so they run the same under cmd.exe, PowerShell, or bash. **History/gotcha:** they used to prepend `set NODE_OPTIONS=--use-system-ca && ...` (for firebase-tools TLS behind an SSL-inspecting proxy). That flag is **forbidden in `NODE_OPTIONS` for Turbopack workers** on Node ≥ 24, so `next build` crashed with `ERR_WORKER_INVALID_EXEC_ARGV`. It was removed (Firebase deploys fine without it here). If a machine behind a MITM proxy ever needs a custom CA, use `NODE_EXTRA_CA_CERTS=<path-to-ca.pem>` (worker-safe), never `--use-system-ca`.
 
 Root (`package.json`):
 - `npm run dev` — `next dev`. PWA is disabled in dev unless `NEXT_PUBLIC_ENABLE_PWA_DEV=true`.
 - `npm run build` — `next build`. `prebuild` (`node scripts/copy-sw.js`) and `postbuild` (`next-sitemap`) run automatically. Note: `next.config.js` sets `typescript.ignoreBuildErrors: true`, so `next build` does NOT fail on TS errors (worked around i18next type recursion). Run `npx tsc --noEmit` manually if you need type checking.
 - `npm run lint` — `next lint` (flat `eslint.config.mjs`, extends `next/core-web-vitals` + `next/typescript`).
 - `npm run deploy` — build + `firebase deploy` (hosting + functions + firestore rules/indexes + storage). Prefer the narrower variants.
-- `npm run deploy:hosting` — build + `firebase deploy --only hosting` (preferred; avoids functions build failures).
+- `npm run deploy:hosting` — build + `firebase deploy --only hosting` (preferred; avoids functions build failures). **This also (re)deploys the framework SSR Cloud Function `ssrlaboelallalipwa` (europe-west1)** — `firebase deploy` rebuilds the Next app itself via web-frameworks, so the `npm run build` prefix mainly exists to run `prebuild` (copy-sw) + `postbuild` (sitemap). **`next.config.js` sets `output: 'standalone'`** so that SSR function ships a traced ~13 MB bundle (was ~580 MB — full `node_modules` + the 842 MB `.next/dev` Turbopack cache — which made Cloud Build exceed the 25-min deploy timeout: `Task index 0 failed: timed out after 1500000ms`). Do NOT remove `output: 'standalone'`.
 - `npm run deploy:functions` — `firebase deploy --only functions` (no local build; Firebase builds functions via their own `tsc`).
 - `npm run generate:css-vars` — regenerates `src/styles/system/variables.css` from theme tokens (auto-generated file, do not edit by hand).
 - `npm run docs:concat` — `node scripts/concat-docs.js`: concatenates `SPEC.md` + `DESIGN.md` + `AGENTS.md` + `docs/pages/*.md` into `docs/FULL_CONTEXT.md` for pasting into external AIs.

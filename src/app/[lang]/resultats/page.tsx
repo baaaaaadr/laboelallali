@@ -13,7 +13,7 @@
  *  - The callable already responds with `Cache-Control: no-store`.
  */
 
-import React, { useState, useEffect, useCallback, useRef, use, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, use, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { httpsCallable } from 'firebase/functions';
@@ -37,6 +37,7 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   ZoomIn,
   ZoomOut,
   Loader2,
@@ -141,6 +142,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const [containerWidth, setContainerWidth] = useState(0);
   // Web Share is offered on mobile only (on desktop it's redundant with download).
   const [canShare, setCanShare] = useState(false);
+  // Collapsible year sections: we only remember the sections the user explicitly
+  // toggled; every other section follows the default (most-recent year open).
+  const [yearOverrides, setYearOverrides] = useState<Record<string, boolean>>({});
 
   const isArabic = lang === 'ar';
 
@@ -300,6 +304,55 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     return key ? t(key) : raw;
   };
 
+  // ── Group results into collapsible sections by year ──────────────────────────
+  // Only years that actually have results get a section; within a year the newest
+  // dossier comes first, and years are ordered most-recent first. Results whose
+  // date can't be parsed fall into a dateless section (so none are ever dropped).
+  const grouped = useMemo(() => {
+    const byYear = new Map<number, CyberlabResult[]>();
+    const noDate: CyberlabResult[] = [];
+    for (const r of results) {
+      const d = new Date(r.date_dossier);
+      if (r.date_dossier && !Number.isNaN(d.getTime())) {
+        const y = d.getFullYear();
+        const arr = byYear.get(y);
+        if (arr) arr.push(r);
+        else byYear.set(y, [r]);
+      } else {
+        noDate.push(r);
+      }
+    }
+    const years = Array.from(byYear.keys()).sort((a, b) => b - a);
+    for (const y of years) {
+      byYear
+        .get(y)!
+        .sort((a, b) => new Date(b.date_dossier).getTime() - new Date(a.date_dossier).getTime());
+    }
+    return { years, byYear, noDate };
+  }, [results]);
+
+  // Default-open section = most recent year with results (else the dateless one).
+  const defaultOpenKey =
+    grouped.years.length > 0
+      ? String(grouped.years[0])
+      : grouped.noDate.length > 0
+        ? 'no-date'
+        : null;
+  const isSectionOpen = (key: string) =>
+    key in yearOverrides ? yearOverrides[key] : key === defaultOpenKey;
+  const toggleSection = (key: string) =>
+    setYearOverrides((o) => ({ ...o, [key]: !(key in o ? o[key] : key === defaultOpenKey) }));
+
+  // Year label localized so its digits match the dates shown on the cards
+  // (Arabic-Indic under ar, Latin under fr); no thousands separator.
+  const formatYear = (year: number) => {
+    try {
+      return new Intl.NumberFormat(isArabic ? 'ar-MA' : 'fr-FR', { useGrouping: false }).format(year);
+    } catch {
+      return String(year);
+    }
+  };
+
   // Pinch-to-zoom + one-finger pan on the PDF (touch-action: none so the browser
   // never steals the gesture; preventDefault needs non-passive native listeners).
   const pdfScrollRef = useRef<HTMLDivElement>(null); // scroll viewport
@@ -439,6 +492,124 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     };
   }, [viewer]);
 
+  // Collapsible header for one year section (reused by the dateless section too).
+  const renderSectionHeader = (key: string, label: string, count: number) => {
+    const open = isSectionOpen(key);
+    return (
+      <button
+        type="button"
+        onClick={() => toggleSection(key)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-[var(--background-secondary)] border border-[var(--border-default)] hover:border-[var(--color-bordeaux-primary)] transition-colors"
+      >
+        <span className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
+          <ChevronDown
+            size={18}
+            className={`text-[var(--color-bordeaux-primary)] transition-transform ${
+              open ? '' : isArabic ? 'rotate-90' : '-rotate-90'
+            }`}
+          />
+          {label}
+        </span>
+        <span className="text-xs font-medium text-[var(--text-secondary)]">
+          {t('resultats.count', { count })}
+        </span>
+      </button>
+    );
+  };
+
+  // One dossier card. `index` only drives the staggered fade-in animation.
+  const renderResultCard = (r: CyberlabResult, index: number) => {
+    const pdf = pdfState(r.dossier_id);
+    const isNewest = r.dossier_id === newestDossierId;
+    const loadingPdf = pdf.status === 'loading';
+    const errorPdf = pdf.status === 'error';
+    return (
+      <div
+        key={r.dossier_id}
+        className="card p-6 flex flex-col gap-4"
+        style={{ animation: 'resFadeUp 0.35s ease-out both', animationDelay: `${Math.min(index, 8) * 60}ms` }}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="h-11 w-11 rounded-lg bg-[var(--color-bordeaux-primary)]/10 text-[var(--color-bordeaux-primary)] flex items-center justify-center flex-shrink-0">
+              <FileText size={22} />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-x-2 gap-y-1.5 flex-wrap">
+                <p className="font-semibold text-[var(--text-primary)] truncate">
+                  {t('resultats.dossier', 'Dossier')} {r.dossier_id}
+                </p>
+                {isNewest && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)]">
+                    <Star size={11} className="fill-current" />
+                    {t('resultats.latest_badge', 'Dernier résultat')}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-[var(--text-secondary)] mt-1.5">{formatDate(r.date_dossier)}</p>
+            </div>
+          </div>
+          {r.etat && (
+            <span className="flex-shrink-0 text-xs font-semibold px-3 py-1 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)]">
+              {etatLabel(r.etat)}
+            </span>
+          )}
+        </div>
+
+        {r.analyses_summary && <AnalysesDetails summary={r.analyses_summary} isArabic={isArabic} />}
+
+        {/* Indeterminate loading bar while this dossier's PDF is fetched. */}
+        {loadingPdf && (
+          <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+            <div className="relative h-1 flex-1 overflow-hidden rounded-lg bg-[var(--background-secondary)]">
+              <div
+                className="absolute inset-y-0 w-1/3 rounded-lg bg-[var(--color-bordeaux-primary)]"
+                style={{ animation: 'resBar 1.1s ease-in-out infinite' }}
+              />
+            </div>
+            <span className="flex-shrink-0">{t('resultats.pdf_loading', 'Chargement du PDF…')}</span>
+          </div>
+        )}
+
+        {errorPdf && (
+          <p className="text-sm text-[var(--status-error)]">
+            {t('resultats.pdf_load_error', 'Échec du chargement du PDF.')}
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-3 pt-1">
+          <button
+            onClick={() => handleView(r)}
+            disabled={loadingPdf}
+            className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loadingPdf ? <Loader2 size={18} className="animate-spin" /> : <Eye size={18} />}
+            {loadingPdf ? t('resultats.pdf_loading_short', 'Chargement…') : t('resultats.view', 'Voir')}
+          </button>
+          <button
+            onClick={() => (errorPdf ? loadPdf(r.dossier_id) : handleDownload(r))}
+            disabled={loadingPdf}
+            className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border-2 border-[var(--border-default)] text-[var(--text-primary)] font-medium hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {errorPdf ? <RotateCw size={18} /> : <Download size={18} />}
+            {errorPdf ? t('resultats.retry', 'Réessayer') : t('resultats.download', 'Télécharger')}
+          </button>
+          {canShare && (
+            <button
+              onClick={() => handleShare(r)}
+              disabled={loadingPdf}
+              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border-2 border-[var(--border-default)] text-[var(--text-primary)] font-medium hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Share2 size={18} />
+              {t('resultats.share', 'Partager')}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // ── Auth gate (spinner while resolving / before redirect) ────────────────────
   if (authLoading || !user) {
     return (
@@ -575,99 +746,27 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                 </>
               )}
             </div>
-            <div className="space-y-4">
-              {results.map((r, index) => {
-                const pdf = pdfState(r.dossier_id);
-                const isNewest = r.dossier_id === newestDossierId;
-                const loadingPdf = pdf.status === 'loading';
-                const errorPdf = pdf.status === 'error';
+            <div className="space-y-3">
+              {grouped.years.map((year) => {
+                const key = String(year);
+                const list = grouped.byYear.get(year)!;
                 return (
-                  <div
-                    key={r.dossier_id}
-                    className="card p-6 flex flex-col gap-4"
-                    style={{ animation: 'resFadeUp 0.35s ease-out both', animationDelay: `${Math.min(index, 8) * 60}ms` }}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="h-11 w-11 rounded-lg bg-[var(--color-bordeaux-primary)]/10 text-[var(--color-bordeaux-primary)] flex items-center justify-center flex-shrink-0">
-                          <FileText size={22} />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-x-2 gap-y-1.5 flex-wrap">
-                            <p className="font-semibold text-[var(--text-primary)] truncate">
-                              {t('resultats.dossier', 'Dossier')} {r.dossier_id}
-                            </p>
-                            {isNewest && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)]">
-                                <Star size={11} className="fill-current" />
-                                {t('resultats.latest_badge', 'Dernier résultat')}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-[var(--text-secondary)] mt-1.5">{formatDate(r.date_dossier)}</p>
-                        </div>
-                      </div>
-                      {r.etat && (
-                        <span className="flex-shrink-0 text-xs font-semibold px-3 py-1 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)]">
-                          {etatLabel(r.etat)}
-                        </span>
-                      )}
-                    </div>
-
-                    {r.analyses_summary && (
-                      <AnalysesDetails summary={r.analyses_summary} isArabic={isArabic} />
+                  <section key={key} className="space-y-4">
+                    {renderSectionHeader(key, formatYear(year), list.length)}
+                    {isSectionOpen(key) && (
+                      <div className="space-y-4">{list.map((r, i) => renderResultCard(r, i))}</div>
                     )}
-
-                    {/* Indeterminate loading bar while this dossier's PDF is fetched. */}
-                    {loadingPdf && (
-                      <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                        <div className="relative h-1 flex-1 overflow-hidden rounded-lg bg-[var(--background-secondary)]">
-                          <div
-                            className="absolute inset-y-0 w-1/3 rounded-lg bg-[var(--color-bordeaux-primary)]"
-                            style={{ animation: 'resBar 1.1s ease-in-out infinite' }}
-                          />
-                        </div>
-                        <span className="flex-shrink-0">{t('resultats.pdf_loading', 'Chargement du PDF…')}</span>
-                      </div>
-                    )}
-
-                    {errorPdf && (
-                      <p className="text-sm text-[var(--status-error)]">
-                        {t('resultats.pdf_load_error', 'Échec du chargement du PDF.')}
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap gap-3 pt-1">
-                      <button
-                        onClick={() => handleView(r)}
-                        disabled={loadingPdf}
-                        className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                      >
-                        {loadingPdf ? <Loader2 size={18} className="animate-spin" /> : <Eye size={18} />}
-                        {loadingPdf ? t('resultats.pdf_loading_short', 'Chargement…') : t('resultats.view', 'Voir')}
-                      </button>
-                      <button
-                        onClick={() => (errorPdf ? loadPdf(r.dossier_id) : handleDownload(r))}
-                        disabled={loadingPdf}
-                        className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border-2 border-[var(--border-default)] text-[var(--text-primary)] font-medium hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        {errorPdf ? <RotateCw size={18} /> : <Download size={18} />}
-                        {errorPdf ? t('resultats.retry', 'Réessayer') : t('resultats.download', 'Télécharger')}
-                      </button>
-                      {canShare && (
-                        <button
-                          onClick={() => handleShare(r)}
-                          disabled={loadingPdf}
-                          className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border-2 border-[var(--border-default)] text-[var(--text-primary)] font-medium hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                          <Share2 size={18} />
-                          {t('resultats.share', 'Partager')}
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                  </section>
                 );
               })}
+              {grouped.noDate.length > 0 && (
+                <section className="space-y-4">
+                  {renderSectionHeader('no-date', t('resultats.year_unknown', 'Sans date'), grouped.noDate.length)}
+                  {isSectionOpen('no-date') && (
+                    <div className="space-y-4">{grouped.noDate.map((r, i) => renderResultCard(r, i))}</div>
+                  )}
+                </section>
+              )}
             </div>
           </>
         )}

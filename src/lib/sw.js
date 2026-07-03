@@ -1,5 +1,5 @@
 // Service Worker for LaboElAllali PWA
-const CACHE_NAME = 'laboelallali-v3';
+const CACHE_NAME = 'laboelallali-v4';
 const OFFLINE_PAGE = '/offline.html';
 
 // Install event - cache the application shell
@@ -43,6 +43,20 @@ self.addEventListener('fetch', (event) => {
   // Cache-first here causes hydration mismatches: the SW serves stale JS while the server
   // returns fresh HTML, creating server/client render divergence on full-page navigations.
   if (event.request.url.includes('/_next/')) {
+    return;
+  }
+
+  // Skip Next.js App Router data requests (RSC payloads + route prefetches). These carry
+  // an `RSC: 1` header and a `?_rsc=` query and MUST always hit the network: if the SW
+  // serves them cache-first (the branch below), the client router gets a stale/mismatched
+  // response and falls back to a FULL-PAGE RELOAD on soft navigations — e.g. the language
+  // switch, which re-mounts the app and re-runs the results API. This only bit the INSTALLED
+  // PWA (where the SW controls every request); a normal browser tab navigated instantly.
+  if (
+    event.request.headers.get('RSC') === '1' ||
+    event.request.headers.get('Next-Router-Prefetch') === '1' ||
+    event.request.url.includes('_rsc=')
+  ) {
     return;
   }
 

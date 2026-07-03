@@ -18,6 +18,7 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 - `viewer` (`{ url: string; dossierId: string } | null`): the currently open PDF viewer; `url` is an in-memory `blob:` URL.
 - `accessStatus` (`'checking' | 'none' | 'pending' | 'rejected'`) + `requesting` (bool): drive the access-request card in the `need_access` state.
 - **PDF viewer state:** `pdfPages` / `pdfPage` (page nav), `zoom` (1 = fit-to-width; opens at **1.6** = 160%), `containerWidth` (measured, for width-based rendering). See §4b.
+- **Year sections state:** `yearOverrides` (`Record<string, boolean>`) — remembers ONLY the sections the user explicitly toggled; every untouched section follows the default rule (most-recent year open). See §4d.
 
 ### 1.1 Results prefetch + progressive PDF loading — `src/contexts/ResultsContext.tsx`
 - `ResultsProvider` is mounted in `src/app/[lang]/layout.tsx` **inside `AuthProvider`** (it needs `useAuth`). Exposes `{ results, status, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh }` via `useResults()`.
@@ -49,6 +50,14 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 - **Per-card UI states** (from `pdfState(r.dossier_id)`): `loading` → indeterminate progress bar + "Chargement du PDF…", buttons disabled with a `Loader2` spinner; `error` → "Échec du chargement" + the second button becomes "Réessayer" (`loadPdf` again); the newest dossier shows a "Dernier résultat" star badge. Cards fade in with a small staggered `resFadeUp` animation.
 - `formatDate`: `date_dossier` → localized (`ar-MA` / `fr-FR`) long date; falls back to the raw string if unparseable.
 
+### 4d. Collapsible year sections (the "ready" list)
+- The dossiers list is **grouped by year** (from `date_dossier`), rendered as collapsible `<section>`s, most-recent year first. The `grouped` `useMemo` (keyed on `results`) builds `{ years: number[] (desc), byYear: Map<number, CyberlabResult[]>, noDate: CyberlabResult[] }`; **within each year the newest dossier is first** (sorted desc by `date_dossier`).
+- **Only years that actually have results get a section** (empty years never render). Results whose `date_dossier` is missing/unparseable go into a **dateless section** labelled `resultats.year_unknown` so **none are ever dropped**; it renders last and is never the default-open one.
+- **Default open = the most recent year** (`defaultOpenKey = String(grouped.years[0])`, or `'no-date'` if that's all there is); all other sections start collapsed. The newest dossier (star "Dernier résultat" badge + its auto-loaded PDF) therefore always sits in the section that's open by default.
+- **Open/closed logic:** `isSectionOpen(key) = key in yearOverrides ? yearOverrides[key] : key === defaultOpenKey`; `toggleSection` flips the effective value into `yearOverrides`. So a `refresh()` that introduces a newer year re-opens *that* (untouched) year automatically, while any section the user manually opened/closed keeps its choice (override keyed by year string — stale keys for years that vanish are harmless).
+- **Collapsed sections don't render their cards** (the card list is behind `isSectionOpen`), so cards fade in (`resFadeUp`, staggered by within-section index) when a year is expanded. PDF prefetch is unaffected — it lives in `ResultsContext`, independent of what's rendered, so the newest PDF still auto-loads even if its section were collapsed.
+- Section keys are **strings**: the year (`"2026"`) or the literal `"no-date"`. `formatYear` localizes the header digits (`Intl.NumberFormat` `ar-MA`/`fr-FR`, `useGrouping:false`) so they match the Arabic-Indic/Latin digits of the card dates. Card + section header markup is factored into `renderResultCard(r, index)` / `renderSectionHeader(key, label, count)` (chevron rotates: down=open, `-rotate-90` LTR / `rotate-90` RTL when collapsed).
+
 ### 4b. PDF viewer (full-screen modal, `react-pdf`/pdf.js on a `<canvas>`)
 - Rendered via **`react-pdf`** (lazy `Document`/`Page`, pdf.js worker from an unpkg CDN URL) — a `<canvas>`, NOT an `<iframe>`, because Android can't inline-render PDFs in an iframe (it only offered an "Open" button).
 - **Full-screen** panel (`fixed inset-0`, close ✕ in the header). Toolbar is forced **`dir="ltr"`** so the page-nav arrows ("◀ prev / next ▶") and zoom ("−/+") never look reversed under the Arabic RTL layout.
@@ -57,8 +66,8 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 
 ### 5. Reusable Styles & Assets
 - Semantic classes: `.card`, `.button-bordeaux`, `.button-outline`, CSS vars (`--color-bordeaux-primary`, `--background-default`, `--text-*`, `--border-default`, `--status-error`).
-- Lucide icons: `FileText`, `Download`, `Eye`, `X`, `RefreshCw`, `Inbox`, `AlertCircle`, `ShieldCheck`, `Loader2`, `Star`, `RotateCw`.
-- New i18n keys: `resultats.latest_badge`, `resultats.pdf_loading`, `resultats.pdf_loading_short`, `resultats.pdf_load_error` (fr + ar).
+- Lucide icons: `FileText`, `Download`, `Eye`, `X`, `RefreshCw`, `Inbox`, `AlertCircle`, `ShieldCheck`, `Loader2`, `Star`, `RotateCw`, `ChevronDown` (year section toggle).
+- New i18n keys: `resultats.latest_badge`, `resultats.pdf_loading`, `resultats.pdf_loading_short`, `resultats.pdf_load_error`, `resultats.year_unknown` (dateless section label) — all fr + ar. Year section headers also reuse `resultats.count` for the per-year result count.
 - i18n: `useTranslation('common')`, keys under `resultats.*` in `public/locales/{fr,ar}/common.json` (incl. plural `resultats.count`).
 
 ## Data Fetching & Mutations

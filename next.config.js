@@ -9,6 +9,11 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  // Trace only the files the server actually needs into `.next/standalone`, so the
+  // Firebase frameworks function ships a minimal bundle (no full node_modules, no
+  // `.next/dev` Turbopack cache). Keeps the SSR Cloud Function small enough that
+  // Cloud Build finishes well under the deploy timeout.
+  output: 'standalone',
   transpilePackages: ['react-pdf', 'pdfjs-dist'],
   typescript: {
     // TODO: Fix i18next type recursion issues and remove this
