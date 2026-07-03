@@ -69,17 +69,12 @@
   }
 }
 
-/* Backdrop Blur Animation */
-.backdrop-blur-sm {
-  transition: opacity 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out;
-  opacity: 0;
-  backdrop-filter: blur(0);
-}
-
-.backdrop-blur-sm.open {
-  opacity: 1;
-  backdrop-filter: blur(4px);
-}
+/* NOTE: there used to be a custom `.backdrop-blur-sm { opacity: 0 }` rule here for
+   a fade-in menu backdrop. It collided with Tailwind's `backdrop-blur-sm` utility
+   and made EVERY element using that utility invisible (opacity 0) — the home status
+   widget, the flagship icon, etc. Its `.open` variant had no consumer (the mobile
+   menu backdrop controls opacity via inline style). Removed so the utility behaves
+   normally. Do NOT reintroduce an opacity rule on a Tailwind utility class name. */
 
 /* Hover Lift Animation */
 .hover-lift {

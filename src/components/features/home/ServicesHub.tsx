@@ -26,11 +26,11 @@ export default function ServicesHub({ lang }: ServicesHubProps) {
   const { t } = useTranslation('common');
 
   const services = [
-    { key: 'appointment', href: `/${lang}/rendez-vous`, icon: CalendarDays, label: t('services_hub.appointment') },
-    { key: 'glabo', href: `/${lang}/glabo`, icon: Truck, label: t('services_hub.glabo') },
-    { key: 'analyses', href: `/${lang}/analyses`, icon: FlaskConical, label: t('services_hub.analyses') },
-    { key: 'medecins', href: `/${lang}/medecins`, icon: Stethoscope, label: t('services_hub.medecins') },
-    { key: 'contact', href: `/${lang}/contact`, icon: Phone, label: t('services_hub.contact') },
+    { key: 'appointment', href: `/${lang}/rendez-vous`, icon: CalendarDays, label: t('services_hub.appointment'), desc: t('services_hub.appointment_desc') },
+    { key: 'glabo', href: `/${lang}/glabo`, icon: Truck, label: t('services_hub.glabo'), desc: t('services_hub.glabo_desc') },
+    { key: 'analyses', href: `/${lang}/analyses`, icon: FlaskConical, label: t('services_hub.analyses'), desc: t('services_hub.analyses_desc') },
+    { key: 'medecins', href: `/${lang}/medecins`, icon: Stethoscope, label: t('services_hub.medecins'), desc: t('services_hub.medecins_desc') },
+    { key: 'contact', href: `/${lang}/contact`, icon: Phone, label: t('services_hub.contact'), desc: t('services_hub.contact_desc') },
   ];
 
   return (
@@ -69,16 +69,17 @@ export default function ServicesHub({ lang }: ServicesHubProps) {
 
       {/* Other services — quick access grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        {services.map(({ key, href, icon: Icon, label }) => (
+        {services.map(({ key, href, icon: Icon, label, desc }) => (
           <Link
             key={key}
             href={href}
-            className="card group flex flex-col items-center justify-center text-center gap-3 py-6 hover:border-[var(--color-fuchsia-accent)] transition-colors"
+            className="card group flex flex-col items-center text-center gap-2 py-6 px-3 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-[var(--color-fuchsia-accent)]"
           >
             <span className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20 group-hover:bg-[var(--color-fuchsia-accent)]/15 transition-colors">
-              <Icon className="text-[var(--color-bordeaux-primary)]" size={26} />
+              <Icon className="text-[var(--color-bordeaux-primary)] group-hover:text-[var(--color-fuchsia-accent)] transition-colors" size={26} />
             </span>
-            <span className="font-semibold text-sm sm:text-base text-[var(--text-primary)] leading-tight">{label}</span>
+            <span className="font-semibold text-sm sm:text-base text-[var(--text-primary)] group-hover:text-[var(--color-fuchsia-accent)] transition-colors leading-tight">{label}</span>
+            <span className="text-xs text-[var(--text-secondary)] leading-snug">{desc}</span>
           </Link>
         ))}
       </div>

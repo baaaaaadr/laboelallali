@@ -2,12 +2,11 @@
 "use client";
 import HeroBanner from '@/components/features/home/HeroBanner';
 import ServicesHub from '@/components/features/home/ServicesHub';
-import { Clock } from 'lucide-react';
+import LabStatusWidget from '@/components/features/home/LabStatusWidget';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from "react";
 import { useInView } from 'react-intersection-observer';
 import { useTranslation } from 'react-i18next';
-import { useLabStatus } from '@/hooks/useLabStatus';
 
 // Below-the-fold sections: no SSR + code-split → JS loaded only when near viewport
 const WhyChooseUs = dynamic(() => import('@/components/features/home/WhyChooseUs'), { ssr: false });
@@ -26,7 +25,6 @@ function LazySection({ children, minHeight = '200px' }: { children: React.ReactN
 
 export default function HomeClient({ lang }: { lang: string }) {
   const { t, i18n } = useTranslation(['common', 'glabo']);
-  const labStatus = useLabStatus();
 
   // Ensure i18n language is set based on the lang prop
   useEffect(() => {
@@ -82,38 +80,10 @@ export default function HomeClient({ lang }: { lang: string }) {
       {/* Hero Banner with Opening Hours Widget */}
       <div className="relative">
         <HeroBanner onCallClick={handleCallClick} isMobile={isMobile} />
-        {/* Opening-hours / live status.
-            · Desktop (lg+): full card overlaid at the hero's top-right.
-            · Mobile/tablet: a COMPACT centered status pill under the hero (open/closed
-              + countdown only). The full-width card here used to read as a big empty
-              white block; the hours list is hidden on mobile to keep it tight. */}
-        <div className="flex justify-center px-4 mt-4 lg:mt-0 lg:block lg:absolute lg:top-4 lg:right-4 lg:z-20 lg:max-w-80">
-          <div className="card bg-[var(--background-card)]/95 backdrop-blur-sm shadow-lg border border-[var(--border-default)] inline-block lg:block lg:w-full">
-            <div className="flex flex-col md:flex-row lg:flex-col items-center justify-between gap-4">
-              <div className="hidden lg:block flex-1 w-full">
-                <h3 className="text-lg font-bold text-[var(--color-bordeaux-primary)] mb-1 flex items-center">
-                  <Clock size={20} className="mr-2 text-[var(--color-fuchsia-accent)]" />
-                  {t('opening_hours')}
-                </h3>
-                <p className="text-sm text-[var(--text-secondary)]">{t('opening_hours_text')}</p>
-              </div>
-              <div className="flex flex-col items-center justify-center gap-2" suppressHydrationWarning>
-                <div 
-                  className={`${labStatus.isOpen ? 'bg-[var(--status-success)]' : 'bg-[var(--status-error)]'} text-white px-5 py-2 rounded-lg font-semibold text-base shadow transition-colors flex items-center gap-2`}
-                  suppressHydrationWarning
-                >
-                  <span className={`w-3 h-3 ${labStatus.isOpen ? 'opacity-100' : 'opacity-80'} bg-white rounded-lg ${labStatus.isOpen ? 'animate-pulse' : ''}`} suppressHydrationWarning></span>
-                  {labStatus.statusText || '...'}
-                </div>
-                {/* Only show countdown on client side to prevent hydration mismatch */}
-                {labStatus.isClient && labStatus.countdownText && (
-                  <div className="text-sm font-medium text-[var(--text-secondary)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] px-3 py-1 rounded-lg border border-[var(--border-default)]">
-                    {labStatus.countdownText}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        {/* Discreet open/closed badge overlaid on the hero (top-right desktop,
+            top-centre mobile). Expands to the full hours card on hover / tap. */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 lg:left-auto lg:right-4 lg:translate-x-0">
+          <LabStatusWidget />
         </div>
       </div>
       

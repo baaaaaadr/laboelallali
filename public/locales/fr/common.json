@@ -206,17 +206,22 @@
     "pdf_loading_short": "Chargement…",
     "pdf_load_error": "Échec du chargement du PDF.",
     "home_highlight_title": "Consultez vos résultats en ligne",
-    "home_highlight_desc": "Récupérés à la demande, jamais conservés par l'application. 100% sécurisé.",
+    "home_highlight_desc": "Demandez l'accès à vos résultats et consultez-les en ligne, en toute sécurité.",
     "home_highlight_cta": "Voir mes résultats"
   },
   "services_hub": {
     "title": "Nos services",
     "results_badge": "Nouveau",
     "appointment": "Prendre rendez-vous",
+    "appointment_desc": "Réservez votre créneau en ligne",
     "glabo": "Prélèvement à domicile",
+    "glabo_desc": "Analyses sans vous déplacer",
     "analyses": "Nos bilans",
+    "analyses_desc": "Catalogue et tarifs des analyses",
     "medecins": "Médecins de la région",
-    "contact": "Nous contacter"
+    "medecins_desc": "Trouvez un médecin près de chez vous",
+    "contact": "Nous contacter",
+    "contact_desc": "Adresse, horaires et plan d'accès"
   },
   "confidentialite": {
     "nav": "Confidentialité",

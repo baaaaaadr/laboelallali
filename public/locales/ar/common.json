@@ -286,17 +286,22 @@
     "pdf_loading_short": "جارٍ التحميل…",
     "pdf_load_error": "تعذّر تحميل ملف PDF.",
     "home_highlight_title": "اطّلع على نتائجك عبر الإنترنت",
-    "home_highlight_desc": "تُجلب عند الطلب ولا تُحفظ أبداً في التطبيق. آمنة 100%.",
+    "home_highlight_desc": "اطلب الوصول إلى نتائجك واطّلع عليها عبر الإنترنت بكل أمان.",
     "home_highlight_cta": "عرض نتائجي"
   },
   "services_hub": {
     "title": "خدماتنا",
     "results_badge": "جديد",
     "appointment": "حجز موعد",
+    "appointment_desc": "احجز موعدك عبر الإنترنت",
     "glabo": "أخذ العينات في المنزل",
+    "glabo_desc": "تحاليل دون الحاجة للتنقل",
     "analyses": "فحوصاتنا",
+    "analyses_desc": "دليل التحاليل والأسعار",
     "medecins": "أطباء المنطقة",
-    "contact": "اتصل بنا"
+    "medecins_desc": "ابحث عن طبيب قريب منك",
+    "contact": "اتصل بنا",
+    "contact_desc": "العنوان وساعات العمل والوصول"
   },
   "confidentialite": {
     "nav": "الخصوصية",

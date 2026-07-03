@@ -180,11 +180,11 @@ const Header = () => {
         <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
         <div className="flex items-center justify-between transition-all text-white h-[64px]">
           {/* Logo and name */}
-          <Link href={currentLanguagePath} className="flex items-center h-full">
+          <Link href={currentLanguagePath} className="flex items-center h-full flex-shrink-0">
             <img
               src="/images/icons/logo-footer.png"
               alt="Labo El Allali"
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex-shrink-0 object-contain"
             />
           </Link>
 
