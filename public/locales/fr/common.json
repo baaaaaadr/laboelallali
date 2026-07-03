@@ -236,7 +236,7 @@
     "rights_title": "Vos droits",
     "rights_access": "Accéder à vos données : vous pouvez les consulter à tout moment depuis votre profil.",
     "rights_rectify": "Rectifier vos données : vous pouvez les modifier directement dans l'application.",
-    "rights_delete": "Supprimer votre compte : depuis votre profil, ou en écrivant à contact@laboelallali.ma. La suppression est effective sous 48 heures.",
+    "rights_delete": "Supprimer votre compte : depuis votre profil, ou en écrivant à laboelallali@gmail.com. La suppression est effective sous 48 heures.",
     "rights_oppose": "Vous opposer au traitement : sur simple demande écrite au laboratoire.",
     "rights_complaint": "Introduire une réclamation auprès de la CNDP (Commission Nationale de Contrôle de Protection des Données à caractère Personnel), à Rabat.",
     "security_title": "Mesures de sécurité",
@@ -244,7 +244,7 @@
     "retention_title": "Durée de conservation",
     "retention_text": "Vos données de profil sont conservées tant que votre compte est actif. Après suppression du compte, elles sont effacées sous 48 heures, sauf obligation légale de conservation.",
     "contact_title": "Nous contacter",
-    "contact_text": "Pour toute question ou pour exercer vos droits, contactez le laboratoire à contact@laboelallali.ma ou par téléphone."
+    "contact_text": "Pour toute question ou pour exercer vos droits, contactez le laboratoire à laboelallali@gmail.com ou par téléphone."
   },
   "admin": {
     "nav": "Admin",

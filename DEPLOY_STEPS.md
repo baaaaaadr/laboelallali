@@ -39,10 +39,10 @@ Avant de déployer les functions, vous devez configurer les variables d'environn
 npx firebase functions:secrets:set SENDGRID_API_KEY
 
 # Configurer l'email expéditeur
-npx firebase functions:config:set sendgrid.sender="noreply@laboelallali.ma"
+npx firebase functions:config:set sendgrid.sender="laboelallali@gmail.com"
 
 # Configurer l'email du laboratoire
-npx firebase functions:config:set lab.email="contact@laboelallali.ma"
+npx firebase functions:config:set lab.email="laboelallali@gmail.com"
 ```
 
 ### Option 2 : Fichier .env local (Pour émulateurs uniquement)
@@ -50,8 +50,8 @@ npx firebase functions:config:set lab.email="contact@laboelallali.ma"
 Créez `functions/.env` :
 ```bash
 SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxx
-SENDGRID_SENDER_EMAIL=noreply@laboelallali.ma
-LAB_EMAIL=contact@laboelallali.ma
+SENDGRID_SENDER_EMAIL=laboelallali@gmail.com
+LAB_EMAIL=laboelallali@gmail.com
 ```
 
 **⚠️ Important** : Ne committez JAMAIS le fichier `.env` (déjà dans `.gitignore`)

@@ -547,7 +547,7 @@ Téléphone : ........................................................ Email : .
 * Droit à l'effacement de mon compte et de mes données personnelles à tout moment, sur simple demande.  
 * Droit d'introduire une réclamation auprès de la CNDP (Commission Nationale de Contrôle de Protection des Données à caractère Personnel).
 
-Pour exercer ces droits, je peux contacter le laboratoire à l'adresse contact@laboelallali.ma ou par téléphone.
+Pour exercer ces droits, je peux contacter le laboratoire à l'adresse laboelallali@gmail.com ou par téléphone.
 
 **Le laboratoire décline toute responsabilité en cas de :**
 
@@ -584,7 +584,7 @@ Vos données de profil (nom, téléphone, email) sont stockées dans les service
 
 * **Accéder à vos données** : vous pouvez les consulter à tout moment depuis votre page profil.  
 * **Rectifier vos données** : vous pouvez les modifier directement dans l'application.  
-* **Supprimer votre compte** : depuis votre profil, ou en écrivant à contact@laboelallali.ma. La suppression est effective sous 48 heures.  
+* **Supprimer votre compte** : depuis votre profil, ou en écrivant à laboelallali@gmail.com. La suppression est effective sous 48 heures.  
 * **Vous opposer au traitement** : sur simple demande écrite au laboratoire.  
 * **Introduire une réclamation** auprès de la CNDP à Rabat.
 
