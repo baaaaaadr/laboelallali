@@ -404,6 +404,16 @@ html, body {
   text-decoration: underline;
 }
 
+/* White CTA button sitting ON the gradient (e.g. ServicesHub "Voir mes résultats"):
+   keep its brand-coloured text — the `.footer-gradient span { color:white }` rule
+   above (and its dark variant) would otherwise make it white-on-white. Higher
+   specificity so it wins in both light and dark mode. */
+.footer-gradient .results-cta,
+.dark .footer-gradient .results-cta {
+  color: var(--color-fuchsia-bright) !important;
+  text-shadow: none;
+}
+
 /* FIXED: Footer PWA button with proper background and NO OUTLINE */
 .footer-gradient .menu-pwa-button,
 .footer-gradient button.menu-pwa-button,

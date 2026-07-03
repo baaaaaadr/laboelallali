@@ -43,7 +43,9 @@ export default function ServicesHub({ lang }: ServicesHubProps) {
         className="footer-gradient group block rounded-2xl overflow-hidden mb-6 shadow-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-fuchsia-light)]"
       >
         <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-5 sm:gap-6 text-white">
-          <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+          {/* Decorative icon: to the LEFT of the text on desktop. Hidden on mobile
+              (stacked, it just became a big empty box above the "NOUVEAU" badge). */}
+          <div className="hidden sm:flex flex-shrink-0 w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm items-center justify-center">
             <FileText size={40} className="text-white" />
           </div>
           <div className="flex-1 text-center sm:text-start">
@@ -55,7 +57,7 @@ export default function ServicesHub({ lang }: ServicesHubProps) {
           </div>
           <div className="flex-shrink-0">
             <span
-              className="inline-flex items-center gap-2 font-bold rounded-xl px-6 py-3 text-base shadow-md group-hover:scale-105 transition-transform"
+              className="results-cta inline-flex items-center gap-2 font-bold rounded-xl px-6 py-3 text-base shadow-md group-hover:scale-105 transition-transform"
               style={{ backgroundColor: 'var(--color-white)', color: 'var(--color-fuchsia-bright)' }}
             >
               {t('resultats.home_highlight_cta')}

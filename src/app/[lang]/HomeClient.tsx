@@ -82,11 +82,15 @@ export default function HomeClient({ lang }: { lang: string }) {
       {/* Hero Banner with Opening Hours Widget */}
       <div className="relative">
         <HeroBanner onCallClick={handleCallClick} isMobile={isMobile} />
-        {/* Opening Hours Widget - Positioned at top right on large screens, always visible */}
-        <div className="lg:absolute lg:top-4 lg:right-4 lg:z-20 lg:max-w-80 w-full">
-          <div className="card bg-[var(--background-card)]/95 backdrop-blur-sm shadow-lg border border-[var(--border-default)] mx-4 mt-4 lg:mx-0 lg:mt-0">
+        {/* Opening-hours / live status.
+            · Desktop (lg+): full card overlaid at the hero's top-right.
+            · Mobile/tablet: a COMPACT centered status pill under the hero (open/closed
+              + countdown only). The full-width card here used to read as a big empty
+              white block; the hours list is hidden on mobile to keep it tight. */}
+        <div className="flex justify-center px-4 mt-4 lg:mt-0 lg:block lg:absolute lg:top-4 lg:right-4 lg:z-20 lg:max-w-80">
+          <div className="card bg-[var(--background-card)]/95 backdrop-blur-sm shadow-lg border border-[var(--border-default)] inline-block lg:block lg:w-full">
             <div className="flex flex-col md:flex-row lg:flex-col items-center justify-between gap-4">
-              <div className="flex-1 w-full">
+              <div className="hidden lg:block flex-1 w-full">
                 <h3 className="text-lg font-bold text-[var(--color-bordeaux-primary)] mb-1 flex items-center">
                   <Clock size={20} className="mr-2 text-[var(--color-fuchsia-accent)]" />
                   {t('opening_hours')}
