@@ -284,7 +284,19 @@
     "updated_seconds": "آخر تحديث منذ لحظات",
     "pdf_loading": "جارٍ تحميل ملف PDF…",
     "pdf_loading_short": "جارٍ التحميل…",
-    "pdf_load_error": "تعذّر تحميل ملف PDF."
+    "pdf_load_error": "تعذّر تحميل ملف PDF.",
+    "home_highlight_title": "اطّلع على نتائجك عبر الإنترنت",
+    "home_highlight_desc": "تُجلب عند الطلب ولا تُحفظ أبداً في التطبيق. آمنة 100%.",
+    "home_highlight_cta": "عرض نتائجي"
+  },
+  "services_hub": {
+    "title": "خدماتنا",
+    "results_badge": "جديد",
+    "appointment": "حجز موعد",
+    "glabo": "أخذ العينات في المنزل",
+    "analyses": "فحوصاتنا",
+    "medecins": "أطباء المنطقة",
+    "contact": "اتصل بنا"
   },
   "confidentialite": {
     "nav": "الخصوصية",

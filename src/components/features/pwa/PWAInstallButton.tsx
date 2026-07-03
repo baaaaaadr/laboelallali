@@ -33,7 +33,7 @@ declare global {
  */
 type PWAInstallButtonProps = {
   /** Visual presentation style of the button */
-  variant?: 'button' | 'banner' | 'footer';
+  variant?: 'button' | 'banner' | 'footer' | 'icon';
   /** Additional CSS classes to apply */
   className?: string;
   /** Force button to show regardless of installation state (useful for testing) */
@@ -160,6 +160,25 @@ export default function PWAInstallButton({
     );
   }
   
+  // Icon variant: compact icon-only button (used in the mobile menu's 3-icon action row).
+  // Rendered as a <div role="button"> to bypass the global button background reset.
+  if (variant === 'icon') {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={isDisabled ? undefined : handleInstallClick}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInstallClick(); } }}
+        className={`menu-icon-button ${className} ${isDisabled ? 'opacity-70 cursor-not-allowed pointer-events-none' : ''}`}
+        aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
+        title={isClientReady ? t('pwa.install_app_button') : 'Install App'}
+        style={style}
+      >
+        <Download size={22} className="flex-shrink-0" />
+      </div>
+    );
+  }
+
   // Footer variant: rendered as a <div role="button"> to bypass the global `button { background-color: transparent }` reset.
   // The WhatsApp link is an <a> tag and doesn't suffer from this. Using <div> is the cleanest fix.
   if (variant === 'footer') {

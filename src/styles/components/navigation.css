@@ -306,6 +306,49 @@
   border-color: #c2185b !important;
 }
 
+/* Compact icon-only action row in mobile menu (WhatsApp / Install / Language) */
+.menu-icon-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.menu-icon-button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px;
+  background-color: #800020 !important;
+  color: #ffffff !important;
+  border: 2px solid #800020 !important;
+  border-radius: var(--radius-md) !important;
+  cursor: pointer;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+}
+
+.menu-icon-button:hover {
+  background-color: #c2185b !important;
+  border-color: #c2185b !important;
+  color: #ffffff !important;
+}
+
+.dark .menu-icon-button {
+  background-color: #c2185b !important;
+  border-color: #c2185b !important;
+  color: #ffffff !important;
+}
+
+.dark .menu-icon-button:hover {
+  background-color: #ff4081 !important;
+  border-color: #ff4081 !important;
+  color: #ffffff !important;
+}
+
 /* Mobile Language Dropdown */
 .mobile-language-dropdown {
   position: absolute;

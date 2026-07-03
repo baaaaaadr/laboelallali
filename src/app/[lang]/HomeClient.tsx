@@ -1,6 +1,7 @@
 // src/app/[lang]/HomeClient.tsx
 "use client";
 import HeroBanner from '@/components/features/home/HeroBanner';
+import ServicesHub from '@/components/features/home/ServicesHub';
 import { Clock } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from "react";
@@ -10,7 +11,6 @@ import { useLabStatus } from '@/hooks/useLabStatus';
 
 // Below-the-fold sections: no SSR + code-split → JS loaded only when near viewport
 const WhyChooseUs = dynamic(() => import('@/components/features/home/WhyChooseUs'), { ssr: false });
-const MainServices = dynamic(() => import('@/components/features/home/MainServices'), { ssr: false });
 const LocationInfo = dynamic(() => import('@/components/features/home/LocationInfo'), { ssr: false });
 const PracticalInfo = dynamic(() => import('@/components/features/home/PracticalInfo'), { ssr: false });
 const ContactModal = dynamic(() => import('@/components/ui/ContactModal'), { ssr: false });
@@ -114,8 +114,9 @@ export default function HomeClient({ lang }: { lang: string }) {
       </div>
       
       <div className="container mx-auto px-4 pb-12">
+        {/* Flagship services hub (Résultats banner + quick-access grid) — eager, priority CTA */}
+        <ServicesHub lang={lang} />
         <LazySection minHeight="300px"><WhyChooseUs /></LazySection>
-        <LazySection minHeight="400px"><MainServices lang={lang} /></LazySection>
         <LazySection minHeight="400px"><LocationInfo isClient={isClient} isMobile={isMobile} onCallClick={handleCallClick} /></LazySection>
         <LazySection minHeight="300px"><PracticalInfo lang={lang} /></LazySection>
       </div>

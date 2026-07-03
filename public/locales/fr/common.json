@@ -204,7 +204,19 @@
     "updated_seconds": "Actualisé il y a quelques secondes",
     "pdf_loading": "Chargement du PDF…",
     "pdf_loading_short": "Chargement…",
-    "pdf_load_error": "Échec du chargement du PDF."
+    "pdf_load_error": "Échec du chargement du PDF.",
+    "home_highlight_title": "Consultez vos résultats en ligne",
+    "home_highlight_desc": "Récupérés à la demande, jamais conservés par l'application. 100% sécurisé.",
+    "home_highlight_cta": "Voir mes résultats"
+  },
+  "services_hub": {
+    "title": "Nos services",
+    "results_badge": "Nouveau",
+    "appointment": "Prendre rendez-vous",
+    "glabo": "Prélèvement à domicile",
+    "analyses": "Nos bilans",
+    "medecins": "Médecins de la région",
+    "contact": "Nous contacter"
   },
   "confidentialite": {
     "nav": "Confidentialité",

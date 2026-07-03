@@ -193,6 +193,10 @@ const Header = () => {
             <Link href={`${currentLanguagePath}/`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded text-sm lg:text-base">
               {t('home')}
             </Link>
+            <Link href={`${currentLanguagePath}/resultats`} className="nav-link flex items-center gap-1.5 text-white bg-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-bright)] px-3 py-2 rounded-full font-semibold text-sm lg:text-base shadow-sm">
+              <FileText size={16} />
+              {t('resultats.nav', { defaultValue: "Résultats" })}
+            </Link>
             <Link href={`${currentLanguagePath}/rendez-vous`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base">
               {t('appointment')}
             </Link>
@@ -204,9 +208,6 @@ const Header = () => {
             </Link>
             <Link href={`${currentLanguagePath}/medecins`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base">
               {t('navigation.medecins', { ns: 'common', defaultValue: "Médecins" })}
-            </Link>
-            <Link href={`${currentLanguagePath}/resultats`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base">
-              {t('resultats.nav', { defaultValue: "Résultats" })}
             </Link>
             <Link href={`${currentLanguagePath}/contact`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded text-sm lg:text-base">
               {t('contact')}
@@ -367,6 +368,34 @@ const Header = () => {
             </Link>
 
             <Link
+              href={`${currentLanguagePath}/resultats`}
+              style={{
+                ...menuStyles.navLink,
+                ...(isDarkMode ? menuStyles.navLinkDark : {}),
+                backgroundColor: 'rgba(255, 64, 129, 0.12)',
+              }}
+              onClick={toggleMenu}
+            >
+              <FileText size={20} style={{ ...menuStyles.navIcon, color: 'var(--color-fuchsia-accent)' }} />
+              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                {t('resultats.nav', { defaultValue: 'Résultats' })}
+              </span>
+              <span
+                style={{
+                  marginInlineStart: 'auto',
+                  backgroundColor: 'var(--color-fuchsia-accent)',
+                  color: 'var(--color-white)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                }}
+              >
+                {t('services_hub.results_badge')}
+              </span>
+            </Link>
+
+            <Link
               href={`${currentLanguagePath}/rendez-vous`}
               style={{
                 ...menuStyles.navLink,
@@ -419,20 +448,6 @@ const Header = () => {
               <Stethoscope size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
               <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
                 {t('navigation.medecins', { ns: 'common', defaultValue: 'Médecins' })}
-              </span>
-            </Link>
-
-            <Link
-              href={`${currentLanguagePath}/resultats`}
-              style={{
-                ...menuStyles.navLink,
-                ...(isDarkMode ? menuStyles.navLinkDark : {}),
-              }}
-              onClick={toggleMenu}
-            >
-              <FileText size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
-              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
-                {t('resultats.nav', { defaultValue: 'Résultats' })}
               </span>
             </Link>
 
@@ -493,48 +508,45 @@ const Header = () => {
             )}
           </nav>
           
-          {/* Action Buttons Section - Stuck to Bottom */}
+          {/* Action Buttons Section - Stuck to Bottom: compact 3-icon row */}
           <div
-            className="p-6 space-y-4"
+            className="p-4"
             style={{
               backgroundColor: 'var(--background-default)',
               borderTop: '1px solid var(--border-default)',
             }}
           >
-            {/* WhatsApp Contact Button */}
-            <a
-              href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={toggleMenu}
-              aria-label="Contact via WhatsApp"
-              className="menu-whatsapp-button"
-            >
-              <MessageCircle size={20} />
-              {t('contact')} WhatsApp
-            </a>
+            <div className="menu-icon-row">
+              {/* WhatsApp */}
+              <a
+                href={`https://wa.me/${LAB_WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={toggleMenu}
+                aria-label={`${t('contact')} WhatsApp`}
+                title={`${t('contact')} WhatsApp`}
+                className="menu-icon-button"
+              >
+                <MessageCircle size={22} />
+              </a>
 
-            {/* PWA Install Button */}
-            <div className="w-full">
-              <PWAInstallButton variant="footer" />
+              {/* PWA Install (icon-only) */}
+              <PWAInstallButton variant="icon" />
+
+              {/* Language toggle */}
+              <button
+                onClick={() => {
+                  const newLang = urlLang === 'fr' ? 'ar' : 'fr';
+                  handleLanguageChange(newLang);
+                }}
+                aria-label={t('changeLanguage')}
+                title={urlLang === 'fr' ? 'العربية' : 'Français'}
+                className="menu-icon-button"
+              >
+                <Globe size={20} />
+                <span className="text-sm font-bold">{urlLang === 'fr' ? 'AR' : 'FR'}</span>
+              </button>
             </div>
-
-            {/* Language Switch Button - Mobile Menu */}
-            <button
-              onClick={() => {
-                const newLang = urlLang === 'fr' ? 'ar' : 'fr';
-                handleLanguageChange(newLang);
-              }}
-              aria-label={t('changeLanguage')}
-              className="menu-language-button"
-            >
-              <Globe size={20} />
-              <div className="flex items-center gap-1 font-bold">
-                <span className={urlLang === 'fr' ? 'opacity-100' : 'opacity-60'}>FR</span>
-                <span className="opacity-40">|</span>
-                <span className={urlLang === 'ar' ? 'opacity-100' : 'opacity-60'}>AR</span>
-              </div>
-            </button>
           </div>
         </div>
       </div>

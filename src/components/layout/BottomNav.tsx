@@ -31,7 +31,8 @@ const BottomNav = () => {
   const currentLang = getLangFromPath(pathname);
   const isRTL = i18n.language === 'ar';
 
-  // Navigation items configuration
+  // Navigation items configuration — Résultats (flagship) sits right after Accueil,
+  // flagged `highlight` for its fuchsia indicator dot.
   const navItems = [
     {
       key: 'home',
@@ -39,20 +40,7 @@ const BottomNav = () => {
       icon: Home,
       href: `/${currentLang}`,
       activePath: '/',
-    },
-    {
-      key: 'analyses',
-      label: t('navigation.analyses_catalog'),
-      icon: FlaskConical,
-      href: `/${currentLang}/analyses`,
-      activePath: '/analyses',
-    },
-    {
-      key: 'appointment',
-      label: t('appointment'),
-      icon: CalendarDays,
-      href: `/${currentLang}/rendez-vous`,
-      activePath: '/rendez-vous',
+      highlight: false,
     },
     {
       key: 'resultats',
@@ -60,6 +48,23 @@ const BottomNav = () => {
       icon: FileText,
       href: `/${currentLang}/resultats`,
       activePath: '/resultats',
+      highlight: true,
+    },
+    {
+      key: 'analyses',
+      label: t('navigation.analyses_catalog'),
+      icon: FlaskConical,
+      href: `/${currentLang}/analyses`,
+      activePath: '/analyses',
+      highlight: false,
+    },
+    {
+      key: 'appointment',
+      label: t('appointment'),
+      icon: CalendarDays,
+      href: `/${currentLang}/rendez-vous`,
+      activePath: '/rendez-vous',
+      highlight: false,
     },
     {
       key: 'contact',
@@ -67,6 +72,7 @@ const BottomNav = () => {
       icon: Phone,
       href: `/${currentLang}/contact`,
       activePath: '/contact',
+      highlight: false,
     },
   ];
 
@@ -89,12 +95,27 @@ const BottomNav = () => {
               className={`bottom-nav-item ${isActive ? 'active' : ''}`}
               aria-current={isActive ? 'page' : undefined}
             >
-              <div className="bottom-nav-icon-container">
-                <IconComponent 
-                  size={20} 
+              <div className="bottom-nav-icon-container" style={{ position: 'relative' }}>
+                <IconComponent
+                  size={20}
                   className="bottom-nav-icon"
                   aria-hidden="true"
                 />
+                {item.highlight && (
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      top: '-2px',
+                      insetInlineEnd: '-3px',
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '9999px',
+                      backgroundColor: 'var(--color-fuchsia-accent)',
+                      boxShadow: '0 0 0 2px var(--background-default)',
+                    }}
+                  />
+                )}
               </div>
               <span className="bottom-nav-label">
                 {item.label}
