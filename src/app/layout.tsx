@@ -3,6 +3,8 @@ import EnvProvider from '@/components/EnvProvider';
 import EnvironmentScript from '@/components/EnvironmentScript';
 import RTLStylesProvider from '@/components/RTLStylesProvider';
 import RTLAdditionalStyles from '@/components/RTLAdditionalStyles';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ResultsProvider } from '@/contexts/ResultsContext';
 
 // Metadata is now defined in metadata.ts since this is a Server Component
 
@@ -139,7 +141,14 @@ export default function RootLayout({
         </div>
 
         <EnvProvider />
-        {children}
+        {/* Auth + results live ABOVE the [lang] segment so switching language
+            (which remounts the [lang] subtree) never resets them — no refetch,
+            no PDF reload. They don't depend on locale. */}
+        <AuthProvider>
+          <ResultsProvider>
+            {children}
+          </ResultsProvider>
+        </AuthProvider>
       </body>
     </html>
   );

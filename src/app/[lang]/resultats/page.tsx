@@ -486,7 +486,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                           <FileText size={22} />
                         </div>
                         <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-x-2 gap-y-1.5 flex-wrap">
                             <p className="font-semibold text-[var(--text-primary)] truncate">
                               {t('resultats.dossier', 'Dossier')} {r.dossier_id}
                             </p>
@@ -497,7 +497,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-[var(--text-secondary)]">{formatDate(r.date_dossier)}</p>
+                          <p className="text-sm text-[var(--text-secondary)] mt-1.5">{formatDate(r.date_dossier)}</p>
                         </div>
                       </div>
                       {r.etat && (
@@ -542,7 +542,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                       <button
                         onClick={() => (errorPdf ? loadPdf(r.dossier_id) : handleDownload(r))}
                         disabled={loadingPdf}
-                        className="button-outline justify-center flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border-2 border-[var(--border-default)] text-[var(--text-primary)] font-medium hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         {errorPdf ? <RotateCw size={18} /> : <Download size={18} />}
                         {errorPdf ? t('resultats.retry', 'Réessayer') : t('resultats.download', 'Télécharger')}
