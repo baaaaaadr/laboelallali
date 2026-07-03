@@ -43,6 +43,8 @@ const IDLE_PDF: PdfState = { status: 'idle' };
 interface ResultsContextValue {
   results: CyberlabResult[];
   status: ResultsStatus;
+  /** Epoch ms of the last successful list load (null until the first success). */
+  lastUpdated: number | null;
   /** PDF fetch state per dossier id (defaults to idle when absent). */
   pdfState: (dossierId: string) => PdfState;
   /** Fetch one dossier's PDF on demand (idempotent, de-duped). Resolves to the final state. */
@@ -58,6 +60,7 @@ interface ResultsContextValue {
 const ResultsContext = createContext<ResultsContextValue>({
   results: [],
   status: 'idle',
+  lastUpdated: null,
   pdfState: () => IDLE_PDF,
   loadPdf: async () => IDLE_PDF,
   newestDossierId: null,
@@ -76,6 +79,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
   const { user, userProfile } = useAuth();
   const [results, setResults] = useState<CyberlabResult[]>([]);
   const [status, setStatus] = useState<ResultsStatus>('idle');
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [pdfById, setPdfById] = useState<Record<string, PdfState>>({});
 
   // Only set on a successful ready/empty fetch → lets us skip a redundant reload
@@ -162,6 +166,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
         bgRetryRef.current = 0;
         setResults(list);
         setStatus(list.length ? 'ready' : 'empty');
+        setLastUpdated(Date.now());
 
         // Phase 2 — auto-load the most recent dossier's PDF in the background.
         const newest = newestOf(list);
@@ -174,6 +179,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
           bgRetryRef.current = 0;
           setResults([]);
           setStatus('empty');
+          setLastUpdated(Date.now());
         } else if (code === 'failed-precondition') {
           // No requester_id yet → the page offers the online-access request.
           setResults([]);
@@ -213,6 +219,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
       bgRetryRef.current = 0;
       setResults([]);
       setStatus('idle');
+      setLastUpdated(null);
       resetPdfs();
     }
   }, [user?.uid, resetPdfs]);
@@ -236,8 +243,8 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
   const newestDossierId = useMemo(() => newestOf(results), [results]);
 
   const value = useMemo<ResultsContextValue>(
-    () => ({ results, status, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh }),
-    [results, status, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh]
+    () => ({ results, status, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh }),
+    [results, status, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh]
   );
 
   return <ResultsContext.Provider value={value}>{children}</ResultsContext.Provider>;

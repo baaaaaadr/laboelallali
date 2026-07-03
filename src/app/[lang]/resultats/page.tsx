@@ -42,6 +42,7 @@ import {
   Loader2,
   Star,
   RotateCw,
+  Share2,
 } from 'lucide-react';
 
 // PDF rendering via pdf.js (react-pdf): renders on a <canvas>, so "Voir" works on
@@ -64,11 +65,60 @@ function base64ToPdfBlob(b64: string): Blob {
   return new Blob([bytes], { type: 'application/pdf' });
 }
 
+/** PC heuristic (same idea used elsewhere in the app): not a mobile UA + wide viewport. */
+function isDesktopViewer(): boolean {
+  if (typeof window === 'undefined') return false;
+  const mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  return !mobileUA && window.innerWidth >= 768;
+}
+
 // Lab statuses (`etat`) come from CyberLab in English (e.g. "Final"); map the known
 // ones to i18n keys and pass through any unknown value verbatim.
 const ETAT_LABEL_KEYS: Record<string, string> = {
   final: 'resultats.etat_final',
 };
+
+/**
+ * Live "Actualisé il y a X" label. Shows the largest unit (sec → min → h → jour)
+ * and ticks every second; grammar/locale handled by Intl.RelativeTimeFormat.
+ */
+function LastUpdatedLabel({ timestamp }: { timestamp: number }) {
+  const { t, i18n } = useTranslation('common');
+  const [now, setNow] = useState(() => Date.now());
+
+  // Seconds aren't shown individually (just "quelques secondes"), so a slow tick
+  // is enough to catch the minute/hour/day transitions without visual churn.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 20000);
+    return () => clearInterval(id);
+  }, []);
+
+  const sec = Math.max(0, Math.floor((now - timestamp) / 1000));
+  // Under a minute → a stable phrase (no jittery per-second counter).
+  if (sec < 60) return <>{t('resultats.updated_seconds', 'Actualisé il y a quelques secondes')}</>;
+
+  let value: number;
+  let unit: Intl.RelativeTimeFormatUnit;
+  if (sec < 3600) {
+    value = Math.floor(sec / 60);
+    unit = 'minute';
+  } else if (sec < 86400) {
+    value = Math.floor(sec / 3600);
+    unit = 'hour';
+  } else {
+    value = Math.floor(sec / 86400);
+    unit = 'day';
+  }
+
+  const locale = i18n.language === 'ar' ? 'ar' : 'fr';
+  let ago: string;
+  try {
+    ago = new Intl.RelativeTimeFormat(locale, { numeric: 'always' }).format(-value, unit);
+  } catch {
+    ago = `${value}`;
+  }
+  return <>{t('resultats.updated_ago', { ago, defaultValue: 'Actualisé {{ago}}' })}</>;
+}
 
 export default function ResultatsPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params);
@@ -77,7 +127,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const { user, loading: authLoading } = useAuth();
   // Results come from the shared context (prefetched in the background at login).
   // List loads first (fast); each PDF is fetched on demand (newest one auto-loads).
-  const { results, status, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh } = useResults();
+  const { results, status, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh } = useResults();
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ url: string; dossierId: string } | null>(null);
@@ -89,8 +139,14 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   // left column (test names + results) is readable straight away.
   const [zoom, setZoom] = useState(1.6);
   const [containerWidth, setContainerWidth] = useState(0);
+  // Web Share is offered on mobile only (on desktop it's redundant with download).
+  const [canShare, setCanShare] = useState(false);
 
   const isArabic = lang === 'ar';
+
+  useEffect(() => {
+    setCanShare(!isDesktopViewer() && typeof navigator !== 'undefined' && typeof navigator.share === 'function');
+  }, []);
 
   // Redirect unauthenticated visitors to login (same pattern as /profile).
   useEffect(() => {
@@ -160,8 +216,11 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     const url = URL.createObjectURL(base64ToPdfBlob(base64));
     setPdfPage(1);
     setPdfPages(0);
-    setZoom(1.6);
-    pendingScrollRef.current = { left: 0, top: 0 }; // land on the top-left (readable column)
+    // PC: near fit-to-width (105%) + horizontally centered.
+    // Mobile: 160% pinned to the readable top-left column.
+    const desktop = isDesktopViewer();
+    setZoom(desktop ? 1.05 : 1.6);
+    pendingScrollRef.current = desktop ? { centerX: true, top: 0 } : { left: 0, top: 0 };
     setViewer({ url, dossierId });
   }, []);
 
@@ -196,6 +255,34 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     [pdfState, loadPdf]
   );
 
+  // Mobile share via the Web Share API (email / WhatsApp / … chosen by the OS).
+  // User-initiated, like a download — the PDF File is handed to the OS share sheet
+  // and never persisted by us.
+  const handleShare = useCallback(
+    async (r: CyberlabResult) => {
+      const st = pdfState(r.dossier_id);
+      const ready = st.status === 'ready' && st.base64 ? st : await loadPdf(r.dossier_id);
+      if (ready.status !== 'ready' || !ready.base64) return;
+      const file = new File([base64ToPdfBlob(ready.base64)], `resultat-${r.dossier_id}.pdf`, {
+        type: 'application/pdf',
+      });
+      try {
+        const shareData = {
+          title: t('resultats.share_title', "Résultat d'analyses"),
+          text: t('resultats.share_text', "Mon résultat d'analyses — Labo El Allali"),
+        };
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ ...shareData, files: [file] });
+        } else {
+          await navigator.share(shareData);
+        }
+      } catch {
+        // User cancelled (AbortError) or the platform refused — nothing to do.
+      }
+    },
+    [pdfState, loadPdf, t]
+  );
+
   const formatDate = (iso: string) => {
     if (!iso) return '';
     const d = new Date(iso);
@@ -220,7 +307,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const zoomRef = useRef(zoom);
   // Scroll position we want AFTER the next real (width) re-render — applied in the
   // Page's onRenderSuccess so it isn't clamped against the still-old canvas size.
-  const pendingScrollRef = useRef<{ left: number; top: number } | null>(null);
+  const pendingScrollRef = useRef<{ left?: number; top: number; centerX?: boolean } | null>(null);
   useEffect(() => {
     zoomRef.current = zoom;
   }, [zoom]);
@@ -243,7 +330,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     const el = pdfScrollRef.current;
     const p = pendingScrollRef.current;
     if (el && p) {
-      el.scrollLeft = p.left;
+      el.scrollLeft = p.centerX
+        ? Math.max(0, (el.scrollWidth - el.clientWidth) / 2)
+        : (p.left ?? 0);
       el.scrollTop = p.top;
       pendingScrollRef.current = null;
     }
@@ -477,9 +566,15 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
               @keyframes resFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
               @keyframes resBar { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
             `}</style>
-            <p className="text-sm text-[var(--text-tertiary)] font-medium">
-              {t('resultats.count', { count: results.length })}
-            </p>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-[var(--text-tertiary)] font-medium">
+              <span>{t('resultats.count', { count: results.length })}</span>
+              {lastUpdated && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <LastUpdatedLabel timestamp={lastUpdated} />
+                </>
+              )}
+            </div>
             <div className="space-y-4">
               {results.map((r, index) => {
                 const pdf = pdfState(r.dossier_id);
@@ -559,6 +654,16 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                         {errorPdf ? <RotateCw size={18} /> : <Download size={18} />}
                         {errorPdf ? t('resultats.retry', 'Réessayer') : t('resultats.download', 'Télécharger')}
                       </button>
+                      {canShare && (
+                        <button
+                          onClick={() => handleShare(r)}
+                          disabled={loadingPdf}
+                          className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border-2 border-[var(--border-default)] text-[var(--text-primary)] font-medium hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          <Share2 size={18} />
+                          {t('resultats.share', 'Partager')}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

@@ -178,6 +178,9 @@
     "analyses_details": "Détails des analyses",
     "view": "Voir",
     "download": "Télécharger",
+    "share": "Partager",
+    "share_title": "Résultat d'analyses",
+    "share_text": "Mon résultat d'analyses — Labo El Allali",
     "close": "Fermer",
     "count_one": "{{count}} résultat",
     "count_other": "{{count}} résultats",
@@ -197,6 +200,8 @@
     "viewer_title": "Résultat — dossier {{id}}",
     "latest_badge": "Dernier résultat",
     "etat_final": "Finalisé",
+    "updated_ago": "Actualisé {{ago}}",
+    "updated_seconds": "Actualisé il y a quelques secondes",
     "pdf_loading": "Chargement du PDF…",
     "pdf_loading_short": "Chargement…",
     "pdf_load_error": "Échec du chargement du PDF."

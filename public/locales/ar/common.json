@@ -254,6 +254,9 @@
     "analyses_details": "تفاصيل التحاليل",
     "view": "عرض",
     "download": "تنزيل",
+    "share": "مشاركة",
+    "share_title": "نتيجة التحاليل",
+    "share_text": "نتيجة تحاليلي — مختبر العلالي",
     "close": "إغلاق",
     "count_zero": "{{count}} نتيجة",
     "count_one": "نتيجة واحدة",
@@ -277,6 +280,8 @@
     "viewer_title": "النتيجة — الملف {{id}}",
     "latest_badge": "أحدث نتيجة",
     "etat_final": "نهائي",
+    "updated_ago": "آخر تحديث {{ago}}",
+    "updated_seconds": "آخر تحديث منذ لحظات",
     "pdf_loading": "جارٍ تحميل ملف PDF…",
     "pdf_loading_short": "جارٍ التحميل…",
     "pdf_load_error": "تعذّر تحميل ملف PDF."
