@@ -21,10 +21,23 @@ export interface CyberlabConfig {
   hmacSecret: string;
 }
 
+/**
+ * Controls which PDFs the server embeds (perf optimisation, backward-compatible):
+ * - "latest" → full list, pdf_base64 filled only for the most recent dossier
+ * - "none"   → full list, all pdf_base64 empty
+ * - "all"    → every PDF (same as omitting the field)
+ */
+export type IncludePdf = "latest" | "none" | "all";
+
 export interface CyberlabRequest {
   type: RequesterType;
   requester_id: string;
-  max_results: number;
+  /** Optional: omit when fetching a single dossier by id. */
+  max_results?: number;
+  /** Optional PDF-inclusion strategy; omit for legacy "all" behaviour. */
+  include_pdf?: IncludePdf;
+  /** Optional: fetch a single dossier's PDF on demand (404 if unknown). */
+  dossier_id?: string;
 }
 
 /** Passed through untouched to the client — shape mirrors the lab API response. */
@@ -116,12 +129,18 @@ export async function callCyberlab(
   cfg: CyberlabConfig,
   req: CyberlabRequest
 ): Promise<CyberlabResponse> {
-  // Serialize once: the same string is both signed and sent.
-  const body = JSON.stringify({
+  // Build the payload with only the fields that are set, then serialize once:
+  // the same string is both signed and sent. Optional fields are omitted (not
+  // sent as null/undefined) to stay backward-compatible. The server verifies the
+  // HMAC over the raw body, so field order is irrelevant.
+  const payload: Record<string, unknown> = {
     type: req.type,
     requester_id: req.requester_id,
-    max_results: req.max_results,
-  });
+  };
+  if (req.max_results !== undefined) payload.max_results = req.max_results;
+  if (req.include_pdf !== undefined) payload.include_pdf = req.include_pdf;
+  if (req.dossier_id !== undefined) payload.dossier_id = req.dossier_id;
+  const body = JSON.stringify(payload);
   const headers = signRequest(body, cfg.apiKey, cfg.hmacSecret);
 
   let res: Response;

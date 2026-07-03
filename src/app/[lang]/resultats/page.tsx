@@ -39,6 +39,9 @@ import {
   ChevronRight,
   ZoomIn,
   ZoomOut,
+  Loader2,
+  Star,
+  RotateCw,
 } from 'lucide-react';
 
 // PDF rendering via pdf.js (react-pdf): renders on a <canvas>, so "Voir" works on
@@ -67,7 +70,8 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   // Results come from the shared context (prefetched in the background at login).
-  const { results, status, ensureLoaded, refresh } = useResults();
+  // List loads first (fast); each PDF is fetched on demand (newest one auto-loads).
+  const { results, status, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh } = useResults();
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ url: string; dossierId: string } | null>(null);
@@ -146,28 +150,45 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     };
   }, [viewer?.url]);
 
-  const openViewer = useCallback((r: CyberlabResult) => {
-    const url = URL.createObjectURL(base64ToPdfBlob(r.pdf_base64));
+  const openViewerWithBase64 = useCallback((dossierId: string, base64: string) => {
+    const url = URL.createObjectURL(base64ToPdfBlob(base64));
     setPdfPage(1);
     setPdfPages(0);
     setZoom(1.6);
     pendingScrollRef.current = { left: 0, top: 0 }; // land on the top-left (readable column)
-    setViewer({ url, dossierId: r.dossier_id });
+    setViewer({ url, dossierId });
   }, []);
 
   const closeViewer = useCallback(() => setViewer(null), []);
 
-  const downloadPdf = useCallback((r: CyberlabResult) => {
-    const url = URL.createObjectURL(base64ToPdfBlob(r.pdf_base64));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `resultat-${r.dossier_id}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    // Give the browser a moment to start the download before releasing memory.
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
-  }, []);
+  // "Voir": use the PDF if already loaded, otherwise fetch it on demand first
+  // (the card shows a spinner while pdfState is 'loading'), then open the viewer.
+  const handleView = useCallback(
+    async (r: CyberlabResult) => {
+      const st = pdfState(r.dossier_id);
+      const ready = st.status === 'ready' && st.base64 ? st : await loadPdf(r.dossier_id);
+      if (ready.status === 'ready' && ready.base64) openViewerWithBase64(r.dossier_id, ready.base64);
+    },
+    [pdfState, loadPdf, openViewerWithBase64]
+  );
+
+  const handleDownload = useCallback(
+    async (r: CyberlabResult) => {
+      const st = pdfState(r.dossier_id);
+      const ready = st.status === 'ready' && st.base64 ? st : await loadPdf(r.dossier_id);
+      if (ready.status !== 'ready' || !ready.base64) return;
+      const url = URL.createObjectURL(base64ToPdfBlob(ready.base64));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resultat-${r.dossier_id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Give the browser a moment to start the download before releasing memory.
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+    },
+    [pdfState, loadPdf]
+  );
 
   const formatDate = (iso: string) => {
     if (!iso) return '';
@@ -433,56 +454,103 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           </div>
         )}
 
-        {/* Ready — list of dossiers */}
+        {/* Ready — list of dossiers. The list appears immediately (fast "none"
+            call); each PDF loads on demand, newest one auto-loads, with a small
+            loading animation so things show up progressively. */}
         {status === 'ready' && (
           <>
+            {/* Scoped animations: cards fade in with a slight stagger; the PDF
+                loading bar slides indeterminately while a dossier is fetched. */}
+            <style>{`
+              @keyframes resFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+              @keyframes resBar { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+            `}</style>
             <p className="text-sm text-[var(--text-tertiary)] font-medium">
               {t('resultats.count', { count: results.length })}
             </p>
             <div className="space-y-4">
-              {results.map((r) => (
-                <div key={r.dossier_id} className="card p-6 flex flex-col gap-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className="h-11 w-11 rounded-lg bg-[var(--color-bordeaux-primary)]/10 text-[var(--color-bordeaux-primary)] flex items-center justify-center flex-shrink-0">
-                        <FileText size={22} />
+              {results.map((r, index) => {
+                const pdf = pdfState(r.dossier_id);
+                const isNewest = r.dossier_id === newestDossierId;
+                const loadingPdf = pdf.status === 'loading';
+                const errorPdf = pdf.status === 'error';
+                return (
+                  <div
+                    key={r.dossier_id}
+                    className="card p-6 flex flex-col gap-4"
+                    style={{ animation: 'resFadeUp 0.35s ease-out both', animationDelay: `${Math.min(index, 8) * 60}ms` }}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="h-11 w-11 rounded-lg bg-[var(--color-bordeaux-primary)]/10 text-[var(--color-bordeaux-primary)] flex items-center justify-center flex-shrink-0">
+                          <FileText size={22} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-[var(--text-primary)] truncate">
+                              {t('resultats.dossier', 'Dossier')} {r.dossier_id}
+                            </p>
+                            {isNewest && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)]">
+                                <Star size={11} className="fill-current" />
+                                {t('resultats.latest_badge', 'Dernier résultat')}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-[var(--text-secondary)]">{formatDate(r.date_dossier)}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-[var(--text-primary)] truncate">
-                          {t('resultats.dossier', 'Dossier')} {r.dossier_id}
-                        </p>
-                        <p className="text-sm text-[var(--text-secondary)]">{formatDate(r.date_dossier)}</p>
-                      </div>
+                      {r.etat && (
+                        <span className="flex-shrink-0 text-xs font-semibold px-3 py-1 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)]">
+                          {r.etat}
+                        </span>
+                      )}
                     </div>
-                    {r.etat && (
-                      <span className="flex-shrink-0 text-xs font-semibold px-3 py-1 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)]">
-                        {r.etat}
-                      </span>
+
+                    {r.analyses_summary && (
+                      <AnalysesDetails summary={r.analyses_summary} isArabic={isArabic} />
                     )}
-                  </div>
 
-                  {r.analyses_summary && (
-                    <AnalysesDetails summary={r.analyses_summary} isArabic={isArabic} />
-                  )}
+                    {/* Indeterminate loading bar while this dossier's PDF is fetched. */}
+                    {loadingPdf && (
+                      <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                        <div className="relative h-1 flex-1 overflow-hidden rounded-lg bg-[var(--background-secondary)]">
+                          <div
+                            className="absolute inset-y-0 w-1/3 rounded-lg bg-[var(--color-bordeaux-primary)]"
+                            style={{ animation: 'resBar 1.1s ease-in-out infinite' }}
+                          />
+                        </div>
+                        <span className="flex-shrink-0">{t('resultats.pdf_loading', 'Chargement du PDF…')}</span>
+                      </div>
+                    )}
 
-                  <div className="flex flex-wrap gap-3 pt-1">
-                    <button
-                      onClick={() => openViewer(r)}
-                      className="button-bordeaux justify-center flex items-center gap-2"
-                    >
-                      <Eye size={18} />
-                      {t('resultats.view', 'Voir')}
-                    </button>
-                    <button
-                      onClick={() => downloadPdf(r)}
-                      className="button-outline justify-center flex items-center gap-2"
-                    >
-                      <Download size={18} />
-                      {t('resultats.download', 'Télécharger')}
-                    </button>
+                    {errorPdf && (
+                      <p className="text-sm text-[var(--status-error)]">
+                        {t('resultats.pdf_load_error', 'Échec du chargement du PDF.')}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-3 pt-1">
+                      <button
+                        onClick={() => handleView(r)}
+                        disabled={loadingPdf}
+                        className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        {loadingPdf ? <Loader2 size={18} className="animate-spin" /> : <Eye size={18} />}
+                        {loadingPdf ? t('resultats.pdf_loading_short', 'Chargement…') : t('resultats.view', 'Voir')}
+                      </button>
+                      <button
+                        onClick={() => (errorPdf ? loadPdf(r.dossier_id) : handleDownload(r))}
+                        disabled={loadingPdf}
+                        className="button-outline justify-center flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        {errorPdf ? <RotateCw size={18} /> : <Download size={18} />}
+                        {errorPdf ? t('resultats.retry', 'Réessayer') : t('resultats.download', 'Télécharger')}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}

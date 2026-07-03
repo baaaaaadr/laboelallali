@@ -323,6 +323,72 @@ async function run() {
       "décodage → magic %PDF-", ok, `decode_pdf_ok=${ok}`);
   }
 
+  // ── E — Perf params: include_pdf + on-demand dossier_id ─────────────────────
+  const callReq = async (req) => {
+    try {
+      return { status: 200, json: await callCyberlab(cfg, req) };
+    } catch (e) {
+      return { status: e.status || 0, json: null, kind: e.kind };
+    }
+  };
+  const nonEmptyPdf = (r) => typeof r.pdf_base64 === "string" && r.pdf_base64.length > 0;
+
+  let knownDossierId = null; // captured in memory from E2; never printed.
+
+  {
+    const r = await callReq({ type: "patient", requester_id: "7587", max_results: 50, include_pdf: "latest" });
+    const list = r.json && r.json.results;
+    const ok = r.status === 200 && Array.isArray(list) && list.length > 0;
+    const withPdf = ok ? list.filter(nonEmptyPdf) : [];
+    const exactlyOne = withPdf.length === 1;
+    let isMostRecent = false;
+    if (ok && exactlyOne) {
+      const maxDate = list.reduce((m, x) => (x.date_dossier > m ? x.date_dossier : m), "");
+      isMostRecent = withPdf[0].date_dossier === maxDate;
+    }
+    record("E1", "E", "include_pdf=latest — liste complète, PDF du plus récent seulement",
+      "≥1 résultat, exactement 1 PDF (le plus récent)", ok && exactlyOne && isMostRecent,
+      `status=${r.status}, results=${Array.isArray(list) ? list.length : "n/a"}, pdf_count=${withPdf.length}, pdf_est_plus_recent=${isMostRecent}`);
+  }
+  {
+    const r = await callReq({ type: "patient", requester_id: "7587", max_results: 50, include_pdf: "none" });
+    const list = r.json && r.json.results;
+    const ok = r.status === 200 && Array.isArray(list) && list.length > 0;
+    const allEmpty = ok && list.every((x) => x.pdf_base64 === "");
+    if (ok && list[0]) knownDossierId = list[0].dossier_id;
+    record("E2", "E", "include_pdf=none — liste complète, aucun PDF",
+      "≥1 résultat, tous pdf_base64 vides", ok && allEmpty,
+      `status=${r.status}, results=${Array.isArray(list) ? list.length : "n/a"}, tous_pdf_vides=${allEmpty}`);
+  }
+  {
+    const r = await callReq({ type: "patient", requester_id: "7587", max_results: 50, include_pdf: "all" });
+    const list = r.json && r.json.results;
+    const ok = r.status === 200 && Array.isArray(list) && list.length > 0;
+    const allFilled = ok && list.every(nonEmptyPdf);
+    record("E3", "E", "include_pdf=all — tous les PDF (rétrocompatibilité)",
+      "≥1 résultat, tous pdf_base64 remplis", ok && allFilled,
+      `status=${r.status}, results=${Array.isArray(list) ? list.length : "n/a"}, tous_pdf_remplis=${allFilled}`);
+  }
+  {
+    if (!knownDossierId) {
+      record("E4", "E", "dossier_id connu — 1 dossier avec son PDF",
+        "1 résultat, bon dossier, PDF présent", false, "aucun dossier_id disponible depuis E2");
+    } else {
+      const r = await callReq({ type: "patient", requester_id: "7587", dossier_id: knownDossierId });
+      const list = r.json && r.json.results;
+      const single = r.status === 200 && Array.isArray(list) && list.length === 1;
+      const pdfPresent = single && nonEmptyPdf(list[0]);
+      const matches = single && list[0].dossier_id === knownDossierId;
+      record("E4", "E", "dossier_id connu — 1 dossier avec son PDF",
+        "1 résultat, bon dossier, PDF présent", single && pdfPresent && matches,
+        `status=${r.status}, results=${Array.isArray(list) ? list.length : "n/a"}, pdf_present=${pdfPresent}, dossier_correspond=${matches}`);
+    }
+  }
+  {
+    const r = await callReq({ type: "patient", requester_id: "7587", dossier_id: "999999999" });
+    record("E5", "E", "dossier_id inconnu — rejet", "404", r.status === 404, `status=${r.status}`);
+  }
+
   // ── Persist + report ────────────────────────────────────────────────────────
   const pass = cases.filter((c) => c.pass).length;
   const snapshot = {

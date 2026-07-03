@@ -2,7 +2,7 @@
 
 > ⚠️ **Rapport sans aucun contenu de résultat réel.** Il ne contient que des identifiants de test, descriptions, codes/statuts attendus vs obtenus et PASS/FAIL. Aucun nom de patient, date de dossier ni donnée PDF n'y figure. Sûr à transmettre à un tiers.
 
-_Généré le 2026-07-01T13:37:25.216Z._
+_Généré le 2026-07-03T10:07:33.265Z._
 
 ## Vecteur de test de signature (à comparer par l'éditeur)
 
@@ -19,8 +19,8 @@ Toute implémentation correcte doit reproduire exactement cette `X-Signature`.
 
 ## Cible « mock » — localhost (mock)
 
-- Exécuté : 2026-07-01T13:33:45.620Z
-- Résultat global : **16/16 PASS**
+- Exécuté : 2026-07-03T10:06:32.969Z
+- Résultat global : **21/21 PASS**
 
 | ID | Groupe | Description | Attendu | Obtenu | Résultat |
 | --- | --- | --- | --- | --- | --- |
@@ -40,11 +40,16 @@ Toute implémentation correcte doit reproduire exactement cette `X-Signature`.
 | C4 | C | max_results > 50 (=100) | clampé (≤50) ou rejeté | status=200, results=50 _(comportement: clampé)_ | ✅ PASS |
 | D1 | D | Champs attendus présents dans chaque résultat | présence de: dossier_id, patient_nom, patient_prenom, date_dossier, etat, analyses_summary, pdf_base64 | tous_champs_presents=true | ✅ PASS |
 | D2 | D | pdf_base64 = base64 valide décodant en PDF | décodage → magic %PDF- | decode_pdf_ok=true | ✅ PASS |
+| E1 | E | include_pdf=latest — liste complète, PDF du plus récent seulement | ≥1 résultat, exactement 1 PDF (le plus récent) | status=200, results=50, pdf_count=1, pdf_est_plus_recent=true | ✅ PASS |
+| E2 | E | include_pdf=none — liste complète, aucun PDF | ≥1 résultat, tous pdf_base64 vides | status=200, results=50, tous_pdf_vides=true | ✅ PASS |
+| E3 | E | include_pdf=all — tous les PDF (rétrocompatibilité) | ≥1 résultat, tous pdf_base64 remplis | status=200, results=50, tous_pdf_remplis=true | ✅ PASS |
+| E4 | E | dossier_id connu — 1 dossier avec son PDF | 1 résultat, bon dossier, PDF présent | status=200, results=1, pdf_present=true, dossier_correspond=true | ✅ PASS |
+| E5 | E | dossier_id inconnu — rejet | 404 | status=404 | ✅ PASS |
 
 ## Cible « real » — ***.coraliaflat.com
 
-- Exécuté : 2026-07-01T13:35:01.180Z
-- Résultat global : **15/16 PASS**
+- Exécuté : 2026-07-03T10:07:33.264Z
+- Résultat global : **20/21 PASS**
 
 | ID | Groupe | Description | Attendu | Obtenu | Résultat |
 | --- | --- | --- | --- | --- | --- |
@@ -64,6 +69,11 @@ Toute implémentation correcte doit reproduire exactement cette `X-Signature`.
 | C4 | C | max_results > 50 (=100) | clampé (≤50) ou rejeté | status=200, results=3 _(comportement: clampé)_ | ✅ PASS |
 | D1 | D | Champs attendus présents dans chaque résultat | présence de: dossier_id, patient_nom, patient_prenom, date_dossier, etat, analyses_summary, pdf_base64 | tous_champs_presents=true | ✅ PASS |
 | D2 | D | pdf_base64 = base64 valide décodant en PDF | décodage → magic %PDF- | decode_pdf_ok=true | ✅ PASS |
+| E1 | E | include_pdf=latest — liste complète, PDF du plus récent seulement | ≥1 résultat, exactement 1 PDF (le plus récent) | status=200, results=3, pdf_count=1, pdf_est_plus_recent=true | ✅ PASS |
+| E2 | E | include_pdf=none — liste complète, aucun PDF | ≥1 résultat, tous pdf_base64 vides | status=200, results=3, tous_pdf_vides=true | ✅ PASS |
+| E3 | E | include_pdf=all — tous les PDF (rétrocompatibilité) | ≥1 résultat, tous pdf_base64 remplis | status=200, results=3, tous_pdf_remplis=true | ✅ PASS |
+| E4 | E | dossier_id connu — 1 dossier avec son PDF | 1 résultat, bon dossier, PDF présent | status=200, results=1, pdf_present=true, dossier_correspond=true | ✅ PASS |
+| E5 | E | dossier_id inconnu — rejet | 404 | status=404 | ✅ PASS |
 
 ## Comparaison mock vs serveur réel
 

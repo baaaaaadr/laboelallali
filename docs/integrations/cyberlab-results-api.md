@@ -491,11 +491,23 @@ Charge estimée côté application : environ 8 à 12 jours de développement.
     `functions/scripts/call-fetch-results.js`.
   * ⚠️ Piège HMAC (re-sérialisation JSON) documenté avec vecteur de test
     reproductible dans [hmac-signature-notes.md](hmac-signature-notes.md).
-* ✅ **Batterie de tests exécutée** — mock **16/16**, serveur réel **15/16**
+* ✅ **Batterie de tests exécutée** — mock **21/21**, serveur réel **20/21**
   ([test-results.md](test-results.md)). B6 (corps modifié après signature) **passe**
   sur le serveur réel → HMAC vérifié sur le raw body, **aucun problème de
   sérialisation**. Seul écart : **C3** (`requester_id` manquant → le serveur renvoie
   `404` au lieu de `400`), bénin (la Function n'envoie jamais d'entrée malformée).
+* ✅ **Optimisation perf (params `include_pdf` + `dossier_id`) — vérifiée côté serveur.**
+  Groupe de tests E : `include_pdf="latest"` (liste complète, PDF du plus récent
+  seulement), `"none"` (aucun PDF), `"all"`/absent (rétrocompat, tous les PDF), et
+  `dossier_id` (1 dossier à la demande, `404` si inconnu). Tous PASS sur le serveur
+  réel. `client.ts` envoie ces champs de façon optionnelle.
+* ✅ **Optimisation branchée côté app.** Choix mesuré (voir
+  `functions/scripts/time-approaches.js`) : **2 appels** plutôt qu'un seul `"latest"`
+  — la liste s'affiche en ~0,2 s (`include_pdf:"none"`), puis le PDF le plus récent
+  se charge automatiquement (`dossier_id`) et les autres à la demande, avec
+  animations de chargement par carte. Impl. : `fetchResults` accepte `include_pdf`
+  + `dossier_id` (validés) ; `ResultsContext` fait le flux 2 phases ; page
+  `/resultats` progressive. Voir [../pages/resultats.md](../pages/resultats.md).
   * ⚠️ Les certificats mTLS (`origin.*`, `ca.*`, `mtls-client.*`) sécurisent le
     lien Cloudflare↔serveur ; ils ne sont **pas** utilisés par la Function.
 * ⏳ À venir : page `/resultats`, espace `/admin` (encodage `requester_id`/`type`

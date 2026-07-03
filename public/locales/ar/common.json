@@ -270,7 +270,11 @@
     "pdf_next": "الصفحة التالية",
     "pdf_zoom_in": "تكبير",
     "pdf_zoom_out": "تصغير",
-    "viewer_title": "النتيجة — الملف {{id}}"
+    "viewer_title": "النتيجة — الملف {{id}}",
+    "latest_badge": "أحدث نتيجة",
+    "pdf_loading": "جارٍ تحميل ملف PDF…",
+    "pdf_loading_short": "جارٍ التحميل…",
+    "pdf_load_error": "تعذّر تحميل ملف PDF."
   },
   "confidentialite": {
     "nav": "الخصوصية",

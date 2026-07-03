@@ -20,7 +20,9 @@ import {
   callCyberlab,
   CyberlabConfig,
   CyberlabError,
+  CyberlabRequest,
   CyberlabResponse,
+  IncludePdf,
   RequesterType,
 } from "./client";
 
@@ -46,12 +48,24 @@ class ProfileError extends Error {
 }
 
 /**
+ * Client-controllable options (safe to accept: they only tune what the caller
+ * gets for *their own* requester_id — identity stays server-side from Firestore).
+ * - include_pdf: "latest" | "none" | "all" (perf: which PDFs to embed)
+ * - dossier_id: fetch a single dossier's PDF on demand
+ */
+export interface FetchOptions {
+  include_pdf?: IncludePdf;
+  dossier_id?: string;
+}
+
+/**
  * Core logic, decoupled from the callable/auth plumbing so it can be exercised
  * directly by the local test script.
  */
 export async function fetchResultsForUser(
   uid: string,
-  cfg: CyberlabConfig
+  cfg: CyberlabConfig,
+  opts: FetchOptions = {}
 ): Promise<CyberlabResponse> {
   const snap = await admin.firestore().doc(`users/${uid}`).get();
   if (!snap.exists) {
@@ -71,11 +85,32 @@ export async function fetchResultsForUser(
     throw new ProfileError("no_requester");
   }
 
-  return callCyberlab(cfg, {
+  const req: CyberlabRequest = {
     type: type as RequesterType,
     requester_id: requesterId,
-    max_results: MAX_RESULTS,
-  });
+  };
+  if (opts.dossier_id) {
+    // Single-dossier on-demand fetch: no list needed.
+    req.dossier_id = opts.dossier_id;
+  } else {
+    req.max_results = MAX_RESULTS;
+    if (opts.include_pdf) req.include_pdf = opts.include_pdf;
+  }
+
+  return callCyberlab(cfg, req);
+}
+
+/** Parse the (untrusted) callable payload into validated options. */
+function parseOptions(data: unknown): FetchOptions {
+  const d = (data ?? {}) as { include_pdf?: unknown; dossier_id?: unknown };
+  const opts: FetchOptions = {};
+  if (d.include_pdf === "latest" || d.include_pdf === "none" || d.include_pdf === "all") {
+    opts.include_pdf = d.include_pdf;
+  }
+  if (typeof d.dossier_id === "string" && d.dossier_id.trim() !== "") {
+    opts.dossier_id = d.dossier_id.trim();
+  }
+  return opts;
 }
 
 /**
@@ -99,6 +134,7 @@ export const fetchResults = onCall(
       throw new HttpsError("unauthenticated", "Authentification requise.");
     }
     const uid = request.auth.uid;
+    const opts = parseOptions(request.data);
 
     const cfg: CyberlabConfig = {
       apiUrl: CYBERLAB_API_URL.value(),
@@ -107,7 +143,7 @@ export const fetchResults = onCall(
     };
 
     try {
-      return await fetchResultsForUser(uid, cfg);
+      return await fetchResultsForUser(uid, cfg, opts);
     } catch (err) {
       if (err instanceof ProfileError) {
         logger.warn("fetchResults: profile not usable", { reason: err.reason });

@@ -128,7 +128,7 @@ const server = http.createServer((req, res) => {
     } catch {
       return reject(res, 400, "bad_json");
     }
-    const { type, requester_id, max_results } = payload;
+    const { type, requester_id, max_results, include_pdf, dossier_id } = payload;
 
     if (!VALID_TYPES.has(type)) {
       return reject(res, 400, "invalid_type");
@@ -146,19 +146,40 @@ const server = http.createServer((req, res) => {
 
     // patient_nom/prenom filled only for medecin/correspondant (§7.3).
     const isPatient = type === "patient";
-    const results = Array.from({ length: n }, (_, i) => ({
+    const makeDossier = (i, withPdf) => ({
       dossier_id: `9990000${String(i).padStart(3, "0")}`, // fake, non-real
       patient_nom: isPatient ? "" : "TEST_NOM",
       patient_prenom: isPatient ? "" : "TEST_PRENOM",
-      date_dossier: "2026-04-15T08:52:20Z",
+      // Distinct descending dates so "most recent" is well-defined (index 0 newest).
+      date_dossier: `2026-04-${String(15 - i).padStart(2, "0")}T08:52:20Z`,
       etat: "Final",
       analyses_summary: "NFS, GLY, HBA1C, U, CR",
-      pdf_base64: CANNED_PDF_B64,
-    }));
+      pdf_base64: withPdf ? CANNED_PDF_B64 : "",
+    });
+
+    let results;
+    if (dossier_id !== undefined) {
+      // Single-dossier on-demand fetch: return only that dossier (with its PDF).
+      const all = Array.from({ length: n }, (_, i) => makeDossier(i, false));
+      const one = all.find((d) => d.dossier_id === dossier_id);
+      if (!one) return reject(res, 404, "dossier_not_found");
+      one.pdf_base64 = CANNED_PDF_B64;
+      results = [one];
+    } else {
+      // include_pdf: "latest" | "none" | "all" (default "all").
+      const mode = include_pdf === undefined ? "all" : include_pdf;
+      // index 0 has the newest date_dossier, so it is "the latest".
+      results = Array.from({ length: n }, (_, i) =>
+        makeDossier(i, mode === "all" || (mode === "latest" && i === 0))
+      );
+    }
 
     res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
     res.end(JSON.stringify({ type, requester_id, results }));
-    console.log(`[mock] 200 ${type}/${requester_id} — ${n} result(s), signature OK`);
+    console.log(
+      `[mock] 200 ${type}/${requester_id} — ${results.length} result(s)` +
+        `${dossier_id !== undefined ? " (single dossier)" : `, include_pdf=${include_pdf || "all"}`}, signature OK`
+    );
   });
 });
 

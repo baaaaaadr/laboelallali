@@ -19,3 +19,12 @@ export interface CyberlabResponse {
 // idle  → nothing attempted yet
 // need_access → logged in but no requester_id (offer the online-access request)
 export type ResultsStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'need_access';
+
+// Which PDFs the server embeds in the list response (perf optimisation).
+export type IncludePdf = 'latest' | 'none' | 'all';
+
+// Per-dossier PDF fetch state (PDFs are loaded on demand, one at a time).
+export interface PdfState {
+  status: 'idle' | 'loading' | 'ready' | 'error';
+  base64?: string;
+}

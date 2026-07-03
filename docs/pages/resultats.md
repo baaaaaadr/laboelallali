@@ -3,7 +3,7 @@
 ## Purpose
 Authenticated patient results viewer. It fetches the patient's lab results from the lab's CyberLab server (via the `fetchResults` Cloud Function) and lets the patient view or download each result PDF. The app is a **viewer only**: results live in memory for the duration of the session and are never persisted (no Firestore, no localStorage, no disk). See `docs/integrations/cyberlab-results-api.md`.
 
-**Results are prefetched at login** (background), not on page open — see `src/contexts/ResultsContext.tsx` (§1.1). This page mostly *consumes* that context.
+**Two-phase progressive loading** (see `src/contexts/ResultsContext.tsx` §1.1): the **list** is fetched first with `include_pdf: "none"` (~0.2 s, no PDFs) so every dossier renders immediately; then the **most recent** dossier's PDF auto-loads via `dossier_id`, and every other PDF is fetched **on demand** when the patient taps "Voir"/"Télécharger". This is prefetched at login (background), not on page open. This page mostly *consumes* the context and adds the per-card loading animations.
 
 ## Directory & File
 - **Path:** `src/app/[lang]/resultats/page.tsx`
@@ -12,19 +12,22 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 ## Context & Key Components
 
 ### 1. State Management
-- `results` + `status` come from **`useResults()`** (the `ResultsContext`), NOT local state (§1.1). `status` (`'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'need_access'`) drives which block renders; `idle` renders the same loader as `loading`. `need_access` = patient has no `requester_id` yet → self-service access-request card.
+- `results` + `status` + **per-dossier PDF state** come from **`useResults()`** (the `ResultsContext`), NOT local state (§1.1). `status` (`'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'need_access'`) is the **list** status and drives which block renders; `idle` renders the same loader as `loading`. `need_access` = patient has no `requester_id` yet → self-service access-request card.
+- **Per-dossier PDF:** `pdfState(dossierId)` → `PdfState` (`'idle' | 'loading' | 'ready' | 'error'`, `base64?`); `loadPdf(dossierId)` fetches one PDF on demand; `newestDossierId` = the auto-loaded most-recent dossier (badged "Dernier résultat").
 - `errorMsg` (string | null): local — used ONLY by the access-request flow now (the results-error block shows a generic translated string directly).
 - `viewer` (`{ url: string; dossierId: string } | null`): the currently open PDF viewer; `url` is an in-memory `blob:` URL.
 - `accessStatus` (`'checking' | 'none' | 'pending' | 'rejected'`) + `requesting` (bool): drive the access-request card in the `need_access` state.
 - **PDF viewer state:** `pdfPages` / `pdfPage` (page nav), `zoom` (1 = fit-to-width; opens at **1.6** = 160%), `containerWidth` (measured, for width-based rendering). See §4b.
 
-### 1.1 Results prefetch — `src/contexts/ResultsContext.tsx`
-- `ResultsProvider` is mounted in `src/app/[lang]/layout.tsx` **inside `AuthProvider`** (it needs `useAuth`). Exposes `{ results, status, ensureLoaded, refresh }` via `useResults()`.
-- **Background prefetch:** an effect fires `load()` as soon as `user && userProfile?.requester_id && status === 'idle'`. Because `ResultsProvider` sits in the global layout and Firebase restores the session, this runs **at app open on ANY screen** (not tied to the login action) — the slow (~10 s) fetch is usually done before the patient opens /resultats (Aziz's idea). Only patients who already have access (`requester_id`) prefetch, so staff / not-yet-granted users don't fire pointless calls on every launch.
-- **Cold-start auto-retry:** on a generic/network error (common at PWA launch before the network is ready), the *background* load retries up to 2× (4 s, 8 s), guarded by `currentUidRef` so a stale timer never fetches for a signed-out / switched account. `bgRetryRef` counts retries; reset on success, account switch, and manual `refresh`.
-- `loadedForUidRef` (set only on `ready`/`empty`) de-dupes reloads while still retrying after `error`/`need_access`; `loadingRef` guards concurrent calls; the account-switch effect (keyed on `user?.uid`) resets everything on login/logout/**account switch**.
-- Same error mapping as before: `not-found` → `empty`, `failed-precondition` → `need_access`, else `error`.
-- **Still in-memory only** (React state) — never localStorage/IndexedDB/SW. Cleared on logout. This does **not** reduce total load (everything is still fetched at once); it only moves it earlier.
+### 1.1 Results prefetch + progressive PDF loading — `src/contexts/ResultsContext.tsx`
+- `ResultsProvider` is mounted in `src/app/[lang]/layout.tsx` **inside `AuthProvider`** (it needs `useAuth`). Exposes `{ results, status, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh }` via `useResults()`.
+- **Phase 1 — list (`load`):** calls `fetchResults({ include_pdf: 'none' })` → list metadata only (fast, ~0.2 s, `pdf_base64` empty). Sets `results` + `status` (`ready`/`empty`). Same error mapping: `not-found` → `empty`, `failed-precondition` → `need_access`, else `error`.
+- **Phase 2 — newest PDF (auto):** right after the list, `load` picks the most recent dossier (`newestOf` = max `date_dossier`) and fires `loadPdf(newest)` in the background.
+- **On-demand PDFs (`loadPdf`):** calls `fetchResults({ dossier_id })`, extracts the matching result's `pdf_base64` (matched by id, defensively), stores it in `pdfById[id]`. Idempotent + de-duped via `pdfByIdRef` (sync mirror) + `pdfPromisesRef` (shared in-flight promise); returns the final `PdfState` so the page can await then open the viewer. `ready` results short-circuit (no refetch).
+- **Empirical choice (2 calls vs 1):** measured on the real server — `"latest"` in one call ≈ 2.3 s to show anything; `"none"` list ≈ 0.2 s + newest PDF ≈ +2.3 s. Two calls win big on perceived speed (list ~2 s sooner; newest PDF only ~0.2 s later). See `functions/scripts/time-approaches.js`.
+- **Background prefetch:** an effect fires `load()` as soon as `user && userProfile?.requester_id && status === 'idle'` — at app open on ANY screen (Firebase restores the session), so list + newest PDF are usually ready before /resultats opens. Only patients with `requester_id` prefetch.
+- **Cold-start auto-retry:** on a generic/network error, the *background* load retries up to 2× (4 s, 8 s), guarded by `currentUidRef`. `loadedForUidRef` (set on `ready`/`empty`) de-dupes reloads; `loadingRef` guards concurrent calls; the account-switch effect (keyed on `user?.uid`) resets everything (incl. `resetPdfs`) on login/logout/**account switch**.
+- **In-memory only** (React state + refs) — PDF base64 never touches localStorage/IndexedDB/SW. Cleared on logout.
 
 ### 2. Authentication Integration (`useAuth`)
 - `user`, `loading` (aliased to `authLoading`). Unauthenticated visitors are redirected to `/${lang}/login` (same pattern as `/profile`). While `authLoading || !user`, a bordeaux spinner renders.
@@ -42,8 +45,8 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 - A `useEffect` calls `loadAccessStatus` whenever `status === 'need_access'` (the context sets the status; the page owns the access UI).
 - **Self-service access** (`need_access`): `loadAccessStatus` (`myAccessRequest` callable) checks if a request is already pending; `handleRequestAccess` (`requestResultsAccess` callable) creates one. The card shows a "Demander l'accès" button or a "pending" badge. Staff activates it from `/admin` (attaches `requester_id`) → `refresh()` then loads results.
 - `base64ToPdfBlob`: decodes `pdf_base64` → in-memory `application/pdf` Blob.
-- `openViewer` / `closeViewer`: manage the modal; a single `useEffect` keyed on `viewer?.url` revokes the `blob:` URL whenever it changes or the component unmounts (no PDF lingers).
-- `downloadPdf`: creates a blob URL, clicks a temporary `<a download>` (user-initiated save), revokes after 15s.
+- `handleView(r)` / `handleDownload(r)`: **on-demand** — if the dossier's PDF isn't loaded yet, `await loadPdf(r.dossier_id)` first (the card shows a spinner + loading bar), then open the viewer / save. `openViewerWithBase64(dossierId, base64)` builds the blob URL and opens the modal; `closeViewer` closes it. A single `useEffect` keyed on `viewer?.url` revokes the `blob:` URL on change/unmount (no PDF lingers).
+- **Per-card UI states** (from `pdfState(r.dossier_id)`): `loading` → indeterminate progress bar + "Chargement du PDF…", buttons disabled with a `Loader2` spinner; `error` → "Échec du chargement" + the second button becomes "Réessayer" (`loadPdf` again); the newest dossier shows a "Dernier résultat" star badge. Cards fade in with a small staggered `resFadeUp` animation.
 - `formatDate`: `date_dossier` → localized (`ar-MA` / `fr-FR`) long date; falls back to the raw string if unparseable.
 
 ### 4b. PDF viewer (full-screen modal, `react-pdf`/pdf.js on a `<canvas>`)
@@ -54,11 +57,12 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 
 ### 5. Reusable Styles & Assets
 - Semantic classes: `.card`, `.button-bordeaux`, `.button-outline`, CSS vars (`--color-bordeaux-primary`, `--background-default`, `--text-*`, `--border-default`, `--status-error`).
-- Lucide icons: `FileText`, `Download`, `Eye`, `X`, `RefreshCw`, `Inbox`, `AlertCircle`, `ShieldCheck`.
+- Lucide icons: `FileText`, `Download`, `Eye`, `X`, `RefreshCw`, `Inbox`, `AlertCircle`, `ShieldCheck`, `Loader2`, `Star`, `RotateCw`.
+- New i18n keys: `resultats.latest_badge`, `resultats.pdf_loading`, `resultats.pdf_loading_short`, `resultats.pdf_load_error` (fr + ar).
 - i18n: `useTranslation('common')`, keys under `resultats.*` in `public/locales/{fr,ar}/common.json` (incl. plural `resultats.count`).
 
 ## Data Fetching & Mutations
-- **Read:** `fetchResults` callable in region `europe-southwest1` (wired via `getClientFunctions` in `src/config/firebase.ts`), invoked from `ResultsContext` (background at login + on demand). The callable reads `requester_id` + `type` from `users/{uid}` server-side (never from the client) and proxies the signed request to the lab. Response carries `Cache-Control: no-store`.
+- **Read:** `fetchResults` callable in region `europe-southwest1` (wired via `getClientFunctions` in `src/config/firebase.ts`), invoked from `ResultsContext`. The callable reads `requester_id` + `type` from `users/{uid}` server-side (never from the client) and proxies the signed request to the lab. It now **accepts two optional, validated client params** — `include_pdf` (`"latest" | "none" | "all"`) and `dossier_id` — to drive the two-phase flow (list via `none`, then each PDF via `dossier_id`). Identity still comes only from Firestore. Response carries `Cache-Control: no-store`.
 - **Writes:** none. This page never writes to Firestore/Storage.
 
 ## Notes for AI
@@ -66,5 +70,6 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 - **Access is granted, not seeded.** A patient without `requester_id` gets the `need_access` card and requests access (`requestResultsAccess`); staff activates it from `/admin` (`docs/pages/admin.md`). Local shortcut still exists: `functions/scripts/seed-requester.js <email> [requester_id] [type]`.
 - **Dev wiring:** callable → local emulator when `NEXT_PUBLIC_USE_FUNCTIONS_EMULATOR=true` (root `.env.local`; forced `false` for prod builds via `.env.production.local`). Emulator needs `NODE_OPTIONS=--use-system-ca` + `GOOGLE_APPLICATION_CREDENTIALS`. **In prod, gen2 callables MUST have `allUsers` Cloud Run invoker** or the browser gets a CORS/403 (set via the Cloud Run IAM API — firebase deploy did not always apply it).
 - **Linked from the nav** (Header + BottomNav → "Résultats").
-- **Perf caveat:** the lab server returns all PDFs inline (~8–10 s for 3 dossiers). The login-time **prefetch** (`ResultsContext`) hides this latency but does NOT reduce it. The real fix is still a two-step list-then-PDF-on-demand flow needing a server-side change (Si Brahim: `include_pdf=latest|list|all` + `dossier_id`). Until then, keep the prefetch in-memory only.
+- **Perf — DONE (two-phase):** the list-then-PDF-on-demand flow is implemented (server params `include_pdf` + `dossier_id` verified against the real server — see `docs/integrations/cyberlab-results-api.md` §9.1 and `test-results.md` group E). The list shows in ~0.2 s; the newest PDF auto-loads; others load on tap. Do NOT revert to fetching all PDFs inline. Keep everything in-memory only.
+- **Backward-compat note:** omitting `include_pdf`/`dossier_id` still returns all PDFs (`"all"`), so old callers keep working. `loadPdf` matches the returned result **by `dossier_id`** (not `results[0]`) to stay correct even if a server/build returns the full list.
 - **Prefetch is opt-in by access:** only patients with `requester_id` prefetch. If you change the gate, do NOT prefetch for users without access (avoids failing calls at every login).
