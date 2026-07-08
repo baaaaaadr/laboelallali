@@ -16,7 +16,8 @@ This is the main landing page of the Laboratoire El Allali PWA. It serves as the
 
 ### 2. High-Performance Client Shell (`HomeClient`)
 - Renders the `HeroBanner` with an interactive "Opening Hours" widget above the fold.
-- **`ServicesHub` (eager, priority CTA):** rendered as the FIRST item in the content container, directly under the hero. Statically imported (NOT `next/dynamic`, NOT wrapped in `LazySection`) so the flagship Résultats call-to-action never flickers or waits on intersection. See §2.1. **It replaces the former `MainServices` section** (which only surfaced 3 services and duplicated analyses/glabo). `MainServices.tsx` still exists on disk but is now unused/orphaned.
+- **`CheckupReminder` (auth-gated, first child of the content container):** `src/components/features/results/CheckupReminder.tsx` with `variant="home"`, statically imported. Renders `null` for everyone except linked patients whose newest bilan is ≥ 6 months old — see §2.2. Sits ABOVE ServicesHub.
+- **`ServicesHub` (eager, priority CTA):** rendered right after the reminder in the content container, directly under the hero. Statically imported (NOT `next/dynamic`, NOT wrapped in `LazySection`) so the flagship Résultats call-to-action never flickers or waits on intersection. See §2.1. **It replaces the former `MainServices` section** (which only surfaced 3 services and duplicated analyses/glabo). `MainServices.tsx` still exists on disk but is now unused/orphaned.
 - **Below-the-fold Lazy Loading:** To achieve near-instant initial loads and prevent blocking bundle downloads, the remaining sub-sections are imported using dynamic imports (`next/dynamic`) with client-side loading only (`ssr: false`):
   - `WhyChooseUs` (`@/components/features/home/WhyChooseUs`)
   - `LocationInfo` (`@/components/features/home/LocationInfo`)
@@ -31,6 +32,14 @@ This is the main landing page of the Laboratoire El Allali PWA. It serves as the
 - **Below: quick-access grid** (2/3/5 cols) of the five other services, each an icon card → its page: `rendez-vous` (CalendarDays), `glabo` (Truck), `analyses` (FlaskConical), `medecins` (Stethoscope), `contact` (Phone). Labels are `services_hub.{appointment,glabo,analyses,medecins,contact}`.
 - **i18n:** all strings under `services_hub.*` and `resultats.home_highlight_*` in `public/locales/{fr,ar}/common.json` (namespace `common`).
 - **Flagship nav treatment (not this page, but related):** Résultats was moved to the 2nd slot (right after Accueil) in the desktop nav, mobile hamburger, and `BottomNav`, each with a fuchsia marker (desktop pill, mobile fuchsia tint + "Nouveau" badge, bottom-nav fuchsia dot). See `src/components/layout/{Header,BottomNav}.tsx`.
+
+### 2.2 Checkup reminder (`CheckupReminder`) — personalized "time for a new bilan" nudge
+- File: `src/components/features/results/CheckupReminder.tsx` (results domain — it consumes `useResults`); shared with `/resultats` via a `variant: 'home' | 'results'` prop (home = larger paddings/h2, results = compact).
+- **Self-contained gating** (host pages stay free of auth code): returns `null` unless `user && userProfile.requester_id` AND `status === 'ready'` AND the newest bilan is **≥ 6 full calendar months** old (`MIN_MONTHS = 6`, adjustable constant). No extra network call — reads the login-time prefetched `ResultsContext`.
+- **Date logic:** exported pure helper `monthsSince(iso, now)` → full calendar months (floored, so "plus de X" is literally true); `null` on missing/invalid/future dates. The bilan date comes from `results.find(r => r.dossier_id === newestDossierId).date_dossier` — NEVER `lastUpdated` (server-sync time) and NEVER `results[0]` (list is unsorted).
+- **Buckets/tone:** 6–11 months → `resultats.checkup_title_months` (+ gentle nudge); 12–23 → `checkup_title_year`; ≥ 24 → `checkup_title_years` (count = floor(months/12)); ≥ 12 months uses the stronger `checkup_nudge_yearly` ("recommandé une fois par an"). Plurals: fr `_one/_other`, ar full CLDR 6-form set.
+- **CTAs:** primary `.button-bordeaux` → `/${lang}/rendez-vous`; secondary bordered → `/${lang}/analyses?tab=bilans` (tab param already supported by the analyses page).
+- **Style:** deliberately a `.card` with a fuchsia `border-s-4` accent + `CalendarClock` icon tile — NOT a gradient banner, so it doesn't read as a duplicate of ServicesHub's fuchsia banner right below. RTL-safe (flex+gap, `text-start`, `border-s`, no directional chevrons). No hydration risk: SSR renders `null` (status `idle`), the widget appears after the client prefetch (below the fold — hero is `min-h-screen`).
 
 ### 3. Real-Time Status Widget (`useLabStatus`)
 - Integrates the `useLabStatus` hook to compute whether the laboratory is open or closed based on current local times.

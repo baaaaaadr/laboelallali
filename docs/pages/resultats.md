@@ -36,6 +36,11 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 ### 3. Data type — `src/types/cyberlab.ts` (mirrors the lab API — `functions/src/cyberlab/client.ts`)
 `CyberlabResult`: `dossier_id`, `patient_nom`, `patient_prenom`, `date_dossier` (ISO), `etat`, `analyses_summary`, `pdf_base64`. For `type: "patient"`, `patient_nom` / `patient_prenom` come back **empty** (data minimisation), so the UI intentionally does not show them. (Shared by the page AND `ResultsContext`.) `analyses_summary` is a comma-separated list of the lab's terse internal codes (e.g. `"NFS, GLY, HBA1C, U, CR"`), passed through verbatim — see §4c.
 
+### 4d. Checkup reminder — `src/components/features/results/CheckupReminder.tsx`
+- Rendered between the page header and the status blocks with `variant="results"` (compact). Same component is on the home page with `variant="home"` — full behavior documented in `docs/pages/home.md` §2.2. (The privacy-reassurance note sits at the very BOTTOM of the page, below all results — owner request.)
+- Self-gated: `null` unless linked patient (`userProfile.requester_id`) + `status === 'ready'` + newest bilan **≥ 6 full months** old. Bilan date = `date_dossier` of `newestDossierId` (NOT `lastUpdated`). Pure helper `monthsSince()` exported for testing.
+- i18n keys `resultats.checkup_*` in both `common.json` files (fr `_one/_other` plurals, ar 6-form CLDR). CTAs → `/{lang}/rendez-vous` (primary) and `/{lang}/analyses?tab=bilans`.
+
 ### 4c. "Détails des analyses" (code → name) — `src/components/features/results/AnalysesDetails.tsx`
 - Per result card, `analyses_summary` is rendered as a **collapsed** "Détails des analyses (N)" toggle. On first expand it **lazy-loads** the analyses catalog (Firestore `analyses`, ~324 docs) via `src/lib/analyses/catalog.ts` and lists each code resolved to its patient-facing name; unknown codes are shown **as-is**.
 - **Code matching gotcha:** catalog ids carry a category prefix (`"H  NFS"`, `"C  GLY"`) but the lab summary sends the **bare** code (`"NFS"`, `"GLY"`). `buildCodeMap` indexes both the full normalized id (`HNFS`) and the prefix-stripped bare code (`NFS`); a bare code shared by ≥2 analyses is **ambiguous → dropped** (show the raw code rather than risk a wrong medical name). No fuzzy/tag matching for the same reason (so e.g. `HBA1C` vs catalog `HBA1` stays a code).

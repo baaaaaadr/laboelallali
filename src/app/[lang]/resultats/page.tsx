@@ -22,6 +22,7 @@ import { useResults } from '@/contexts/ResultsContext';
 import { getClientFunctions } from '@/config/firebase';
 import type { CyberlabResult } from '@/types/cyberlab';
 import AnalysesDetails from '@/components/features/results/AnalysesDetails';
+import CheckupReminder from '@/components/features/results/CheckupReminder';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import {
   FileText,
@@ -643,11 +644,8 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           </button>
         </div>
 
-        {/* Privacy reassurance */}
-        <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] text-sm">
-          <ShieldCheck size={18} className="text-[var(--color-fuchsia-accent)] mt-0.5 flex-shrink-0" />
-          <span>{t('resultats.privacy_note', "Vos résultats sont récupérés à la demande et ne sont jamais conservés par l'application.")}</span>
-        </div>
+        {/* Checkup reminder — only renders when ready AND last bilan ≥ 6 months old */}
+        <CheckupReminder lang={lang} variant="results" />
 
         {/* Loading (idle = prefetch not resolved yet → also show the loader) */}
         {(status === 'loading' || status === 'idle') && (
@@ -770,6 +768,12 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             </div>
           </>
         )}
+
+        {/* Privacy reassurance — kept at the very bottom, below all results */}
+        <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] text-sm">
+          <ShieldCheck size={18} className="text-[var(--color-fuchsia-accent)] mt-0.5 flex-shrink-0" />
+          <span>{t('resultats.privacy_note', "Vos résultats sont récupérés à la demande et ne sont jamais conservés par l'application.")}</span>
+        </div>
       </div>
 
       {/* PDF viewer modal — in-memory blob, revoked on close */}

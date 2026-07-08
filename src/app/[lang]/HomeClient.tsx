@@ -3,6 +3,7 @@
 import HeroBanner from '@/components/features/home/HeroBanner';
 import ServicesHub from '@/components/features/home/ServicesHub';
 import LabStatusWidget from '@/components/features/home/LabStatusWidget';
+import CheckupReminder from '@/components/features/results/CheckupReminder';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from "react";
 import { useInView } from 'react-intersection-observer';
@@ -88,6 +89,9 @@ export default function HomeClient({ lang }: { lang: string }) {
       </div>
       
       <div className="container mx-auto px-4 pb-12">
+        {/* Personal checkup reminder — renders only for linked patients whose
+            newest bilan is ≥ 6 months old (self-gated, null otherwise) */}
+        <CheckupReminder lang={lang} variant="home" />
         {/* Flagship services hub (Résultats banner + quick-access grid) — eager, priority CTA */}
         <ServicesHub lang={lang} />
         <LazySection minHeight="300px"><WhyChooseUs /></LazySection>
