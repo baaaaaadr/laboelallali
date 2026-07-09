@@ -1,0 +1,505 @@
+<title>Schéma serveurs — Laboratoire El Allali</title>
+<style>
+  :root {
+    --paper: #FBF7F5;
+    --surface: #FFFFFF;
+    --surface-2: #FDF3F5;
+    --ink: #2A1D20;
+    --ink-soft: #6B5A5E;
+    --line: #E7D9DC;
+    --line-strong: #D8C3C8;
+    --bordeaux: #800020;
+    --fuchsia: #E5316F;
+    --shield: #1F5F9E;
+    --ok: #2E7D5B;
+    --ok-bg: #E7F3ED;
+    --pending: #9A7400;
+    --pending-bg: #F6EFD8;
+
+    --font-display: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+
+    --maxw: 780px;
+    --radius: 12px;
+    --shadow: 0 1px 2px rgba(42, 29, 32, .05), 0 8px 24px -12px rgba(42, 29, 32, .18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1A0F12;
+      --surface: #241519;
+      --surface-2: #2C181D;
+      --ink: #F5E9EC;
+      --ink-soft: #C4A9AF;
+      --line: #3A252B;
+      --line-strong: #4A3037;
+      --bordeaux: #FF79A8;
+      --fuchsia: #FF6F9C;
+      --shield: #7CB2E8;
+      --ok: #63C79A;
+      --ok-bg: #17352A;
+      --pending: #E7C55E;
+      --pending-bg: #322613;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1A0F12; --surface: #241519; --surface-2: #2C181D;
+    --ink: #F5E9EC; --ink-soft: #C4A9AF; --line: #3A252B; --line-strong: #4A3037;
+    --bordeaux: #FF79A8; --fuchsia: #FF6F9C; --shield: #7CB2E8;
+    --ok: #63C79A; --ok-bg: #17352A; --pending: #E7C55E; --pending-bg: #322613;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+  }
+  :root[data-theme="light"] {
+    --paper: #FBF7F5; --surface: #FFFFFF; --surface-2: #FDF3F5;
+    --ink: #2A1D20; --ink-soft: #6B5A5E; --line: #E7D9DC; --line-strong: #D8C3C8;
+    --bordeaux: #800020; --fuchsia: #E5316F; --shield: #1F5F9E;
+    --ok: #2E7D5B; --ok-bg: #E7F3ED; --pending: #9A7400; --pending-bg: #F6EFD8;
+    --shadow: 0 1px 2px rgba(42,29,32,.05), 0 8px 24px -12px rgba(42,29,32,.18);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sheet {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: clamp(24px, 5vw, 56px) clamp(18px, 4vw, 40px) 64px;
+  }
+
+  /* ---------- Header ---------- */
+  .masthead {
+    border-bottom: 2px solid var(--bordeaux);
+    padding-bottom: 22px;
+    margin-bottom: 34px;
+  }
+  .eyebrow {
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--bordeaux);
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.7rem, 4.5vw, 2.5rem);
+    line-height: 1.1;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .lede {
+    margin: 0;
+    max-width: 58ch;
+    color: var(--ink-soft);
+    font-size: 1.02rem;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    margin-top: 18px;
+    font-size: .82rem;
+    color: var(--ink-soft);
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Section titles ---------- */
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 44px 0 4px;
+    color: var(--ink);
+  }
+  .section-sub {
+    margin: 0 0 22px;
+    color: var(--ink-soft);
+    font-size: .92rem;
+  }
+
+  /* ---------- Diagram spine ---------- */
+  .diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .node {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .node__icon {
+    flex: 0 0 auto;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    background: var(--surface-2);
+    color: var(--bordeaux);
+    border: 1px solid var(--line);
+  }
+  .node__icon svg { width: 22px; height: 22px; display: block; }
+  .node__body { min-width: 0; }
+  .node__title {
+    font-weight: 650;
+    font-size: 1rem;
+    margin: 2px 0 3px;
+    letter-spacing: -.005em;
+  }
+  .node__desc { color: var(--ink-soft); font-size: .9rem; }
+
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .74rem; font-weight: 600;
+    padding: 3px 9px; border-radius: 999px;
+    border: 1px solid transparent;
+  }
+  .badge svg { width: 13px; height: 13px; }
+  .badge--ok { background: var(--ok-bg); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+  .badge--wire { background: var(--surface-2); color: var(--ink-soft); border-color: var(--line-strong); }
+  .badge--pending { background: var(--pending-bg); color: var(--pending); border-color: color-mix(in srgb, var(--pending) 35%, transparent); }
+
+  /* node accent variants */
+  .node--shield .node__icon { color: var(--shield); background: color-mix(in srgb, var(--shield) 12%, var(--surface)); border-color: color-mix(in srgb, var(--shield) 30%, transparent); }
+  .node--active {
+    border-color: color-mix(in srgb, var(--ok) 45%, var(--line));
+    border-left: 4px solid var(--ok);
+  }
+  .node--active .node__icon { color: var(--ok); background: var(--ok-bg); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+  .node--cloud { background: var(--surface-2); }
+
+  /* Connector between nodes */
+  .link {
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 0;
+  }
+  .link::before, .link::after {
+    content: "";
+    width: 2px; height: 14px;
+    background: linear-gradient(var(--line-strong), var(--line-strong));
+  }
+  .link__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px dashed var(--line-strong);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: .78rem;
+    color: var(--ink-soft);
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .port {
+    font-family: var(--font-mono);
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--bordeaux);
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 1px 7px;
+    white-space: nowrap;
+  }
+
+  /* Two authorized branches */
+  .branches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .branches .node { box-shadow: none; }
+  .branch-note {
+    text-align: center;
+    font-size: .78rem;
+    color: var(--ok);
+    font-weight: 600;
+    margin: 12px 0 2px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .branch-note svg { width: 14px; height: 14px; }
+
+  /* Pending server, visually detached */
+  .pending-wrap { margin-top: 30px; }
+  .node--pending {
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--surface), var(--surface) 12px,
+      var(--surface-2) 12px, var(--surface-2) 24px
+    );
+    border: 2px dashed var(--pending);
+    box-shadow: none;
+    opacity: .96;
+  }
+  .node--pending .node__icon { color: var(--pending); background: var(--pending-bg); border-color: color-mix(in srgb, var(--pending) 35%, transparent); }
+  .detached-label {
+    text-align: center;
+    font-size: .76rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  /* ---------- Q&A cards ---------- */
+  .qa {
+    display: grid;
+    gap: 14px;
+  }
+  .qcard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .qcard__q {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 0 0 8px;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .qcard__num {
+    font-family: var(--font-mono);
+    font-size: .8rem;
+    color: var(--bordeaux);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 1px 7px;
+    flex: 0 0 auto;
+  }
+  .qcard__a { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+  .qcard__a strong { color: var(--ink); }
+  .verdict {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-weight: 700; font-size: .82rem;
+    margin-bottom: 6px;
+  }
+  .verdict svg { width: 15px; height: 15px; }
+  .verdict--ok { color: var(--ok); }
+  .verdict--pending { color: var(--pending); }
+
+  /* ---------- Legend ---------- */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px 18px;
+    margin-top: 20px; padding: 14px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-size: .82rem; color: var(--ink-soft);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .dot { width: 12px; height: 12px; border-radius: 4px; flex: 0 0 auto; }
+  .dot--ok { background: var(--ok); }
+  .dot--pending { background: var(--pending); }
+  .dot--shield { background: var(--shield); }
+
+  footer {
+    margin-top: 46px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: .8rem;
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+  }
+
+  @media (max-width: 520px) {
+    .branches { grid-template-columns: 1fr; }
+    .link__chip { flex-direction: column; gap: 3px; }
+  }
+
+  @media print {
+    body { background: #fff; }
+    .node, .qcard { box-shadow: none; }
+    .sheet { padding: 0; }
+    .pending-wrap { break-inside: avoid; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .node { transition: none; }
+  }
+</style>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <p class="eyebrow">Laboratoire El Allali · Infrastructure des résultats</p>
+    <h1>Comment les deux serveurs sont connectés</h1>
+    <p class="lede">Schéma simplifié de l'installation qui alimente l'espace résultats des patients — sécurité, alimentation et état actuel de la redondance.</p>
+    <div class="meta">
+      <span><b>Établi le</b> 6 juillet 2026</span>
+      <span><b>Pour</b> Dr EL ALLALI Mohamed Aziz</span>
+      <span><b>Détails techniques</b> Si Brahim (Computel)</span>
+    </div>
+  </header>
+
+  <h2 class="section-title">Le chemin des données, de bout en bout</h2>
+  <p class="section-sub">On lit le schéma du haut (les patients sur Internet) vers le bas (le labo). Chaque flèche indique la seule porte par laquelle les données peuvent passer.</p>
+
+  <div class="diagram">
+
+    <!-- Internet -->
+    <div class="node node--cloud">
+      <div class="node__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/></svg>
+      </div>
+      <div class="node__body">
+        <div class="node__title">Patients &amp; Internet</div>
+        <div class="node__desc">Les patients consultent leurs résultats depuis leur téléphone ou ordinateur, via le site.</div>
+      </div>
+    </div>
+
+    <div class="link">
+      <span class="link__chip">Trafic web sécurisé (HTTPS)</span>
+    </div>
+
+    <!-- Cloudflare -->
+    <div class="node node--shield">
+      <div class="node__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <div class="node__body">
+        <div class="node__title">Cloudflare — le bouclier de sécurité</div>
+        <div class="node__desc">Tout le trafic passe d'abord par Cloudflare, qui bloque les attaques et le trafic suspect <em>avant</em> qu'ils n'atteignent le serveur.</div>
+      </div>
+    </div>
+
+    <div class="link">
+      <span class="link__chip"><span class="port">Port Web · 443</span> ouvert uniquement aux adresses de Cloudflare</span>
+    </div>
+
+    <!-- Active server -->
+    <div class="node node--active">
+      <div class="node__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>
+      </div>
+      <div class="node__body">
+        <div class="node__title">Serveur des résultats — en service</div>
+        <div class="node__desc">Le serveur qui répond aux patients. Il possède sa <strong>propre ligne ADSL dédiée</strong> et n'ouvre que deux portes, toutes deux verrouillées.</div>
+        <div class="badges">
+          <span class="badge badge--ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Actif</span>
+          <span class="badge badge--ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg> Branché sur onduleur</span>
+          <span class="badge badge--wire">Ligne ADSL dédiée</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="link">
+      <span class="link__chip"><span class="port">Port SSH · 22</span> ouvert à seulement 2 adresses connues</span>
+    </div>
+
+    <!-- Two authorized IPs -->
+    <div class="branches">
+      <div class="node">
+        <div class="node__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/><path d="M8 7h.01M8 17h.01"/></svg>
+        </div>
+        <div class="node__body">
+          <div class="node__title">Serveur du labo (Qualam)</div>
+          <div class="node__desc">Envoie automatiquement les résultats validés vers le serveur.</div>
+        </div>
+      </div>
+      <div class="node">
+        <div class="node__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l7-7 3 3M15.5 8.5l2 2"/></svg>
+        </div>
+        <div class="node__body">
+          <div class="node__title">IP fixe de Si Brahim</div>
+          <div class="node__desc">Accès de maintenance, réservé à sa seule adresse.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="branch-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      Toute autre adresse est automatiquement refusée.
+    </div>
+
+  </div>
+
+  <!-- Pending redundant server -->
+  <div class="pending-wrap">
+    <div class="detached-label">Séparé — pas encore relié</div>
+    <div class="node node--pending">
+      <div class="node__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>
+      </div>
+      <div class="node__body">
+        <div class="node__title">Serveur n°2 (modèle de 2019)</div>
+        <div class="node__desc">L'ancien serveur de la première installation CyberLab. Il est <strong>physiquement posé au labo</strong>, mais <strong>pas encore connecté ni configuré</strong>. Il servira de secours automatique (redondance) : Si Brahim finalisera son installation à son retour de Casablanca.</div>
+        <div class="badges">
+          <span class="badge badge--pending">Redondance à venir</span>
+          <span class="badge badge--pending">Onduleur prévu à la mise en service</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend" aria-hidden="false">
+    <span><span class="dot dot--shield"></span> Bouclier / filtrage</span>
+    <span><span class="dot dot--ok"></span> En service &amp; sécurisé</span>
+    <span><span class="dot dot--pending"></span> Prévu, pas encore actif</span>
+    <span><span class="port">Port</span> = porte d'entrée réseau</span>
+  </div>
+
+  <!-- Q&A -->
+  <h2 class="section-title">Vos trois questions, en clair</h2>
+  <p class="section-sub">Les réponses aux points soulevés dans votre message.</p>
+
+  <div class="qa">
+
+    <div class="qcard">
+      <div class="qcard__q"><span class="qcard__num">Q1</span> Risque de saturation à cause des PDF des bilans&nbsp;?</div>
+      <div class="verdict verdict--ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Aucun risque aujourd'hui — simplement à surveiller</div>
+      <p class="qcard__a">Les PDF des bilans sont bien conservés sur le <strong>serveur du labo</strong> — c'est normal, c'est là que vivent les données. Aujourd'hui, le disque n'est rempli qu'à <strong>3 à 4 %</strong>, car peu de patients utilisent encore la consultation CyberLab : nous sommes très loin de toute saturation. Point à <strong>surveiller</strong> simplement si l'adoption augmente avec le temps.</p>
+      <p class="qcard__a" style="margin-top:10px">À noter (protection des données / <strong>CNDP</strong>) : l'<strong>application</strong> patient, elle, ne garde jamais de copie des PDF. Elle les demande au serveur au moment de la consultation, les affiche, puis n'en conserve rien.</p>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard__q"><span class="qcard__num">Q2</span> Comment les deux serveurs sont-ils connectés&nbsp;?</div>
+      <div class="verdict verdict--pending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Un serveur actif, un second en attente</div>
+      <p class="qcard__a">Le serveur actif est celui décrit dans le schéma ci-dessus : ligne ADSL dédiée, deux portes seulement (web via Cloudflare, et SSH réservé à 2 adresses). <strong>Le serveur n°2 n'est pas encore relié</strong> — il est posé au labo en attendant que Si Brahim mette en place la redondance à son retour.</p>
+    </div>
+
+    <div class="qcard">
+      <div class="qcard__q"><span class="qcard__num">Q3</span> Sont-ils sur onduleur&nbsp;?</div>
+      <div class="verdict verdict--ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Oui pour le serveur actif</div>
+      <p class="qcard__a">Si Brahim a vérifié avec Mohamed (au labo) que la rallonge d'alimentation est bien <strong>ondulée</strong> — Mohamed l'a confirmé — puis a branché le serveur dessus. Il est donc protégé contre les coupures et micro-coupures de courant. Le serveur n°2 sera lui aussi branché sur l'onduleur au moment de sa mise en service.</p>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>Laboratoire El Allali — schéma interne, à usage explicatif.</span>
+    <span>Détails techniques&nbsp;: Si Brahim / Computel.</span>
+  </footer>
+
+</div>
