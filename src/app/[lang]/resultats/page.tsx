@@ -23,6 +23,7 @@ import { getClientFunctions } from '@/config/firebase';
 import type { CyberlabResult } from '@/types/cyberlab';
 import AnalysesDetails from '@/components/features/results/AnalysesDetails';
 import CheckupReminder from '@/components/features/results/CheckupReminder';
+import ResultsIndicators from '@/components/features/results/ResultsIndicators';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import {
   FileText,
@@ -634,17 +635,28 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
               {t('resultats.subtitle', "Consultez et téléchargez vos résultats d'analyses.")}
             </p>
           </div>
-          <button
-            onClick={refresh}
-            disabled={status === 'loading'}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[var(--border-default)] text-[var(--text-primary)] rounded-lg hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <RefreshCw size={18} className={status === 'loading' ? 'animate-spin' : ''} />
-            {t('resultats.refresh', 'Actualiser')}
-          </button>
+          <div className="flex flex-col items-start sm:items-end gap-1.5">
+            <button
+              onClick={refresh}
+              disabled={status === 'loading'}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[var(--border-default)] text-[var(--text-primary)] rounded-lg hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={18} className={status === 'loading' ? 'animate-spin' : ''} />
+              {t('resultats.refresh', 'Actualiser')}
+            </button>
+            {/* Freshness sits right under the button — it qualifies the refresh action. */}
+            {lastUpdated && (
+              <span className="text-xs text-[var(--text-tertiary)] font-medium">
+                <LastUpdatedLabel timestamp={lastUpdated} />
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Checkup reminder — only renders when ready AND last bilan ≥ 6 months old */}
+        {/* At-a-glance indicators (count / last bilan / follow-up since) — ready only */}
+        {status === 'ready' && <ResultsIndicators results={results} lang={lang} />}
+
+        {/* Checkup reminder — always shown for linked patients once results are ready */}
         <CheckupReminder lang={lang} variant="results" />
 
         {/* Loading (idle = prefetch not resolved yet → also show the loader) */}
@@ -735,15 +747,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
               @keyframes resFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
               @keyframes resBar { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
             `}</style>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-[var(--text-tertiary)] font-medium">
-              <span>{t('resultats.count', { count: results.length })}</span>
-              {lastUpdated && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <LastUpdatedLabel timestamp={lastUpdated} />
-                </>
-              )}
-            </div>
+            {/* Count → indicators bar (top); freshness → under the Actualiser button. */}
             <div className="space-y-3">
               {grouped.years.map((year) => {
                 const key = String(year);

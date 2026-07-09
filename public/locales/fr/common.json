@@ -209,15 +209,18 @@
     "home_highlight_title": "Consultez vos résultats en ligne",
     "home_highlight_desc": "Demandez l'accès à vos résultats et consultez-les en ligne, en toute sécurité.",
     "home_highlight_cta": "Voir mes résultats",
+    "checkup_title_recent": "Votre dernier bilan date de moins d'un mois",
     "checkup_title_months_one": "Votre dernier bilan remonte à plus d'un mois",
     "checkup_title_months_other": "Votre dernier bilan remonte à plus de {{count}} mois",
     "checkup_title_year": "Votre dernier bilan remonte à plus d'un an",
     "checkup_title_years_one": "Votre dernier bilan remonte à plus d'un an",
     "checkup_title_years_other": "Votre dernier bilan remonte à plus de {{count}} ans",
-    "checkup_nudge_gentle": "Il est peut-être temps d'en refaire un pour surveiller votre santé.",
-    "checkup_nudge_yearly": "Il est recommandé de faire un bilan une fois par an. Pensez à en refaire un pour surveiller votre santé.",
+    "checkup_nudge_gentle": "Pensez à programmer votre prochain bilan pour surveiller votre santé.",
     "checkup_cta_appointment": "Prendre rendez-vous",
-    "checkup_cta_bilans": "Découvrir nos bilans"
+    "checkup_cta_bilans": "Découvrir nos bilans",
+    "stats_bilans_label": "Bilans",
+    "stats_last_label": "Dernier bilan",
+    "stats_since_label": "Suivi depuis"
   },
   "services_hub": {
     "title": "Nos services",

@@ -261,6 +261,36 @@ html, body {
   box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3);
 }
 
+/* Outline counterpart of .button-bordeaux — same box model, transparent fill.
+   !important defeats the unlayered global `a { color: var(--text-accent) }`. */
+.button-bordeaux-outline {
+  background-color: transparent !important;
+  color: var(--color-bordeaux-primary) !important;
+  border: 2px solid var(--color-bordeaux-primary);
+  padding: 0.75rem 1.625rem; /* offsets the 2px border → matches .button-bordeaux height */
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.button-bordeaux-outline:hover {
+  background-color: var(--color-bordeaux-primary) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-bordeaux-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(128, 0, 32, 0.3);
+}
+
 /* === MOBILE MENU STYLES === */
 
 /* FIXED: Mobile menu action buttons with proper visibility */
