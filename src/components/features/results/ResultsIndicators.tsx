@@ -31,11 +31,12 @@ export default function ResultsIndicators({
     new Intl.NumberFormat(isArabic ? 'ar-MA' : 'fr-FR', { useGrouping: false }).format(n);
   const formatDate = (iso: string) => {
     const d = new Date(iso);
+    // Abbreviated month ("22 sept. 2025") — compact enough to fit a narrow mobile tile.
     return Number.isNaN(d.getTime())
       ? iso
       : d.toLocaleDateString(isArabic ? 'ar-MA' : 'fr-FR', {
           year: 'numeric',
-          month: 'long',
+          month: 'short',
           day: 'numeric',
         });
   };
@@ -68,7 +69,7 @@ export default function ResultsIndicators({
   return (
     <div className={`grid ${cols} gap-3`}>
       {tiles.map(({ icon: Icon, value, label }, i) => (
-        <div key={i} className="card p-4 flex items-center gap-3">
+        <div key={i} className="card p-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
           <div className="h-11 w-11 rounded-lg bg-[var(--color-bordeaux-primary)]/10 dark:bg-[var(--color-bordeaux-primary)]/20 text-[var(--color-bordeaux-primary)] flex items-center justify-center flex-shrink-0">
             <Icon size={20} />
           </div>
