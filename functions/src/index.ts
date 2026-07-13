@@ -16,6 +16,9 @@ import next from "next";
 // Patient results bridge (CyberLab) — see docs/integrations/cyberlab-results-api.md
 export { fetchResults } from "./cyberlab/fetchResults";
 
+// Staff-only onboarding probe: test a requester_id against CyberLab (list-only).
+export { adminTestResults } from "./cyberlab/adminTestResults";
+
 // Admin space callables (staff attach requester_id/type; owner/admin manage roles).
 export {
   adminLookupPatient,

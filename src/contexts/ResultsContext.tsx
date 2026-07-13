@@ -130,7 +130,10 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
           // case a build still returns the full list).
           const match = data?.results?.find((x) => x.dossier_id === dossierId) ?? data?.results?.[0];
           const base64 = match?.pdf_base64 || '';
-          const next: PdfState = base64 ? { status: 'ready', base64 } : { status: 'error' };
+          // The call SUCCEEDED but the lab server sent no PDF bytes → 'unavailable'
+          // (not 'error'): the document isn't attached in CyberLab yet, which the
+          // card surfaces with a calmer message than a hard failure.
+          const next: PdfState = base64 ? { status: 'ready', base64 } : { status: 'unavailable' };
           setPdfState(dossierId, next);
           return next;
         } catch {

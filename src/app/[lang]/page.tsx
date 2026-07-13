@@ -1,10 +1,7 @@
 import { Metadata } from 'next';
 
 // Constants
-import { 
-  LAB_NAME, 
-  LAB_ADDRESS
-} from '@/constants/contact';
+import { LAB_SITE_URL } from '@/constants/contact';
 
 // Import the client component
 import HomeClient from './HomeClient';
@@ -40,12 +37,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: meta.title,
     description: meta.description,
     keywords: meta.keywords,
+    // metadataBase is inherited from the [lang] layout (resolves the relative OG image).
     openGraph: {
       title: meta.og_title,
       description: meta.og_description,
       type: 'website',
       locale: lang,
       siteName: 'Laboratoire El Allali',
+      url: `${LAB_SITE_URL}/${lang}`,
+      images: ['/images/hero-banner.jpg'],
     },
   };
 }

@@ -286,6 +286,7 @@
     "pdf_loading": "جارٍ تحميل ملف PDF…",
     "pdf_loading_short": "جارٍ التحميل…",
     "pdf_load_error": "تعذّر تحميل ملف PDF.",
+    "pdf_unavailable": "لم يُرفق المختبر بعد ملف PDF لهذا الملف. أعد المحاولة لاحقاً أو تواصل مع المختبر.",
     "home_highlight_title": "اطّلع على نتائجك عبر الإنترنت",
     "home_highlight_desc": "اطلب الوصول إلى نتائجك واطّلع عليها عبر الإنترنت بكل أمان.",
     "home_highlight_cta": "عرض نتائجي",
@@ -308,7 +309,11 @@
     "checkup_cta_bilans": "اكتشف باقاتنا",
     "stats_bilans_label": "الفحوصات",
     "stats_last_label": "آخر فحص",
-    "stats_since_label": "المتابعة منذ"
+    "stats_since_label": "المتابعة منذ",
+    "share_access_title": "أخبِر أحد أقاربك",
+    "share_access_desc": "يمكن لأحد أقاربك أيضًا الاطّلاع على تحاليله عبر الإنترنت. شارك معه الرابط بنقرة واحدة.",
+    "share_access_cta": "مشاركة",
+    "share_access_message": "مرحبًا، أصبحت الآن أطّلع على تحاليلي الطبية عبر الإنترنت مباشرة من هاتفي مع مختبر العلالي — بسيط وآمن. هذا هو الرابط إن أردت الاستفادة:"
   },
   "services_hub": {
     "title": "خدماتنا",
@@ -384,7 +389,25 @@
     "req_validate": "تفعيل الوصول",
     "req_reject": "رفض",
     "req_fulfilled": "تم تفعيل الوصول لـ {{name}}.",
-    "req_rejected": "تم رفض طلب {{name}}."
+    "req_rejected": "تم رفض طلب {{name}}.",
+    "test_title": "اختبار مُعرّف النتائج",
+    "test_subtitle": "تأكد من أن المُعرّف يُرجع نتائج فعلاً قبل دعوة المريض لتسجيل الدخول.",
+    "test_run": "اختبار",
+    "test_running": "جارٍ الاختبار…",
+    "test_ok": "التحاليل تظهر بشكل صحيح ✓",
+    "test_empty": "لا توجد نتائج لهذا المُعرّف.",
+    "test_error": "تعذّر الاختبار حالياً. حاول مرة أخرى.",
+    "test_count_zero": "لا ملفات",
+    "test_count_one": "ملف واحد",
+    "test_count_two": "ملفان",
+    "test_count_few": "{{count}} ملفات",
+    "test_count_many": "{{count}} ملفًا",
+    "test_count_other": "{{count}} ملف",
+    "test_pdf_view": "عرض ملف PDF",
+    "test_pdf_loading": "جارٍ التحميل…",
+    "test_pdf_ok": "تم جلب ملف PDF ✓",
+    "test_pdf_empty": "لم يُرجِع الخادم ملف PDF لهذا الملف.",
+    "test_pdf_error": "فشل في جلب ملف PDF."
   },
   "theme": {
     "toggle": "تغيير المظهر",

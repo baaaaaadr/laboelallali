@@ -12,35 +12,12 @@
  */
 import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+// Role gate + region live in a side-effect-free leaf module, shared with the
+// CyberLab staff callable (adminTestResults) so both use the exact same check.
+import { LEVEL, levelOf, requireLevel, REGION } from "./roles";
 
-const REGION = "europe-southwest1";
 const VALID_TYPES = ["patient", "medecin", "correspondant"] as const;
 type RequesterType = (typeof VALID_TYPES)[number];
-
-const LEVEL: Record<string, number> = { owner: 3, admin: 2, staff: 1 };
-function levelOf(role?: string): number {
-  return (role && LEVEL[role]) || 0;
-}
-
-/** Throws unless the caller is authenticated and at least `min` level. */
-async function requireLevel(
-  request: CallableRequest,
-  min: number
-): Promise<{ uid: string; level: number }> {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "Authentification requise.");
-  }
-  const uid = request.auth.uid;
-  const snap = await admin.firestore().doc(`users/${uid}`).get();
-  const level = levelOf(snap.data()?.role);
-  if (level < min) {
-    throw new HttpsError(
-      "permission-denied",
-      "Accès réservé au personnel du laboratoire."
-    );
-  }
-  return { uid, level };
-}
 
 async function getUidByEmail(email: string, subject: string): Promise<string> {
   try {

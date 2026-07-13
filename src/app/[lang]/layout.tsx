@@ -13,6 +13,7 @@ import PWAComponents from '@/components/features/pwa/PWAComponents';
 import SplashRemover from '@/components/ui/SplashRemover';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ToastProvider from '@/components/providers/ToastProvider';
+import { LAB_SITE_URL } from '@/constants/contact';
 // AuthProvider + ResultsProvider are mounted in the ROOT layout (src/app/layout.tsx)
 // so they survive language switches (this [lang] subtree remounts on lang change).
 
@@ -80,6 +81,17 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     description: description,
     applicationName: 'LaboElAllali',
     manifest: '/manifest.json',
+    // Site-wide social preview (rich card when any page is shared, e.g. on WhatsApp).
+    // metadataBase resolves the relative OG image to an absolute URL.
+    metadataBase: new URL(LAB_SITE_URL),
+    openGraph: {
+      title: pageTitle,
+      description: description,
+      type: 'website',
+      locale: lang,
+      siteName: 'Laboratoire El Allali',
+      images: ['/images/hero-banner.jpg'],
+    },
     appleWebApp: {
       capable: true,
       statusBarStyle: 'black-translucent',
@@ -134,7 +146,7 @@ export default async function LangLayout({
   try {
     i18nInstance = await initServerI18next(lang, [defaultNS, 'appointment', 'glabo', 'catalog']);
     resources = i18nInstance.services.resourceStore.data;
-  } catch (error) {
+  } catch {
     // Fallback to create a minimal instance
     i18nInstance = createInstance();
     await i18nInstance.init({ lng: lang });

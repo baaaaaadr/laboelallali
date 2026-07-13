@@ -24,7 +24,10 @@ export type ResultsStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | '
 export type IncludePdf = 'latest' | 'none' | 'all';
 
 // Per-dossier PDF fetch state (PDFs are loaded on demand, one at a time).
+// 'unavailable' = the lab server answered OK but returned no PDF for this dossier
+// (distinct from 'error' = the fetch itself failed) — lets the UI show a clearer,
+// non-alarming message ("le laboratoire n'a pas encore joint le PDF").
 export interface PdfState {
-  status: 'idle' | 'loading' | 'ready' | 'error';
+  status: 'idle' | 'loading' | 'ready' | 'error' | 'unavailable';
   base64?: string;
 }

@@ -77,3 +77,8 @@ functions/public/public/
 
 # Local context files (except the generator script)
 nul
+
+# Private sample result PDFs (real medical data — NEVER commit)
+.private-samples/
+*.pdf
+*.PDF

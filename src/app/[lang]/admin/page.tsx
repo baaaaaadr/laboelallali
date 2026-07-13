@@ -16,7 +16,10 @@ import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
 import { getClientFunctions } from '@/config/firebase';
 import MedicalLoader from '@/components/ui/MedicalLoader';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X } from 'lucide-react';
+import type { CyberlabResponse } from '@/types/cyberlab';
+import ResultsIndicators from '@/components/features/results/ResultsIndicators';
+import AnalysesDetails from '@/components/features/results/AnalysesDetails';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X, FlaskConical, FileText, Eye, Loader2 } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
@@ -55,6 +58,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const isStaff = level >= 1;
   const isManager = level >= 2; // admin or owner
   const isOwner = level >= 3;
+  const isArabic = lang === 'ar';
 
   // Encode section
   const [email, setEmail] = useState('');
@@ -80,11 +84,101 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [arMsg, setArMsg] = useState<string | null>(null);
   const [arError, setArError] = useState<string | null>(null);
 
+  // Test-a-requester-id section (onboarding probe — see adminTestResults callable)
+  const [testId, setTestId] = useState('');
+  const [testType, setTestType] = useState<RequesterType>('patient');
+  const [testBusy, setTestBusy] = useState(false);
+  const [testStatus, setTestStatus] = useState<'idle' | 'ok' | 'empty' | 'error'>('idle');
+  const [testError, setTestError] = useState<string | null>(null);
+  const [testResp, setTestResp] = useState<CyberlabResponse | null>(null);
+  // Per-dossier PDF probe state (reproduces the patient "Voir", incl. the empty-PDF case).
+  const [pdfProbe, setPdfProbe] = useState<Record<string, 'loading' | 'ok' | 'empty' | 'error'>>({});
+
   const errMsg = useCallback(
     (err: unknown): string =>
       (err as { message?: string })?.message || t('admin.error', 'Une erreur est survenue. Réessayez.'),
     [t]
   );
+
+  // ── Test a requester_id (onboarding probe) ──────────────────────────────────
+  // Calls the staff-only `adminTestResults` callable with a client-supplied id and
+  // shows what the patient would see (list only, no PDFs). Reusable so both the form
+  // submit and any future shortcut can trigger the same preview.
+  const runTest = useCallback(
+    async (id: string, type: RequesterType) => {
+      const requesterId = id.trim();
+      if (!requesterId) return;
+      setTestError(null);
+      setTestResp(null);
+      setTestStatus('idle');
+      setPdfProbe({});
+      setTestBusy(true);
+      try {
+        const res = await callFn<CyberlabResponse>('adminTestResults', { requester_id: requesterId, type });
+        setTestResp(res);
+        setTestStatus(res.results.length > 0 ? 'ok' : 'empty');
+      } catch (err: unknown) {
+        // Backend maps "unknown id / no results" to not-found → treat as the empty state.
+        const code = ((err as { code?: string })?.code || '').replace('functions/', '');
+        if (code === 'not-found') {
+          setTestStatus('empty');
+        } else {
+          setTestStatus('error');
+          setTestError(errMsg(err));
+        }
+      } finally {
+        setTestBusy(false);
+      }
+    },
+    [errMsg]
+  );
+
+  // Localized date for the preview cards (mirrors the /resultats formatting).
+  const fmtDate = (iso: string) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime())
+      ? iso
+      : d.toLocaleDateString(isArabic ? 'ar-MA' : 'fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+  // Map the known lab status to i18n; pass any other value through verbatim.
+  const etatLabel = (raw: string) =>
+    raw.trim().toLowerCase() === 'final' ? t('resultats.etat_final', 'Finalisé') : raw;
+
+  // base64 → in-memory PDF blob URL (never persisted to disk).
+  const base64ToBlobUrl = (b64: string) => {
+    const clean = (b64 || '').replace(/\s+/g, '');
+    const bin = atob(clean);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+  };
+
+  // Fetch ONE dossier's PDF (exactly like the patient "Voir") and open it in a new tab.
+  // An empty PDF from the lab server → 'empty' — that is the real onboarding failure we
+  // want staff to catch here instead of the patient discovering it at home.
+  const viewTestPdf = async (dossierId: string) => {
+    setPdfProbe((m) => ({ ...m, [dossierId]: 'loading' }));
+    try {
+      const res = await callFn<CyberlabResponse>('adminTestResults', {
+        requester_id: testId.trim(),
+        type: testType,
+        dossier_id: dossierId,
+      });
+      const match = res.results?.find((x) => x.dossier_id === dossierId) ?? res.results?.[0];
+      const base64 = match?.pdf_base64 || '';
+      if (!base64) {
+        setPdfProbe((m) => ({ ...m, [dossierId]: 'empty' }));
+        return;
+      }
+      const url = base64ToBlobUrl(base64);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      setPdfProbe((m) => ({ ...m, [dossierId]: 'ok' }));
+    } catch {
+      setPdfProbe((m) => ({ ...m, [dossierId]: 'error' }));
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) router.push(`/${lang}/login`);
@@ -449,6 +543,139 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             </form>
           </div>
         )}
+
+        {/* ── Test a requester_id (onboarding probe) ──────────────────────── */}
+        <div className="card p-6 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+              <FlaskConical size={20} className="text-[var(--color-bordeaux-primary)]" />
+              {t('admin.test_title', 'Tester un identifiant de résultats')}
+            </h2>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
+              {t('admin.test_subtitle', "Vérifiez qu'un identifiant renvoie bien des résultats avant d'inviter le patient à se connecter.")}
+            </p>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              runTest(testId, testType);
+            }}
+            className="flex flex-col sm:flex-row gap-3"
+          >
+            <input
+              type="text"
+              value={testId}
+              onChange={(e) => setTestId(e.target.value)}
+              placeholder={t('admin.requester_id_label', 'Identifiant patient (requester_id)')}
+              className="flex-1 rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
+            />
+            <select
+              value={testType}
+              onChange={(e) => setTestType(e.target.value as RequesterType)}
+              aria-label={t('admin.type_label', 'Type')}
+              className="rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
+            >
+              <option value="patient">{t('admin.type_patient', 'Patient')}</option>
+              <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
+              <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
+            </select>
+            <button
+              type="submit"
+              disabled={testBusy || !testId.trim()}
+              className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-60"
+            >
+              <FlaskConical size={18} />
+              {testBusy ? t('admin.test_running', 'Test en cours…') : t('admin.test_run', 'Tester')}
+            </button>
+          </form>
+
+          {/* Status banner */}
+          {testStatus === 'ok' && (
+            <div className="flex items-center gap-2 text-sm text-[var(--status-success)]">
+              <CheckCircle size={16} /> <span>{t('admin.test_ok', 'Les analyses remontent bien ✓')}</span>
+            </div>
+          )}
+          {testStatus === 'empty' && (
+            <div className="flex items-center gap-2 text-sm text-[var(--status-warning)]">
+              <AlertCircle size={16} /> <span>{t('admin.test_empty', 'Aucun résultat pour cet identifiant.')}</span>
+            </div>
+          )}
+          {testStatus === 'error' && (
+            <div className="flex items-center gap-2 text-sm text-[var(--status-error)]">
+              <AlertCircle size={16} /> <span>{testError || t('admin.test_error', 'Test impossible pour le moment. Réessayez.')}</span>
+            </div>
+          )}
+
+          {/* Preview — what the patient would see (list only, no PDFs) */}
+          {testStatus === 'ok' && testResp && (
+            <div className="space-y-4 pt-1">
+              <p className="text-sm font-medium text-[var(--text-secondary)]">
+                {t('admin.test_count', { count: testResp.results.length })}
+              </p>
+              <ResultsIndicators results={testResp.results} lang={lang} />
+              <div className="space-y-3">
+                {testResp.results.map((r) => (
+                  <div key={r.dossier_id} className="rounded-lg border border-[var(--border-default)] p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-[var(--color-bordeaux-primary)]/10 text-[var(--color-bordeaux-primary)] flex items-center justify-center flex-shrink-0">
+                        <FileText size={20} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-[var(--text-primary)] truncate">
+                            {t('resultats.dossier', 'Dossier')} {r.dossier_id}
+                          </p>
+                          {r.etat && (
+                            <span className="flex-shrink-0 text-xs font-semibold px-2.5 py-0.5 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)]">
+                              {etatLabel(r.etat)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-[var(--text-secondary)] mt-1">{fmtDate(r.date_dossier)}</p>
+                      </div>
+                    </div>
+                    {r.analyses_summary && <AnalysesDetails summary={r.analyses_summary} isArabic={isArabic} />}
+
+                    {/* PDF probe — reproduces the patient "Voir" for this dossier. */}
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => viewTestPdf(r.dossier_id)}
+                        disabled={pdfProbe[r.dossier_id] === 'loading'}
+                        className="button-bordeaux-outline justify-center flex items-center gap-2 disabled:opacity-60"
+                      >
+                        {pdfProbe[r.dossier_id] === 'loading' ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Eye size={16} />
+                        )}
+                        {pdfProbe[r.dossier_id] === 'loading'
+                          ? t('admin.test_pdf_loading', 'Chargement…')
+                          : t('admin.test_pdf_view', 'Voir le PDF')}
+                      </button>
+                      {pdfProbe[r.dossier_id] === 'ok' && (
+                        <span className="flex items-center gap-1.5 text-sm text-[var(--status-success)]">
+                          <CheckCircle size={15} /> {t('admin.test_pdf_ok', 'PDF récupéré ✓')}
+                        </span>
+                      )}
+                      {pdfProbe[r.dossier_id] === 'empty' && (
+                        <span className="flex items-center gap-1.5 text-sm text-[var(--status-warning)]">
+                          <AlertCircle size={15} /> {t('admin.test_pdf_empty', "Le serveur n'a pas renvoyé de PDF pour ce dossier.")}
+                        </span>
+                      )}
+                      {pdfProbe[r.dossier_id] === 'error' && (
+                        <span className="flex items-center gap-1.5 text-sm text-[var(--status-error)]">
+                          <AlertCircle size={15} /> {t('admin.test_pdf_error', 'Échec de la récupération du PDF.')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* ── Team management (admin + owner) ──────────────────────────────── */}
         {isManager && (

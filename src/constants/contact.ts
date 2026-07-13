@@ -49,3 +49,6 @@ export const LAB_HOURS = {
 
 // Default WhatsApp number (first number from the WHATSAPP array)
 export const LAB_WHATSAPP_NUMBER = LAB_CONTACT.WHATSAPP[0].display;
+
+// Canonical public site URL (matches the domain used in the lab's PDFs).
+export const LAB_SITE_URL = "https://www.laboelallali.com";

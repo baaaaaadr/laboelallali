@@ -32,9 +32,27 @@ service cloud.firestore {
       allow write: if false; // Only admin/script can modify via Google Sheets sync
     }
 
-    // Allow authenticated users to read and write their own profile
+    // Authenticated users read/write ONLY their own profile — and may NEVER set or
+    // change the privileged fields role / requester_id / type. Those are managed
+    // exclusively server-side via the Admin SDK (which bypasses these rules):
+    // adminSetRequester, adminSetStaff, adminSetAdmin, adminFulfillAccessRequest.
+    // This blocks self-promotion to staff/owner AND self-pointing requester_id at
+    // another patient's id (which fetchResults/adminTestResults would otherwise trust).
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Create: a fresh profile may not include any privileged field.
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && !request.resource.data.keys().hasAny(['role', 'requester_id', 'type']);
+
+      // Update: allowed only if it does not CHANGE any privileged field. diff()
+      // compares values, so a {merge:true} write that echoes an unchanged role /
+      // requester_id is fine — only an actual change is blocked.
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data)
+              .affectedKeys().hasAny(['role', 'requester_id', 'type']);
     }
 
     // Default deny for anything not explicitly allowed

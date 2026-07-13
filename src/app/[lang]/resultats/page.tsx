@@ -24,6 +24,7 @@ import type { CyberlabResult } from '@/types/cyberlab';
 import AnalysesDetails from '@/components/features/results/AnalysesDetails';
 import CheckupReminder from '@/components/features/results/CheckupReminder';
 import ResultsIndicators from '@/components/features/results/ResultsIndicators';
+import ShareAccessCard from '@/components/features/results/ShareAccessCard';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import {
   FileText,
@@ -526,6 +527,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     const isNewest = r.dossier_id === newestDossierId;
     const loadingPdf = pdf.status === 'loading';
     const errorPdf = pdf.status === 'error';
+    // 'unavailable' = fetch OK but no PDF from the lab yet (calmer message, still retryable).
+    const unavailablePdf = pdf.status === 'unavailable';
+    const retryPdf = errorPdf || unavailablePdf;
     return (
       <div
         key={r.dossier_id}
@@ -580,6 +584,12 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           </p>
         )}
 
+        {unavailablePdf && (
+          <p className="text-sm text-[var(--status-warning)]">
+            {t('resultats.pdf_unavailable', "Le laboratoire n'a pas encore joint le PDF de ce dossier. Réessayez plus tard ou contactez le laboratoire.")}
+          </p>
+        )}
+
         <div className="flex flex-wrap gap-3 pt-1">
           <button
             onClick={() => handleView(r)}
@@ -590,12 +600,12 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             {loadingPdf ? t('resultats.pdf_loading_short', 'Chargement…') : t('resultats.view', 'Voir')}
           </button>
           <button
-            onClick={() => (errorPdf ? loadPdf(r.dossier_id) : handleDownload(r))}
+            onClick={() => (retryPdf ? loadPdf(r.dossier_id) : handleDownload(r))}
             disabled={loadingPdf}
             className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border-2 border-[var(--border-default)] text-[var(--text-primary)] font-medium hover:bg-[var(--background-tertiary)] hover:border-[var(--color-bordeaux-primary)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {errorPdf ? <RotateCw size={18} /> : <Download size={18} />}
-            {errorPdf ? t('resultats.retry', 'Réessayer') : t('resultats.download', 'Télécharger')}
+            {retryPdf ? <RotateCw size={18} /> : <Download size={18} />}
+            {retryPdf ? t('resultats.retry', 'Réessayer') : t('resultats.download', 'Télécharger')}
           </button>
           {canShare && (
             <button
@@ -772,6 +782,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             </div>
           </>
         )}
+
+        {/* Refer a relative to the online-results service (self-gated to patients) */}
+        <ShareAccessCard lang={lang} />
 
         {/* Privacy reassurance — kept at the very bottom, below all results */}
         <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] text-sm">

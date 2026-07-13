@@ -206,6 +206,7 @@
     "pdf_loading": "Chargement du PDF…",
     "pdf_loading_short": "Chargement…",
     "pdf_load_error": "Échec du chargement du PDF.",
+    "pdf_unavailable": "Le laboratoire n'a pas encore joint le PDF de ce dossier. Réessayez plus tard ou contactez le laboratoire.",
     "home_highlight_title": "Consultez vos résultats en ligne",
     "home_highlight_desc": "Demandez l'accès à vos résultats et consultez-les en ligne, en toute sécurité.",
     "home_highlight_cta": "Voir mes résultats",
@@ -220,7 +221,11 @@
     "checkup_cta_bilans": "Découvrir nos bilans",
     "stats_bilans_label": "Bilans",
     "stats_last_label": "Dernier bilan",
-    "stats_since_label": "Suivi depuis"
+    "stats_since_label": "Suivi depuis",
+    "share_access_title": "Faites-en profiter un proche",
+    "share_access_desc": "Un proche aussi pourrait consulter ses analyses en ligne. Partagez-lui le lien en un clic.",
+    "share_access_cta": "Partager",
+    "share_access_message": "Bonjour, je consulte désormais mes analyses médicales en ligne, directement sur mon téléphone, avec le Laboratoire El Allali — simple et sécurisé. Voici le lien si tu veux en profiter :"
   },
   "services_hub": {
     "title": "Nos services",
@@ -296,7 +301,21 @@
     "req_validate": "Valider l'accès",
     "req_reject": "Refuser",
     "req_fulfilled": "Accès activé pour {{name}}.",
-    "req_rejected": "Demande de {{name}} refusée."
+    "req_rejected": "Demande de {{name}} refusée.",
+    "test_title": "Tester un identifiant de résultats",
+    "test_subtitle": "Vérifiez qu'un identifiant renvoie bien des résultats avant d'inviter le patient à se connecter.",
+    "test_run": "Tester",
+    "test_running": "Test en cours…",
+    "test_ok": "Les analyses remontent bien ✓",
+    "test_empty": "Aucun résultat pour cet identifiant.",
+    "test_error": "Test impossible pour le moment. Réessayez.",
+    "test_count_one": "{{count}} dossier trouvé",
+    "test_count_other": "{{count}} dossiers trouvés",
+    "test_pdf_view": "Voir le PDF",
+    "test_pdf_loading": "Chargement…",
+    "test_pdf_ok": "PDF récupéré ✓",
+    "test_pdf_empty": "Le serveur n'a pas renvoyé de PDF pour ce dossier.",
+    "test_pdf_error": "Échec de la récupération du PDF."
   },
   "theme": {
     "toggle": "Changer le thème",
