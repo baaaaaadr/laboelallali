@@ -100,6 +100,129 @@ export const adminSetRequester = onCall(
   }
 );
 
+// ── Multi-field patient search (staff and up) ────────────────────────────────
+// Staff/interns often don't know the patient's exact email. This scans the users
+// collection server-side (the Admin SDK bypasses the "own doc only" Firestore
+// rule) and matches a free-text query against fullName / email / requester_id /
+// phone / dateOfBirth, returning a capped, ranked list. Read-heavy but bounded
+// by SCAN_LIMIT — fine for this lab's size; see the scale caveat in
+// docs/pages/admin.md. Like the rest of this file, it never logs PII.
+interface SearchData {
+  query?: string;
+}
+const SCAN_LIMIT = 5000; // max user docs scanned per search (cost guard)
+const MAX_RESULTS = 25; // max matches returned to the client
+
+/** lowercase + strip diacritics, so "Zoé"/"zoe" and "Béchir"/"bechir" match. */
+const stripAccents = (s: string): string =>
+  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+interface PatientMatch {
+  uid: string;
+  email: string | null;
+  hasProfile: boolean;
+  fullName: string;
+  phone: string;
+  requester_id: string;
+  type: string;
+  role: string;
+  createdAt: string;
+  dateOfBirth: string;
+  exact: boolean; // exact email or requester_id hit — ranked first
+}
+
+export const adminSearchPatients = onCall(
+  { region: REGION },
+  async (request: CallableRequest<SearchData>) => {
+    await requireLevel(request, LEVEL.staff);
+    const q = (request.data?.query || "").trim();
+    if (q.length < 2) return { results: [], truncated: false };
+
+    const nq = stripAccents(q);
+    const digits = q.replace(/\D/g, "");
+
+    const snap = await admin
+      .firestore()
+      .collection("users")
+      .limit(SCAN_LIMIT)
+      .get();
+
+    const matches: PatientMatch[] = [];
+    snap.forEach((doc) => {
+      const d = doc.data() || {};
+      const fullName = String(d.fullName || "");
+      const email = d.email == null ? "" : String(d.email);
+      const rid = String(d.requester_id || "");
+      const phone = String(d.phone || "").replace(/\D/g, "");
+      const dob = String(d.dateOfBirth || "");
+
+      const emailExact = email !== "" && stripAccents(email) === nq;
+      const ridExact = rid !== "" && rid === q;
+      const hit =
+        stripAccents(fullName).includes(nq) ||
+        (email !== "" && stripAccents(email).includes(nq)) ||
+        ridExact ||
+        (digits.length >= 1 && rid !== "" && rid.includes(digits)) ||
+        (digits.length >= 4 && phone !== "" && phone.includes(digits)) ||
+        (dob !== "" && dob.includes(q));
+      if (!hit) return;
+
+      matches.push({
+        uid: doc.id,
+        email: d.email ?? null,
+        hasProfile: true,
+        fullName,
+        phone: String(d.phone || ""),
+        requester_id: rid,
+        type: String(d.type || ""),
+        role: String(d.role || ""),
+        createdAt: String(d.createdAt || ""),
+        dateOfBirth: dob,
+        exact: emailExact || ridExact,
+      });
+    });
+
+    // Exact matches first, then alphabetical by name.
+    matches.sort(
+      (a, b) =>
+        Number(b.exact) - Number(a.exact) || a.fullName.localeCompare(b.fullName)
+    );
+    const truncated = matches.length > MAX_RESULTS;
+    const results = matches.slice(0, MAX_RESULTS);
+
+    // Fallback: an exact-email account that has authenticated but has no Firestore
+    // profile yet (so it wasn't in the scan). Mirrors the old adminLookupPatient
+    // path so staff can still attach a requester_id to a freshly-created account.
+    if (
+      q.includes("@") &&
+      !results.some((m) => (m.email || "").toLowerCase() === q.toLowerCase())
+    ) {
+      try {
+        const rec = await admin.auth().getUserByEmail(q);
+        const profile = await admin.firestore().doc(`users/${rec.uid}`).get();
+        const d = profile.data() || {};
+        results.unshift({
+          uid: rec.uid,
+          email: rec.email ?? null,
+          hasProfile: profile.exists,
+          fullName: String(d.fullName || ""),
+          phone: String(d.phone || ""),
+          requester_id: String(d.requester_id || ""),
+          type: String(d.type || ""),
+          role: String(d.role || ""),
+          createdAt: String(d.createdAt || ""),
+          dateOfBirth: String(d.dateOfBirth || ""),
+          exact: true,
+        });
+      } catch {
+        // No Auth user for this email — nothing to add.
+      }
+    }
+
+    return { results, truncated };
+  }
+);
+
 // ── Team / role management ───────────────────────────────────────────────────
 interface RoleData {
   email?: string;

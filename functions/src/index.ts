@@ -22,6 +22,7 @@ export { adminTestResults } from "./cyberlab/adminTestResults";
 // Admin space callables (staff attach requester_id/type; owner/admin manage roles).
 export {
   adminLookupPatient,
+  adminSearchPatients,
   adminSetRequester,
   adminSetStaff,
   adminSetAdmin,

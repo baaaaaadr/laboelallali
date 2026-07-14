@@ -19,22 +19,26 @@ import MedicalLoader from '@/components/ui/MedicalLoader';
 import type { CyberlabResponse } from '@/types/cyberlab';
 import ResultsIndicators from '@/components/features/results/ResultsIndicators';
 import AnalysesDetails from '@/components/features/results/AnalysesDetails';
+import TabsNavigation, { type TabItem } from '@/components/features/catalog/TabsNavigation';
 import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X, FlaskConical, FileText, Eye, Loader2 } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
 const LEVEL: Record<string, number> = { owner: 3, admin: 2, staff: 1 };
 
-interface LookupResult {
-  found: boolean;
-  uid?: string;
-  email?: string | null;
-  hasProfile?: boolean;
-  fullName?: string;
+type AdminTab = 'patients' | 'requests' | 'test' | 'team';
+
+interface SearchResult {
+  uid: string;
+  email: string | null;
+  hasProfile: boolean;
+  fullName: string;
   phone?: string;
   requester_id?: string;
   type?: string;
   role?: string;
+  createdAt?: string;
+  dateOfBirth?: string;
 }
 interface SetResult { success: boolean; uid: string; fullName: string; requester_id: string; type: string; }
 interface Member { uid: string; email: string; fullName: string; role: string; }
@@ -60,9 +64,15 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const isOwner = level >= 3;
   const isArabic = lang === 'ar';
 
-  // Encode section
-  const [email, setEmail] = useState('');
-  const [lookup, setLookup] = useState<LookupResult | null>(null);
+  // Tabs
+  const [activeTab, setActiveTab] = useState<AdminTab>('patients');
+
+  // Encode section — multi-field patient search + attach requester_id
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [truncated, setTruncated] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [selected, setSelected] = useState<SearchResult | null>(null);
   const [requesterId, setRequesterId] = useState('');
   const [type, setType] = useState<RequesterType>('patient');
   const [busy, setBusy] = useState<false | 'search' | 'save'>(false);
@@ -248,19 +258,36 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   };
 
   // ── Encode handlers ─────────────────────────────────────────────────────────
+  // Prefill the attach form from a chosen search result.
+  const selectPatient = (p: SearchResult) => {
+    setSelected(p);
+    setSaved(null);
+    setError(null);
+    setRequesterId(p.requester_id || '');
+    setType(TYPES.includes(p.type as RequesterType) ? (p.type as RequesterType) : 'patient');
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSaved(null);
-    setLookup(null);
+    setSelected(null);
+    setResults([]);
+    setTruncated(false);
+    setSearched(false);
+    const q = query.trim();
+    if (q.length < 2) {
+      setError(t('admin.search_min', 'Tapez au moins 2 caractères pour lancer la recherche.'));
+      return;
+    }
     setBusy('search');
     try {
-      const res = await callFn<LookupResult>('adminLookupPatient', { email: email.trim() });
-      setLookup(res);
-      if (res.found) {
-        setRequesterId(res.requester_id || '');
-        setType(TYPES.includes(res.type as RequesterType) ? (res.type as RequesterType) : 'patient');
-      }
+      const res = await callFn<{ results: SearchResult[]; truncated: boolean }>('adminSearchPatients', { query: q });
+      const list = res.results || [];
+      setResults(list);
+      setTruncated(!!res.truncated);
+      setSearched(true);
+      if (list.length === 1) selectPatient(list[0]); // single hit → open the attach form directly
     } catch (err: unknown) {
       setError(errMsg(err));
     } finally {
@@ -270,17 +297,21 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selected?.email) return; // attach is keyed on email; disabled in the UI when missing
+    const targetEmail = selected.email;
+    const targetUid = selected.uid;
     setError(null);
     setSaved(null);
     setBusy('save');
     try {
       const res = await callFn<SetResult>('adminSetRequester', {
-        email: email.trim(),
+        email: targetEmail,
         requester_id: requesterId.trim(),
         type,
       });
-      setSaved(t('admin.saved', { name: res.fullName || email, id: res.requester_id }));
-      setLookup((l) => (l ? { ...l, requester_id: res.requester_id, type: res.type } : l));
+      setSaved(t('admin.saved', { name: res.fullName || targetEmail, id: res.requester_id }));
+      setSelected((s) => (s ? { ...s, requester_id: res.requester_id, type: res.type } : s));
+      setResults((rs) => rs.map((r) => (r.uid === targetUid ? { ...r, requester_id: res.requester_id, type: res.type } : r)));
     } catch (err: unknown) {
       setError(errMsg(err));
     } finally {
@@ -348,7 +379,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     );
   }
 
-  const notFound = lookup !== null && !lookup.found;
+  const tabs: TabItem[] = [
+    { id: 'patients', label: t('admin.tab_patients', 'Patients'), icon: User },
+    { id: 'requests', label: t('admin.tab_requests', 'Demandes'), icon: Inbox, count: accessReqs.length },
+    { id: 'test', label: t('admin.tab_test', 'Tester'), icon: FlaskConical },
+    ...(isManager ? [{ id: 'team', label: t('admin.tab_team', 'Équipe'), icon: Users }] : []),
+  ];
 
   const roleBadge = (role: string) => {
     const label =
@@ -365,8 +401,8 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
 
   return (
     <div className="min-h-[80vh] py-12 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div>
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-4">
           <h1 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] flex items-center gap-2">
             <UserCog size={26} />
             {t('admin.title', 'Espace administrateur')}
@@ -376,15 +412,29 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
           </p>
         </div>
 
-        {/* ── Pending access requests ─────────────────────────────────────── */}
-        {accessReqs.length > 0 && (
+        {/* Tab bar — a normal in-flow element: it scrolls away with the page, so it
+            takes zero fixed screen space. To switch tabs, scroll back to the top. */}
+        <div className="border-b border-[var(--border-default)]">
+          <TabsNavigation
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={(id) => setActiveTab(id as AdminTab)}
+            isRtl={isArabic}
+          />
+        </div>
+
+        <div className="space-y-8 pt-8">
+        {/* ── Demandes tab: pending access requests ───────────────────────── */}
+        {activeTab === 'requests' && (
           <div className="card p-6 space-y-4">
             <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
               <Inbox size={20} className="text-[var(--color-bordeaux-primary)]" />
               {t('admin.req_title', "Demandes d'accès en attente")}
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-[var(--color-bordeaux-primary)] text-white">
-                {accessReqs.length}
-              </span>
+              {accessReqs.length > 0 && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-[var(--color-bordeaux-primary)] text-white">
+                  {accessReqs.length}
+                </span>
+              )}
             </h2>
             {arError && (
               <div className="flex items-center gap-2 text-sm text-[var(--status-error)]">
@@ -397,6 +447,11 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
               </div>
             )}
             <div className="space-y-4">
+              {accessReqs.length === 0 && (
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {t('admin.req_empty', "Aucune demande d'accès en attente.")}
+                </p>
+              )}
               {accessReqs.map((req) => {
                 const inp = arInputs[req.uid] || { requester_id: '', type: 'patient' as RequesterType };
                 return (
@@ -452,99 +507,170 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
           </div>
         )}
 
-        {/* ── Encode requester_id ─────────────────────────────────────────── */}
-        <form onSubmit={handleSearch} className="card p-6 space-y-4">
-          <label className="block text-sm font-medium text-[var(--text-secondary)]">
-            {t('admin.email_label', 'Email du patient')}
-          </label>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="patient@email.com"
-              className="flex-1 rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
-            />
-            <button type="submit" disabled={busy !== false} className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-60">
-              <Search size={18} />
-              {busy === 'search' ? t('admin.searching', 'Recherche…') : t('admin.search', 'Rechercher')}
-            </button>
-          </div>
-        </form>
-
-        {error && (
-          <div className="card p-4 flex items-center gap-3">
-            <AlertCircle size={20} className="text-[var(--status-error)] flex-shrink-0" />
-            <span className="text-[var(--text-primary)]">{error}</span>
-          </div>
-        )}
-        {notFound && (
-          <div className="card p-6 text-center text-[var(--text-secondary)]">
-            {t('admin.not_found', "Aucun compte trouvé pour cet email. Le patient doit se connecter une fois à l'application d'abord.")}
-          </div>
-        )}
-
-        {lookup?.found && (
-          <div className="card p-6 space-y-5">
-            <div className="flex items-start gap-3 pb-4 border-b border-[var(--border-default)]">
-              <div className="h-11 w-11 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] flex items-center justify-center flex-shrink-0">
-                <User size={22} />
-              </div>
+        {/* ── Patients tab: multi-field search + attach requester_id ──────── */}
+        {activeTab === 'patients' && (
+          <>
+            <form onSubmit={handleSearch} className="card p-6 space-y-4">
               <div>
-                <p className="font-semibold text-[var(--text-primary)]">{lookup.fullName || t('admin.name', 'Nom')}</p>
-                <p className="text-sm text-[var(--text-secondary)]">{lookup.email}</p>
-                {lookup.phone && <p className="text-sm text-[var(--text-secondary)]">{lookup.phone}</p>}
-                {!lookup.hasProfile && (
-                  <p className="text-sm text-[var(--status-error)] mt-1">
-                    {t('admin.no_profile_warning', "Ce compte existe mais le profil n'est pas encore complété.")}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <form onSubmit={handleSave} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
-                  {t('admin.requester_id_label', 'Identifiant patient (requester_id)')}
+                <label className="block text-sm font-medium text-[var(--text-secondary)]">
+                  {t('admin.search_label', 'Rechercher un patient')}
                 </label>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
+                  {t('admin.search_hint', 'Par email, nom/prénom, téléphone, date de naissance ou identifiant patient.')}
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="text"
-                  required
-                  value={requesterId}
-                  onChange={(e) => setRequesterId(e.target.value)}
-                  placeholder="7587"
-                  className="w-full rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t('admin.search_placeholder', 'Email, nom, téléphone, date de naissance ou identifiant')}
+                  className="flex-1 rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
                 />
+                <button type="submit" disabled={busy !== false} className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-60">
+                  <Search size={18} />
+                  {busy === 'search' ? t('admin.searching', 'Recherche…') : t('admin.search', 'Rechercher')}
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
-                  {t('admin.type_label', 'Type')}
-                </label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value as RequesterType)}
-                  className="w-full rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
-                >
-                  <option value="patient">{t('admin.type_patient', 'Patient')}</option>
-                  <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
-                  <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
-                </select>
-              </div>
-              {saved && (
-                <div className="flex items-center gap-2 text-sm text-[var(--color-bordeaux-primary)]">
-                  <CheckCircle size={18} />
-                  <span>{saved}</span>
-                </div>
-              )}
-              <button type="submit" disabled={busy !== false} className="button-bordeaux justify-center w-full disabled:opacity-60">
-                {busy === 'save' ? t('admin.saving', 'Enregistrement…') : t('admin.save', 'Enregistrer')}
-              </button>
             </form>
-          </div>
+
+            {error && (
+              <div className="card p-4 flex items-center gap-3">
+                <AlertCircle size={20} className="text-[var(--status-error)] flex-shrink-0" />
+                <span className="text-[var(--text-primary)]">{error}</span>
+              </div>
+            )}
+
+            {searched && results.length === 0 && !error && (
+              <div className="card p-6 text-center text-[var(--text-secondary)]">
+                {t('admin.not_found', "Aucun patient trouvé. Essayez un autre nom, email, téléphone ou identifiant. Si le patient vient de s'inscrire, il doit se connecter une fois à l'application.")}
+              </div>
+            )}
+
+            {results.length > 0 && (
+              <div className="space-y-3">
+                {truncated && (
+                  <div className="flex items-center gap-2 text-sm text-[var(--status-warning)]">
+                    <AlertCircle size={16} className="flex-shrink-0" />
+                    <span>{t('admin.results_truncated', 'Beaucoup de résultats — précisez votre recherche pour affiner.')}</span>
+                  </div>
+                )}
+                {results.map((r) => {
+                  const isSel = selected?.uid === r.uid;
+                  return (
+                    <button
+                      key={r.uid}
+                      type="button"
+                      onClick={() => selectPatient(r)}
+                      className={`w-full text-start rounded-lg border p-4 transition bg-[var(--background-default)] ${
+                        isSel
+                          ? 'border-[var(--color-fuchsia-accent)] ring-2 ring-[var(--color-fuchsia-accent)]'
+                          : 'border-[var(--border-default)] hover:border-[var(--color-fuchsia-accent)]'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] flex items-center justify-center flex-shrink-0">
+                          <User size={20} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-[var(--text-primary)] truncate">{r.fullName || t('admin.name', 'Nom')}</p>
+                          {r.email && <p className="text-sm text-[var(--text-secondary)] truncate">{r.email}</p>}
+                          {r.phone && <p className="text-sm text-[var(--text-secondary)]">{r.phone}</p>}
+                          {(r.dateOfBirth || r.createdAt) && (
+                            <p className="text-xs text-[var(--text-secondary)] mt-1">
+                              {r.dateOfBirth && <span>{t('admin.dob_label', 'Date de naissance')} : {fmtDate(r.dateOfBirth)}</span>}
+                              {r.dateOfBirth && r.createdAt && <span className="mx-1">·</span>}
+                              {r.createdAt && <span>{t('admin.created_at_label', 'Compte créé le')} {fmtDate(r.createdAt)}</span>}
+                            </p>
+                          )}
+                          {r.requester_id && (
+                            <span className="inline-flex items-center gap-1 mt-2 text-xs font-semibold px-2 py-0.5 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)]">
+                              <CheckCircle size={12} className="text-[var(--status-success)]" />
+                              {t('admin.requester_id_label', 'Identifiant patient (requester_id)')} : {r.requester_id}
+                            </span>
+                          )}
+                          {!r.hasProfile && (
+                            <p className="text-sm text-[var(--status-error)] mt-1">
+                              {t('admin.no_profile_warning', "Ce compte existe mais le profil n'est pas encore complété.")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {selected && (
+              <div className="card p-6 space-y-5">
+                <div className="flex items-start gap-3 pb-4 border-b border-[var(--border-default)]">
+                  <div className="h-11 w-11 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] flex items-center justify-center flex-shrink-0">
+                    <User size={22} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[var(--text-primary)]">{selected.fullName || t('admin.name', 'Nom')}</p>
+                    {selected.email && <p className="text-sm text-[var(--text-secondary)] break-all">{selected.email}</p>}
+                    {selected.phone && <p className="text-sm text-[var(--text-secondary)]">{selected.phone}</p>}
+                    {selected.dateOfBirth && (
+                      <p className="text-sm text-[var(--text-secondary)]">{t('admin.dob_label', 'Date de naissance')} : {fmtDate(selected.dateOfBirth)}</p>
+                    )}
+                    {selected.createdAt && (
+                      <p className="text-sm text-[var(--text-secondary)]">{t('admin.created_at_label', 'Compte créé le')} {fmtDate(selected.createdAt)}</p>
+                    )}
+                    {!selected.hasProfile && (
+                      <p className="text-sm text-[var(--status-error)] mt-1">
+                        {t('admin.no_profile_warning', "Ce compte existe mais le profil n'est pas encore complété.")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <form onSubmit={handleSave} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                      {t('admin.requester_id_label', 'Identifiant patient (requester_id)')}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={requesterId}
+                      onChange={(e) => setRequesterId(e.target.value)}
+                      placeholder="7587"
+                      className="w-full rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                      {t('admin.type_label', 'Type')}
+                    </label>
+                    <select
+                      value={type}
+                      onChange={(e) => setType(e.target.value as RequesterType)}
+                      className="w-full rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
+                    >
+                      <option value="patient">{t('admin.type_patient', 'Patient')}</option>
+                      <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
+                      <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
+                    </select>
+                  </div>
+                  {saved && (
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+                      <CheckCircle size={18} />
+                      <span>{saved}</span>
+                    </div>
+                  )}
+                  <button type="submit" disabled={busy !== false || !selected.email} className="button-bordeaux justify-center w-full disabled:opacity-60">
+                    {busy === 'save' ? t('admin.saving', 'Enregistrement…') : t('admin.save', 'Enregistrer')}
+                  </button>
+                </form>
+              </div>
+            )}
+          </>
         )}
 
-        {/* ── Test a requester_id (onboarding probe) ──────────────────────── */}
+        {/* ── Tester tab: results-ID onboarding probe ─────────────────────── */}
+        {activeTab === 'test' && (
         <div className="card p-6 space-y-4">
           <div>
             <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
@@ -676,9 +802,10 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             </div>
           )}
         </div>
+        )}
 
-        {/* ── Team management (admin + owner) ──────────────────────────────── */}
-        {isManager && (
+        {/* ── Équipe tab: team management (admin + owner) ──────────────────── */}
+        {activeTab === 'team' && isManager && (
           <div className="card p-6 space-y-5">
             <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
               <Users size={20} className="text-[var(--color-bordeaux-primary)]" />
@@ -763,6 +890,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
