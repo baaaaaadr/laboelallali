@@ -33,6 +33,8 @@ export {
   adminListAccessRequests,
   adminFulfillAccessRequest,
   adminRejectAccessRequest,
+  // Adoption dashboard (accounts + usage) for the staff space.
+  adminDashboardStats,
 } from "./admin/adminPatients";
 
 import { getStorage } from "firebase-admin/storage";
@@ -89,12 +91,19 @@ export const nextServer = onRequest(
 /**
  * Scheduled Cloud Function to clean up expired prescription files
  * Runs daily at 2:00 AM to delete prescriptions older than 30 days
+ *
+ * REGION — deliberately `europe-west1`, NOT the `europe-southwest1` used by every other
+ * function here: **Cloud Scheduler has no europe-southwest1 location**, so creating the
+ * schedule failed with `HTTP 400: Location 'europe-southwest1' is not a valid location`.
+ * The function itself deployed but no scheduler job was ever created, so this cleanup
+ * silently never ran. europe-west1 is supported (and already hosts the SSR function).
+ * Do not align this back to REGION without checking Cloud Scheduler's supported locations.
  */
 export const cleanupExpiredPrescriptions = onSchedule(
   {
     schedule: "0 2 * * *", // Every day at 2:00 AM (cron format)
     timeZone: "Europe/Paris",
-    region: "europe-southwest1",
+    region: "europe-west1",
     memory: "512MiB",
   },
   async () => {
