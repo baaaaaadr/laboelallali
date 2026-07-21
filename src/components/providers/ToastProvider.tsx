@@ -8,10 +8,15 @@ import { Toaster } from 'react-hot-toast';
  */
 export default function ToastProvider() {
   return (
+    // react-hot-toast pose son conteneur à top:16px en style inline : sans
+    // containerStyle, les toasts passent sous la barre d'état en PWA installée.
+    // env() en dur plutôt que var(--safe-area-top) : ce style est appliqué hors
+    // de la cascade de la feuille globale.
     <Toaster
       position="top-center"
       reverseOrder={false}
       gutter={8}
+      containerStyle={{ top: 'calc(16px + env(safe-area-inset-top, 0px))' }}
       toastOptions={{
         // Default options for all toasts
         duration: 4000,

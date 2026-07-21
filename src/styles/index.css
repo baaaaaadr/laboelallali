@@ -46,8 +46,10 @@ html, body {
   scroll-behavior: smooth !important;
 }
 
+/* Le header grandit de l'encoche en PWA installée : les sauts d'ancre doivent
+   suivre, sinon la cible atterrit sous la barre d'état. Vaut 160px ailleurs. */
 [id] {
-  scroll-margin-top: 160px !important;
+  scroll-margin-top: calc(160px + var(--safe-area-top, 0px)) !important;
 }
 
 html, body {
@@ -115,7 +117,10 @@ html, body {
   text-decoration: none;
   font-weight: 500;
   padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
+  /* Pilule : cohérent avec l'état actif et le lien vedette de
+     components/navigation.css. Ce fichier passant APRÈS l'import de
+     navigation.css, un rayon différent ici l'écraserait silencieusement. */
+  border-radius: 9999px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;

@@ -688,7 +688,7 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
 
         {/* Sticky Container - Search + Tabs Together */}
         <div
-          className="sticky top-[64px] z-40 bg-[var(--background-default)] shadow-sm border-b border-gray-200 dark:border-[var(--border-default)]"
+          className="sticky top-[var(--header-total-height)] z-40 bg-[var(--background-default)] shadow-sm border-b border-gray-200 dark:border-[var(--border-default)]"
           style={{ willChange: 'transform' }}
         >
           <div className="container mx-auto px-4">
@@ -1005,14 +1005,16 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         </div>
       </div>
 
-      {/* Fixed desktop side panel — below site header (top: 64px), independent scroll */}
+      {/* Fixed desktop side panel — below site header, independent scroll.
+          --header-total-height inclut l'encoche de la barre d'état : en PWA iPad
+          en paysage (≥1024px), un 64px en dur ferait passer le panneau dessous. */}
       <div
         className="hidden lg:block fixed z-30 overflow-hidden"
         style={{
-          top: '64px',
+          top: 'var(--header-total-height)',
           right: isArabic ? 'auto' : '0',
           left: isArabic ? '0' : 'auto',
-          height: 'calc(100vh - 64px)',
+          height: 'calc(100vh - var(--header-total-height))',
           width: isPanelOpen ? '360px' : '0',
           transition: 'width 0.3s ease-in-out',
         }}

@@ -237,7 +237,10 @@ export default function UniversalSearchModal({ isOpen, onClose, lang }: Props) {
   let flatIndex = -1;
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex flex-col items-center pt-16 sm:pt-20 px-4">
+    // Les `_` sont convertis en espaces par Tailwind (obligatoire : en CSS, le
+    // `+` d'un calc() doit être entouré d'espaces). --safe-area-top vaut 0 hors
+    // PWA installée, donc l'écart visuel y est nul.
+    <div className="fixed inset-0 z-[60] flex flex-col items-center pt-[calc(4rem_+_var(--safe-area-top))] sm:pt-[calc(5rem_+_var(--safe-area-top))] px-4">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/70 backdrop-blur-md"
@@ -247,7 +250,7 @@ export default function UniversalSearchModal({ isOpen, onClose, lang }: Props) {
       {/* Panel */}
       <div
         className="relative w-full max-w-2xl bg-[var(--background-card)] rounded-xl shadow-2xl border border-[var(--border-default)] flex flex-col overflow-hidden"
-        style={{ maxHeight: 'calc(100vh - 8rem)' }}
+        style={{ maxHeight: 'calc(100vh - 8rem - var(--safe-area-top))' }}
         role="dialog"
         aria-modal="true"
         aria-label={t('search.modal_label')}

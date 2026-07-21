@@ -3,11 +3,83 @@
  * Header, Mobile Menu, and Bottom Navigation
  */
 
+/**
+ * Grammaire de navigation — deux canaux visuels qui ne se croisent jamais :
+ *   fond PLEIN  = « vous êtes ici »   (jamais fuchsia)
+ *   fuchsia     = « service vedette » (contour, icône, badge, point — jamais un fond plein)
+ *
+ * En sombre, --brand-primary/--color-bordeaux-primary sont remappés vers le rose
+ * #FF79A8, trop proche du fuchsia promo #FF4081 : le canal « ici » bascule donc sur
+ * du neutre/inversé au lieu de la couleur de marque.
+ */
+:root {
+  /* pastille du header (posée sur le bordeaux) */
+  --nav-here-header-bg: var(--color-white);
+  --nav-here-header-fg: var(--color-bordeaux-primary);
+  /* pastille d'icône de la barre du bas (posée sur le fond de page) */
+  --nav-here-chip-bg: var(--color-bordeaux-primary);
+  --nav-here-chip-fg: var(--color-white);
+  --nav-here-label: var(--color-bordeaux-primary);
+  /* ligne du menu latéral */
+  --nav-here-row-bg: var(--color-bordeaux-primary);
+  --nav-here-row-fg: var(--color-white);
+  --nav-here-rail: var(--color-white);
+  /* badge « Nouveau » — --color-fuchsia-* n'est pas remappé en sombre,
+     seul le texte change de mode. */
+  --nav-badge-bg: var(--color-fuchsia-light);
+  --nav-badge-fg: var(--color-bordeaux-primary);
+}
+
+html.dark {
+  --nav-here-header-bg: var(--color-white);
+  --nav-here-header-fg: var(--background-secondary);
+  --nav-here-chip-bg: var(--text-primary);
+  --nav-here-chip-fg: var(--background-default);
+  --nav-here-label: var(--text-primary);
+  /* voile clair plutôt qu'un aplat rose : le rose sombre (#FF79A8) empiéterait
+     sur le canal fuchsia. Le rail clair porte l'essentiel du signal. */
+  --nav-here-row-bg: color-mix(in srgb, var(--text-primary) 14%, transparent);
+  --nav-here-row-fg: var(--text-primary);
+  --nav-here-rail: var(--text-primary);
+  --nav-badge-bg: var(--color-fuchsia-light);
+  --nav-badge-fg: var(--background-default);
+}
+
+/* Encoche / barre d'état (PWA installée en plein écran).
+ *
+ * L'app demande explicitement le plein écran — `viewportFit: 'cover'` +
+ * `statusBarStyle: 'black-translucent'` (src/app/[lang]/layout.tsx) — donc iOS
+ * dessine l'heure/wifi/batterie PAR-DESSUS la page. C'est à nous de réserver
+ * la place. `env(safe-area-inset-top)` vaut exactement 0px en onglet, sur
+ * desktop et sur Android : le décalage s'auto-annule hors PWA iOS, sans
+ * @media (display-mode: standalone) — qui raterait de toute façon les modes
+ * fullscreen/minimal-ui et le mode fenêtré d'iPadOS.
+ *
+ * Ne JAMAIS remplacer ceci par une lecture JS (getComputedStyle) : WebKit livre
+ * ces valeurs après le load et les laisse périmées après rotation. Seul env(),
+ * réévalué par le moteur, est fiable.
+ */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  /* hauteur du bandeau bordeaux hors encoche */
+  --header-height: 64px;
+  /* hauteur réellement peinte à l'écran — ce que doivent viser tous les
+     éléments qui se collent SOUS le header (cf. /analyses). */
+  --header-total-height: calc(var(--header-height) + var(--safe-area-top));
+}
+
 /* Header Base Styles */
 .header-main {
   background-color: var(--color-bordeaux-primary);
   color: var(--color-white);
-  height: 64px;
+  /* box-sizing explicite : la hauteur INCLUT le padding, donc la rangée interne
+     conserve exactement --header-height sous la barre d'état. */
+  box-sizing: border-box;
+  height: var(--header-total-height);
+  /* padding-top sur l'élément sticky lui-même, JAMAIS `top: env(...)` :
+     le fond bordeaux peint alors la zone de la barre d'état. Avec `top:`,
+     une bande transparente laisserait défiler le contenu par-dessous. */
+  padding-top: var(--safe-area-top);
   position: sticky;
   top: 0;
   z-index: 40;
@@ -47,7 +119,7 @@
   padding: var(--space-3);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
-  transition: background-color 1s ease, color 1s ease, border-color 1s ease, text-shadow 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, text-shadow 0.2s ease;
   position: relative;
   display: flex;
   align-items: center;
@@ -55,6 +127,7 @@
   height: 44px;
   line-height: 1;
   white-space: nowrap;
+  border-radius: 9999px;
 }
 
 .nav-link:hover {
@@ -62,18 +135,84 @@
   text-shadow: 0 0 8px var(--color-fuchsia-light);
 }
 
-.nav-link.active {
-  color: var(--color-white);
+/* Les règles ci-dessous sont scopées sous .header-main et portent !important :
+   src/styles/index.css impose `.header-main .nav-link { color: white !important }`
+   et un border-radius de 0.375rem, qui écraseraient sinon l'état actif. */
+
+/* « Vous êtes ici » : pastille pleine claire — le seul lien rempli de la barre.
+   Les variantes .dark sont obligatoires : index.css déclare
+   `.dark .header-main .nav-link { color: white !important }`, de même spécificité
+   que la règle claire — sans elles le texte de la pastille reste blanc sur blanc. */
+.header-main .nav-link.active,
+.header-main .nav-link.active:hover,
+.dark .header-main .nav-link.active,
+.dark .header-main .nav-link.active:hover {
+  background-color: var(--nav-here-header-bg) !important;
+  color: var(--nav-here-header-fg) !important;
+  border-radius: 9999px !important;
+  font-weight: var(--font-weight-bold);
+  text-shadow: none;
 }
 
-.nav-link.active::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: var(--space-3);
-  right: var(--space-3);
-  height: 2px;
-  background-color: var(--color-fuchsia-accent);
+.header-main .nav-link.active svg {
+  color: currentColor;
+}
+
+/* Lien « vedette » (Résultats) : contour + badge, jamais de fond plein.
+   `font-weight` porte !important : index.css impose 500 à spécificité égale. */
+.header-main .nav-link-featured {
+  border: 2px solid var(--color-fuchsia-accent);
+  gap: var(--space-2);
+  font-weight: var(--font-weight-semibold) !important;
+}
+
+.header-main .nav-link-featured svg {
+  color: var(--color-fuchsia-light);
+}
+
+/* Le fond de survol reste celui, commun, d'index.css (blanc 10 %) : seul le
+   contour s'éclaircit. Y déclarer un fond ici serait sans effet — index.css
+   passe après ce fichier à spécificité égale. */
+.header-main .nav-link-featured:hover {
+  border-color: var(--color-fuchsia-light);
+}
+
+/* Sur la page Résultats : la pastille se remplit (« vous êtes ici ») et garde
+   son contour fuchsia (« vedette »). L'icône suit la couleur du texte. */
+.header-main .nav-link-featured.active svg {
+  color: currentColor;
+}
+
+/* Badge « Nouveau » — fuchsia CLAIR à texte sombre : c'est la seule combinaison
+   qui passe WCAG AA (5,2:1) tout en se détachant du bandeau bordeaux (5,2:1
+   aussi). Du blanc sur fuchsia soutenu plafonne à 4,2:1 et la pastille se
+   confondait avec le bordeaux du header (2,6:1). */
+.nav-badge-new {
+  background-color: var(--nav-badge-bg);
+  color: var(--nav-badge-fg);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Entre 1024 et 1279 px, les 7 liens + les boutons d'action tiennent tout juste :
+   le badge (~64 px) faisait déborder la page horizontalement en français.
+   Il est masqué dans le header à ces largeurs — le contour et l'icône fuchsia
+   suffisent à marquer la vedette. Le badge du menu latéral n'est pas concerné
+   (il est hors de .header-main). */
+.header-main .nav-badge-new {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .header-main .nav-badge-new {
+    display: inline-block;
+  }
 }
 
 /* Mobile Menu Toggle */
@@ -135,11 +274,17 @@
   transform: translateX(0);
 }
 
-/* Mobile Menu Header */
+/* Mobile Menu Header
+   Le tiroir est `fixed top-0` : sans ce décalage, son bouton « fermer » se
+   retrouve SOUS la barre d'état iOS, donc intouchable. Le fond bordeaux peint
+   l'encoche, comme le header principal. */
 .mobile-menu-header {
   background-color: var(--color-bordeaux-primary);
   color: var(--color-white);
+  box-sizing: border-box;
   padding: var(--space-4);
+  padding-top: calc(var(--space-4) + var(--safe-area-top));
+  min-height: var(--header-total-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -433,29 +578,54 @@
   min-height: 56px;
   min-width: 44px;
   text-decoration: none;
-  transition: background-color 1s ease, color 1s ease, border-color 1s ease;
+  transition: color 0.2s ease;
   border-radius: var(--radius-md);
   cursor: pointer;
   color: var(--text-secondary);
 }
 
 .bottom-nav-item:hover {
-  background-color: var(--background-secondary);
-  color: var(--brand-primary);
+  color: var(--nav-here-label);
+}
+
+/* « Vous êtes ici » : pilule pleine derrière l'icône (jamais fuchsia). */
+.bottom-nav-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 16px;
+  margin-bottom: 2px;
+  border-radius: 9999px;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.bottom-nav-item:hover .bottom-nav-pill {
+  background-color: var(--background-tertiary);
 }
 
 .bottom-nav-item.active {
-  color: var(--brand-accent);
+  color: var(--nav-here-label);
+}
+
+/* Le gras doit cibler le libellé : .bottom-nav-label déclare son propre
+   font-weight, qui l'emporte toujours sur l'héritage du parent. */
+.bottom-nav-item.active .bottom-nav-label {
+  font-weight: var(--font-weight-bold);
+}
+
+.bottom-nav-item.active .bottom-nav-pill,
+.bottom-nav-item.active:hover .bottom-nav-pill {
+  background-color: var(--nav-here-chip-bg);
+}
+
+.bottom-nav-item.active .bottom-nav-icon {
+  color: var(--nav-here-chip-fg);
 }
 
 .bottom-nav-icon {
   font-size: 24px;
-  margin-bottom: var(--space-1);
-  transition: transform 0.2s ease;
-}
-
-.bottom-nav-item.active .bottom-nav-icon {
-  transform: scale(1.1);
+  transition: color 0.2s ease;
 }
 
 .bottom-nav-label {
@@ -509,13 +679,8 @@
   text-shadow: 0 0 8px var(--brand-accent);
 }
 
-.dark .nav-link.active {
-  color: var(--text-primary);
-}
-
-.dark .nav-link.active::after {
-  background-color: var(--brand-accent);
-}
+/* L'état actif en sombre passe par les variables --nav-here-* (pastille claire,
+   texte sombre) : ne pas le repeindre ici, sinon le texte redevient illisible. */
 
 .dark .mobile-menu {
   background-color: #1a1a2e;
@@ -624,14 +789,8 @@
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
 }
 
-.dark .bottom-nav-item:hover {
-  background-color: var(--background-tertiary);
-  color: var(--brand-primary);
-}
-
-.dark .bottom-nav-item.active {
-  color: var(--brand-accent);
-}
+/* Survol et état actif de la barre du bas : entièrement pilotés par les
+   variables --nav-here-* (cf. haut du fichier). Aucune surcharge fuchsia ici. */
 
 /* ===========================================
    RESPONSIVE DESIGN - UNIFIED BREAKPOINTS

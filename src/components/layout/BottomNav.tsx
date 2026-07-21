@@ -4,26 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, FlaskConical, CalendarDays, Phone, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-
-// Helper function to extract language from pathname
-function getLangFromPath(path: string): string {
-  const match = path.match(/^\/([a-zA-Z-]+)/);
-  return match ? match[1] : 'fr';
-}
-
-// Helper function to check if a path is active
-function isActivePath(currentPath: string, targetPath: string): boolean {
-  const lang = getLangFromPath(currentPath);
-  const expectedPath = `/${lang}${targetPath === '/' ? '' : targetPath}`;
-  
-  if (targetPath === '/') {
-    // For home, match exactly
-    return currentPath === `/${lang}` || currentPath === expectedPath;
-  }
-  
-  // For other paths, check if current path starts with the target path
-  return currentPath.startsWith(expectedPath);
-}
+import { getLangFromPath, isActivePath } from '@/lib/navigation/isActivePath';
 
 const BottomNav = () => {
   const { t, i18n } = useTranslation('common');
@@ -95,28 +76,33 @@ const BottomNav = () => {
               className={`bottom-nav-item ${isActive ? 'active' : ''}`}
               aria-current={isActive ? 'page' : undefined}
             >
-              <div className="bottom-nav-icon-container" style={{ position: 'relative' }}>
-                <IconComponent
-                  size={20}
-                  className="bottom-nav-icon"
-                  aria-hidden="true"
-                />
-                {item.highlight && (
-                  <span
+              {/* La pilule porte l'état « vous êtes ici » ; le conteneur intérieur reste
+                  le repère de positionnement du point fuchsia, collé à l'icône. */}
+              <span className="bottom-nav-pill">
+                <span className="bottom-nav-icon-container" style={{ position: 'relative', display: 'flex' }}>
+                  <IconComponent
+                    size={20}
+                    className="bottom-nav-icon"
                     aria-hidden="true"
-                    style={{
-                      position: 'absolute',
-                      top: '-2px',
-                      insetInlineEnd: '-3px',
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '9999px',
-                      backgroundColor: 'var(--color-fuchsia-accent)',
-                      boxShadow: '0 0 0 2px var(--background-default)',
-                    }}
                   />
-                )}
-              </div>
+                  {/* Point « service vedette » — inutile sur la page où l'on se trouve déjà. */}
+                  {item.highlight && !isActive && (
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        position: 'absolute',
+                        top: '-2px',
+                        insetInlineEnd: '-3px',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '9999px',
+                        backgroundColor: 'var(--color-fuchsia-accent)',
+                        boxShadow: '0 0 0 2px var(--background-default)',
+                      }}
+                    />
+                  )}
+                </span>
+              </span>
               <span className="bottom-nav-label">
                 {item.label}
               </span>

@@ -5,8 +5,21 @@ import RTLStylesProvider from '@/components/RTLStylesProvider';
 import RTLAdditionalStyles from '@/components/RTLAdditionalStyles';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ResultsProvider } from '@/contexts/ResultsContext';
+import type { Viewport } from 'next';
 
-// Metadata is now defined in metadata.ts since this is a Server Component
+/**
+ * Viewport racine — sert les routes rendues HORS du segment [lang]
+ * (404 / error boundaries de Next), qui recevaient sinon le viewport par défaut
+ * de Next, SANS `viewport-fit=cover`. Next REMPLACE (il ne fusionne pas) le
+ * viewport du segment le plus profond : le [lang] layout continue donc de gagner
+ * sur toutes les vraies pages, et aucune balise n'est dupliquée.
+ */
+export const viewport: Viewport = {
+  themeColor: '#800020',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export default function RootLayout({
   children,
@@ -20,17 +33,17 @@ export default function RootLayout({
         <RTLStylesProvider />
         <RTLAdditionalStyles />
         
-        {/* PWA Configuration */}
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#800020" />
-        
-        {/* iOS specific PWA configuration */}
+        {/* PWA — manifest, theme-color, apple-touch-icon, mobile-web-app-capable,
+            apple-mobile-web-app-title et -status-bar-style sont TOUS émis par le
+            [lang] layout (metadata + viewport). Ils étaient dupliqués ici, avec
+            un apple-mobile-web-app-status-bar-style CONTRADICTOIRE ("default"
+            ici contre "black-translucent" là-bas) : iOS recevait deux consignes
+            opposées sur la barre d'état.
+            Seule exception conservée : la balise Apple historique, que Next
+            n'émet plus (il ne produit que le `mobile-web-app-capable` moderne).
+            On la garde par prudence pour les anciens iOS déjà installés. */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="LaboElAllali" />
-        <link rel="apple-touch-icon" href="/images/icons/apple-touch-icon.png" />
-        
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
@@ -53,6 +66,22 @@ export default function RootLayout({
             gap: '20px',
           }}
         >
+          {/* Bandeau d'encoche : en PWA iOS la barre d'état est translucide et
+              son texte est forcé en BLANC — invisible sur ce splash blanc
+              pendant ~1s. Ce bandeau bordeaux lui redonne un fond lisible.
+              Hauteur 0 (donc invisible) partout ailleurs. Hors flux pour ne pas
+              perturber le centrage flex. */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 'env(safe-area-inset-top, 0px)',
+              backgroundColor: '#800020',
+            }}
+          />
           <style>{`
             @keyframes ml-rise {
               0%, 100% { transform: translateY(28px); }

@@ -795,8 +795,11 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
 
       {/* PDF viewer modal — in-memory blob, revoked on close */}
       {viewer && (
+        // Plein écran : sans le paddingTop, le titre et le bouton « Fermer »
+        // passent sous la barre d'état en PWA. Vaut 0 hors PWA installée.
         <div
           className="fixed inset-0 z-50 bg-[var(--background-card)] flex flex-col"
+          style={{ paddingTop: 'var(--safe-area-top)' }}
           role="dialog"
           aria-modal="true"
         >

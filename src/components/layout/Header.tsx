@@ -10,6 +10,7 @@ import { supportedLngs } from '../../../i18n';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
+import { getLangFromPath, isActivePath } from '@/lib/navigation/isActivePath';
 
 // Debug version - update this to verify deployment
 const HEADER_VERSION = 'v2.0.2-hydration-fix-2026-05-02';
@@ -27,11 +28,6 @@ const UniversalSearchModal = dynamic(
   () => import('@/components/features/search/UniversalSearchModal'),
   { ssr: false }
 );
-
-function getLangFromPath(path: string) {
-  const match = path.match(/^\/([a-zA-Z-]+)/);
-  return match ? match[1] : 'fr'; // fallback on 'fr'
-}
 
 // Inline styles for mobile menu - ensures visibility regardless of CSS
 const menuStyles = {
@@ -68,6 +64,22 @@ const menuStyles = {
   } as React.CSSProperties,
   navTextDark: {
      color: 'var(--text-primary)',
+  } as React.CSSProperties,
+  // « Vous êtes ici » : la ligne entière s'inverse + rail de 4px au bord intérieur.
+  // Les couleurs passent par les variables --nav-here-* pour suivre le mode sombre
+  // sans dépendre de la détection JS (cf. src/styles/components/navigation.css).
+  navLinkActive: {
+     backgroundColor: 'var(--nav-here-row-bg)',
+     borderInlineStart: '4px solid var(--nav-here-rail)',
+     paddingInlineStart: '12px',
+     fontWeight: 700,
+  } as React.CSSProperties,
+  navIconActive: {
+     color: 'var(--nav-here-row-fg)',
+  } as React.CSSProperties,
+  navTextActive: {
+     color: 'var(--nav-here-row-fg)',
+     fontWeight: 700,
   } as React.CSSProperties,
 };
 
@@ -124,6 +136,30 @@ const Header = () => {
   const currentLanguagePath = `/${urlLang}`;
   const isStaff = ['owner', 'admin', 'staff'].includes(userProfile?.role || '');
 
+  // « Vous êtes ici » — un seul canal visuel dans toute l'appli : un fond PLEIN.
+  // Le fuchsia, lui, ne signale que la mise en avant de Résultats (contour/badge/point).
+  const isHere = (target: string) => isActivePath(pathname, target);
+  // Profil et Connexion partagent la même entrée de menu.
+  const isAccountHere = isHere('/profile') || isHere('/login');
+
+  const drawerLinkStyle = (active: boolean): React.CSSProperties => ({
+    ...menuStyles.navLink,
+    ...(isDarkMode ? menuStyles.navLinkDark : {}),
+    ...(active ? menuStyles.navLinkActive : {}),
+  });
+
+  const drawerIconStyle = (active: boolean): React.CSSProperties => ({
+    ...menuStyles.navIcon,
+    ...(isDarkMode ? menuStyles.navIconDark : {}),
+    ...(active ? menuStyles.navIconActive : {}),
+  });
+
+  const drawerTextStyle = (active: boolean): React.CSSProperties => ({
+    ...menuStyles.navText,
+    ...(isDarkMode ? menuStyles.navTextDark : {}),
+    ...(active ? menuStyles.navTextActive : {}),
+  });
+
   const handleLogout = async () => {
     setIsMenuOpen(false);
     await logout();
@@ -178,7 +214,9 @@ const Header = () => {
     <>
       <header className="header-main shadow-md sticky top-0 z-50 w-full">
         <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
-        <div className="flex items-center justify-between transition-all text-white h-[64px]">
+        {/* Hauteur pilotée par --header-height : .header-main y ajoute l'encoche
+            (barre d'état PWA) via padding-top, cette rangée garde ses 64px. */}
+        <div className="flex items-center justify-between transition-all text-white h-[var(--header-height)]">
           {/* Logo and name */}
           <Link href={currentLanguagePath} className="flex items-center h-full flex-shrink-0">
             <img
@@ -189,31 +227,68 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation - Only visible at lg (1024px) and above */}
-          <nav className="desktop-nav hidden lg:flex items-center space-x-4 xl:space-x-6">
-            <Link href={`${currentLanguagePath}/`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded text-sm lg:text-base">
+          {/* Espacement resserré entre 1024 et 1279 px : à space-x-4 la barre
+              débordait horizontalement en français (7 liens, 8 pour le staff). */}
+          <nav className="desktop-nav hidden lg:flex items-center space-x-2 xl:space-x-6">
+            <Link
+              href={`${currentLanguagePath}/`}
+              className={`nav-link text-sm lg:text-base ${isHere('/') ? 'active' : ''}`}
+              aria-current={isHere('/') ? 'page' : undefined}
+            >
               {t('home')}
             </Link>
-            <Link href={`${currentLanguagePath}/resultats`} className="nav-link flex items-center gap-1.5 text-white bg-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-bright)] px-3 py-2 rounded-full font-semibold text-sm lg:text-base shadow-sm">
+            {/* Service vedette : contour + badge fuchsia. Jamais de fond plein —
+                le fond plein est réservé à l'état « vous êtes ici ». */}
+            <Link
+              href={`${currentLanguagePath}/resultats`}
+              className={`nav-link nav-link-featured text-sm lg:text-base ${isHere('/resultats') ? 'active' : ''}`}
+              aria-current={isHere('/resultats') ? 'page' : undefined}
+            >
               <FileText size={16} />
               {t('resultats.nav', { defaultValue: "Résultats" })}
+              <span className="nav-badge-new">{t('services_hub.results_badge')}</span>
             </Link>
-            <Link href={`${currentLanguagePath}/rendez-vous`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base">
+            <Link
+              href={`${currentLanguagePath}/rendez-vous`}
+              className={`nav-link font-semibold text-sm lg:text-base ${isHere('/rendez-vous') ? 'active' : ''}`}
+              aria-current={isHere('/rendez-vous') ? 'page' : undefined}
+            >
               {t('appointment')}
             </Link>
-            <Link href={`${currentLanguagePath}/glabo`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base">
+            <Link
+              href={`${currentLanguagePath}/glabo`}
+              className={`nav-link font-semibold text-sm lg:text-base ${isHere('/glabo') ? 'active' : ''}`}
+              aria-current={isHere('/glabo') ? 'page' : undefined}
+            >
               {t('glabo')}
             </Link>
-            <Link href={`${currentLanguagePath}/analyses`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base">
+            <Link
+              href={`${currentLanguagePath}/analyses`}
+              className={`nav-link font-semibold text-sm lg:text-base ${isHere('/analyses') ? 'active' : ''}`}
+              aria-current={isHere('/analyses') ? 'page' : undefined}
+            >
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
-            <Link href={`${currentLanguagePath}/medecins`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base">
+            <Link
+              href={`${currentLanguagePath}/medecins`}
+              className={`nav-link font-semibold text-sm lg:text-base ${isHere('/medecins') ? 'active' : ''}`}
+              aria-current={isHere('/medecins') ? 'page' : undefined}
+            >
               {t('navigation.medecins', { ns: 'common', defaultValue: "Médecins" })}
             </Link>
-            <Link href={`${currentLanguagePath}/contact`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded text-sm lg:text-base">
+            <Link
+              href={`${currentLanguagePath}/contact`}
+              className={`nav-link text-sm lg:text-base ${isHere('/contact') ? 'active' : ''}`}
+              aria-current={isHere('/contact') ? 'page' : undefined}
+            >
               {t('contact')}
             </Link>
             {isStaff && (
-              <Link href={`${currentLanguagePath}/admin`} className="nav-link text-white hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] px-2 lg:px-3 py-2 rounded font-semibold text-sm lg:text-base flex items-center gap-1">
+              <Link
+                href={`${currentLanguagePath}/admin`}
+                className={`nav-link font-semibold text-sm lg:text-base flex items-center gap-1 ${isHere('/admin') ? 'active' : ''}`}
+                aria-current={isHere('/admin') ? 'page' : undefined}
+              >
                 <UserCog size={16} /> {t('admin.nav', 'Admin')}
               </Link>
             )}
@@ -327,7 +402,9 @@ const Header = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Menu Header Section - Matches main header height */}
-          <div className="mobile-menu-header h-16 flex items-center justify-between px-4" suppressHydrationWarning>
+          {/* Pas de h-16 ici : .mobile-menu-header porte min-height + le padding
+              d'encoche, sinon le bouton « fermer » passe sous la barre d'état. */}
+          <div className="mobile-menu-header flex items-center justify-between px-4" suppressHydrationWarning>
             <div className="flex items-center gap-2">
               <Link href={currentLanguagePath} className="flex items-center gap-2" onClick={toggleMenu}>
                 <img
@@ -355,41 +432,38 @@ const Header = () => {
             {/* Navigation Links with inline styles for guaranteed visibility */}
             <Link
               href={`${currentLanguagePath}/`}
-              style={{
-                ...menuStyles.navLink,
-                ...(isDarkMode ? menuStyles.navLinkDark : {}),
-              }}
+              style={drawerLinkStyle(isHere('/'))}
+              aria-current={isHere('/') ? 'page' : undefined}
               onClick={toggleMenu}
             >
-              <Home size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
-              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+              <Home size={20} style={drawerIconStyle(isHere('/'))} />
+              <span style={drawerTextStyle(isHere('/'))}>
                 {t('home')}
               </span>
             </Link>
 
+            {/* Service vedette : icône fuchsia + badge « Nouveau ».
+                Plus de fond rose permanent — ce canal signale désormais la page courante. */}
             <Link
               href={`${currentLanguagePath}/resultats`}
-              style={{
-                ...menuStyles.navLink,
-                ...(isDarkMode ? menuStyles.navLinkDark : {}),
-                backgroundColor: 'rgba(255, 64, 129, 0.12)',
-              }}
+              style={drawerLinkStyle(isHere('/resultats'))}
+              aria-current={isHere('/resultats') ? 'page' : undefined}
               onClick={toggleMenu}
             >
-              <FileText size={20} style={{ ...menuStyles.navIcon, color: 'var(--color-fuchsia-accent)' }} />
-              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+              <FileText
+                size={20}
+                style={
+                  isHere('/resultats')
+                    ? drawerIconStyle(true)
+                    : { ...menuStyles.navIcon, color: 'var(--color-fuchsia-accent)' }
+                }
+              />
+              <span style={drawerTextStyle(isHere('/resultats'))}>
                 {t('resultats.nav', { defaultValue: 'Résultats' })}
               </span>
               <span
-                style={{
-                  marginInlineStart: 'auto',
-                  backgroundColor: 'var(--color-fuchsia-accent)',
-                  color: 'var(--color-white)',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '9999px',
-                }}
+                className="nav-badge-new"
+                style={{ marginInlineStart: 'auto', fontSize: '11px', padding: '2px 8px' }}
               >
                 {t('services_hub.results_badge')}
               </span>
@@ -397,70 +471,60 @@ const Header = () => {
 
             <Link
               href={`${currentLanguagePath}/rendez-vous`}
-              style={{
-                ...menuStyles.navLink,
-                ...(isDarkMode ? menuStyles.navLinkDark : {}),
-              }}
+              style={drawerLinkStyle(isHere('/rendez-vous'))}
+              aria-current={isHere('/rendez-vous') ? 'page' : undefined}
               onClick={toggleMenu}
             >
-              <CalendarDays size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
-              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+              <CalendarDays size={20} style={drawerIconStyle(isHere('/rendez-vous'))} />
+              <span style={drawerTextStyle(isHere('/rendez-vous'))}>
                 {t('appointment')}
               </span>
             </Link>
 
             <Link
               href={`${currentLanguagePath}/glabo`}
-              style={{
-                ...menuStyles.navLink,
-                ...(isDarkMode ? menuStyles.navLinkDark : {}),
-              }}
+              style={drawerLinkStyle(isHere('/glabo'))}
+              aria-current={isHere('/glabo') ? 'page' : undefined}
               onClick={toggleMenu}
             >
-              <Truck size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
-              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+              <Truck size={20} style={drawerIconStyle(isHere('/glabo'))} />
+              <span style={drawerTextStyle(isHere('/glabo'))}>
                 {t('glabo')}
               </span>
             </Link>
 
             <Link
               href={`${currentLanguagePath}/analyses`}
-              style={{
-                ...menuStyles.navLink,
-                ...(isDarkMode ? menuStyles.navLinkDark : {}),
-              }}
+              style={drawerLinkStyle(isHere('/analyses'))}
+              aria-current={isHere('/analyses') ? 'page' : undefined}
               onClick={toggleMenu}
             >
-              <FlaskConical size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
-              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+              <FlaskConical size={20} style={drawerIconStyle(isHere('/analyses'))} />
+              <span style={drawerTextStyle(isHere('/analyses'))}>
                 {t('navigation.analyses_catalog', { ns: 'common', defaultValue: 'Analyses' })}
               </span>
             </Link>
 
             <Link
               href={`${currentLanguagePath}/medecins`}
-              style={{
-                ...menuStyles.navLink,
-                ...(isDarkMode ? menuStyles.navLinkDark : {}),
-              }}
+              style={drawerLinkStyle(isHere('/medecins'))}
+              aria-current={isHere('/medecins') ? 'page' : undefined}
               onClick={toggleMenu}
             >
-              <Stethoscope size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
-              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+              <Stethoscope size={20} style={drawerIconStyle(isHere('/medecins'))} />
+              <span style={drawerTextStyle(isHere('/medecins'))}>
                 {t('navigation.medecins', { ns: 'common', defaultValue: 'Médecins' })}
               </span>
             </Link>
 
             <Link
               href={`${currentLanguagePath}/contact`}
-              style={{
-                ...menuStyles.navLink,
-                ...(isDarkMode ? menuStyles.navLinkDark : {}),
-              }}
+              style={drawerLinkStyle(isHere('/contact'))}
+              aria-current={isHere('/contact') ? 'page' : undefined}
               onClick={toggleMenu}
             >
-              <Phone size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
-              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+              <Phone size={20} style={drawerIconStyle(isHere('/contact'))} />
+              <span style={drawerTextStyle(isHere('/contact'))}>
                 {t('contact')}
               </span>
             </Link>
@@ -468,14 +532,12 @@ const Header = () => {
             {/* Profile Link - Mobile Only */}
             <Link
               href={`${currentLanguagePath}/${user ? 'profile' : 'login'}`}
-              style={{
-                ...menuStyles.navLink,
-                ...(isDarkMode ? menuStyles.navLinkDark : {}),
-              }}
+              style={drawerLinkStyle(isAccountHere)}
+              aria-current={isAccountHere ? 'page' : undefined}
               onClick={toggleMenu}
             >
-              <User size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
-              <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+              <User size={20} style={drawerIconStyle(isAccountHere)} />
+              <span style={drawerTextStyle(isAccountHere)}>
                 {user ? t('personal_information', 'Profil') : t('sign_in', 'Se connecter')}
               </span>
             </Link>
@@ -484,11 +546,12 @@ const Header = () => {
             {isStaff && (
               <Link
                 href={`${currentLanguagePath}/admin`}
-                style={{ ...menuStyles.navLink, ...(isDarkMode ? menuStyles.navLinkDark : {}) }}
+                style={drawerLinkStyle(isHere('/admin'))}
+                aria-current={isHere('/admin') ? 'page' : undefined}
                 onClick={toggleMenu}
               >
-                <UserCog size={20} style={{ ...menuStyles.navIcon, ...(isDarkMode ? menuStyles.navIconDark : {}) }} />
-                <span style={{ ...menuStyles.navText, ...(isDarkMode ? menuStyles.navTextDark : {}) }}>
+                <UserCog size={20} style={drawerIconStyle(isHere('/admin'))} />
+                <span style={drawerTextStyle(isHere('/admin'))}>
                   {t('admin.nav', 'Admin')}
                 </span>
               </Link>

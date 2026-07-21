@@ -298,7 +298,7 @@ export default function MultiFileUploader({
         >
           {/* Close button */}
           <button 
-            className="fixed top-4 right-4 p-2.5 rounded-lg text-white transition-all hover:scale-110 z-[100000]"
+            className="fixed top-[calc(1rem_+_var(--safe-area-top))] right-4 p-2.5 rounded-lg text-white transition-all hover:scale-110 z-[100000]"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
             onClick={(e) => { e.stopPropagation(); closePreview(); }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'; }}
@@ -309,7 +309,7 @@ export default function MultiFileUploader({
 
           {/* File name badge */}
           <div 
-            className="fixed top-4 left-4 px-4 py-2 rounded-lg text-white text-sm font-medium max-w-[60vw] truncate z-[100000]"
+            className="fixed top-[calc(1rem_+_var(--safe-area-top))] left-4 px-4 py-2 rounded-lg text-white text-sm font-medium max-w-[60vw] truncate z-[100000]"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}
           >
             {previewData.name}
