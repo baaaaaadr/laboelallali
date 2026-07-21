@@ -42,10 +42,9 @@ export const LAB_CONTACT = {
   WHATSAPP_TEL: "tel:0654079592"
 };
 
-export const LAB_HOURS = {
-  WEEKDAYS: "Lundi au Vendredi: 7h30 à 18h30",
-  SATURDAY: "Samedi: 07h30 à 13h00"
-};
+// Opening hours are NOT duplicated here anymore: the machine-readable schedule
+// lives in `./labHours` and the text shown to patients comes from the
+// `monday_to_friday` / `saturday_hours` translation keys (fr + ar).
 
 // Default WhatsApp number (first number from the WHATSAPP array)
 export const LAB_WHATSAPP_NUMBER = LAB_CONTACT.WHATSAPP[0].display;

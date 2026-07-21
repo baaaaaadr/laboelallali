@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Phone, MessageCircle, Mail, Clock, X, Check, Copy, Printer } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { LAB_CONTACT, LAB_WHATSAPP_NUMBER, LAB_HOURS } from '@/constants/contact';
+import { LAB_CONTACT, LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useLabStatus } from '@/hooks/useLabStatus';
 
 interface ContactModalProps {
@@ -49,11 +49,15 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // The labels carry a trailing ":" in the locale files (they are also used as
+  // "Fixe : 0528…" elsewhere); the modal shows them as standalone captions.
+  const label = (key: string) => t(key).replace(':', '').trim();
+
   const contactItems = [
     {
       id: 'phone',
       icon: <Phone size={20} />,
-      label: 'APPEL',
+      label: label('landline_label'),
       value: LAB_CONTACT.LANDLINE.display,
       copyValue: LAB_CONTACT.LANDLINE.display.replace(/\s+/g, ''),
       iconColor: 'text-red-600 dark:text-red-400',
@@ -62,7 +66,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     {
       id: 'whatsapp',
       icon: <MessageCircle size={20} />,
-      label: 'APPEL + WHATSAPP',
+      label: label('whatsapp_label'),
       value: `+212 ${LAB_WHATSAPP_NUMBER.replace(/^0/, '')}`,
       copyValue: `+212${LAB_WHATSAPP_NUMBER.replace(/^0/, '')}`,
       iconColor: 'text-green-600 dark:text-green-400',
@@ -71,7 +75,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     {
       id: 'companies',
       icon: <Building2 size={20} />,
-      label: t('companies_label').replace(':', ''),
+      label: label('companies_label'),
       value: LAB_CONTACT.COMPANIES.display,
       copyValue: LAB_CONTACT.COMPANIES.display.replace(/\s+/g, ''),
       iconColor: 'text-purple-600 dark:text-purple-400',
@@ -80,7 +84,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     {
       id: 'fax',
       icon: <Printer size={20} />,
-      label: t('fax_label').replace(':', ''),
+      label: label('fax_label'),
       value: LAB_CONTACT.FAX,
       copyValue: LAB_CONTACT.FAX.replace(/\s+/g, ''),
       iconColor: 'text-slate-600 dark:text-slate-300',
@@ -89,7 +93,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     {
       id: 'email',
       icon: <Mail size={20} />,
-      label: 'EMAIL',
+      label: label('email_label'),
       value: LAB_CONTACT.EMAIL.display,
       copyValue: LAB_CONTACT.EMAIL.display,
       iconColor: 'text-blue-600 dark:text-blue-400',
@@ -97,10 +101,13 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     }
   ];
 
-  // On utilise directement LAB_HOURS
-  const mondayToFridayText = LAB_HOURS.WEEKDAYS;
-  const saturdayText = LAB_HOURS.SATURDAY;
-  
+  // Translated hours — the same keys the contact page and the footer use.
+  // NEVER read the French-only LAB_HOURS constant here: an /ar visitor would
+  // get "Lundi au Vendredi" inside an otherwise fully Arabic RTL modal.
+  const mondayToFridayText = t('monday_to_friday');
+  const saturdayText = t('saturday_hours');
+
+
   const extractHours = (text: string) => {
     const parts = text.split(':');
     return parts.length > 1 ? parts.slice(1).join(':').trim() : text;

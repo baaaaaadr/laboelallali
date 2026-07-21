@@ -23,9 +23,8 @@ const SimpleMap = dynamic(
 import { 
   LAB_NAME, 
   LAB_ADDRESS, 
-  LAB_COORDINATES, 
-  LAB_CONTACT, 
-  LAB_HOURS 
+  LAB_COORDINATES,
+  LAB_CONTACT
 } from '@/constants/contact';
 
 export default function ContactPage({ 

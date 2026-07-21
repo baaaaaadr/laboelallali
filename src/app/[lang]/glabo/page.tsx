@@ -7,8 +7,8 @@ import { fr, ar } from "date-fns/locale";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { LAB_CONTACT } from "../../../constants/contact";
-import { isOpenDay, nextOpenDate } from "../../../constants/labHours";
-import { generateTimeSlots } from "../../../utils/timeSlots";
+import { generateTimeSlots, hasBookableSlots, nextBookableDate } from "../../../utils/timeSlots";
+import { useNow } from "../../../hooks/useNow";
 import { validatePhone } from "../../../utils/phone";
 import toast from 'react-hot-toast';
 import { db, storage } from "../../../config/firebase";
@@ -59,9 +59,11 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
   const [adresse, setAdresse] = useState('');
   const [lieuPrelevement, setLieuPrelevement] = useState('domicile'); // 'domicile' ou 'travail'
   const [instructionsAcces, setInstructionsAcces] = useState(''); // Pour code d'immeuble, etc.
-  // Never seed the picker on a day the lab is closed (dimanche) — it would show
-  // an empty time list. See src/constants/labHours.ts.
-  const [selectedDate, setSelectedDate] = useState<Date | null>(nextOpenDate(new Date()));
+  // Seeded from the browser clock after mount (see the useNow effect below):
+  // computing it during the server render would bake the build date into the
+  // prerendered HTML, and it must never land on a closed day nor on a today
+  // whose slots have all passed.
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState('');
   const [commentaires, setCommentaires] = useState('');
   
@@ -74,17 +76,26 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState('');
 
-  const timeSlots = generateTimeSlots(selectedDate);
+  // `null` until mounted, then ticking every minute — never compute the time
+  // during a render the server also performs (see useNow).
+  const now = useNow();
+  const timeSlots = generateTimeSlots(selectedDate, now);
+
+  // Seed the picker once the browser clock is known: today if some of its slots
+  // are still ahead, otherwise the next open day.
+  useEffect(() => {
+    if (now) setSelectedDate((current) => current ?? nextBookableDate(now));
+  }, [now]);
 
   /**
    * Changing the date can invalidate the chosen hour (17:00 exists Mon-Fri but
-   * not on Saturday, which closes at 13h). Drop it instead of submitting a slot
-   * the lab does not open — the <select> would render blank while still holding
-   * the stale value.
+   * not on Saturday, which closes at 13h, and no slot of today can be in the
+   * past). Drop it instead of submitting a slot the lab does not open — the
+   * <select> would render blank while still holding the stale value.
    */
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
-    if (selectedTime && !generateTimeSlots(date).includes(selectedTime)) {
+    if (selectedTime && !generateTimeSlots(date, now).includes(selectedTime)) {
       setSelectedTime('');
     }
   };
@@ -207,7 +218,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         setEmail('');
         setAdresse('');
         setInstructionsAcces('');
-        setSelectedDate(nextOpenDate(new Date()));
+        setSelectedDate(nextBookableDate(new Date()));
         setSelectedTime('');
         setPrescriptionFiles([]);
         setFilePreviews([]);
@@ -322,7 +333,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
       setEmail('');
       setAdresse('');
       setInstructionsAcces('');
-      setSelectedDate(nextOpenDate(new Date()));
+      setSelectedDate(nextBookableDate(new Date()));
       setSelectedTime('');
       setPrescriptionFiles([]);
       setFilePreviews([]);
@@ -597,7 +608,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                             onChange={handleDateChange}
                             dateFormat="dd/MM/yyyy"
                             minDate={new Date()}
-                            filterDate={(date) => isOpenDay(date.getDay())}
+                            filterDate={(date) => hasBookableSlots(date, now)}
                             locale={dateLocale}
                             placeholderText={t('common:select_date', 'Sélectionnez une date')}
                             className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLabOpeningStatus } from '@/constants/labHours';
+import { useNow } from '@/hooks/useNow';
 
 interface LabStatus {
   /** Meaningless while `isClient` is false — check `isClient` before showing it. */
@@ -12,59 +12,17 @@ interface LabStatus {
   isClient: boolean;
 }
 
-/** Milliseconds left until the next whole minute (so the badge flips on time). */
-const msUntilNextMinute = (from: Date) =>
-  60_000 - (from.getSeconds() * 1000 + from.getMilliseconds());
-
 /**
  * Live "laboratoire ouvert / fermé" status.
  *
- * IMPORTANT — why nothing is computed during the server render:
- * the status is time-dependent, so the HTML produced by the server (or baked
- * into a prerendered/CDN-cached page, or replayed from the service-worker
- * cache) is stale by construction. Rendering it server-side used to leave a
- * permanently wrong badge: the server said "Ouvert", the client's first render
- * said "Fermé", and because both renders after hydration produced the SAME
- * value React never patched the DOM — the stale "Ouvert" stayed on screen
- * until the value happened to flip. `suppressHydrationWarning` made it worse by
- * telling React to keep the server text.
- *
- * So: `currentTime` starts at `null` (server AND first client render agree on a
- * neutral "unknown" state), and the real status only appears after mount, which
- * is a genuine value change React always commits.
+ * Nothing is computed during the server render — see `useNow` for why. Until
+ * the browser has mounted, `isClient` is false and every consumer must render a
+ * neutral placeholder rather than `isOpen`, otherwise a stale "Ouvert" baked
+ * into the prerendered HTML can stay on screen indefinitely.
  */
 export const useLabStatus = (): LabStatus => {
   const { t } = useTranslation('common');
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
-
-  useEffect(() => {
-    const tick = () => setCurrentTime(new Date());
-    tick();
-
-    // Align the first tick on the minute boundary, then run every minute.
-    let interval: ReturnType<typeof setInterval> | undefined;
-    const timeout = setTimeout(() => {
-      tick();
-      interval = setInterval(tick, 60_000);
-    }, msUntilNextMinute(new Date()));
-
-    // Timers are throttled (or frozen) in a backgrounded tab / installed PWA,
-    // so recompute as soon as the page comes back to the foreground.
-    const refresh = () => {
-      if (document.visibilityState === 'visible') tick();
-    };
-    document.addEventListener('visibilitychange', refresh);
-    window.addEventListener('focus', refresh);
-    window.addEventListener('pageshow', refresh);
-
-    return () => {
-      clearTimeout(timeout);
-      if (interval) clearInterval(interval);
-      document.removeEventListener('visibilitychange', refresh);
-      window.removeEventListener('focus', refresh);
-      window.removeEventListener('pageshow', refresh);
-    };
-  }, []);
+  const currentTime = useNow();
 
   if (!currentTime) {
     return {

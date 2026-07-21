@@ -1,9 +1,11 @@
 /**
  * Single source of truth for the laboratory's opening hours.
  *
- * These MUST stay in sync with what the patient is shown:
- *  - `LAB_HOURS` in `./contact` (used by the contact modal / footer)
- *  - the `opening_hours_text` key in `public/locales/{fr,ar}/common.json`
+ * This is the ONLY machine-readable schedule in the app (open/closed badge,
+ * appointment slots, date pickers). It MUST stay in sync with the text shown to
+ * patients, which lives entirely in `public/locales/{fr,ar}/common.json`:
+ *  - `opening_hours_text` (home badge popover)
+ *  - `monday_to_friday` + `saturday_hours` (contact page, footer, contact modal)
  *
  * Advertised hours:
  *    Lundi → Vendredi : 7h30 – 18h30
@@ -54,23 +56,6 @@ const MINUTES_PER_DAY = 24 * 60;
  */
 export function getHoursForDay(dayOfWeek: number): LabDayHours | null {
   return LAB_WEEKLY_HOURS[dayOfWeek] ?? null;
-}
-
-/** Is the lab open at all on that day of week? */
-export function isOpenDay(dayOfWeek: number): boolean {
-  return getHoursForDay(dayOfWeek) !== null;
-}
-
-/**
- * `from` itself if the lab opens that day, otherwise the next calendar day
- * that it does (used to seed date pickers so they never land on a closed day).
- */
-export function nextOpenDate(from: Date): Date {
-  const date = new Date(from);
-  for (let offset = 0; offset < 7 && !isOpenDay(date.getDay()); offset++) {
-    date.setDate(date.getDate() + 1);
-  }
-  return date;
 }
 
 /** Wall-clock reading in the lab's timezone. */
