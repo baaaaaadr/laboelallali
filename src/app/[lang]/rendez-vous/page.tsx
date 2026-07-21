@@ -12,6 +12,7 @@ import { db, storage } from "../../../config/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { LAB_CONTACT } from "../../../constants/contact";
+import { isOpenDay, nextOpenDate } from "../../../constants/labHours";
 import { generateTimeSlots } from "../../../utils/timeSlots";
 import { validatePhone } from "../../../utils/phone";
 import toast from 'react-hot-toast';
@@ -56,7 +57,9 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   const [nom, setNom] = useState('');
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  // Never seed the picker on a day the lab is closed (dimanche) — it would show
+  // an empty time list. See src/constants/labHours.ts.
+  const [selectedDate, setSelectedDate] = useState<Date | null>(nextOpenDate(new Date()));
   const [selectedTime, setSelectedTime] = useState('');
   const [prescriptionFiles, setPrescriptionFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string>('');
@@ -121,6 +124,20 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
   const [phoneError, setPhoneError] = useState('');
 
   const timeSlots = generateTimeSlots(selectedDate);
+
+  /**
+   * Changing the date can invalidate the chosen hour (17:00 exists Mon-Fri but
+   * not on Saturday, which closes at 13h). Drop it instead of submitting a slot
+   * the lab does not open — the <select> would render blank while still holding
+   * the stale value.
+   */
+  const handleDateChange = (date: Date | null) => {
+    setSelectedDate(date);
+    if (selectedTime && !generateTimeSlots(date).includes(selectedTime)) {
+      setSelectedTime('');
+    }
+  };
+
   // Get WhatsApp number from constants (remove leading 0 and add country code)
   const laboWhatsapp = LAB_CONTACT.WHATSAPP[0].url.replace('https://wa.me/', '');
 
@@ -246,7 +263,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
         setNom('');
         setTelephone('');
         setEmail('');
-        setSelectedDate(new Date());
+        setSelectedDate(nextOpenDate(new Date()));
         setSelectedTime('');
         setPrescriptionFiles([]);
         setFilePreviews([]);
@@ -368,7 +385,7 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
       setNom('');
       setTelephone('');
       setEmail('');
-      setSelectedDate(new Date());
+      setSelectedDate(nextOpenDate(new Date()));
       setSelectedTime('');
       setPrescriptionFiles([]);
       setFilePreviews([]);
@@ -508,9 +525,10 @@ export default function RendezVousPage({ params }: { params: Promise<RendezVousP
                     <DatePicker
                       id="date"
                       selected={selectedDate}
-                      onChange={(date) => setSelectedDate(date)}
+                      onChange={handleDateChange}
                       dateFormat="dd/MM/yyyy"
                       minDate={new Date()}
+                      filterDate={(date) => isOpenDay(date.getDay())}
                       locale={dateLocale}
                       placeholderText="Sélectionnez une date"
                       className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"

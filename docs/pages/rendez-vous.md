@@ -11,6 +11,7 @@ This page manages **In-Laboratory Appointment Booking (Rendez-vous Laboratoire)*
 
 ### 1. State Management & Advanced Pre-Uploading
 - Renders standard inputs: Full Name, Phone, Email (Optional), Date, Hour, Comments, and Prescription files.
+- **Date & hour are bound to the lab's real opening hours** (identical wiring to `/glabo`): `selectedDate` is seeded with `nextOpenDate(new Date())` and the `DatePicker` carries `filterDate={(date) => isOpenDay(date.getDay())}`, so dimanche (closed) cannot be picked; `generateTimeSlots(selectedDate)` derives the slots from `src/constants/labHours.ts` — Lun-Ven 07:30→18:15, Sam 07:30→12:45, dimanche vide. `handleDateChange` clears `selectedTime` when the new date no longer offers it (17:00 picked on a Tuesday then moved to a Saturday), so the lab never receives a request for a closed hour — always route date changes through it. Opening hours live in ONE file (`labHours.ts`); keep `LAB_HOURS` in `src/constants/contact.ts` and the `opening_hours_text` i18n key in sync with it. Known gap: past hours of the current day are still offered.
 - **Pre-uploading Logic:** When files are selected in `MultiFileUploader`, the page initiates background uploads *immediately* rather than waiting for form submission.
   - A `useEffect` hooks into `prescriptionFiles`.
   - It tracks active upload promises using `uploadPromiseRef` and stores statuses ('uploading', 'done', 'error') in `fileUploadStates`.

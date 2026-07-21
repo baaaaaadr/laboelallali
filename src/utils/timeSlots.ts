@@ -1,35 +1,34 @@
+import { getHoursForDay } from '@/constants/labHours';
+
+/** Appointment slots are offered every 15 minutes. */
+export const SLOT_INTERVAL_MINUTES = 15;
+
 /**
- * Generate available time slots based on the selected date
- * Lab hours:
- * - Saturday: 7:30 to 12:00
- * - Other days: 7:30 to 18:30
- * - Slots are in 15-minute intervals
+ * Available appointment slots for a given date.
+ *
+ * The opening hours come from `src/constants/labHours.ts` — the single source
+ * of truth shared with the home page's open/closed badge — so the booking form
+ * can never offer a slot on a day or at an hour the lab is closed:
+ *   - Lundi → Vendredi : 07:30 → 18:15 (last slot 15 min before closing)
+ *   - Samedi           : 07:30 → 12:45
+ *   - Dimanche         : aucun créneau (fermé)
+ *
+ * `date.getDay()` is deliberate: the visitor picks a day in a calendar grid
+ * rendered in their own timezone, so the weekday must be read the same way.
  */
 export function generateTimeSlots(date: Date | null): string[] {
   if (!date) return [];
 
-  const day = date.getDay(); // 0=Sunday, 6=Saturday
-  const startHour = 7;
-  const startMinute = 30;
-
-  // Saturday has shorter hours
-  const endHour = day === 6 ? 12 : 18;
-  const endMinute = day === 6 ? 0 : 30;
+  const hours = getHoursForDay(date.getDay());
+  if (!hours) return [];
 
   const slots: string[] = [];
-  let h = startHour;
-  let m = startMinute;
+  const lastSlot = hours.closeMinutes - SLOT_INTERVAL_MINUTES;
 
-  while (h < endHour || (h === endHour && m <= endMinute - 15)) {
-    const hh = h.toString().padStart(2, '0');
-    const mm = m.toString().padStart(2, '0');
+  for (let minutes = hours.openMinutes; minutes <= lastSlot; minutes += SLOT_INTERVAL_MINUTES) {
+    const hh = Math.floor(minutes / 60).toString().padStart(2, '0');
+    const mm = (minutes % 60).toString().padStart(2, '0');
     slots.push(`${hh}:${mm}`);
-
-    m += 15;
-    if (m === 60) {
-      m = 0;
-      h++;
-    }
   }
 
   return slots;

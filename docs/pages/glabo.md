@@ -11,8 +11,9 @@ This page hosts the booking form for **at-home blood tests and collections (Pré
 
 ### 1. State Management & Form Handling
 - Tracks user text inputs: `nom` (Full Name), `telephone` (Phone Number), `email` (Optional), `adresse` (Home address), `lieuPrelevement` (Domicile vs. Travail), `instructionsAcces` (Building access codes), and `commentaires` (Optional description).
-- `selectedDate` (Date): Selected calendar date utilizing the `react-datepicker` library.
-- `selectedTime` (string): Time slot selection generated dynamically based on active days by `generateTimeSlots(selectedDate)`.
+- `selectedDate` (Date): Selected calendar date utilizing the `react-datepicker` library. Seeded with `nextOpenDate(new Date())` and constrained by `filterDate={(date) => isOpenDay(date.getDay())}`, so a closed day (dimanche) can never be picked or reset to. Both helpers come from `src/constants/labHours.ts`.
+- `selectedTime` (string): filled from `generateTimeSlots(selectedDate)` (`src/utils/timeSlots.ts`), which derives its hours from the SAME `src/constants/labHours.ts` as the home page's open/closed badge — Lun-Ven 07:30→18:15, Sam 07:30→12:45, dimanche aucun créneau (last slot is always 15 min before closing).
+- `handleDateChange` wraps `setSelectedDate`: it CLEARS `selectedTime` when the newly picked date no longer offers it (e.g. 17:00 chosen on a Tuesday, then the date is moved to a Saturday). Without it the `<select>` renders blank while still holding the stale value, and the lab receives a request for an hour it is closed. Wire any new date input through this handler, never through `setSelectedDate` directly.
 - `prescriptionFiles` (File[]) & `filePreviews` (string[]): Tracks selected prescription files for upload.
 
 ### 2. MultiFileUploader Component
@@ -42,4 +43,4 @@ This page hosts the booking form for **at-home blood tests and collections (Pré
 
 ## Notes for AI
 - **WhatsApp Blockers:** Do not run async operations (like Firestore writes or Storage uploads) *before* calling `window.open` on desktop systems, otherwise browsers will block the redirection as an unwanted popup. Ensure `window.open` is called first synchronously inside the user's click boundary.
-- **Time Slots:** `generateTimeSlots` filters out past hours if booking is attempted on the current day, or returns standard working hour increments.
+- **Time Slots:** `generateTimeSlots` returns 15-minute increments derived from `LAB_WEEKLY_HOURS` (`src/constants/labHours.ts`) — the single source of truth shared with the home page badge. It does NOT filter out past hours on the current day (a 07:30 slot is still offered at 16:00 today); if that ever needs fixing, do it in the page, not in the helper, which must stay a pure function of the date. Never redefine opening hours locally: `labHours.ts`, `LAB_HOURS` (`src/constants/contact.ts`) and the `opening_hours_text` i18n key must agree.

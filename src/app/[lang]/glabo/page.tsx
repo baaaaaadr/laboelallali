@@ -7,6 +7,7 @@ import { fr, ar } from "date-fns/locale";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { LAB_CONTACT } from "../../../constants/contact";
+import { isOpenDay, nextOpenDate } from "../../../constants/labHours";
 import { generateTimeSlots } from "../../../utils/timeSlots";
 import { validatePhone } from "../../../utils/phone";
 import toast from 'react-hot-toast';
@@ -58,7 +59,9 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
   const [adresse, setAdresse] = useState('');
   const [lieuPrelevement, setLieuPrelevement] = useState('domicile'); // 'domicile' ou 'travail'
   const [instructionsAcces, setInstructionsAcces] = useState(''); // Pour code d'immeuble, etc.
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  // Never seed the picker on a day the lab is closed (dimanche) — it would show
+  // an empty time list. See src/constants/labHours.ts.
+  const [selectedDate, setSelectedDate] = useState<Date | null>(nextOpenDate(new Date()));
   const [selectedTime, setSelectedTime] = useState('');
   const [commentaires, setCommentaires] = useState('');
   
@@ -72,6 +75,20 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
   const [phoneError, setPhoneError] = useState('');
 
   const timeSlots = generateTimeSlots(selectedDate);
+
+  /**
+   * Changing the date can invalidate the chosen hour (17:00 exists Mon-Fri but
+   * not on Saturday, which closes at 13h). Drop it instead of submitting a slot
+   * the lab does not open — the <select> would render blank while still holding
+   * the stale value.
+   */
+  const handleDateChange = (date: Date | null) => {
+    setSelectedDate(date);
+    if (selectedTime && !generateTimeSlots(date).includes(selectedTime)) {
+      setSelectedTime('');
+    }
+  };
+
   // Get WhatsApp number from constants
   const laboWhatsapp = LAB_CONTACT.WHATSAPP[0].url.replace('https://wa.me/', '');
 
@@ -190,7 +207,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
         setEmail('');
         setAdresse('');
         setInstructionsAcces('');
-        setSelectedDate(new Date());
+        setSelectedDate(nextOpenDate(new Date()));
         setSelectedTime('');
         setPrescriptionFiles([]);
         setFilePreviews([]);
@@ -305,7 +322,7 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
       setEmail('');
       setAdresse('');
       setInstructionsAcces('');
-      setSelectedDate(new Date());
+      setSelectedDate(nextOpenDate(new Date()));
       setSelectedTime('');
       setPrescriptionFiles([]);
       setFilePreviews([]);
@@ -577,9 +594,10 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
                           <DatePicker
                             id="date"
                             selected={selectedDate}
-                            onChange={(date) => setSelectedDate(date)}
+                            onChange={handleDateChange}
                             dateFormat="dd/MM/yyyy"
                             minDate={new Date()}
+                            filterDate={(date) => isOpenDay(date.getDay())}
                             locale={dateLocale}
                             placeholderText={t('common:select_date', 'Sélectionnez une date')}
                             className="block w-full pl-10 pr-3 py-2.5 bg-[var(--background-secondary)] border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent transition-all duration-200 text-[var(--text-primary)]"

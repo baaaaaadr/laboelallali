@@ -44,6 +44,35 @@ export const LAB_WEEKLY_HOURS: readonly (LabDayHours | null)[] = [
 
 const MINUTES_PER_DAY = 24 * 60;
 
+/**
+ * Opening window of a given day of week (0 = Sunday), or `null` if closed.
+ *
+ * Callers dealing with a CALENDAR date (a date picker, an appointment slot)
+ * must pass `date.getDay()` — the day the visitor sees in the calendar grid.
+ * Only "is the lab open right NOW" goes through `getLabClock`, which resolves
+ * the current instant in the lab's own timezone.
+ */
+export function getHoursForDay(dayOfWeek: number): LabDayHours | null {
+  return LAB_WEEKLY_HOURS[dayOfWeek] ?? null;
+}
+
+/** Is the lab open at all on that day of week? */
+export function isOpenDay(dayOfWeek: number): boolean {
+  return getHoursForDay(dayOfWeek) !== null;
+}
+
+/**
+ * `from` itself if the lab opens that day, otherwise the next calendar day
+ * that it does (used to seed date pickers so they never land on a closed day).
+ */
+export function nextOpenDate(from: Date): Date {
+  const date = new Date(from);
+  for (let offset = 0; offset < 7 && !isOpenDay(date.getDay()); offset++) {
+    date.setDate(date.getDate() + 1);
+  }
+  return date;
+}
+
 /** Wall-clock reading in the lab's timezone. */
 export interface LabClock {
   /** 0 = Sunday … 6 = Saturday, as observed in `LAB_TIMEZONE`. */
