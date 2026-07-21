@@ -25,9 +25,17 @@ const Footer = () => {
   const { i18n } = useTranslation();
   const pathname = usePathname();
   const isRTL = i18n.language === 'ar';
-  const currentYear = new Date().getFullYear();
+  // Computed after mount, never during the server render: the page is
+  // prerendered at build time, so `new Date()` here would freeze the copyright
+  // on the year of the last deploy (and the surrounding suppressHydrationWarning
+  // used to stop React from ever correcting it). Same reasoning as useLabStatus.
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -202,7 +210,7 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-white/20 mt-8 pt-6 text-center flex items-center justify-center gap-2" suppressHydrationWarning>
+        <div className="border-t border-white/20 mt-8 pt-6 text-center flex items-center justify-center gap-2">
           <img
             src="/images/icons/logo-footer.png"
             alt="Labo El Allali"
@@ -210,7 +218,7 @@ const Footer = () => {
             width={24}
             height={24}
           />
-          <p className="footer-copyright">{currentYear} {t('laboratory_name')}. {t('rights_reserved')}</p>
+          <p className="footer-copyright">{currentYear ? `${currentYear} ` : ''}{t('laboratory_name')}. {t('rights_reserved')}</p>
         </div>
       </div>
       </footer>
