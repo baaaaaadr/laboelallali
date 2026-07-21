@@ -79,10 +79,39 @@ l'onglet **Patients** de `/admin`.
   abîmé donnerait `404` → « aucun résultat » ; une erreur de transport donnerait
   l'état `error` ; le message « pas de PDF » n'est atteignable qu'après un **200 avec
   une chaîne vide**.
-- Angle mort assumé : dans notre échantillon, aucun autre dossier n'est postérieur au
-  17/06/2026. On ne peut donc pas distinguer formellement « ce dossier précis » de
-  « tous les dossiers depuis début juillet » sans un identifiant patient témoin ayant
-  un bilan de juillet 2026.
+### Rebondissement : la réplique ne contient qu'une partie des patients
+
+Le laboratoire (Si Hassan) a fourni 4 identifiants de patients ayant un bilan en
+juillet 2026 : `41666` (01/07), `165783` (07/07), `163007` (13/07), `232735` (21/07).
+
+**Les quatre renvoient `404 requester_not_found`**, dans les trois types
+(`patient`/`medecin`/`correspondant`) — alors qu'au même instant les identifiants de
+test de Si Brahim (`7587`, `142807`, `TESTA`, `TESTMED`) et les 10 patients inscrits
+dans l'app répondent normalement. Le serveur n'est donc pas en panne : **il ne connaît
+tout simplement pas ces patients**.
+
+Autre fait décisif : Si Hassan confirme que **le PDF du dossier 130726314 existe bien
+dans Qalam**, qu'il est imprimable, et qu'il a été envoyé au patient par WhatsApp. Le
+document existe au laboratoire ; il n'est pas visible depuis l'API.
+
+**Hypothèse de travail** (à confirmer par Si Brahim / Si Hassan) : la réplique
+interrogée par l'API ne couvre pas tout Qalam, mais seulement les patients « publiés »
+en ligne (héritage de l'ancien portail cyberlab.ma), et elle est alimentée à
+l'inscription plutôt qu'en continu. Cela expliquerait les deux symptômes d'un coup :
+
+- les 4 patients récents n'ont jamais été publiés → inconnus ;
+- le patient 232527 a été publié le **13/07 à 07h50** (jour où le laboratoire lui a
+  accordé l'accès à l'app), et son prélèvement est du **13/07 à 08h42**, juste après :
+  la fiche du dossier est arrivée dans la réplique, mais le PDF, édité plus tard dans
+  la journée, n'a jamais suivi.
+
+**Conséquence opérationnelle majeure si l'hypothèse se confirme :** inscrire un patient
+dans l'application ne suffit pas — il faut aussi l'action de publication côté Qalam,
+sinon le patient ne verra rien. À intégrer à la procédure d'accueil.
+
+**Test décisif demandé** : publier UN seul des quatre patients (`232735`) et relancer
+`node scripts/diag-dossier.js 232735 --compare 7587`. S'il apparaît avec son PDF,
+l'hypothèse est confirmée et on tient la marche à suivre.
 
 ## 5. Bug applicatif trouvé en chemin — identifiant avec espace
 
