@@ -583,9 +583,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                     },
                   ].map(({ icon: Icon, label, value, sub }) => (
                     <div key={label} className="card p-4">
-                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+                      {/* No `truncate` here: these labels ("Demandes en attente"…) must
+                          always be readable in full, so they wrap instead of being cut.
+                          `tracking-wide` was also dropped — the extra letter-spacing was
+                          what pushed them over the tile width in the first place. */}
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase text-[var(--text-tertiary)]">
                         <Icon size={14} className="text-[var(--color-bordeaux-primary)] flex-shrink-0" />
-                        <span className="truncate">{label}</span>
+                        <span className="leading-tight">{label}</span>
                       </div>
                       <div className="mt-2 text-2xl font-bold text-[var(--text-primary)] tabular-nums">{value}</div>
                       {sub && <div className="text-xs text-[var(--text-secondary)] mt-0.5">{sub}</div>}
