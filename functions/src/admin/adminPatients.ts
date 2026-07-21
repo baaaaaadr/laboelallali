@@ -15,6 +15,9 @@ import * as admin from "firebase-admin";
 // Role gate + region live in a side-effect-free leaf module, shared with the
 // CyberLab staff callable (adminTestResults) so both use the exact same check.
 import { LEVEL, levelOf, requireLevel, REGION } from "./roles";
+// Ids are typed by hand at the front desk; strip any whitespace (Qalam shows big
+// ids as "67 305") before storing, or the lab server answers requester_not_found.
+import { normalizeRequesterId } from "../cyberlab/client";
 
 const VALID_TYPES = ["patient", "medecin", "correspondant"] as const;
 type RequesterType = (typeof VALID_TYPES)[number];
@@ -74,7 +77,7 @@ export const adminSetRequester = onCall(
   async (request: CallableRequest<SetData>) => {
     await requireLevel(request, LEVEL.staff);
     const email = (request.data?.email || "").trim();
-    const requesterId = (request.data?.requester_id || "").trim();
+    const requesterId = normalizeRequesterId(request.data?.requester_id);
     const type = (request.data?.type || "").trim();
     if (!email) throw new HttpsError("invalid-argument", "Email requis.");
     if (!requesterId) {
@@ -389,7 +392,7 @@ export const adminFulfillAccessRequest = onCall(
   ) => {
     const { uid: adminUid } = await requireLevel(request, LEVEL.staff);
     const targetUid = (request.data?.uid || "").trim();
-    const requesterId = (request.data?.requester_id || "").trim();
+    const requesterId = normalizeRequesterId(request.data?.requester_id);
     const type = (request.data?.type || "").trim();
     if (!targetUid) throw new HttpsError("invalid-argument", "Patient requis.");
     if (!requesterId) {
@@ -440,5 +443,156 @@ export const adminRejectAccessRequest = onCall(
         { merge: true }
       );
     return { success: true };
+  }
+);
+
+// ── Dashboard ────────────────────────────────────────────────────────────────
+// One call powering the "Tableau de bord" tab: adoption of the online-results
+// service. Same bounded scan as adminSearchPatients (Admin SDK, SCAN_LIMIT).
+// Team members (any `role`) are excluded from the patient counts.
+//
+// The usage half reads `lastResultsAt`, stamped by fetchResults when the patient's
+// results are loaded (see functions/src/cyberlab/fetchResults.ts). It is a DATE
+// only — this dashboard never sees a result. Accounts stamped before the feature
+// shipped simply have no value yet, so they read as "never consulted" until their
+// owner next opens the app; the UI shows a "suivi depuis" caption for that.
+
+/** Considered active when the account was used within this window. */
+const ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const RECENT_LIST = 10; // rows in the "latest ..." tables
+const DORMANT_LIST = 25; // rows in the "to relance" table
+
+interface AccountRow {
+  uid: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  createdAt: string; // ISO string as written at signup ("" when missing)
+  hasAccess: boolean;
+  lastResultsMs: number | null;
+}
+
+/** Firestore Timestamp | anything → millis, or null. */
+function toMillis(v: unknown): number | null {
+  const ts = v as admin.firestore.Timestamp | undefined;
+  return ts && typeof ts.toMillis === "function" ? ts.toMillis() : null;
+}
+
+export const adminDashboardStats = onCall(
+  { region: REGION },
+  async (request: CallableRequest) => {
+    await requireLevel(request, LEVEL.staff);
+
+    const snap = await admin
+      .firestore()
+      .collection("users")
+      .limit(SCAN_LIMIT)
+      .get();
+
+    const accounts: AccountRow[] = [];
+    const byType: Record<string, number> = {
+      patient: 0,
+      medecin: 0,
+      correspondant: 0,
+    };
+
+    snap.forEach((doc) => {
+      const d = doc.data() || {};
+      // Staff/admin/owner are team members, not patients — keep them out of the
+      // adoption numbers so the denominator stays meaningful.
+      if (String(d.role || "")) return;
+
+      const hasAccess = String(d.requester_id || "").trim() !== "";
+      const type = String(d.type || "");
+      if (hasAccess && type in byType) byType[type] += 1;
+
+      accounts.push({
+        uid: doc.id,
+        fullName: String(d.fullName || ""),
+        email: d.email == null ? "" : String(d.email),
+        phone: String(d.phone || ""),
+        createdAt: String(d.createdAt || ""),
+        hasAccess,
+        lastResultsMs: toMillis(d.lastResultsAt),
+      });
+    });
+
+    const now = Date.now();
+    const withAccess = accounts.filter((a) => a.hasAccess);
+    const active = withAccess.filter(
+      (a) => a.lastResultsMs !== null && now - a.lastResultsMs < ACTIVE_WINDOW_MS
+    );
+    const dormant = withAccess.filter(
+      (a) => a.lastResultsMs === null || now - a.lastResultsMs >= ACTIVE_WINDOW_MS
+    );
+
+    // Latest accounts created — createdAt is an ISO string, so lexicographic sort
+    // is chronological; blanks (legacy docs) sort last.
+    const latestCreated = [...accounts]
+      .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""))
+      .slice(0, RECENT_LIST)
+      .map((a) => ({
+        uid: a.uid,
+        fullName: a.fullName,
+        email: a.email,
+        createdAt: a.createdAt,
+        hasAccess: a.hasAccess,
+      }));
+
+    const latestActive = [...active]
+      .sort((a, b) => (b.lastResultsMs || 0) - (a.lastResultsMs || 0))
+      .slice(0, RECENT_LIST)
+      .map((a) => ({
+        uid: a.uid,
+        fullName: a.fullName,
+        email: a.email,
+        lastResultsAt: a.lastResultsMs,
+      }));
+
+    // Never-used first (the best relance targets), then longest-inactive.
+    const dormantList = [...dormant]
+      .sort(
+        (a, b) => (a.lastResultsMs || 0) - (b.lastResultsMs || 0)
+      )
+      .slice(0, DORMANT_LIST)
+      .map((a) => ({
+        uid: a.uid,
+        fullName: a.fullName,
+        email: a.email,
+        // Needed so staff can relance the patient directly (WhatsApp) from the row.
+        phone: a.phone,
+        createdAt: a.createdAt,
+        lastResultsAt: a.lastResultsMs, // null → jamais consulté
+      }));
+
+    const pendingSnap = await admin
+      .firestore()
+      .collection("resultAccessRequests")
+      .where("status", "==", "pending")
+      .limit(200)
+      .get();
+
+    return {
+      totals: {
+        accounts: accounts.length,
+        withAccess: withAccess.length,
+        withoutAccess: accounts.length - withAccess.length,
+        pendingRequests: pendingSnap.size,
+        byType,
+      },
+      usage: {
+        active: active.length,
+        dormant: dormant.length,
+        // Share of ACTIVATED accounts actually used (0 when none activated yet).
+        rate: withAccess.length
+          ? Math.round((active.length / withAccess.length) * 100)
+          : 0,
+        windowDays: 30,
+      },
+      latestCreated,
+      latestActive,
+      dormantList,
+      truncated: snap.size >= SCAN_LIMIT,
+    };
   }
 );

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail } from 'lucide-react';
+import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail, Activity } from 'lucide-react';
 
 export default function ConfidentialitePage() {
   const { t } = useTranslation('common');
@@ -16,6 +16,9 @@ export default function ConfidentialitePage() {
     { icon: FileText, title: 'confidentialite.collect_title', text: 'confidentialite.collect_text' },
     { icon: Server, title: 'confidentialite.results_title', text: 'confidentialite.results_text' },
     { icon: UserCog, title: 'confidentialite.profile_title', text: 'confidentialite.profile_text' },
+    // Declares the single usage datum the app stores (date of last results view),
+    // which powers the lab's adoption dashboard. See docs/pages/admin.md.
+    { icon: Activity, title: 'confidentialite.usage_title', text: 'confidentialite.usage_text' },
   ];
   const rights = [
     'confidentialite.rights_access',

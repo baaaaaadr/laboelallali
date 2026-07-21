@@ -126,9 +126,12 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
         setPdfState(dossierId, { status: 'loading' });
         try {
           const data = await callFetch({ dossier_id: dossierId });
-          // Match by id (the new API returns just this dossier; be defensive in
-          // case a build still returns the full list).
-          const match = data?.results?.find((x) => x.dossier_id === dossierId) ?? data?.results?.[0];
+          // Match by id ONLY. The server returns just this dossier, but if a build
+          // ever ignored `dossier_id` and answered with the full list, falling back
+          // to results[0] would show the patient ANOTHER dossier's PDF under this
+          // card's date — on a medical document, showing nothing beats showing the
+          // wrong one.
+          const match = data?.results?.find((x) => x.dossier_id === dossierId);
           const base64 = match?.pdf_base64 || '';
           // The call SUCCEEDED but the lab server sent no PDF bytes → 'unavailable'
           // (not 'error'): the document isn't attached in CyberLab yet, which the

@@ -20,13 +20,55 @@ import type { CyberlabResponse } from '@/types/cyberlab';
 import ResultsIndicators from '@/components/features/results/ResultsIndicators';
 import AnalysesDetails from '@/components/features/results/AnalysesDetails';
 import TabsNavigation, { type TabItem } from '@/components/features/catalog/TabsNavigation';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X, FlaskConical, FileText, Eye, Loader2 } from 'lucide-react';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, Activity, MessageCircle, Clock } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
 const LEVEL: Record<string, number> = { owner: 3, admin: 2, staff: 1 };
 
-type AdminTab = 'patients' | 'requests' | 'test' | 'team';
+type AdminTab = 'dashboard' | 'patients' | 'requests' | 'test' | 'team';
+
+/**
+ * Callable errors whose `message` is just the status code — the SDK does this for
+ * transport failures (function not deployed yet, offline, CORS). They carry no
+ * information for a human, so the UI shows the generic sentence instead.
+ */
+const OPAQUE_ERROR_MESSAGES = new Set([
+  'internal',
+  'unavailable',
+  'unknown',
+  'cancelled',
+  'deadline-exceeded',
+]);
+
+// Usage tracking (lastResultsAt) started shipping on this date — before it, no
+// account has a value, so everyone would read as "jamais consulté". The dashboard
+// shows this as a caption so the numbers aren't misread during the ramp-up.
+const USAGE_SINCE = '2026-07-20';
+
+interface DashAccount {
+  uid: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  createdAt?: string;
+  hasAccess?: boolean;
+  lastResultsAt?: number | null;
+}
+interface DashboardStats {
+  totals: {
+    accounts: number;
+    withAccess: number;
+    withoutAccess: number;
+    pendingRequests: number;
+    byType: Record<string, number>;
+  };
+  usage: { active: number; dormant: number; rate: number; windowDays: number };
+  latestCreated: DashAccount[];
+  latestActive: DashAccount[];
+  dormantList: DashAccount[];
+  truncated: boolean;
+}
 
 /**
  * `adminTestResults` response = the lab payload + the identity staff need to confirm
@@ -75,7 +117,11 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const isArabic = lang === 'ar';
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<AdminTab>('patients');
+  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+
+  // Dashboard tab
+  const [dash, setDash] = useState<DashboardStats | null>(null);
+  const [dashError, setDashError] = useState<string | null>(null);
 
   // Encode section — multi-field patient search + attach requester_id
   const [query, setQuery] = useState('');
@@ -115,8 +161,15 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [pdfProbe, setPdfProbe] = useState<Record<string, 'loading' | 'ok' | 'empty' | 'error'>>({});
 
   const errMsg = useCallback(
-    (err: unknown): string =>
-      (err as { message?: string })?.message || t('admin.error', 'Une erreur est survenue. Réessayez.'),
+    (err: unknown): string => {
+      const msg = ((err as { message?: string })?.message || '').trim();
+      // A transport failure (function not deployed, offline, CORS…) surfaces from
+      // the callable SDK with message === the bare status code, e.g. "internal".
+      // Showing that token to staff means nothing — fall back to a real sentence.
+      return msg && !OPAQUE_ERROR_MESSAGES.has(msg.toLowerCase())
+        ? msg
+        : t('admin.error', 'Une erreur est survenue. Réessayez.');
+    },
     [t]
   );
 
@@ -165,6 +218,37 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const etatLabel = (raw: string) =>
     raw.trim().toLowerCase() === 'final' ? t('resultats.etat_final', 'Finalisé') : raw;
 
+  // ── Dashboard helpers ───────────────────────────────────────────────────────
+  /** Epoch ms → short localized date+time (dashboard activity columns). */
+  const fmtWhen = (ms?: number | null) => {
+    if (!ms) return '—';
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime())
+      ? '—'
+      : d.toLocaleDateString(isArabic ? 'ar-MA' : 'fr-FR', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        });
+  };
+  /** Whole days since an epoch ms (used for "inactif depuis N j"). */
+  const daysSince = (ms: number) => Math.floor((Date.now() - ms) / 86400000);
+  /**
+   * Moroccan phone → wa.me digits: strip formatting, turn a leading 0 into 212.
+   * Lets staff relance a dormant patient in one tap (Aziz's preferred channel).
+   */
+  const waLink = (phone: string, name: string) => {
+    const digits = (phone || '').replace(/\D/g, '');
+    if (!digits) return null;
+    const intl = digits.startsWith('212') ? digits : digits.replace(/^0/, '212');
+    const msg = t('admin.dash_relance_msg', {
+      name: name || '',
+      defaultValue:
+        'Bonjour {{name}}, le Laboratoire El Allali vous informe que vous pouvez consulter vos résultats en ligne depuis notre application. Besoin d\'aide pour vous connecter ?',
+    });
+    return `https://wa.me/${intl}?text=${encodeURIComponent(msg)}`;
+  };
+
   // base64 → in-memory PDF blob URL (never persisted to disk).
   const base64ToBlobUrl = (b64: string) => {
     const clean = (b64 || '').replace(/\s+/g, '');
@@ -185,7 +269,9 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         type: testType,
         dossier_id: dossierId,
       });
-      const match = res.results?.find((x) => x.dossier_id === dossierId) ?? res.results?.[0];
+      // Strict id match, no results[0] fallback: a probe that opened another
+      // dossier's PDF would make staff validate an onboarding that is broken.
+      const match = res.results?.find((x) => x.dossier_id === dossierId);
       const base64 = match?.pdf_base64 || '';
       if (!base64) {
         setPdfProbe((m) => ({ ...m, [dossierId]: 'empty' }));
@@ -229,6 +315,19 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   useEffect(() => {
     if (!loading && isStaff) loadAccessReqs();
   }, [loading, isStaff, loadAccessReqs]);
+
+  const loadDash = useCallback(async () => {
+    try {
+      setDashError(null);
+      setDash(await callFn<DashboardStats>('adminDashboardStats', {}));
+    } catch (err: unknown) {
+      setDashError(errMsg(err));
+    }
+  }, [errMsg]);
+
+  useEffect(() => {
+    if (!loading && isStaff) loadDash();
+  }, [loading, isStaff, loadDash]);
 
   const setArInput = (uid: string, patch: Partial<{ requester_id: string; type: RequesterType }>) =>
     setArInputs((m) => {
@@ -390,6 +489,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   }
 
   const tabs: TabItem[] = [
+    { id: 'dashboard', label: t('admin.tab_dashboard', 'Tableau de bord'), icon: LayoutDashboard },
     { id: 'patients', label: t('admin.tab_patients', 'Patients'), icon: User },
     { id: 'requests', label: t('admin.tab_requests', 'Demandes'), icon: Inbox, count: accessReqs.length },
     { id: 'test', label: t('admin.tab_test', 'Tester'), icon: FlaskConical },
@@ -434,6 +534,199 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         </div>
 
         <div className="space-y-8 pt-8">
+        {/* ── Tableau de bord: adoption of the online-results service ──────── */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
+            {dashError && (
+              <div className="card p-4 flex items-center gap-3">
+                <AlertCircle size={20} className="text-[var(--status-error)] flex-shrink-0" />
+                <span className="text-[var(--text-primary)]">{dashError}</span>
+              </div>
+            )}
+
+            {!dash && !dashError && (
+              <div className="card">
+                <MedicalLoader label={t('admin.dash_loading', 'Chargement du tableau de bord…')} />
+              </div>
+            )}
+
+            {dash && (
+              <>
+                {/* Indicateurs */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    {
+                      icon: Users,
+                      label: t('admin.dash_accounts', 'Comptes patients'),
+                      value: dash.totals.accounts,
+                      sub: '',
+                    },
+                    {
+                      icon: CheckCircle,
+                      label: t('admin.dash_with_access', 'Accès activé'),
+                      value: dash.totals.withAccess,
+                      sub: dash.totals.accounts
+                        ? `${Math.round((dash.totals.withAccess / dash.totals.accounts) * 100)} %`
+                        : '',
+                    },
+                    {
+                      icon: User,
+                      label: t('admin.dash_without_access', 'Sans accès'),
+                      value: dash.totals.withoutAccess,
+                      sub: '',
+                    },
+                    {
+                      icon: Inbox,
+                      label: t('admin.dash_pending', 'Demandes en attente'),
+                      value: dash.totals.pendingRequests,
+                      sub: '',
+                    },
+                  ].map(({ icon: Icon, label, value, sub }) => (
+                    <div key={label} className="card p-4">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+                        <Icon size={14} className="text-[var(--color-bordeaux-primary)] flex-shrink-0" />
+                        <span className="truncate">{label}</span>
+                      </div>
+                      <div className="mt-2 text-2xl font-bold text-[var(--text-primary)] tabular-nums">{value}</div>
+                      {sub && <div className="text-xs text-[var(--text-secondary)] mt-0.5">{sub}</div>}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Taux d'utilisation */}
+                <div className="card p-5 space-y-3">
+                  <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                      <Activity size={20} className="text-[var(--color-bordeaux-primary)]" />
+                      {t('admin.dash_usage_title', "Taux d'utilisation")}
+                    </h2>
+                    <span className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">{dash.usage.rate} %</span>
+                  </div>
+                  <div className="h-2.5 rounded-lg bg-[var(--background-secondary)] overflow-hidden">
+                    <div
+                      className="h-full rounded-lg bg-[var(--color-fuchsia-accent)]"
+                      style={{ width: `${Math.min(100, Math.max(0, dash.usage.rate))}%` }}
+                    />
+                  </div>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    {t('admin.dash_usage_desc', {
+                      active: dash.usage.active,
+                      total: dash.totals.withAccess,
+                      days: dash.usage.windowDays,
+                      defaultValue:
+                        '{{active}} comptes actifs sur {{total}} accès activés (sur {{days}} jours). {{dormant}} dormants.',
+                      dormant: dash.usage.dormant,
+                    })}
+                  </p>
+                  {/* Ramp-up caveat: before this date nothing was measured, so old
+                      accounts read as "jamais consulté" until they next open the app. */}
+                  <p className="text-xs text-[var(--text-tertiary)] flex items-center gap-1.5">
+                    <Clock size={13} className="flex-shrink-0" />
+                    {t('admin.dash_since', {
+                      date: fmtDate(USAGE_SINCE),
+                      defaultValue: "Suivi d'utilisation actif depuis le {{date}} — les comptes plus anciens apparaissent « jamais consulté » tant qu'ils n'ont pas rouvert l'application.",
+                    })}
+                  </p>
+                </div>
+
+                {/* Dormants — à relancer */}
+                <div className="card p-6 space-y-4">
+                  <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                    <MessageCircle size={20} className="text-[var(--color-bordeaux-primary)]" />
+                    {t('admin.dash_dormant_title', 'Comptes à relancer')}
+                  </h2>
+                  {dash.dormantList.length === 0 ? (
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      {t('admin.dash_dormant_empty', 'Aucun compte dormant. 👌')}
+                    </p>
+                  ) : (
+                    <ul className="divide-y divide-[var(--border-default)]">
+                      {dash.dormantList.map((a) => {
+                        const link = waLink(a.phone || '', a.fullName);
+                        return (
+                          <li key={a.uid} className="flex items-center justify-between gap-3 py-3">
+                            <div className="min-w-0">
+                              <p className="font-medium text-[var(--text-primary)] truncate">{a.fullName || a.email}</p>
+                              <p className="text-sm text-[var(--status-warning)]">
+                                {a.lastResultsAt
+                                  ? t('admin.dash_inactive_days', {
+                                      days: daysSince(a.lastResultsAt),
+                                      defaultValue: 'Inactif depuis {{days}} j',
+                                    })
+                                  : t('admin.dash_never', 'Jamais consulté')}
+                              </p>
+                            </div>
+                            {link && (
+                              <a
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="button-bordeaux-outline justify-center flex items-center gap-2 flex-shrink-0"
+                              >
+                                <MessageCircle size={16} />
+                                {t('admin.dash_relance', 'Relancer')}
+                              </a>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Derniers comptes actifs */}
+                <div className="card p-6 space-y-4">
+                  <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                    <Activity size={20} className="text-[var(--color-bordeaux-primary)]" />
+                    {t('admin.dash_active_title', 'Derniers comptes actifs')}
+                  </h2>
+                  {dash.latestActive.length === 0 ? (
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      {t('admin.dash_active_empty', 'Aucune consultation enregistrée pour le moment.')}
+                    </p>
+                  ) : (
+                    <ul className="divide-y divide-[var(--border-default)]">
+                      {dash.latestActive.map((a) => (
+                        <li key={a.uid} className="flex items-center justify-between gap-3 py-3">
+                          <p className="font-medium text-[var(--text-primary)] truncate min-w-0">{a.fullName || a.email}</p>
+                          <span className="text-sm text-[var(--text-secondary)] flex-shrink-0">{fmtWhen(a.lastResultsAt)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Derniers comptes créés */}
+                <div className="card p-6 space-y-4">
+                  <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                    <UserPlus size={20} className="text-[var(--color-bordeaux-primary)]" />
+                    {t('admin.dash_new_title', 'Derniers comptes créés')}
+                  </h2>
+                  <ul className="divide-y divide-[var(--border-default)]">
+                    {dash.latestCreated.map((a) => (
+                      <li key={a.uid} className="flex items-center justify-between gap-3 py-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-[var(--text-primary)] truncate">{a.fullName || a.email}</p>
+                          <p className="text-sm text-[var(--text-secondary)]">{fmtDate(a.createdAt || '')}</p>
+                        </div>
+                        <span
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex-shrink-0 ${
+                            a.hasAccess
+                              ? 'text-[var(--status-success)] bg-[var(--background-secondary)]'
+                              : 'text-[var(--text-secondary)] bg-[var(--background-secondary)]'
+                          }`}
+                        >
+                          {a.hasAccess ? t('admin.dash_access_yes', 'Activé') : t('admin.dash_access_no', 'Aucun')}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {/* ── Demandes tab: pending access requests ───────────────────────── */}
         {activeTab === 'requests' && (
           <div className="card p-6 space-y-4">

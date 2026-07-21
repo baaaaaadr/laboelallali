@@ -103,6 +103,22 @@ export function signRequest(
   };
 }
 
+/**
+ * Canonical form of a `requester_id`.
+ *
+ * Staff type the lab id by hand, and Qalam displays large ids with a thousands
+ * separator — "67 305" was actually saved on a real patient profile, which the lab
+ * server rejects with `404 requester_not_found` (the patient then sees nothing at
+ * all in the app). Ids are alphanumeric and never legitimately contain whitespace,
+ * so every space — regular, non-breaking or narrow — is stripped. Applied both when
+ * writing an id (admin space) and when reading one back from a profile, so already
+ * corrupted documents are rescued too.
+ */
+export function normalizeRequesterId(raw: unknown): string {
+  if (typeof raw === "number" && Number.isFinite(raw)) return String(raw);
+  return typeof raw === "string" ? raw.replace(/\s+/g, "") : "";
+}
+
 function mapStatusToKind(status: number): CyberlabErrorKind {
   if (status === 401) return "unauthorized";
   if (status === 404) return "not_found";

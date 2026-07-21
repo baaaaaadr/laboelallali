@@ -32,6 +32,7 @@ import {
   CyberlabError,
   CyberlabRequest,
   CyberlabResponse,
+  normalizeRequesterId,
   RequesterType,
 } from "./client";
 import { LEVEL, requireLevel, REGION } from "../admin/roles";
@@ -103,7 +104,9 @@ export const adminTestResults = onCall(
     // Staff and up only; re-checked server-side (never trusts the client UI gate).
     await requireLevel(request, LEVEL.staff);
 
-    const requesterId = (request.data?.requester_id || "").trim();
+    // Same normalization as the write path, so testing "67 305" probes the id
+    // that would actually be stored rather than 404-ing on the space.
+    const requesterId = normalizeRequesterId(request.data?.requester_id);
     const type = (request.data?.type || "").trim();
     const dossierId = (request.data?.dossier_id || "").trim();
     if (!requesterId) {

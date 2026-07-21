@@ -90,7 +90,7 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 
 ## Data Fetching & Mutations
 - **Read:** `fetchResults` callable in region `europe-southwest1` (wired via `getClientFunctions` in `src/config/firebase.ts`), invoked from `ResultsContext`. The callable reads `requester_id` + `type` from `users/{uid}` server-side (never from the client) and proxies the signed request to the lab. It now **accepts two optional, validated client params** — `include_pdf` (`"latest" | "none" | "all"`) and `dossier_id` — to drive the two-phase flow (list via `none`, then each PDF via `dossier_id`). Identity still comes only from Firestore. Response carries `Cache-Control: no-store`.
-- **Writes:** none. This page never writes to Firestore/Storage.
+- **Writes:** none *from this page*. The `fetchResults` callable itself stamps one field server-side — `users/{uid}.lastResultsAt` — on the **list** fetch only, throttled to once per 6 h. It is a DATE (never a result, never which dossier) and powers the admin dashboard's "suivi d'utilisation"; clients cannot write it (locked in `firestore.rules`). See `docs/pages/admin.md` and `confidentialite.usage_*`.
 
 ## Notes for AI
 - **Never persist results.** Do not add caching, localStorage, Firestore writes, or file writes for results/PDFs. Keep them in memory and revoke blob URLs on close.

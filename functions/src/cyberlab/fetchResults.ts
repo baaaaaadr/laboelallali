@@ -2,8 +2,14 @@
  * `fetchResults` — secure bridge between an authenticated patient and the lab's
  * CyberLab results server. See docs/integrations/cyberlab-results-api.md §9.
  *
- * The app is only a viewer: results are fetched on demand and returned to the
- * client, never written to Firestore and never logged.
+ * The app is only a viewer OF RESULTS: they are fetched on demand and returned to
+ * the client, never written to Firestore and never logged.
+ *
+ * The ONE thing this bridge does persist is a usage stamp on the caller's own
+ * profile (`users/{uid}.lastResultsAt`) — a date, never a result and never a
+ * medical value. It powers the admin dashboard's "suivi d'utilisation" (which
+ * accounts are actually used, which are dormant and should be relanced) and is
+ * declared in the privacy policy. See docs/pages/admin.md.
  *
  * Security notes:
  * - `type` and `requester_id` are read exclusively from the caller's Firestore
@@ -23,6 +29,7 @@ import {
   CyberlabRequest,
   CyberlabResponse,
   IncludePdf,
+  normalizeRequesterId,
   RequesterType,
 } from "./client";
 
@@ -36,6 +43,36 @@ const VALID_TYPES: readonly RequesterType[] = [
   "medecin",
   "correspondant",
 ];
+
+/**
+ * Don't re-stamp usage more often than this. The patient's results are prefetched
+ * on EVERY app launch, so without a throttle we'd write on each one; the dashboard
+ * only needs day-level freshness. The profile snapshot is already loaded when we
+ * check, so the throttle costs no extra read.
+ */
+const USAGE_THROTTLE_MS = 6 * 60 * 60 * 1000; // 6 h
+
+/**
+ * Best-effort "this account was used" stamp, for the admin dashboard.
+ * Stores a DATE only — never a result, never which dossier was opened.
+ * Never throws: usage tracking must not be able to break a patient's results.
+ */
+async function touchLastResultsAt(uid: string, current: unknown): Promise<void> {
+  try {
+    const ts = current as admin.firestore.Timestamp | undefined;
+    const lastMs = ts && typeof ts.toMillis === "function" ? ts.toMillis() : 0;
+    if (Date.now() - lastMs < USAGE_THROTTLE_MS) return;
+    await admin
+      .firestore()
+      .doc(`users/${uid}`)
+      .set(
+        { lastResultsAt: admin.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      );
+  } catch {
+    /* best-effort only — never fail the results fetch over a usage stamp */
+  }
+}
 
 /** Thrown when the caller's profile can't be turned into a valid request. */
 class ProfileError extends Error {
@@ -73,12 +110,13 @@ export async function fetchResultsForUser(
   }
 
   const data = snap.data() ?? {};
-  const requesterId = data.requester_id;
+  // Normalized on read as well as on write: a profile saved before the fix may
+  // still hold a space-separated id ("67 305"), which the lab server 404s.
+  const requesterId = normalizeRequesterId(data.requester_id);
   const type = data.type;
 
   if (
-    typeof requesterId !== "string" ||
-    requesterId.trim() === "" ||
+    requesterId === "" ||
     typeof type !== "string" ||
     !VALID_TYPES.includes(type as RequesterType)
   ) {
@@ -97,7 +135,17 @@ export async function fetchResultsForUser(
     if (opts.include_pdf) req.include_pdf = opts.include_pdf;
   }
 
-  return callCyberlab(cfg, req);
+  const resp = await callCyberlab(cfg, req);
+
+  // Stamp usage on the LIST fetch only — that's the one that runs when the patient
+  // opens the app, so it marks "this account is used". Per-PDF fetches would just
+  // re-stamp the same session. Awaited (not floating) so it can't be dropped when
+  // the function instance freezes; the 6 h throttle makes it a no-op most times.
+  if (!opts.dossier_id) {
+    await touchLastResultsAt(uid, data.lastResultsAt);
+  }
+
+  return resp;
 }
 
 /** Parse the (untrusted) callable payload into validated options. */

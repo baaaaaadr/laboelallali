@@ -33,18 +33,21 @@ service cloud.firestore {
     }
 
     // Authenticated users read/write ONLY their own profile — and may NEVER set or
-    // change the privileged fields role / requester_id / type. Those are managed
-    // exclusively server-side via the Admin SDK (which bypasses these rules):
-    // adminSetRequester, adminSetStaff, adminSetAdmin, adminFulfillAccessRequest.
-    // This blocks self-promotion to staff/owner AND self-pointing requester_id at
-    // another patient's id (which fetchResults/adminTestResults would otherwise trust).
+    // change the privileged fields role / requester_id / type / lastResultsAt. Those
+    // are managed exclusively server-side via the Admin SDK (which bypasses these
+    // rules): adminSetRequester, adminSetStaff, adminSetAdmin,
+    // adminFulfillAccessRequest, and fetchResults for the usage stamp.
+    // This blocks self-promotion to staff/owner, self-pointing requester_id at
+    // another patient's id (which fetchResults/adminTestResults would otherwise
+    // trust), and forging one's own activity date (dashboard stats integrity).
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
 
       // Create: a fresh profile may not include any privileged field.
       allow create: if request.auth != null
         && request.auth.uid == userId
-        && !request.resource.data.keys().hasAny(['role', 'requester_id', 'type']);
+        && !request.resource.data.keys()
+              .hasAny(['role', 'requester_id', 'type', 'lastResultsAt']);
 
       // Update: allowed only if it does not CHANGE any privileged field. diff()
       // compares values, so a {merge:true} write that echoes an unchanged role /
@@ -52,7 +55,8 @@ service cloud.firestore {
       allow update: if request.auth != null
         && request.auth.uid == userId
         && !request.resource.data.diff(resource.data)
-              .affectedKeys().hasAny(['role', 'requester_id', 'type']);
+              .affectedKeys()
+              .hasAny(['role', 'requester_id', 'type', 'lastResultsAt']);
     }
 
     // Default deny for anything not explicitly allowed
