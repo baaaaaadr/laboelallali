@@ -328,7 +328,10 @@
     "test_pdf_loading": "Chargement…",
     "test_pdf_ok": "PDF récupéré ✓",
     "test_pdf_empty": "Le serveur n'a pas renvoyé de PDF pour ce dossier.",
-    "test_pdf_error": "Échec de la récupération du PDF."
+    "test_pdf_error": "Échec de la récupération du PDF.",
+    "test_name_src_lab": "selon le laboratoire",
+    "test_name_src_account": "compte lié",
+    "test_name_unknown": "Nom indisponible — aucun compte lié à cet identifiant."
   },
   "theme": {
     "toggle": "Changer le thème",

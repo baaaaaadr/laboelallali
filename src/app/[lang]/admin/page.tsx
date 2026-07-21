@@ -28,6 +28,16 @@ const LEVEL: Record<string, number> = { owner: 3, admin: 2, staff: 1 };
 
 type AdminTab = 'patients' | 'requests' | 'test' | 'team';
 
+/**
+ * `adminTestResults` response = the lab payload + the identity staff need to confirm
+ * the id. `name_source` says where the name came from ('lab' = the laboratory itself,
+ * 'account' = the linked app account) so the UI never implies the lab confirmed it.
+ */
+type AdminTestResponse = CyberlabResponse & {
+  patient_name?: string;
+  name_source?: 'lab' | 'account';
+};
+
 interface SearchResult {
   uid: string;
   email: string | null;
@@ -100,7 +110,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [testBusy, setTestBusy] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'ok' | 'empty' | 'error'>('idle');
   const [testError, setTestError] = useState<string | null>(null);
-  const [testResp, setTestResp] = useState<CyberlabResponse | null>(null);
+  const [testResp, setTestResp] = useState<AdminTestResponse | null>(null);
   // Per-dossier PDF probe state (reproduces the patient "Voir", incl. the empty-PDF case).
   const [pdfProbe, setPdfProbe] = useState<Record<string, 'loading' | 'ok' | 'empty' | 'error'>>({});
 
@@ -124,7 +134,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       setPdfProbe({});
       setTestBusy(true);
       try {
-        const res = await callFn<CyberlabResponse>('adminTestResults', { requester_id: requesterId, type });
+        const res = await callFn<AdminTestResponse>('adminTestResults', { requester_id: requesterId, type });
         setTestResp(res);
         setTestStatus(res.results.length > 0 ? 'ok' : 'empty');
       } catch (err: unknown) {
@@ -736,6 +746,26 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
           {/* Preview — what the patient would see (list only, no PDFs) */}
           {testStatus === 'ok' && testResp && (
             <div className="space-y-4 pt-1">
+              {/* Identity — lets staff confirm the id really belongs to the right person.
+                  For a patient id the lab returns no name (data minimisation), so this is
+                  normally the linked app account; `name_source` keeps that explicit. */}
+              {testResp.patient_name ? (
+                <div className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--background-secondary)] px-3 py-2">
+                  <User size={16} className="text-[var(--color-bordeaux-primary)] flex-shrink-0" />
+                  <span className="font-semibold text-[var(--text-primary)] truncate">
+                    {testResp.patient_name}
+                  </span>
+                  <span className="ms-auto flex-shrink-0 text-xs text-[var(--text-tertiary)]">
+                    {testResp.name_source === 'lab'
+                      ? t('admin.test_name_src_lab', 'selon le laboratoire')
+                      : t('admin.test_name_src_account', 'compte lié')}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-[var(--text-tertiary)]">
+                  {t('admin.test_name_unknown', 'Nom indisponible — aucun compte lié à cet identifiant.')}
+                </p>
+              )}
               <p className="text-sm font-medium text-[var(--text-secondary)]">
                 {t('admin.test_count', { count: testResp.results.length })}
               </p>

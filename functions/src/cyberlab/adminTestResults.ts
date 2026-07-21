@@ -25,6 +25,7 @@
 import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { defineSecret, defineString } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
+import * as admin from "firebase-admin";
 import {
   callCyberlab,
   CyberlabConfig,
@@ -55,12 +56,43 @@ interface TestData {
   dossier_id?: string;
 }
 
+/** Test response = the lab payload + the identity staff needs to confirm the id. */
+interface AdminTestResponse extends CyberlabResponse {
+  /** Resolved name of the person this id belongs to ("" when unknown). */
+  patient_name?: string;
+  /** Where that name came from — so the UI never implies the lab confirmed it. */
+  name_source?: "lab" | "account";
+}
+
+/**
+ * Name of the app account this `requester_id` is attached to, if any.
+ *
+ * Why we need it: for `type: "patient"` the lab deliberately returns EMPTY
+ * `patient_nom`/`patient_prenom` (data minimisation — verified on the real server,
+ * see docs/integrations/test-results.md case A1). So the only name we can show for a
+ * patient id is the one on the linked account. Best-effort: never fails the test.
+ */
+async function linkedAccountName(requesterId: string): Promise<string> {
+  try {
+    const snap = await admin
+      .firestore()
+      .collection("users")
+      .where("requester_id", "==", requesterId)
+      .limit(1)
+      .get();
+    if (snap.empty) return "";
+    return String(snap.docs[0].get("fullName") || "").trim();
+  } catch {
+    return "";
+  }
+}
+
 export const adminTestResults = onCall(
   {
     region: REGION,
     secrets: [CYBERLAB_API_KEY, CYBERLAB_HMAC_SECRET],
   },
-  async (request: CallableRequest<TestData>): Promise<CyberlabResponse> => {
+  async (request: CallableRequest<TestData>): Promise<AdminTestResponse> => {
     // Medical data must never be cached by any intermediary or the browser.
     try {
       request.rawRequest.res?.setHeader("Cache-Control", "no-store");
@@ -100,16 +132,37 @@ export const adminTestResults = onCall(
 
     try {
       const resp = await callCyberlab(cfg, req);
-      // Scrub names — the preview only needs to confirm the analyses come back, not
-      // reveal identities (no-op for type "patient", which already returns empty).
-      return {
-        ...resp,
-        results: resp.results.map((r) => ({
-          ...r,
-          patient_nom: "",
-          patient_prenom: "",
-        })),
-      };
+      const isPatient = req.type === "patient";
+
+      // A PATIENT id returns one person's own dossiers, so keeping the name is
+      // legitimate — it is exactly what staff need to confirm they typed the right id.
+      // A medecin/correspondant id would instead ship that practitioner's whole
+      // nominative patient roster to the browser → keep scrubbing there.
+      const results = isPatient
+        ? resp.results
+        : resp.results.map((r) => ({ ...r, patient_nom: "", patient_prenom: "" }));
+
+      // Identity to display: the lab's own name when it provides one (patient ids
+      // only, and today it does not — see linkedAccountName), else the linked account.
+      let patientName = "";
+      let nameSource: "lab" | "account" | undefined;
+      if (isPatient) {
+        const withName = resp.results.find(
+          (r) => (r.patient_nom || "").trim() || (r.patient_prenom || "").trim()
+        );
+        if (withName) {
+          patientName = `${withName.patient_nom || ""} ${withName.patient_prenom || ""}`
+            .replace(/\s+/g, " ")
+            .trim();
+          nameSource = "lab";
+        }
+      }
+      if (!patientName) {
+        patientName = await linkedAccountName(requesterId);
+        if (patientName) nameSource = "account";
+      }
+
+      return { ...resp, results, patient_name: patientName, name_source: nameSource };
     } catch (err) {
       if (err instanceof CyberlabError) {
         // Log the kind/status only — never the response body.

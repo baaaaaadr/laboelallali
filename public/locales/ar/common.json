@@ -420,7 +420,10 @@
     "test_pdf_loading": "جارٍ التحميل…",
     "test_pdf_ok": "تم جلب ملف PDF ✓",
     "test_pdf_empty": "لم يُرجِع الخادم ملف PDF لهذا الملف.",
-    "test_pdf_error": "فشل في جلب ملف PDF."
+    "test_pdf_error": "فشل في جلب ملف PDF.",
+    "test_name_src_lab": "حسب المختبر",
+    "test_name_src_account": "الحساب المرتبط",
+    "test_name_unknown": "الاسم غير متوفر — لا يوجد حساب مرتبط بهذا المعرّف."
   },
   "theme": {
     "toggle": "تغيير المظهر",
