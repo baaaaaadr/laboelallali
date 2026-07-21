@@ -33,8 +33,11 @@ export {
   adminListAccessRequests,
   adminFulfillAccessRequest,
   adminRejectAccessRequest,
-  // Adoption dashboard (accounts + usage) for the staff space.
+  // Adoption dashboard (admin+owner) + the staff-level relance tools.
   adminDashboardStats,
+  adminListDormant,
+  adminRecordRelance,
+  recordShare,
 } from "./admin/adminPatients";
 
 import { getStorage } from "firebase-admin/storage";

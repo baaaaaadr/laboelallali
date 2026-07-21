@@ -19,7 +19,8 @@ import { Users, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useResults } from '@/contexts/ResultsContext';
-import { getClientAnalytics } from '@/config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { getClientAnalytics, getClientFunctions } from '@/config/firebase';
 import { LAB_SITE_URL } from '@/constants/contact';
 
 /** True on a desktop browser (no touch UA + wide viewport) — mirrors the results page. */
@@ -46,7 +47,10 @@ export default function ShareAccessCard({ lang }: { lang: string }) {
     // Share) and keeps only it, so we embed the link and never pass `url` separately.
     const shareText = `${message} ${url}`;
 
-    // Best-effort analytics (first consumer of getClientAnalytics) — measures shares (ROI).
+    // Best-effort measurement of shares (ROI of the word-of-mouth channel).
+    // Two sinks: Analytics for the funnel, and an ANONYMOUS daily counter the admin
+    // dashboard can actually query (Analytics data isn't readable from Firestore).
+    // Neither records who shared — `recordShare` only bumps a global tally.
     void (async () => {
       try {
         const analytics = await getClientAnalytics();
@@ -56,6 +60,14 @@ export default function ShareAccessCard({ lang }: { lang: string }) {
         }
       } catch {
         /* analytics is optional */
+      }
+    })();
+    void (async () => {
+      try {
+        const functions = await getClientFunctions();
+        if (functions) await httpsCallable(functions, 'recordShare')({});
+      } catch {
+        /* the share already happened — never bother the patient about a counter */
       }
     })();
 

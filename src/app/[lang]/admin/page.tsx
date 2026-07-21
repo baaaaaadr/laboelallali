@@ -20,13 +20,16 @@ import type { CyberlabResponse } from '@/types/cyberlab';
 import ResultsIndicators from '@/components/features/results/ResultsIndicators';
 import AnalysesDetails from '@/components/features/results/AnalysesDetails';
 import TabsNavigation, { type TabItem } from '@/components/features/catalog/TabsNavigation';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, Activity, MessageCircle, Clock } from 'lucide-react';
+import AdminDashboard, { type DashboardStats } from '@/components/features/admin/AdminDashboard';
+import RelancesTab, { type DormantAccount } from '@/components/features/admin/RelancesTab';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
 const LEVEL: Record<string, number> = { owner: 3, admin: 2, staff: 1 };
 
-type AdminTab = 'dashboard' | 'patients' | 'requests' | 'test' | 'team';
+// `dashboard` and `team` need level >= 2; everything else is staff-level.
+type AdminTab = 'dashboard' | 'patients' | 'requests' | 'relances' | 'test' | 'team';
 
 /**
  * Callable errors whose `message` is just the status code — the SDK does this for
@@ -46,29 +49,6 @@ const OPAQUE_ERROR_MESSAGES = new Set([
 // shows this as a caption so the numbers aren't misread during the ramp-up.
 const USAGE_SINCE = '2026-07-20';
 
-interface DashAccount {
-  uid: string;
-  fullName: string;
-  email: string;
-  phone?: string;
-  createdAt?: string;
-  hasAccess?: boolean;
-  lastResultsAt?: number | null;
-}
-interface DashboardStats {
-  totals: {
-    accounts: number;
-    withAccess: number;
-    withoutAccess: number;
-    pendingRequests: number;
-    byType: Record<string, number>;
-  };
-  usage: { active: number; dormant: number; rate: number; windowDays: number };
-  latestCreated: DashAccount[];
-  latestActive: DashAccount[];
-  dormantList: DashAccount[];
-  truncated: boolean;
-}
 
 /**
  * `adminTestResults` response = the lab payload + the identity staff need to confirm
@@ -122,6 +102,18 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   // Dashboard tab
   const [dash, setDash] = useState<DashboardStats | null>(null);
   const [dashError, setDashError] = useState<string | null>(null);
+  // Detail lists start COLLAPSED: the tiles + usage gauge are what staff read at a
+  // glance; the long lists are opened on demand (absent key = closed).
+  const [openSec, setOpenSec] = useState<Record<string, boolean>>({});
+  // Team accounts are excluded by default (they'd inflate the adoption rate), but
+  // whoever opens this page HAS a role — so this lets them see themselves to test.
+  const [includeTeam, setIncludeTeam] = useState(false);
+
+  // Relances tab (staff level and up) — its own callable, so the front desk gets
+  // the working list without seeing the management figures.
+  const [dormant, setDormant] = useState<DormantAccount[] | null>(null);
+  const [dormantError, setDormantError] = useState<string | null>(null);
+  const [relanceBusy, setRelanceBusy] = useState<string | null>(null);
 
   // Encode section — multi-field patient search + attach requester_id
   const [query, setQuery] = useState('');
@@ -233,6 +225,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   };
   /** Whole days since an epoch ms (used for "inactif depuis N j"). */
   const daysSince = (ms: number) => Math.floor((Date.now() - ms) / 86400000);
+
   /**
    * Moroccan phone → wa.me digits: strip formatting, turn a leading 0 into 212.
    * Lets staff relance a dormant patient in one tap (Aziz's preferred channel).
@@ -290,6 +283,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     if (!loading && !user) router.push(`/${lang}/login`);
   }, [loading, user, router, lang]);
 
+  // `dashboard` is the default tab but is managers-only: a stagiaire landing here
+  // would otherwise face an empty screen with no tab selected.
+  useEffect(() => {
+    if (!loading && !isManager && activeTab === 'dashboard') setActiveTab('patients');
+  }, [loading, isManager, activeTab]);
+
   const loadTeam = useCallback(async () => {
     try {
       const res = await callFn<ListResult>('adminListStaff', {});
@@ -319,15 +318,45 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const loadDash = useCallback(async () => {
     try {
       setDashError(null);
-      setDash(await callFn<DashboardStats>('adminDashboardStats', {}));
+      setDash(await callFn<DashboardStats>('adminDashboardStats', { includeTeam }));
     } catch (err: unknown) {
       setDashError(errMsg(err));
+    }
+  }, [errMsg, includeTeam]);
+
+  // Steering figures are for managers only — never fetched for a stagiaire.
+  useEffect(() => {
+    if (!loading && isManager) loadDash();
+  }, [loading, isManager, loadDash]);
+
+  const loadDormant = useCallback(async () => {
+    try {
+      setDormantError(null);
+      const res = await callFn<{ dormantList: DormantAccount[] }>('adminListDormant', {});
+      setDormant(res.dormantList || []);
+    } catch (err: unknown) {
+      setDormantError(errMsg(err));
     }
   }, [errMsg]);
 
   useEffect(() => {
-    if (!loading && isStaff) loadDash();
-  }, [loading, isStaff, loadDash]);
+    if (!loading && isStaff) loadDormant();
+  }, [loading, isStaff, loadDormant]);
+
+  /**
+   * The WhatsApp link opens natively (this runs from the <a> click), and we record
+   * the contact in parallel — fire-and-forget so nothing delays the message.
+   */
+  const handleRelance = useCallback(
+    (a: DormantAccount) => {
+      setRelanceBusy(a.uid);
+      callFn('adminRecordRelance', { uid: a.uid })
+        .then(() => loadDormant())
+        .catch(() => { /* the message still went out — don't block the user */ })
+        .finally(() => setRelanceBusy(null));
+    },
+    [loadDormant]
+  );
 
   const setArInput = (uid: string, patch: Partial<{ requester_id: string; type: RequesterType }>) =>
     setArInputs((m) => {
@@ -489,9 +518,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   }
 
   const tabs: TabItem[] = [
-    { id: 'dashboard', label: t('admin.tab_dashboard', 'Tableau de bord'), icon: LayoutDashboard },
+    // Steering figures: managers only. The front desk gets "Relances" instead.
+    ...(isManager
+      ? [{ id: 'dashboard', label: t('admin.tab_dashboard', 'Tableau de bord'), icon: LayoutDashboard }]
+      : []),
     { id: 'patients', label: t('admin.tab_patients', 'Patients'), icon: User },
     { id: 'requests', label: t('admin.tab_requests', 'Demandes'), icon: Inbox, count: accessReqs.length },
+    { id: 'relances', label: t('admin.tab_relances', 'Relances'), icon: MessageCircle, count: dormant?.length },
     { id: 'test', label: t('admin.tab_test', 'Tester'), icon: FlaskConical },
     ...(isManager ? [{ id: 'team', label: t('admin.tab_team', 'Équipe'), icon: Users }] : []),
   ];
@@ -534,201 +567,42 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         </div>
 
         <div className="space-y-8 pt-8">
-        {/* ── Tableau de bord: adoption of the online-results service ──────── */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-6">
-            {dashError && (
-              <div className="card p-4 flex items-center gap-3">
-                <AlertCircle size={20} className="text-[var(--status-error)] flex-shrink-0" />
-                <span className="text-[var(--text-primary)]">{dashError}</span>
-              </div>
-            )}
+        {/* ── Tableau de bord — steering figures, admin + owner ONLY ───────── */}
+        {activeTab === 'dashboard' && isManager && (
+          dashError ? (
+            <div className="card p-4 flex items-center gap-3">
+              <AlertCircle size={20} className="text-[var(--status-error)] flex-shrink-0" />
+              <span className="text-[var(--text-primary)]">{dashError}</span>
+            </div>
+          ) : !dash ? (
+            <div className="card">
+              <MedicalLoader label={t('admin.dash_loading', 'Chargement du tableau de bord…')} />
+            </div>
+          ) : (
+            <AdminDashboard
+              dash={dash}
+              isArabic={isArabic}
+              usageSince={USAGE_SINCE}
+              includeTeam={includeTeam}
+              onToggleTeam={setIncludeTeam}
+              openSec={openSec}
+              onToggleSec={(k) => setOpenSec((s) => ({ ...s, [k]: !s[k] }))}
+              fmtDate={fmtDate}
+              fmtWhen={fmtWhen}
+            />
+          )
+        )}
 
-            {!dash && !dashError && (
-              <div className="card">
-                <MedicalLoader label={t('admin.dash_loading', 'Chargement du tableau de bord…')} />
-              </div>
-            )}
-
-            {dash && (
-              <>
-                {/* Indicateurs */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    {
-                      icon: Users,
-                      label: t('admin.dash_accounts', 'Comptes patients'),
-                      value: dash.totals.accounts,
-                      sub: '',
-                    },
-                    {
-                      icon: CheckCircle,
-                      label: t('admin.dash_with_access', 'Accès activé'),
-                      value: dash.totals.withAccess,
-                      sub: dash.totals.accounts
-                        ? `${Math.round((dash.totals.withAccess / dash.totals.accounts) * 100)} %`
-                        : '',
-                    },
-                    {
-                      icon: User,
-                      label: t('admin.dash_without_access', 'Sans accès'),
-                      value: dash.totals.withoutAccess,
-                      sub: '',
-                    },
-                    {
-                      icon: Inbox,
-                      label: t('admin.dash_pending', 'Demandes en attente'),
-                      value: dash.totals.pendingRequests,
-                      sub: '',
-                    },
-                  ].map(({ icon: Icon, label, value, sub }) => (
-                    <div key={label} className="card p-4">
-                      {/* No `truncate` here: these labels ("Demandes en attente"…) must
-                          always be readable in full, so they wrap instead of being cut.
-                          `tracking-wide` was also dropped — the extra letter-spacing was
-                          what pushed them over the tile width in the first place. */}
-                      <div className="flex items-center gap-2 text-xs font-semibold uppercase text-[var(--text-tertiary)]">
-                        <Icon size={14} className="text-[var(--color-bordeaux-primary)] flex-shrink-0" />
-                        <span className="leading-tight">{label}</span>
-                      </div>
-                      <div className="mt-2 text-2xl font-bold text-[var(--text-primary)] tabular-nums">{value}</div>
-                      {sub && <div className="text-xs text-[var(--text-secondary)] mt-0.5">{sub}</div>}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Taux d'utilisation */}
-                <div className="card p-5 space-y-3">
-                  <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                    <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                      <Activity size={20} className="text-[var(--color-bordeaux-primary)]" />
-                      {t('admin.dash_usage_title', "Taux d'utilisation")}
-                    </h2>
-                    <span className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">{dash.usage.rate} %</span>
-                  </div>
-                  <div className="h-2.5 rounded-lg bg-[var(--background-secondary)] overflow-hidden">
-                    <div
-                      className="h-full rounded-lg bg-[var(--color-fuchsia-accent)]"
-                      style={{ width: `${Math.min(100, Math.max(0, dash.usage.rate))}%` }}
-                    />
-                  </div>
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    {t('admin.dash_usage_desc', {
-                      active: dash.usage.active,
-                      total: dash.totals.withAccess,
-                      days: dash.usage.windowDays,
-                      defaultValue:
-                        '{{active}} comptes actifs sur {{total}} accès activés (sur {{days}} jours). {{dormant}} dormants.',
-                      dormant: dash.usage.dormant,
-                    })}
-                  </p>
-                  {/* Ramp-up caveat: before this date nothing was measured, so old
-                      accounts read as "jamais consulté" until they next open the app. */}
-                  <p className="text-xs text-[var(--text-tertiary)] flex items-center gap-1.5">
-                    <Clock size={13} className="flex-shrink-0" />
-                    {t('admin.dash_since', {
-                      date: fmtDate(USAGE_SINCE),
-                      defaultValue: "Suivi d'utilisation actif depuis le {{date}} — les comptes plus anciens apparaissent « jamais consulté » tant qu'ils n'ont pas rouvert l'application.",
-                    })}
-                  </p>
-                </div>
-
-                {/* Dormants — à relancer */}
-                <div className="card p-6 space-y-4">
-                  <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                    <MessageCircle size={20} className="text-[var(--color-bordeaux-primary)]" />
-                    {t('admin.dash_dormant_title', 'Comptes à relancer')}
-                  </h2>
-                  {dash.dormantList.length === 0 ? (
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      {t('admin.dash_dormant_empty', 'Aucun compte dormant. 👌')}
-                    </p>
-                  ) : (
-                    <ul className="divide-y divide-[var(--border-default)]">
-                      {dash.dormantList.map((a) => {
-                        const link = waLink(a.phone || '', a.fullName);
-                        return (
-                          <li key={a.uid} className="flex items-center justify-between gap-3 py-3">
-                            <div className="min-w-0">
-                              <p className="font-medium text-[var(--text-primary)] truncate">{a.fullName || a.email}</p>
-                              <p className="text-sm text-[var(--status-warning)]">
-                                {a.lastResultsAt
-                                  ? t('admin.dash_inactive_days', {
-                                      days: daysSince(a.lastResultsAt),
-                                      defaultValue: 'Inactif depuis {{days}} j',
-                                    })
-                                  : t('admin.dash_never', 'Jamais consulté')}
-                              </p>
-                            </div>
-                            {link && (
-                              <a
-                                href={link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="button-bordeaux-outline justify-center flex items-center gap-2 flex-shrink-0"
-                              >
-                                <MessageCircle size={16} />
-                                {t('admin.dash_relance', 'Relancer')}
-                              </a>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Derniers comptes actifs */}
-                <div className="card p-6 space-y-4">
-                  <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                    <Activity size={20} className="text-[var(--color-bordeaux-primary)]" />
-                    {t('admin.dash_active_title', 'Derniers comptes actifs')}
-                  </h2>
-                  {dash.latestActive.length === 0 ? (
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      {t('admin.dash_active_empty', 'Aucune consultation enregistrée pour le moment.')}
-                    </p>
-                  ) : (
-                    <ul className="divide-y divide-[var(--border-default)]">
-                      {dash.latestActive.map((a) => (
-                        <li key={a.uid} className="flex items-center justify-between gap-3 py-3">
-                          <p className="font-medium text-[var(--text-primary)] truncate min-w-0">{a.fullName || a.email}</p>
-                          <span className="text-sm text-[var(--text-secondary)] flex-shrink-0">{fmtWhen(a.lastResultsAt)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Derniers comptes créés */}
-                <div className="card p-6 space-y-4">
-                  <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
-                    <UserPlus size={20} className="text-[var(--color-bordeaux-primary)]" />
-                    {t('admin.dash_new_title', 'Derniers comptes créés')}
-                  </h2>
-                  <ul className="divide-y divide-[var(--border-default)]">
-                    {dash.latestCreated.map((a) => (
-                      <li key={a.uid} className="flex items-center justify-between gap-3 py-3">
-                        <div className="min-w-0">
-                          <p className="font-medium text-[var(--text-primary)] truncate">{a.fullName || a.email}</p>
-                          <p className="text-sm text-[var(--text-secondary)]">{fmtDate(a.createdAt || '')}</p>
-                        </div>
-                        <span
-                          className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex-shrink-0 ${
-                            a.hasAccess
-                              ? 'text-[var(--status-success)] bg-[var(--background-secondary)]'
-                              : 'text-[var(--text-secondary)] bg-[var(--background-secondary)]'
-                          }`}
-                        >
-                          {a.hasAccess ? t('admin.dash_access_yes', 'Activé') : t('admin.dash_access_no', 'Aucun')}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </>
-            )}
-          </div>
+        {/* ── Relances — the front-desk tool, staff level and up ───────────── */}
+        {activeTab === 'relances' && (
+          <RelancesTab
+            list={dormant}
+            error={dormantError}
+            busyUid={relanceBusy}
+            onRelance={handleRelance}
+            waLink={waLink}
+            daysSince={daysSince}
+          />
         )}
 
         {/* ── Demandes tab: pending access requests ───────────────────────── */}

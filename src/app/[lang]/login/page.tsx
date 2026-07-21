@@ -40,6 +40,19 @@ const getErrorMessage = (err: unknown): string => {
   return String(err);
 };
 
+/**
+ * Where this signup came from — `?ref=partage` is set by the referral card on
+ * /resultats, so the admin dashboard can tell how many accounts word-of-mouth
+ * actually brings in. Plain marketing attribution, no personal data.
+ */
+function readSignupRef(): string {
+  try {
+    return (new URLSearchParams(window.location.search).get('ref') || '').trim().slice(0, 32);
+  } catch {
+    return ''; // no window / malformed URL — attribution is optional
+  }
+}
+
 export default function LoginPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params);
   const { t } = useTranslation('common');
@@ -147,22 +160,24 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
 
   const persistProfile = async (uid: string, userEmail: string | null) => {
     if (!db) throw new Error('DB not initialized');
+    // Explicitly typed: an inline conditional spread here made TypeScript's
+    // inference blow past its instantiation budget on this file (TS2589).
+    const payload: Record<string, unknown> = {
+      uid,
+      fullName,
+      dateOfBirth,
+      phone,
+      email: userEmail,
+      createdAt: new Date().toISOString(),
+      consentAccepted: true,
+      consentAcceptedAt: new Date().toISOString(),
+    };
+    const signupRef = readSignupRef();
+    if (signupRef) payload.signupRef = signupRef;
+
     // merge:true so we never wipe fields set elsewhere (e.g. requester_id/type/role
     // written by the admin space). Records the CNDP consent given at registration.
-    await setDoc(
-      doc(db, 'users', uid),
-      {
-        uid,
-        fullName,
-        dateOfBirth,
-        phone,
-        email: userEmail,
-        createdAt: new Date().toISOString(),
-        consentAccepted: true,
-        consentAcceptedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    await setDoc(doc(db, 'users', uid), payload, { merge: true });
   };
 
   const handleGoogleLogin = async () => {

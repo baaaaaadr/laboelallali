@@ -52,23 +52,53 @@ const VALID_TYPES: readonly RequesterType[] = [
  */
 const USAGE_THROTTLE_MS = 6 * 60 * 60 * 1000; // 6 h
 
+/** Today as YYYY-MM-DD (UTC) — the id of the anonymous daily counter doc. */
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 /**
  * Best-effort "this account was used" stamp, for the admin dashboard.
- * Stores a DATE only — never a result, never which dossier was opened.
+ *
+ * Records, on the caller's OWN profile, only usage metadata:
+ *  - `lastResultsAt`   — when they last consulted
+ *  - `firstResultsAt`  — the very first time (set once; measures the delay between
+ *                        access activation and first real use)
+ *  - `resultsViewCount`— how many sessions (throttled, so it counts sessions, not calls)
+ * …and bumps a fully ANONYMOUS daily counter (`usageDaily/{YYYY-MM-DD}.consultations`)
+ * that powers the weekly-activity chart and is linked to nobody.
+ *
+ * Never a result, never a value, never which dossier was opened.
  * Never throws: usage tracking must not be able to break a patient's results.
  */
-async function touchLastResultsAt(uid: string, current: unknown): Promise<void> {
+async function touchLastResultsAt(
+  uid: string,
+  current: unknown,
+  hasFirst: boolean
+): Promise<void> {
   try {
     const ts = current as admin.firestore.Timestamp | undefined;
     const lastMs = ts && typeof ts.toMillis === "function" ? ts.toMillis() : 0;
     if (Date.now() - lastMs < USAGE_THROTTLE_MS) return;
-    await admin
-      .firestore()
-      .doc(`users/${uid}`)
-      .set(
-        { lastResultsAt: admin.firestore.FieldValue.serverTimestamp() },
-        { merge: true }
-      );
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const profile: Record<string, unknown> = {
+      lastResultsAt: now,
+      resultsViewCount: admin.firestore.FieldValue.increment(1),
+    };
+    // Set once and never again — it is the "first ever use" marker.
+    if (!hasFirst) profile.firstResultsAt = now;
+
+    await Promise.all([
+      admin.firestore().doc(`users/${uid}`).set(profile, { merge: true }),
+      admin
+        .firestore()
+        .doc(`usageDaily/${todayKey()}`)
+        .set(
+          { consultations: admin.firestore.FieldValue.increment(1) },
+          { merge: true }
+        ),
+    ]);
   } catch {
     /* best-effort only — never fail the results fetch over a usage stamp */
   }
@@ -142,7 +172,7 @@ export async function fetchResultsForUser(
   // re-stamp the same session. Awaited (not floating) so it can't be dropped when
   // the function instance freezes; the 6 h throttle makes it a no-op most times.
   if (!opts.dossier_id) {
-    await touchLastResultsAt(uid, data.lastResultsAt);
+    await touchLastResultsAt(uid, data.lastResultsAt, Boolean(data.firstResultsAt));
   }
 
   return resp;

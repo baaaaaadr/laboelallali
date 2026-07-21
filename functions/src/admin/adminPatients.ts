@@ -90,7 +90,16 @@ export const adminSetRequester = onCall(
     await admin
       .firestore()
       .doc(`users/${uid}`)
-      .set({ requester_id: requesterId, type }, { merge: true });
+      .set(
+        {
+          requester_id: requesterId,
+          type,
+          // When the access was activated — lets the dashboard measure the delay
+          // between activation and the patient's first real use.
+          requesterLinkedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
     const doc = await admin.firestore().doc(`users/${uid}`).get();
     const d = doc.data() || {};
     return {
@@ -404,7 +413,15 @@ export const adminFulfillAccessRequest = onCall(
     await admin
       .firestore()
       .doc(`users/${targetUid}`)
-      .set({ requester_id: requesterId, type }, { merge: true });
+      .set(
+        {
+          requester_id: requesterId,
+          type,
+          // Activation date — see adminSetRequester.
+          requesterLinkedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
     await admin
       .firestore()
       .doc(`resultAccessRequests/${targetUid}`)
@@ -459,8 +476,13 @@ export const adminRejectAccessRequest = onCall(
 
 /** Considered active when the account was used within this window. */
 const ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const DAY_MS = 24 * 60 * 60 * 1000;
 const RECENT_LIST = 10; // rows in the "latest ..." tables
-const DORMANT_LIST = 25; // rows in the "to relance" table
+const DORMANT_LIST = 40; // rows in the relance list
+const REQUEST_SCAN = 1000; // access requests scanned for delays/statuses
+const GROWTH_MONTHS = 6; // months on the growth curve
+const ACTIVITY_WEEKS = 10; // weeks on the activity chart
+const RELANCE_WINDOW_MS = 60 * DAY_MS; // relances counted as "recent"
 
 interface AccountRow {
   uid: string;
@@ -468,8 +490,14 @@ interface AccountRow {
   email: string;
   phone: string;
   createdAt: string; // ISO string as written at signup ("" when missing)
+  dateOfBirth: string;
+  signupRef: string;
   hasAccess: boolean;
   lastResultsMs: number | null;
+  firstResultsMs: number | null;
+  linkedMs: number | null;
+  lastRelanceMs: number | null;
+  viewCount: number;
 }
 
 /** Firestore Timestamp | anything → millis, or null. */
@@ -478,56 +506,393 @@ function toMillis(v: unknown): number | null {
   return ts && typeof ts.toMillis === "function" ? ts.toMillis() : null;
 }
 
-export const adminDashboardStats = onCall(
+/** "2026-07" for a Date. */
+function monthKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+/** "2026-07-21" for a Date (UTC, same convention as the usageDaily doc ids). */
+function dayKey(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+/** Age in whole years from a YYYY-MM-DD string, or null when unusable. */
+function ageFrom(dob: string): number | null {
+  if (!dob) return null;
+  const t = Date.parse(dob);
+  if (Number.isNaN(t)) return null;
+  const years = (Date.now() - t) / (365.25 * DAY_MS);
+  return years > 0 && years < 130 ? Math.floor(years) : null;
+}
+/** Average of a number list, rounded to one decimal (0 when empty). */
+function avg1(xs: number[]): number {
+  if (!xs.length) return 0;
+  return Math.round((xs.reduce((s, x) => s + x, 0) / xs.length) * 10) / 10;
+}
+
+interface DashboardData {
+  /**
+   * Count team members (staff/admin/owner) as patients too. Off by default so the
+   * adoption rate isn't inflated by the lab's own accounts — but anyone opening
+   * this dashboard necessarily HAS a role, so without this they can never see
+   * themselves while testing. Display-only: it changes no stored data.
+   */
+  includeTeam?: boolean;
+}
+
+/**
+ * Read every user doc once and turn it into the rows the dashboard works on.
+ * Shared by `adminDashboardStats` and `adminListDormant` so both see the same
+ * definition of "a patient account". Returns the raw uid→name map too (team
+ * members included) because the team-activity chart needs to name staff.
+ */
+async function scanAccounts(includeTeam: boolean): Promise<{
+  accounts: AccountRow[];
+  byType: Record<string, number>;
+  teamAccounts: number;
+  nameByUid: Record<string, string>;
+  truncated: boolean;
+}> {
+  const snap = await admin.firestore().collection("users").limit(SCAN_LIMIT).get();
+
+  const accounts: AccountRow[] = [];
+  const byType: Record<string, number> = { patient: 0, medecin: 0, correspondant: 0 };
+  const nameByUid: Record<string, string> = {};
+  let teamAccounts = 0;
+
+  snap.forEach((doc) => {
+    const d = doc.data() || {};
+    nameByUid[doc.id] = String(d.fullName || d.email || "");
+
+    // Staff/admin/owner are team members, not patients — keep them out of the
+    // adoption numbers so the denominator stays meaningful (unless asked).
+    if (String(d.role || "")) {
+      teamAccounts += 1;
+      if (!includeTeam) return;
+    }
+
+    const hasAccess = String(d.requester_id || "").trim() !== "";
+    const type = String(d.type || "");
+    if (hasAccess && type in byType) byType[type] += 1;
+
+    accounts.push({
+      uid: doc.id,
+      fullName: String(d.fullName || ""),
+      email: d.email == null ? "" : String(d.email),
+      phone: String(d.phone || ""),
+      createdAt: String(d.createdAt || ""),
+      dateOfBirth: String(d.dateOfBirth || ""),
+      signupRef: String(d.signupRef || ""),
+      hasAccess,
+      lastResultsMs: toMillis(d.lastResultsAt),
+      firstResultsMs: toMillis(d.firstResultsAt),
+      linkedMs: toMillis(d.requesterLinkedAt),
+      lastRelanceMs: toMillis(d.lastRelanceAt),
+      viewCount: Number(d.resultsViewCount || 0),
+    });
+  });
+
+  return { accounts, byType, teamAccounts, nameByUid, truncated: snap.size >= SCAN_LIMIT };
+}
+
+/** The dormant accounts, worst first — shared by the Relances tab. */
+function dormantOf(accounts: AccountRow[], now: number): AccountRow[] {
+  return accounts
+    .filter(
+      (a) =>
+        a.hasAccess &&
+        (a.lastResultsMs === null || now - a.lastResultsMs >= ACTIVE_WINDOW_MS)
+    )
+    .sort((a, b) => (a.lastResultsMs || 0) - (b.lastResultsMs || 0))
+    .slice(0, DORMANT_LIST);
+}
+
+/**
+ * Staff: the accounts to relance. Lives in its own callable (and its own tab)
+ * because the dashboard is admin-only, while relancing patients is exactly the
+ * front-desk's job — the people who must NOT see the adoption figures.
+ */
+export const adminListDormant = onCall(
   { region: REGION },
   async (request: CallableRequest) => {
     await requireLevel(request, LEVEL.staff);
-
-    const snap = await admin
-      .firestore()
-      .collection("users")
-      .limit(SCAN_LIMIT)
-      .get();
-
-    const accounts: AccountRow[] = [];
-    const byType: Record<string, number> = {
-      patient: 0,
-      medecin: 0,
-      correspondant: 0,
+    const { accounts } = await scanAccounts(false);
+    const now = Date.now();
+    return {
+      dormantList: dormantOf(accounts, now).map((a) => ({
+        uid: a.uid,
+        fullName: a.fullName,
+        email: a.email,
+        phone: a.phone,
+        createdAt: a.createdAt,
+        lastResultsAt: a.lastResultsMs, // null → jamais consulté
+        lastRelanceAt: a.lastRelanceMs,
+      })),
     };
+  }
+);
 
-    snap.forEach((doc) => {
-      const d = doc.data() || {};
-      // Staff/admin/owner are team members, not patients — keep them out of the
-      // adoption numbers so the denominator stays meaningful.
-      if (String(d.role || "")) return;
+/** Staff: remember that this patient was contacted (powers "relancé il y a X j"). */
+export const adminRecordRelance = onCall(
+  { region: REGION },
+  async (request: CallableRequest<{ uid?: string }>) => {
+    await requireLevel(request, LEVEL.staff);
+    const targetUid = (request.data?.uid || "").trim();
+    if (!targetUid) throw new HttpsError("invalid-argument", "Patient requis.");
+    await admin
+      .firestore()
+      .doc(`users/${targetUid}`)
+      .set(
+        {
+          lastRelanceAt: admin.firestore.FieldValue.serverTimestamp(),
+          relanceCount: admin.firestore.FieldValue.increment(1),
+        },
+        { merge: true }
+      );
+    return { success: true };
+  }
+);
 
-      const hasAccess = String(d.requester_id || "").trim() !== "";
-      const type = String(d.type || "");
-      if (hasAccess && type in byType) byType[type] += 1;
+/**
+ * Any signed-in patient: count one "share" of the referral card. Anonymous — it
+ * only bumps a global daily counter, nothing is written on the patient.
+ */
+export const recordShare = onCall(
+  { region: REGION },
+  async (request: CallableRequest) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentification requise.");
+    }
+    await admin
+      .firestore()
+      .doc(`usageDaily/${dayKey(new Date())}`)
+      .set(
+        { shares: admin.firestore.FieldValue.increment(1) },
+        { merge: true }
+      );
+    return { success: true };
+  }
+);
 
-      accounts.push({
-        uid: doc.id,
-        fullName: String(d.fullName || ""),
-        email: d.email == null ? "" : String(d.email),
-        phone: String(d.phone || ""),
-        createdAt: String(d.createdAt || ""),
-        hasAccess,
-        lastResultsMs: toMillis(d.lastResultsAt),
-      });
-    });
+export const adminDashboardStats = onCall(
+  { region: REGION },
+  async (request: CallableRequest<DashboardData>) => {
+    // Admin and owner only: these are steering figures for the lab's management,
+    // not a front-desk tool (the relance list lives in its own staff-level tab).
+    await requireLevel(request, LEVEL.admin);
+    const includeTeam = request.data?.includeTeam === true;
+
+    const { accounts, byType, teamAccounts, nameByUid, truncated } =
+      await scanAccounts(includeTeam);
 
     const now = Date.now();
     const withAccess = accounts.filter((a) => a.hasAccess);
+    const consulted = withAccess.filter((a) => a.lastResultsMs !== null);
     const active = withAccess.filter(
       (a) => a.lastResultsMs !== null && now - a.lastResultsMs < ACTIVE_WINDOW_MS
     );
-    const dormant = withAccess.filter(
-      (a) => a.lastResultsMs === null || now - a.lastResultsMs >= ACTIVE_WINDOW_MS
-    );
+    const dormant = dormantOf(accounts, now);
 
-    // Latest accounts created — createdAt is an ISO string, so lexicographic sort
-    // is chronological; blanks (legacy docs) sort last.
+    // ── A1 growth + B4 month-over-month ──────────────────────────────────────
+    const months: { key: string; created: number; cumulative: number }[] = [];
+    for (let i = GROWTH_MONTHS - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i, 1);
+      const key = monthKey(d);
+      months.push({
+        key,
+        created: accounts.filter((a) => a.createdAt.slice(0, 7) === key).length,
+        // createdAt is an ISO string → a lexicographic compare is chronological.
+        cumulative: accounts.filter(
+          (a) => a.createdAt && a.createdAt.slice(0, 7) <= key
+        ).length,
+      });
+    }
+    const thisMonth = months[months.length - 1]?.created ?? 0;
+    const prevMonth = months[months.length - 2]?.created ?? 0;
+
+    // ── A3 freshness buckets (among activated accounts) ──────────────────────
+    const freshness = { d7: 0, d30: 0, d90: 0, older: 0, never: 0 };
+    for (const a of withAccess) {
+      if (a.lastResultsMs === null) freshness.never += 1;
+      else {
+        const days = (now - a.lastResultsMs) / DAY_MS;
+        if (days < 7) freshness.d7 += 1;
+        else if (days < 30) freshness.d30 += 1;
+        else if (days < 90) freshness.d90 += 1;
+        else freshness.older += 1;
+      }
+    }
+
+    // ── A5 usage by age bracket ──────────────────────────────────────────────
+    const AGE_BUCKETS: { key: string; min: number; max: number }[] = [
+      { key: "18-30", min: 0, max: 30 },
+      { key: "31-45", min: 31, max: 45 },
+      { key: "46-60", min: 46, max: 60 },
+      { key: "61-75", min: 61, max: 75 },
+      { key: "76+", min: 76, max: 200 },
+    ];
+    const ages = AGE_BUCKETS.map((b) => {
+      const inBucket = withAccess.filter((a) => {
+        const age = ageFrom(a.dateOfBirth);
+        return age !== null && age >= b.min && age <= b.max;
+      });
+      const act = inBucket.filter(
+        (a) => a.lastResultsMs !== null && now - a.lastResultsMs < ACTIVE_WINDOW_MS
+      ).length;
+      return {
+        key: b.key,
+        total: inBucket.length,
+        active: act,
+        rate: inBucket.length ? Math.round((act / inBucket.length) * 100) : 0,
+      };
+    });
+
+    // ── C3 how often each account is used ────────────────────────────────────
+    const frequency = { once: 0, f2_5: 0, f6_15: 0, f16: 0 };
+    for (const a of consulted) {
+      const n = a.viewCount || 1;
+      if (n <= 1) frequency.once += 1;
+      else if (n <= 5) frequency.f2_5 += 1;
+      else if (n <= 15) frequency.f6_15 += 1;
+      else frequency.f16 += 1;
+    }
+
+    // ── C4 delay between activation and first real use ───────────────────────
+    const firstDelays = accounts
+      .filter((a) => a.linkedMs !== null && a.firstResultsMs !== null)
+      .map((a) => (a.firstResultsMs as number) - (a.linkedMs as number))
+      .filter((ms) => ms >= 0)
+      .map((ms) => ms / DAY_MS);
+    const firstView = {
+      avgDays: avg1(firstDelays),
+      overWeekPct: firstDelays.length
+        ? Math.round(
+          (firstDelays.filter((d) => d > 7).length / firstDelays.length) * 100
+        )
+        : 0,
+      sample: firstDelays.length,
+    };
+
+    // ── C2 relance effectiveness ─────────────────────────────────────────────
+    const relanced = accounts.filter(
+      (a) => a.lastRelanceMs !== null && now - a.lastRelanceMs < RELANCE_WINDOW_MS
+    );
+    const returned = relanced.filter(
+      (a) => a.lastResultsMs !== null && a.lastResultsMs > (a.lastRelanceMs as number)
+    );
+    const relance = {
+      relanced: relanced.length,
+      returned: returned.length,
+      rate: relanced.length
+        ? Math.round((returned.length / relanced.length) * 100)
+        : 0,
+      windowDays: 60,
+    };
+
+    // ── A4 activation delay + B1/B2 request statuses + B3 team activity ──────
+    const reqSnap = await admin
+      .firestore()
+      .collection("resultAccessRequests")
+      .limit(REQUEST_SCAN)
+      .get();
+
+    const requests = { fulfilled: 0, rejected: 0, pending: 0 };
+    let oldestPendingMs: number | null = null;
+    let oldestPendingName = "";
+    const delaysAll: { at: number; days: number }[] = [];
+    const teamCount: Record<string, number> = {};
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    reqSnap.forEach((doc) => {
+      const d = doc.data() || {};
+      const status = String(d.status || "");
+      const createdMs = toMillis(d.createdAt);
+      const doneMs = toMillis(d.fulfilledAt);
+
+      if (status === "pending") {
+        requests.pending += 1;
+        if (createdMs !== null && (oldestPendingMs === null || createdMs < oldestPendingMs)) {
+          oldestPendingMs = createdMs;
+          oldestPendingName = String(d.fullName || d.email || "");
+        }
+      } else if (status === "rejected") {
+        requests.rejected += 1;
+      } else if (status === "fulfilled") {
+        requests.fulfilled += 1;
+        if (createdMs !== null && doneMs !== null && doneMs >= createdMs) {
+          delaysAll.push({ at: doneMs, days: (doneMs - createdMs) / DAY_MS });
+        }
+        if (doneMs !== null && doneMs >= startOfMonth.getTime()) {
+          const by = String(d.fulfilledBy || "");
+          if (by) teamCount[by] = (teamCount[by] || 0) + 1;
+        }
+      }
+    });
+
+    // Average over the last 30 days, plus a 6-week trend so progress is visible.
+    const activationWeeks: { label: string; avgDays: number; n: number }[] = [];
+    for (let w = 5; w >= 0; w--) {
+      const end = now - w * 7 * DAY_MS;
+      const start = end - 7 * DAY_MS;
+      const inWeek = delaysAll.filter((x) => x.at > start && x.at <= end);
+      activationWeeks.push({
+        label: dayKey(new Date(start + DAY_MS)).slice(5),
+        avgDays: avg1(inWeek.map((x) => x.days)),
+        n: inWeek.length,
+      });
+    }
+    const recentDelays = delaysAll
+      .filter((x) => now - x.at < ACTIVE_WINDOW_MS)
+      .map((x) => x.days);
+    const activation = {
+      avgDays: avg1(recentDelays.length ? recentDelays : delaysAll.map((x) => x.days)),
+      sample: recentDelays.length || delaysAll.length,
+      weeks: activationWeeks,
+    };
+
+    const team = Object.entries(teamCount)
+      .map(([uid, count]) => ({ uid, name: nameByUid[uid] || "—", count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+
+    // ── C1 weekly activity + C5 shares (anonymous daily counters) ────────────
+    const daySnap = await admin
+      .firestore()
+      .collection("usageDaily")
+      .orderBy(admin.firestore.FieldPath.documentId(), "desc")
+      .limit(ACTIVITY_WEEKS * 7 + 7)
+      .get();
+    const consultByDay: Record<string, number> = {};
+    const sharesByDay: Record<string, number> = {};
+    daySnap.forEach((doc) => {
+      const d = doc.data() || {};
+      consultByDay[doc.id] = Number(d.consultations || 0);
+      sharesByDay[doc.id] = Number(d.shares || 0);
+    });
+
+    const weekly: { label: string; consultations: number }[] = [];
+    for (let w = ACTIVITY_WEEKS - 1; w >= 0; w--) {
+      let sum = 0;
+      let label = "";
+      for (let day = 6; day >= 0; day--) {
+        const d = new Date(now - (w * 7 + day) * DAY_MS);
+        const key = dayKey(d);
+        if (day === 6) label = key.slice(5); // MM-DD of the week start
+        sum += consultByDay[key] || 0;
+      }
+      weekly.push({ label, consultations: sum });
+    }
+
+    const monthPrefix = monthKey(new Date());
+    const sharesThisMonth = Object.entries(sharesByDay)
+      .filter(([k]) => k.slice(0, 7) === monthPrefix)
+      .reduce((s, [, v]) => s + v, 0);
+    const signupsFromShare = accounts.filter(
+      (a) => a.signupRef === "partage" && a.createdAt.slice(0, 7) === monthPrefix
+    ).length;
+
+    // ── Detail lists (dashboard-side; the relance list has its own callable) ──
     const latestCreated = [...accounts]
       .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""))
       .slice(0, RECENT_LIST)
@@ -549,35 +914,12 @@ export const adminDashboardStats = onCall(
         lastResultsAt: a.lastResultsMs,
       }));
 
-    // Never-used first (the best relance targets), then longest-inactive.
-    const dormantList = [...dormant]
-      .sort(
-        (a, b) => (a.lastResultsMs || 0) - (b.lastResultsMs || 0)
-      )
-      .slice(0, DORMANT_LIST)
-      .map((a) => ({
-        uid: a.uid,
-        fullName: a.fullName,
-        email: a.email,
-        // Needed so staff can relance the patient directly (WhatsApp) from the row.
-        phone: a.phone,
-        createdAt: a.createdAt,
-        lastResultsAt: a.lastResultsMs, // null → jamais consulté
-      }));
-
-    const pendingSnap = await admin
-      .firestore()
-      .collection("resultAccessRequests")
-      .where("status", "==", "pending")
-      .limit(200)
-      .get();
-
     return {
       totals: {
         accounts: accounts.length,
         withAccess: withAccess.length,
         withoutAccess: accounts.length - withAccess.length,
-        pendingRequests: pendingSnap.size,
+        pendingRequests: requests.pending,
         byType,
       },
       usage: {
@@ -589,10 +931,42 @@ export const adminDashboardStats = onCall(
           : 0,
         windowDays: 30,
       },
+      growth: { months },
+      monthDelta: {
+        current: thisMonth,
+        previous: prevMonth,
+        pct: prevMonth ? Math.round(((thisMonth - prevMonth) / prevMonth) * 100) : 0,
+      },
+      funnel: {
+        created: accounts.length,
+        activated: withAccess.length,
+        consulted: consulted.length,
+      },
+      freshness,
+      ages,
+      frequency,
+      firstView,
+      relance,
+      activation,
+      requests: {
+        ...requests,
+        oldestPendingDays:
+          oldestPendingMs === null
+            ? null
+            : Math.floor((now - oldestPendingMs) / DAY_MS),
+        oldestPendingName,
+      },
+      team,
+      weekly,
+      shares: { month: sharesThisMonth, signups: signupsFromShare },
       latestCreated,
       latestActive,
-      dormantList,
-      truncated: snap.size >= SCAN_LIMIT,
+      truncated,
+      // How many team accounts exist, and whether they are part of the numbers
+      // above — the UI states this so admins don't wonder why they can't see
+      // themselves after testing with their own account.
+      teamAccounts,
+      includeTeam,
     };
   }
 );

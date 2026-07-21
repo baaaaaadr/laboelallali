@@ -47,7 +47,9 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid == userId
         && !request.resource.data.keys()
-              .hasAny(['role', 'requester_id', 'type', 'lastResultsAt']);
+              .hasAny(['role', 'requester_id', 'type', 'lastResultsAt',
+                       'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
+                       'lastRelanceAt', 'relanceCount']);
 
       // Update: allowed only if it does not CHANGE any privileged field. diff()
       // compares values, so a {merge:true} write that echoes an unchanged role /
@@ -56,8 +58,14 @@ service cloud.firestore {
         && request.auth.uid == userId
         && !request.resource.data.diff(resource.data)
               .affectedKeys()
-              .hasAny(['role', 'requester_id', 'type', 'lastResultsAt']);
+              .hasAny(['role', 'requester_id', 'type', 'lastResultsAt',
+                       'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
+                       'lastRelanceAt', 'relanceCount']);
     }
+
+    // Anonymous global usage counters (usageDaily/{YYYY-MM-DD}) are written ONLY
+    // by the Admin SDK and read only by the dashboard callable — they fall through
+    // to the default deny below on purpose. Do not open them to clients.
 
     // Default deny for anything not explicitly allowed
     match /{document=**} {
