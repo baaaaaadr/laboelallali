@@ -127,10 +127,14 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
         <div className="relative bg-gradient-to-br from-[var(--color-bordeaux-primary)] to-[var(--color-fuchsia-accent)] p-5 md:p-6 text-white">
           {/* Top-right controls: status badge + close button */}
           <div className="absolute top-4 right-4 flex items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-black/25 rounded-lg px-2.5 py-1 shadow-sm">
-              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${labStatus.isOpen ? 'bg-[var(--status-success)] animate-pulse' : 'bg-[var(--status-error)]'}`}></span>
-              <span className="text-xs font-bold whitespace-nowrap !text-white">{labStatus.isOpen ? t('labo_open') : t('labo_closed')}</span>
-            </div>
+            {/* Hidden until the status is known client-side (see useLabStatus) —
+                better no badge for one frame than a wrong "Labo ouvert". */}
+            {labStatus.isClient && (
+              <div className="flex items-center gap-1.5 bg-black/25 rounded-lg px-2.5 py-1 shadow-sm">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${labStatus.isOpen ? 'bg-[var(--status-success)] animate-pulse' : 'bg-[var(--status-error)]'}`}></span>
+                <span className="text-xs font-bold whitespace-nowrap !text-white">{labStatus.isOpen ? t('labo_open') : t('labo_closed')}</span>
+              </div>
+            )}
             <button
               onClick={onClose}
               className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors focus:outline-none"

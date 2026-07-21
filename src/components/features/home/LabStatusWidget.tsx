@@ -14,6 +14,11 @@ export default function LabStatusWidget() {
   const { t } = useTranslation('common');
   const labStatus = useLabStatus();
   const [open, setOpen] = useState(false);
+  // Until the status has been computed in the browser it is simply UNKNOWN:
+  // the server cannot know the current time in Agadir at request time, and its
+  // HTML may be prerendered or served from a cache. Showing a neutral badge for
+  // one frame is the only way to never display a wrong "Ouvert".
+  const isKnown = labStatus.isClient;
   const isOpen = labStatus.isOpen;
 
   return (
@@ -23,16 +28,19 @@ export default function LabStatusWidget() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
+        aria-live="polite"
         className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-white shadow-md ring-1 ring-white/30 backdrop-blur-[2px] transition-colors ${
-          isOpen ? 'bg-[var(--status-success)]' : 'bg-[var(--status-error)]'
+          !isKnown
+            ? 'bg-black/30'
+            : isOpen
+              ? 'bg-[var(--status-success)]'
+              : 'bg-[var(--status-error)]'
         }`}
-        suppressHydrationWarning
       >
         <span
-          className={`h-2 w-2 rounded-full bg-white ${isOpen ? 'animate-pulse' : 'opacity-80'}`}
-          suppressHydrationWarning
+          className={`h-2 w-2 rounded-full bg-white ${isKnown && isOpen ? 'animate-pulse' : 'opacity-80'}`}
         />
-        <span suppressHydrationWarning>{labStatus.statusText || '…'}</span>
+        <span>{isKnown ? labStatus.statusText : '…'}</span>
       </button>
 
       {/* Details popover — hover (desktop) or toggled by click/tap (mobile). */}
@@ -45,8 +53,8 @@ export default function LabStatusWidget() {
             {t('opening_hours')}
           </h3>
           <p className="text-sm text-[var(--text-secondary)] whitespace-pre-line">{t('opening_hours_text')}</p>
-          {labStatus.isClient && labStatus.countdownText && (
-            <div className="mt-3 inline-block rounded-lg border border-[var(--border-default)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] px-3 py-1 text-sm font-medium text-[var(--text-secondary)]" suppressHydrationWarning>
+          {isKnown && labStatus.countdownText && (
+            <div className="mt-3 inline-block rounded-lg border border-[var(--border-default)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] px-3 py-1 text-sm font-medium text-[var(--text-secondary)]">
               {labStatus.countdownText}
             </div>
           )}
