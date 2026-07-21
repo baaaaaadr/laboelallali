@@ -11,6 +11,7 @@
  * client write permission on the users collection is needed.
  */
 import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
+import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 // Role gate + region live in a side-effect-free leaf module, shared with the
 // CyberLab staff callable (adminTestResults) so both use the exact same check.
@@ -680,6 +681,27 @@ export const adminDashboardStats = onCall(
     await requireLevel(request, LEVEL.admin);
     const includeTeam = request.data?.includeTeam === true;
 
+    try {
+      return await buildDashboard(includeTeam);
+    } catch (err) {
+      // This aggregates a dozen computations over three collections; without an
+      // explicit log a failure surfaces as an opaque 500 with nothing to debug.
+      // Aggregates only — no patient data is ever put in a log line.
+      logger.error("adminDashboardStats failed", {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+      throw new HttpsError(
+        "internal",
+        "Impossible de calculer le tableau de bord pour le moment."
+      );
+    }
+  }
+);
+
+/** The whole computation, extracted so the callable can log what breaks. */
+async function buildDashboard(includeTeam: boolean) {
+  {
     const { accounts, byType, teamAccounts, nameByUid, truncated } =
       await scanAccounts(includeTeam);
 
@@ -857,19 +879,31 @@ export const adminDashboardStats = onCall(
       .slice(0, 8);
 
     // ── C1 weekly activity + C5 shares (anonymous daily counters) ────────────
-    const daySnap = await admin
-      .firestore()
-      .collection("usageDaily")
-      .orderBy(admin.firestore.FieldPath.documentId(), "desc")
-      .limit(ACTIVITY_WEEKS * 7 + 7)
-      .get();
+    // Read the exact day documents by id rather than ordering the collection.
+    // `orderBy(documentId(), "desc")` needs a dedicated descending __name__ index
+    // (Firestore only auto-creates ascending ones) and fails at RUNTIME with
+    // FAILED_PRECONDITION — invisible at build time. These keys are perfectly
+    // predictable, so getAll() is simpler, index-free and cheaper. Missing days
+    // simply come back as non-existent and count as zero.
     const consultByDay: Record<string, number> = {};
     const sharesByDay: Record<string, number> = {};
-    daySnap.forEach((doc) => {
-      const d = doc.data() || {};
-      consultByDay[doc.id] = Number(d.consultations || 0);
-      sharesByDay[doc.id] = Number(d.shares || 0);
-    });
+    try {
+      const dayRefs = Array.from({ length: ACTIVITY_WEEKS * 7 + 7 }, (_, i) =>
+        admin.firestore().doc(`usageDaily/${dayKey(new Date(now - i * DAY_MS))}`)
+      );
+      const dayDocs = await admin.firestore().getAll(...dayRefs);
+      dayDocs.forEach((doc) => {
+        const d = doc.data() || {};
+        consultByDay[doc.id] = Number(d.consultations || 0);
+        sharesByDay[doc.id] = Number(d.shares || 0);
+      });
+    } catch (err) {
+      // A single missing metric must never blank the whole dashboard — that is
+      // exactly how this section took the entire screen down once already.
+      logger.warn("adminDashboardStats: usageDaily unavailable", {
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
 
     const weekly: { label: string; consultations: number }[] = [];
     for (let w = ACTIVITY_WEEKS - 1; w >= 0; w--) {
@@ -969,4 +1003,4 @@ export const adminDashboardStats = onCall(
       includeTeam,
     };
   }
-);
+}
