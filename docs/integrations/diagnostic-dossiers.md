@@ -190,6 +190,76 @@ avant d'inviter le patient à se connecter, en une seconde.
 **Seule anomalie réelle restante : `232527` / dossier `130726314`** — fiche présente,
 PDF absent à la source. Isolée sur 26 dossiers observés.
 
+### Sondes du 22/07/2026 — hypothèse A retenue, et une piste sérieuse sur le PDF
+
+Re-mesure complète (5 identifiants + 3 témoins, appels espacés de 60-75 s pour éviter
+le `429`), après la réponse de Si Hassan du 22/07 confirmant la procédure Qalam :
+
+| Identifiant | Dossier(s) | Résultat |
+|---|---|---|
+| `41666`  | `010726001` du **01/07/2026** | 200 + **PDF valide** 155 668 o (`%PDF-` ✓ `%%EOF` ✓) |
+| `165783` | — | 404 `requester_not_found` (4 modes) |
+| `163007` | — | 404 `requester_not_found` (4 modes) |
+| `232735` | — | 404 `requester_not_found` (4 modes) |
+| `232527` | `130726314` du 13/07/2026 | 200, **PDF vide dans les 5 modes** (inchangé) |
+| `7587`   | `150426014`, `010224062`, `080921178` | PDF valides |
+| `142807` | `300626536/681/828` du **30/06/2026** | **3 PDF valides** (133-146 Ko) |
+| `TESTA` (correspondant) | 3 dossiers du 30/06 | PDF valides |
+
+**Conclusions.**
+1. **Hypothèse A confirmée en pratique, B et C écartées.** Les trois 404 persistent à
+   l'identique alors que `41666` — même lot, même format de numéro — répond parfaitement
+   depuis que la procédure a été faite pour lui. C réfutée (le format est exploitable) ;
+   B réfutée (le seul compte créé a fonctionné immédiatement, aucun cas « créé mais
+   invisible »). Reste **A : personne n'a créé leur compte CyberLab**, ce qui est normal —
+   ces trois patients n'ont jamais demandé d'accès à l'application. *Réserve : Si Hassan
+   n'a pas répondu littéralement « non, je ne les ai pas créés » ; la question fermée
+   reste posée pour verrouiller le point.*
+2. **Vérification adversariale du code refaite indépendamment** (transport, identifiants,
+   `type`, `include_pdf`, `dossier_id`, taille, parsing) : conclusion identique à celle
+   du 21/07 — aucun mécanisme applicatif ne peut produire ces symptômes. La seule piste
+   théorique restante (un `type` valide mais inadéquat) est **exclue empiriquement** :
+   les sondes testent les trois types.
+3. **Les PDF récents remontent bien.** Le 01/07 (`41666`) et le 30/06 (`142807`, trois
+   dossiers) renvoient tous des PDF valides. Il n'y a **pas** de rupture systémique à
+   partir d'une date. `232527` est bien une anomalie isolée.
+4. **Piste sérieuse sur `232527`, renforcée par ces mesures.** Comparer les deux cas de
+   juillet est éclairant :
+
+   | | `41666` | `232527` |
+   |---|---|---|
+   | Dossier | 01/07 | 13/07 08h42 |
+   | Publication (compte CyberLab) | 21/07, soit **20 jours après** le PDF | 13/07 **07h50**, soit **avant** le prélèvement |
+   | PDF via l'API | ✅ présent | ❌ vide |
+
+   Le seul dossier dont le PDF manque est **le seul publié avant que son PDF existe**.
+   Cohérent avec : *la réplique est alimentée au moment de la publication et n'est jamais
+   remise à jour ensuite.* **Ce n'est pas démontré** (un seul cas), mais c'est testable, et
+   la conséquence serait opérationnelle : tout patient dont on crée le compte le matin,
+   avant l'édition de son résultat, verrait sa ligne sans pouvoir ouvrir le PDF.
+
+**Test décisif suivant (Si Hassan) :** republier le dossier `130726314` maintenant que
+son PDF existe, puis relancer `node scripts/diag-dossier.js 232527 --dossier 130726314`.
+- PDF apparaît → hypothèse confirmée **et** on tient la manipulation de rattrapage.
+- PDF toujours absent → c'est côté serveur, escalade Si Brahim avec la chronologie.
+
+**Question de fond pour Si Brahim :** la réplique peut-elle être alimentée **en continu**
+plutôt qu'au seul moment de la création du compte ? Cela supprimerait cette classe de
+problème au lieu de la rattraper au cas par cas.
+
+**Curiosité relevée (sans impact sur l'app) :** envoyer `requester_id` comme **nombre
+JSON** au lieu d'une chaîne donne `404` sur `41666` mais `200` sur `232527` et `142807`.
+Notre passerelle envoie **toujours** une chaîne (`normalizeRequesterId` convertit un
+nombre en `String`), donc l'app n'est pas exposée — mais le contrat d'API précise bien
+« chaîne, pas un nombre » et le serveur n'est visiblement pas homogène là-dessus.
+
+**Côté application, le symptôme est désormais visible.** `/resultats` ne montre plus
+« Aucun résultat disponible » quand le serveur répond 404 : nouvel état `unknown_id` qui
+explique au patient que son accès n'est pas encore activé au laboratoire et lui fournit
+un message tout prêt à envoyer (Copier / WhatsApp). Même chose pour un dossier sans PDF.
+Voir `docs/pages/resultats.md` §4h. Cela transforme chaque patient bloqué — jusqu'ici
+invisible pour tout le monde — en signal qui remonte au laboratoire.
+
 **Question ouverte, pour Si Hassan d'abord :** republier ce dossier suffit-il à faire
 apparaître le PDF ? Manipulation courte, réversible, et qui n'exige de toucher à aucun
 dossier médical.
