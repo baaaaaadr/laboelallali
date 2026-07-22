@@ -18,7 +18,12 @@ export interface CyberlabResponse {
 
 // idle  → nothing attempted yet
 // need_access → logged in but no requester_id (offer the online-access request)
-export type ResultsStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'need_access';
+// unknown_id → the lab server does not recognize the requester_id (HTTP 404
+//   requester_not_found): the account is linked in the app but was never
+//   created/published in CyberLab lab-side. DISTINCT from 'empty' (valid id,
+//   200 + empty list = genuinely no dossier yet) — merging them showed a
+//   "no results" screen to patients whose account simply wasn't activated.
+export type ResultsStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'unknown_id' | 'error' | 'need_access';
 
 // Which PDFs the server embeds in the list response (perf optimisation).
 export type IncludePdf = 'latest' | 'none' | 'all';

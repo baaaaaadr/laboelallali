@@ -26,6 +26,8 @@ import CheckupReminder from '@/components/features/results/CheckupReminder';
 import ResultsIndicators from '@/components/features/results/ResultsIndicators';
 import ShareAccessCard from '@/components/features/results/ShareAccessCard';
 import MedicalLoader from '@/components/ui/MedicalLoader';
+import VerdictPanel from '@/components/ui/VerdictPanel';
+import { LAB_CONTACT } from '@/constants/contact';
 import {
   FileText,
   Download,
@@ -33,7 +35,6 @@ import {
   X,
   RefreshCw,
   Inbox,
-  AlertCircle,
   ShieldCheck,
   KeyRound,
   Send,
@@ -47,6 +48,9 @@ import {
   Star,
   RotateCw,
   Share2,
+  Copy,
+  Check,
+  MessageCircle,
 } from 'lucide-react';
 
 // PDF rendering via pdf.js (react-pdf): renders on a <canvas>, so "Voir" works on
@@ -128,12 +132,16 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const { lang } = use(params);
   const { t } = useTranslation('common');
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   // Results come from the shared context (prefetched in the background at login).
   // List loads first (fast); each PDF is fetched on demand (newest one auto-loads).
-  const { results, status, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh } = useResults();
+  const { results, status, errorCode, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh } =
+    useResults();
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Which "ready-made message" was just copied ('unknown' or a dossier id) — drives
+  // the 2 s "Copié !" feedback (same pattern as ContactModal).
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ url: string; dossierId: string } | null>(null);
   const [accessStatus, setAccessStatus] = useState<'checking' | 'none' | 'pending' | 'rejected'>('checking');
   const [requesting, setRequesting] = useState(false);
@@ -305,6 +313,83 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const etatLabel = (raw: string) => {
     const key = ETAT_LABEL_KEYS[raw.trim().toLowerCase()];
     return key ? t(key) : raw;
+  };
+
+  // ── "Ready-made message" actions (unknown id / missing PDF) ──────────────────
+  // When the blockage is lab-side, the patient used to face a dead end: nothing to
+  // read, nobody warned. These hand him the exact sentence to send the lab — the
+  // one signal that makes an invisible failure visible. The messages carry only
+  // metadata (requester id, dossier number, date), NEVER a medical value.
+  const copyMessage = useCallback((text: string, key: string) => {
+    try {
+      // Unavailable on http:// origins and old browsers — WhatsApp stays the main route.
+      void navigator.clipboard?.writeText(text);
+    } catch {
+      /* ignore */
+    }
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  }, []);
+
+  /** Opens WhatsApp on the LAB's own number, prefilled (unlike ShareAccessCard's number-less link). */
+  const openWhatsApp = useCallback((text: string) => {
+    window.open(
+      `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodeURIComponent(text)}`,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  }, []);
+
+  // The profile may not carry requester_id client-side yet (staff attached it after
+  // this session's profile load) → fall back to a message without the number.
+  const unknownIdMessage = useMemo(() => {
+    const id = (userProfile?.requester_id || '').trim();
+    return id
+      ? t('resultats.unknown_id_message', {
+          id,
+          defaultValue:
+            "Bonjour, je n'arrive pas à consulter mes résultats sur l'application du laboratoire. Mon identifiant patient ({{id}}) n'est pas reconnu. Pouvez-vous vérifier l'activation de mon accès aux résultats en ligne ? Merci.",
+        })
+      : t('resultats.unknown_id_message_no_id', {
+          defaultValue:
+            "Bonjour, je n'arrive pas à consulter mes résultats sur l'application du laboratoire : mon identifiant patient n'est pas reconnu. Pouvez-vous vérifier l'activation de mon accès aux résultats en ligne ? Merci.",
+        });
+  }, [userProfile?.requester_id, t]);
+
+  const pdfUnavailableMessage = (r: CyberlabResult) =>
+    t('resultats.pdf_unavailable_message', {
+      id: r.dossier_id,
+      date: formatDate(r.date_dossier),
+      defaultValue:
+        "Bonjour, le PDF de mon dossier {{id}} (du {{date}}) n'apparaît pas dans l'application du laboratoire. Pouvez-vous vérifier qu'il a bien été publié en ligne ? Merci.",
+    });
+
+  /** Copy + WhatsApp pair shown under a verdict; `compact` fits inside a dossier card. */
+  const renderMessageActions = (text: string, key: string, compact = false) => {
+    const cls = compact
+      ? 'flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border border-[var(--border-default)] text-[var(--text-primary)] hover:border-[var(--color-bordeaux-primary)] transition-colors'
+      : '';
+    const size = compact ? 15 : 18;
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => openWhatsApp(text)}
+          className={compact ? cls : 'button-bordeaux justify-center flex items-center gap-2'}
+        >
+          <MessageCircle size={size} />
+          {t('resultats.action_whatsapp', 'Envoyer au laboratoire')}
+        </button>
+        <button
+          type="button"
+          onClick={() => copyMessage(text, key)}
+          className={compact ? cls : 'button-bordeaux-outline justify-center flex items-center gap-2'}
+        >
+          {copiedKey === key ? <Check size={size} /> : <Copy size={size} />}
+          {copiedKey === key ? t('copy_success', 'Copié !') : t('copy', 'Copier')}
+        </button>
+      </>
+    );
   };
 
   // ── Group results into collapsible sections by year ──────────────────────────
@@ -584,10 +669,23 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           </p>
         )}
 
+        {/* The call succeeded but the lab sent no PDF for this dossier: the document
+            exists at the lab yet was never published online. Nothing the patient can
+            fix alone → hand him the sentence to send, with the dossier number. */}
         {unavailablePdf && (
-          <p className="text-sm text-[var(--status-warning)]">
-            {t('resultats.pdf_unavailable', "Le laboratoire n'a pas encore joint le PDF de ce dossier. Réessayez plus tard ou contactez le laboratoire.")}
-          </p>
+          <VerdictPanel
+            tone="warning"
+            title={t('resultats.pdf_unavailable_title', 'Ce résultat n’est pas encore consultable en ligne')}
+            body={t(
+              'resultats.pdf_unavailable',
+              "Le laboratoire n'a pas encore joint le PDF de ce dossier. Réessayez plus tard ou contactez le laboratoire."
+            )}
+            todo={t(
+              'resultats.pdf_unavailable_todo',
+              'Envoyez ce message au laboratoire : il permettra de publier votre résultat.'
+            )}
+            actions={renderMessageActions(pdfUnavailableMessage(r), r.dossier_id, true)}
+          />
         )}
 
         <div className="flex flex-wrap gap-3 pt-1">
@@ -676,17 +774,72 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           </div>
         )}
 
-        {/* Error */}
+        {/* Error — 'resource-exhausted' (too many calls in a row) is a wait-a-minute
+            situation, not an outage; saying so stops the patient hammering Actualiser. */}
         {status === 'error' && (
-          <div className="card p-8 flex flex-col items-center justify-center gap-4 text-center">
-            <AlertCircle size={40} className="text-[var(--status-error)]" />
-            <p className="text-[var(--text-primary)] font-medium max-w-md">
-              {t('resultats.error_generic', 'Impossible de récupérer vos résultats pour le moment. Veuillez réessayer plus tard.')}
-            </p>
-            <button onClick={refresh} className="button-bordeaux justify-center">
-              {t('resultats.retry', 'Réessayer')}
-            </button>
-          </div>
+          <VerdictPanel
+            tone={errorCode === 'resource-exhausted' ? 'warning' : 'error'}
+            title={
+              errorCode === 'resource-exhausted'
+                ? t('resultats.rate_limited_title', 'Trop de demandes en peu de temps')
+                : t('resultats.error_title', 'Panne temporaire')
+            }
+            body={
+              errorCode === 'resource-exhausted'
+                ? t(
+                    'resultats.rate_limited_body',
+                    "La liaison avec le laboratoire limite le nombre de demandes rapprochées. Vos résultats ne sont pas perdus."
+                  )
+                : t(
+                    'resultats.error_generic',
+                    'Impossible de récupérer vos résultats pour le moment. Veuillez réessayer plus tard.'
+                  )
+            }
+            todo={
+              errorCode === 'resource-exhausted'
+                ? t('resultats.rate_limited_todo', 'Patientez une minute, puis appuyez sur « Réessayer ».')
+                : t(
+                    'resultats.error_todo',
+                    "Réessayez dans quelques minutes. Si le message revient, contactez le laboratoire — cela ne vient pas de votre dossier."
+                  )
+            }
+            actions={
+              <button onClick={refresh} className="button-bordeaux justify-center flex items-center gap-2">
+                <RotateCw size={18} />
+                {t('resultats.retry', 'Réessayer')}
+              </button>
+            }
+          />
+        )}
+
+        {/* Unknown id — the lab server does not know this requester_id (404). The app
+            works; the patient's CyberLab account was simply never created lab-side.
+            Until this state existed he saw "Aucun résultat" and believed the app was
+            broken (or that the lab lied), and usually never called back. */}
+        {status === 'unknown_id' && (
+          <VerdictPanel
+            tone="warning"
+            title={t('resultats.unknown_id_title', "Votre accès n'est pas encore activé au laboratoire")}
+            body={t(
+              'resultats.unknown_id_body',
+              "Votre compte fonctionne, mais votre identifiant patient n'est pas encore reconnu par le laboratoire. Ce n'est pas une panne, et vos résultats ne sont pas perdus : il manque une activation à faire au laboratoire."
+            )}
+            todo={t(
+              'resultats.unknown_id_todo',
+              'Envoyez ce message au laboratoire : il contient tout ce qu’il faut pour activer votre accès.'
+            )}
+            actions={
+              <>
+                <p
+                  dir="auto"
+                  className="w-full text-sm text-[var(--text-secondary)] rounded-lg border border-[var(--border-default)] bg-[var(--background-default)] p-3"
+                >
+                  {unknownIdMessage}
+                </p>
+                {renderMessageActions(unknownIdMessage, 'unknown')}
+              </>
+            }
+          />
         )}
 
         {/* Need access — patient can request online access */}

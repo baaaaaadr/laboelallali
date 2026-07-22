@@ -43,6 +43,12 @@ const IDLE_PDF: PdfState = { status: 'idle' };
 interface ResultsContextValue {
   results: CyberlabResult[];
   status: ResultsStatus;
+  /**
+   * Cleaned HttpsError code of the last list failure ('resource-exhausted',
+   * 'unavailable', 'internal', …) — only meaningful while status === 'error';
+   * null otherwise. Lets the page tell "too many requests" from a real outage.
+   */
+  errorCode: string | null;
   /** Epoch ms of the last successful list load (null until the first success). */
   lastUpdated: number | null;
   /** PDF fetch state per dossier id (defaults to idle when absent). */
@@ -60,6 +66,7 @@ interface ResultsContextValue {
 const ResultsContext = createContext<ResultsContextValue>({
   results: [],
   status: 'idle',
+  errorCode: null,
   lastUpdated: null,
   pdfState: () => IDLE_PDF,
   loadPdf: async () => IDLE_PDF,
@@ -79,6 +86,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
   const { user, userProfile } = useAuth();
   const [results, setResults] = useState<CyberlabResult[]>([]);
   const [status, setStatus] = useState<ResultsStatus>('idle');
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [pdfById, setPdfById] = useState<Record<string, PdfState>>({});
 
@@ -163,6 +171,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
 
       loadingRef.current = true;
       setStatus('loading');
+      setErrorCode(null);
       resetPdfs();
       try {
         // Phase 1 — list only (fast, no PDFs embedded).
@@ -180,17 +189,23 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
       } catch (err: unknown) {
         const code = ((err as { code?: string })?.code || '').replace('functions/', '');
         if (code === 'not-found') {
-          // Backend maps "no results" to not-found → treat as the empty state.
+          // The lab server answered 404 requester_not_found: the id on the profile
+          // is unknown lab-side (account never created/published in CyberLab, or a
+          // wrong number). A DEFINITIVE answer, not a failure — same dedupe/no-retry
+          // handling as a success, but its own status so the page can explain it
+          // instead of showing the misleading "no results yet" screen.
+          // (A valid id with no dossier comes back as 200 + empty list → 'empty'.)
           loadedForUidRef.current = current.uid;
           bgRetryRef.current = 0;
           setResults([]);
-          setStatus('empty');
+          setStatus('unknown_id');
           setLastUpdated(Date.now());
         } else if (code === 'failed-precondition') {
           // No requester_id yet → the page offers the online-access request.
           setResults([]);
           setStatus('need_access');
         } else {
+          setErrorCode(code || null);
           setStatus('error');
           // At app launch the network is often not ready yet — self-heal a couple
           // of times so a cold-start blip doesn't leave the prefetch stuck.
@@ -225,6 +240,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
       bgRetryRef.current = 0;
       setResults([]);
       setStatus('idle');
+      setErrorCode(null);
       setLastUpdated(null);
       resetPdfs();
     }
@@ -249,8 +265,8 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
   const newestDossierId = useMemo(() => newestOf(results), [results]);
 
   const value = useMemo<ResultsContextValue>(
-    () => ({ results, status, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh }),
-    [results, status, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh]
+    () => ({ results, status, errorCode, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh }),
+    [results, status, errorCode, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh]
   );
 
   return <ResultsContext.Provider value={value}>{children}</ResultsContext.Provider>;
