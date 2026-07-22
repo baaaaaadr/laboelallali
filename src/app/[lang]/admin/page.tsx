@@ -16,6 +16,7 @@ import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
 import { getClientFunctions } from '@/config/firebase';
 import MedicalLoader from '@/components/ui/MedicalLoader';
+import VerdictPanel from '@/components/ui/VerdictPanel';
 import type { CyberlabResponse } from '@/types/cyberlab';
 import ResultsIndicators from '@/components/features/results/ResultsIndicators';
 import AnalysesDetails from '@/components/features/results/AnalysesDetails';
@@ -82,46 +83,6 @@ async function callFn<T>(name: string, data: object): Promise<T> {
   if (!functions) throw new Error('functions-unavailable');
   const fn = httpsCallable<object, T>(functions, name);
   return (await fn(data)).data;
-}
-
-/**
- * Verdict panel for the requester-id test.
- *
- * The probe has three distinct outcomes that each call for a DIFFERENT action at
- * the front desk, and a bare one-liner ("Aucun résultat") left the trainee with
- * nowhere to go. So each verdict states what was observed, what it means, and the
- * one thing to do next — the whole point of the tool is to make the front desk
- * autonomous without calling the lab.
- */
-function TestVerdict({
-  tone,
-  title,
-  body,
-  todo,
-}: {
-  tone: 'success' | 'warning' | 'error';
-  title: string;
-  body: string;
-  todo?: string;
-}) {
-  const colour = `var(--status-${tone})`;
-  const Icon = tone === 'success' ? CheckCircle : AlertCircle;
-  return (
-    <div
-      className="rounded-lg border p-3 space-y-1.5"
-      style={{ borderColor: colour, background: 'var(--background-secondary)' }}
-    >
-      <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: colour }}>
-        <Icon size={16} className="flex-shrink-0" /> {title}
-      </p>
-      <p className="text-sm text-[var(--text-secondary)]">{body}</p>
-      {todo && (
-        <p className="text-sm font-medium text-[var(--text-primary)] border-s-2 ps-2.5" style={{ borderColor: colour }}>
-          {todo}
-        </p>
-      )}
-    </div>
-  );
 }
 
 export default function AdminPage({ params }: { params: Promise<{ lang: string }> }) {
@@ -939,7 +900,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
 
           {/* Status banner */}
           {testStatus === 'ok' && (
-            <TestVerdict
+            <VerdictPanel
               tone="success"
               title={t('admin.test_ok', 'Les analyses remontent bien ✓')}
               body={t(
@@ -953,7 +914,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             />
           )}
           {testStatus === 'empty' && (
-            <TestVerdict
+            <VerdictPanel
               tone="warning"
               title={t('admin.test_empty_title', "Ce patient n'est pas encore reconnu par le laboratoire")}
               body={t(
@@ -967,7 +928,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             />
           )}
           {testStatus === 'error' && (
-            <TestVerdict
+            <VerdictPanel
               tone="error"
               title={t('admin.test_error', 'Test impossible pour le moment. Réessayez.')}
               body={testError || t('admin.test_error_body', "Le test n'a pas pu aboutir : la liaison avec le laboratoire n'a pas répondu.")}
