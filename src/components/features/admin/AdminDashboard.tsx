@@ -311,6 +311,7 @@ export default function AdminDashboard({
           }))}
           ariaLabel={t('admin.dash_age_title', "Utilisation selon l'âge")}
           emptyLabel={collecting}
+          scaleMax={100}
         />
       </ChartCard>
 

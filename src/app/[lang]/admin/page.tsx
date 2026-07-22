@@ -84,6 +84,46 @@ async function callFn<T>(name: string, data: object): Promise<T> {
   return (await fn(data)).data;
 }
 
+/**
+ * Verdict panel for the requester-id test.
+ *
+ * The probe has three distinct outcomes that each call for a DIFFERENT action at
+ * the front desk, and a bare one-liner ("Aucun résultat") left the trainee with
+ * nowhere to go. So each verdict states what was observed, what it means, and the
+ * one thing to do next — the whole point of the tool is to make the front desk
+ * autonomous without calling the lab.
+ */
+function TestVerdict({
+  tone,
+  title,
+  body,
+  todo,
+}: {
+  tone: 'success' | 'warning' | 'error';
+  title: string;
+  body: string;
+  todo?: string;
+}) {
+  const colour = `var(--status-${tone})`;
+  const Icon = tone === 'success' ? CheckCircle : AlertCircle;
+  return (
+    <div
+      className="rounded-lg border p-3 space-y-1.5"
+      style={{ borderColor: colour, background: 'var(--background-secondary)' }}
+    >
+      <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: colour }}>
+        <Icon size={16} className="flex-shrink-0" /> {title}
+      </p>
+      <p className="text-sm text-[var(--text-secondary)]">{body}</p>
+      {todo && (
+        <p className="text-sm font-medium text-[var(--text-primary)] border-s-2 ps-2.5" style={{ borderColor: colour }}>
+          {todo}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params);
   const { t } = useTranslation('common');
@@ -899,19 +939,43 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
 
           {/* Status banner */}
           {testStatus === 'ok' && (
-            <div className="flex items-center gap-2 text-sm text-[var(--status-success)]">
-              <CheckCircle size={16} /> <span>{t('admin.test_ok', 'Les analyses remontent bien ✓')}</span>
-            </div>
+            <TestVerdict
+              tone="success"
+              title={t('admin.test_ok', 'Les analyses remontent bien ✓')}
+              body={t(
+                'admin.test_ok_body',
+                "Cet identifiant est bien reconnu par le laboratoire. Le patient verra la liste ci-dessous en se connectant."
+              )}
+              todo={t(
+                'admin.test_ok_todo',
+                "Vérifiez que le nom affiché est bien celui du patient, puis associez l'identifiant à son compte."
+              )}
+            />
           )}
           {testStatus === 'empty' && (
-            <div className="flex items-center gap-2 text-sm text-[var(--status-warning)]">
-              <AlertCircle size={16} /> <span>{t('admin.test_empty', 'Aucun résultat pour cet identifiant.')}</span>
-            </div>
+            <TestVerdict
+              tone="warning"
+              title={t('admin.test_empty_title', "Ce patient n'est pas encore reconnu par le laboratoire")}
+              body={t(
+                'admin.test_empty_body',
+                "Deux causes possibles : soit le numéro de dossier est erroné, soit le compte CyberLab du patient n'a pas encore été créé dans Qalam."
+              )}
+              todo={t(
+                'admin.test_empty_todo',
+                "À faire : vérifiez le numéro. S'il est correct, créez le compte CyberLab du patient dans Qalam puis refaites ce test. Sans cette étape, le patient se connectera et son écran restera vide."
+              )}
+            />
           )}
           {testStatus === 'error' && (
-            <div className="flex items-center gap-2 text-sm text-[var(--status-error)]">
-              <AlertCircle size={16} /> <span>{testError || t('admin.test_error', 'Test impossible pour le moment. Réessayez.')}</span>
-            </div>
+            <TestVerdict
+              tone="error"
+              title={t('admin.test_error', 'Test impossible pour le moment. Réessayez.')}
+              body={testError || t('admin.test_error_body', "Le test n'a pas pu aboutir : la liaison avec le laboratoire n'a pas répondu.")}
+              todo={t(
+                'admin.test_error_todo',
+                "À faire : patientez une minute et refaites le test. Si le message revient, prévenez l'administrateur — cela ne vient pas du dossier du patient."
+              )}
+            />
           )}
 
           {/* Preview — what the patient would see (list only, no PDFs) */}
@@ -938,7 +1002,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 </p>
               )}
               <p className="text-sm font-medium text-[var(--text-secondary)]">
-                {t('admin.test_count', { count: testResp.results.length })}
+                {t('admin.test_count', '{{count}} bilans trouvés', { count: testResp.results.length })}
               </p>
               <ResultsIndicators results={testResp.results} lang={lang} />
               <div className="space-y-3">
@@ -987,8 +1051,17 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         </span>
                       )}
                       {pdfProbe[r.dossier_id] === 'empty' && (
-                        <span className="flex items-center gap-1.5 text-sm text-[var(--status-warning)]">
-                          <AlertCircle size={15} /> {t('admin.test_pdf_empty', "Le serveur n'a pas renvoyé de PDF pour ce dossier.")}
+                        <span className="flex flex-col gap-1 text-sm">
+                          <span className="flex items-center gap-1.5 text-[var(--status-warning)]">
+                            <AlertCircle size={15} className="flex-shrink-0" />
+                            {t('admin.test_pdf_empty', "Le serveur n'a pas renvoyé de PDF pour ce dossier.")}
+                          </span>
+                          <span className="text-[var(--text-secondary)] ps-[1.4rem]">
+                            {t(
+                              'admin.test_pdf_empty_todo',
+                              "Le patient verra ce bilan dans sa liste mais ne pourra pas l'ouvrir. Le dossier existe au laboratoire, seul le document manque : signalez ce numéro de dossier au laboratoire pour qu'il le republie."
+                            )}
+                          </span>
                         </span>
                       )}
                       {pdfProbe[r.dossier_id] === 'error' && (

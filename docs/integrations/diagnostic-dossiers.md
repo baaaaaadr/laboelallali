@@ -113,6 +113,51 @@ sinon le patient ne verra rien. À intégrer à la procédure d'accueil.
 `node scripts/diag-dossier.js 232735 --compare 7587`. S'il apparaît avec son PDF,
 l'hypothèse est confirmée et on tient la marche à suivre.
 
+### Hypothèse CONFIRMÉE — 21/07/2026
+
+Si Hassan a suivi la procédure complète (ouverture du dossier dans Qalam + création du
+compte CyberLab) sur **un seul** des quatre patients, `41666`, et nous l'a signalé.
+Sonde relancée le lendemain sur les cinq identifiants, sans aucun déploiement entre
+les deux mesures :
+
+| Identifiant | Avant | Après | Lecture |
+|---|---|---|---|
+| `41666`  | 404 | **200 + PDF valide** (155 668 o, `%PDF-` ✓ `%%EOF` ✓) | procédure faite → fonctionne |
+| `165783` | 404 | 404 | procédure non faite |
+| `163007` | 404 | 404 | procédure non faite |
+| `232735` | 404 | 404 | procédure non faite |
+| `232527` | 200 + PDF vide | 200 + PDF vide | cas distinct, non résolu |
+
+Quatre patients du même lot, même serveur ; la seule variable est l'action dans Qalam,
+et c'est exactement le patient traité qui bascule. **L'hypothèse est établie.**
+
+**Trois états possibles, trois actions différentes** — c'est la grille de lecture du
+widget « Tester » de `/admin` :
+
+1. **404 `requester_not_found`** → le patient est inconnu de la réplique. Soit le
+   numéro est faux, soit son compte CyberLab n'a pas été créé dans Qalam. *Action :
+   créer le compte CyberLab, puis retester.*
+2. **200 + `pdf_base64` vide** → la fiche du dossier est là, le document ne l'est pas.
+   Le patient voit la ligne mais ne peut pas l'ouvrir. *Action : faire republier le
+   dossier par le laboratoire.* C'est le cas de `232527` / dossier `130726314`, dont
+   Si Hassan confirme que le PDF existe et s'imprime dans Qalam.
+3. **200 + PDF valide** → rien à faire.
+
+**Conséquence opérationnelle, désormais certaine :** activer l'accès dans l'application
+ne suffit pas. Sans création du compte CyberLab côté Qalam, le patient se connecte et
+son écran reste vide — ce qui explique le **0 % d'utilisation** mesuré par le tableau
+de bord sur les 7 patients dont l'accès avait été activé.
+
+**Question restant ouverte pour Si Brahim :** l'état 2 (fiche présente, PDF absent) est
+purement côté serveur — pourquoi le document ne suit-il pas la fiche, et la
+republication le répare-t-elle ? Et la réplique peut-elle être alimentée en continu
+plutôt qu'à la création du compte ?
+
+**Question restant ouverte pour Si Hassan :** l'étape de liaison d'une adresse Gmail
+fait partie de la procédure du portail CyberLab, mais notre passerelle n'envoie **que**
+le numéro de dossier — jamais d'e-mail. Si la seule création du compte CyberLab suffit
+à publier le patient, l'accueil peut économiser cette étape à chaque inscription.
+
 ## 5. Bug applicatif trouvé en chemin — identifiant avec espace
 
 Un profil patient contenait `requester_id = "67 305"` (Qalam affiche les grands

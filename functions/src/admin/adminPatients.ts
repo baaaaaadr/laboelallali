@@ -594,7 +594,14 @@ async function scanAccounts(includeTeam: boolean): Promise<{
   return { accounts, byType, teamAccounts, nameByUid, truncated: snap.size >= SCAN_LIMIT };
 }
 
-/** The dormant accounts, worst first — shared by the Relances tab. */
+/**
+ * ALL the dormant accounts, worst first — shared by the Relances tab.
+ * Deliberately not truncated here: the dashboard publishes this length as a
+ * factual count ("N dormants"), so capping it at display size would silently
+ * understate the backlog past that threshold, and contradict the "Santé de la
+ * base" chart which counts the same population without a cap. Callers that
+ * render a list slice it themselves.
+ */
 function dormantOf(accounts: AccountRow[], now: number): AccountRow[] {
   return accounts
     .filter(
@@ -602,8 +609,7 @@ function dormantOf(accounts: AccountRow[], now: number): AccountRow[] {
         a.hasAccess &&
         (a.lastResultsMs === null || now - a.lastResultsMs >= ACTIVE_WINDOW_MS)
     )
-    .sort((a, b) => (a.lastResultsMs || 0) - (b.lastResultsMs || 0))
-    .slice(0, DORMANT_LIST);
+    .sort((a, b) => (a.lastResultsMs || 0) - (b.lastResultsMs || 0));
 }
 
 /**
@@ -618,15 +624,17 @@ export const adminListDormant = onCall(
     const { accounts } = await scanAccounts(false);
     const now = Date.now();
     return {
-      dormantList: dormantOf(accounts, now).map((a) => ({
-        uid: a.uid,
-        fullName: a.fullName,
-        email: a.email,
-        phone: a.phone,
-        createdAt: a.createdAt,
-        lastResultsAt: a.lastResultsMs, // null → jamais consulté
-        lastRelanceAt: a.lastRelanceMs,
-      })),
+      dormantList: dormantOf(accounts, now)
+        .slice(0, DORMANT_LIST)
+        .map((a) => ({
+          uid: a.uid,
+          fullName: a.fullName,
+          email: a.email,
+          phone: a.phone,
+          createdAt: a.createdAt,
+          lastResultsAt: a.lastResultsMs, // null → jamais consulté
+          lastRelanceAt: a.lastRelanceMs,
+        })),
     };
   }
 );
@@ -817,6 +825,14 @@ async function buildDashboard(includeTeam: boolean) {
       .limit(REQUEST_SCAN)
       .get();
 
+    // A request document is keyed by the requester's own uid, so `accounts` —
+    // already filtered by `includeTeam` — is exactly the scope to honour here.
+    // Without this, the team's own test requests would inflate "Devenir des
+    // demandes" and drag the activation delay down, while the on-screen note
+    // claims team accounts are excluded. The alert banner would also name a
+    // colleague who appears nowhere else on the screen.
+    const scopeUids = new Set(accounts.map((a) => a.uid));
+
     const requests = { fulfilled: 0, rejected: 0, pending: 0 };
     let oldestPendingMs: number | null = null;
     let oldestPendingName = "";
@@ -827,6 +843,7 @@ async function buildDashboard(includeTeam: boolean) {
     startOfMonth.setHours(0, 0, 0, 0);
 
     reqSnap.forEach((doc) => {
+      if (!scopeUids.has(doc.id)) return;
       const d = doc.data() || {};
       const status = String(d.status || "");
       const createdMs = toMillis(d.createdAt);

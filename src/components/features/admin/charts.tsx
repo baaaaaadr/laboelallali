@@ -175,13 +175,23 @@ export function HBars({
   rows,
   ariaLabel,
   emptyLabel,
+  scaleMax,
 }: {
   rows: { label: string; value: number; display: string; warn?: boolean }[];
   ariaLabel: string;
   emptyLabel: string;
+  /**
+   * Fixed upper bound for the bar widths. Counts (rankings, funnels) have no
+   * natural ceiling and scale against the largest row, but a series that is
+   * already a percentage must scale against 100 — otherwise the biggest value
+   * is always drawn as a full bar and contradicts the figure printed next to it.
+   */
+  scaleMax?: number;
 }) {
-  const max = Math.max(...rows.map((r) => r.value), 0);
-  if (!rows.length || max === 0) return <ChartEmpty label={emptyLabel} />;
+  const dataMax = Math.max(...rows.map((r) => r.value), 0);
+  // Emptiness is a property of the data, never of the fixed scale.
+  if (!rows.length || dataMax === 0) return <ChartEmpty label={emptyLabel} />;
+  const max = scaleMax ?? dataMax;
 
   return (
     <div className="flex flex-col gap-2.5" role="img" aria-label={ariaLabel}>
