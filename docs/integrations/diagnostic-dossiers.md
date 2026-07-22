@@ -144,10 +144,25 @@ problème systémique. **Les faits disent le contraire**, et il faut le lire ava
 
 Les 4 identifiants de juillet n'étaient pas des utilisateurs de l'app : c'étaient des
 patients du laboratoire choisis au hasard pour vérifier si le problème était lié aux
-dossiers récents. **Personne n'avait jamais demandé d'accès pour eux**, donc aucun
-compte CyberLab n'existait. Leur `404` est le comportement normal du système, pas une
-négligence. Si Hassan avait raison sur toute la ligne : « le problème est spécifique au
-patient 232527 ».
+dossiers récents.
+
+⚠️ **Ce qu'on sait vs ce qu'on suppose.** Le seul fait établi est que l'API ne les
+connaît pas (`404 requester_not_found`). La cause n'est **pas** démontrée. Trois
+hypothèses restent ouvertes, et elles n'ont pas du tout les mêmes conséquences :
+
+| Hypothèse | Conséquence |
+|---|---|
+| **A.** Aucun compte CyberLab n'a jamais été créé pour eux (personne n'a demandé d'accès) | comportement normal, rien à corriger |
+| **B.** Les comptes ont été créés mais la publication n'a pas abouti | **problème systémique, urgent** |
+| **C.** Ces numéros ne sont pas des identifiants patient exploitables par l'API | notre lecture des identifiants est à revoir |
+
+**Seul Si Hassan peut trancher**, et la question à lui poser est exactement : « as-tu
+créé le compte CyberLab de ces trois patients, oui ou non ? » Tant qu'elle n'a pas de
+réponse, ne pas conclure.
+
+Élément qui **affaiblit l'hypothèse C** sans l'éliminer : `232527` (qui fonctionne) et
+`232735` (404) sont des numéros voisins, tous deux récents — le format et l'ancienneté
+ne peuvent donc pas expliquer la différence à eux seuls.
 
 **Ne pas relier ce constat au taux d'utilisation de 0 %** du tableau de bord : le suivi
 d'usage n'a démarré que le **20/07**, soit deux jours avant la mesure. Un compteur à
