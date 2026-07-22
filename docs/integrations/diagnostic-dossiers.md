@@ -129,7 +129,29 @@ les deux mesures :
 | `232527` | 200 + PDF vide | 200 + PDF vide | cas distinct, non résolu |
 
 Quatre patients du même lot, même serveur ; la seule variable est l'action dans Qalam,
-et c'est exactement le patient traité qui bascule. **L'hypothèse est établie.**
+et c'est exactement le patient traité qui bascule. **Le lien de cause à effet est
+établi : un patient n'apparaît dans la réplique qu'une fois son compte CyberLab créé.**
+
+### Ce que ce test ne prouve PAS — garde-fou contre la sur-interprétation
+
+Il est tentant d'en conclure que « l'accueil oublie l'étape Qalam » et que c'est un
+problème systémique. **Les faits disent le contraire**, et il faut le lire avant d'agir :
+
+- les **10 patients inscrits dans l'app répondent normalement**, et **25 de leurs
+  dossiers** (2021-08 → 2026-06-17) renvoient un PDF valide (§4 ci-dessus) ;
+- le patient `232527` a été publié le **13/07 à 07h50**, le jour même où l'accueil lui
+  a accordé l'accès à l'app — l'étape Qalam **a donc bien été faite**, et au bon moment.
+
+Les 4 identifiants de juillet n'étaient pas des utilisateurs de l'app : c'étaient des
+patients du laboratoire choisis au hasard pour vérifier si le problème était lié aux
+dossiers récents. **Personne n'avait jamais demandé d'accès pour eux**, donc aucun
+compte CyberLab n'existait. Leur `404` est le comportement normal du système, pas une
+négligence. Si Hassan avait raison sur toute la ligne : « le problème est spécifique au
+patient 232527 ».
+
+**Ne pas relier ce constat au taux d'utilisation de 0 %** du tableau de bord : le suivi
+d'usage n'a démarré que le **20/07**, soit deux jours avant la mesure. Un compteur à
+zéro sur deux jours ne démontre rien.
 
 **Trois états possibles, trois actions différentes** — c'est la grille de lecture du
 widget « Tester » de `/admin` :
@@ -143,20 +165,33 @@ widget « Tester » de `/admin` :
    Si Hassan confirme que le PDF existe et s'imprime dans Qalam.
 3. **200 + PDF valide** → rien à faire.
 
-**Conséquence opérationnelle, désormais certaine :** activer l'accès dans l'application
-ne suffit pas. Sans création du compte CyberLab côté Qalam, le patient se connecte et
-son écran reste vide — ce qui explique le **0 % d'utilisation** mesuré par le tableau
-de bord sur les 7 patients dont l'accès avait été activé.
+**Conséquence opérationnelle :** l'étape Qalam est **indispensable** et, d'après les
+faits ci-dessus, elle est **déjà faite** par l'accueil au moment où il traite une
+demande d'accès. Le risque n'est donc pas un défaut de procédure, mais un **oubli
+ponctuel** — invisible côté accueil comme côté patient, puisque personne ne reçoit
+d'erreur. C'est exactement ce que le widget « Tester » de `/admin` sert à détecter
+avant d'inviter le patient à se connecter, en une seconde.
 
-**Question restant ouverte pour Si Brahim :** l'état 2 (fiche présente, PDF absent) est
-purement côté serveur — pourquoi le document ne suit-il pas la fiche, et la
-republication le répare-t-elle ? Et la réplique peut-elle être alimentée en continu
-plutôt qu'à la création du compte ?
+**Seule anomalie réelle restante : `232527` / dossier `130726314`** — fiche présente,
+PDF absent à la source. Isolée sur 26 dossiers observés.
 
-**Question restant ouverte pour Si Hassan :** l'étape de liaison d'une adresse Gmail
-fait partie de la procédure du portail CyberLab, mais notre passerelle n'envoie **que**
-le numéro de dossier — jamais d'e-mail. Si la seule création du compte CyberLab suffit
-à publier le patient, l'accueil peut économiser cette étape à chaque inscription.
+**Question ouverte, pour Si Hassan d'abord :** republier ce dossier suffit-il à faire
+apparaître le PDF ? Manipulation courte, réversible, et qui n'exige de toucher à aucun
+dossier médical.
+
+**À escalader vers Si Brahim seulement si la republication échoue :** pourquoi le
+document n'a-t-il pas suivi la fiche pour ce dossier précis ? (Indice chronologique :
+la fiche a été publiée le 13/07 à 07h50, le prélèvement est de 08h42 et le PDF a été
+édité plus tard dans la journée — le document est peut-être arrivé après le seul
+instant où la réplique était alimentée.) Deuxième question de fond : la réplique
+peut-elle être **alimentée en continu**, plutôt qu'au seul moment de la création du
+compte ? Cela supprimerait cette classe de problème.
+
+**Note technique utile :** l'étape « lier une adresse Gmail » décrite par Si Hassan
+appartient à la procédure du **portail CyberLab**, pas à la nôtre — notre passerelle
+n'envoie jamais d'e-mail, seulement le numéro de dossier. Reste à savoir si la création
+du compte suffit à publier le patient sans cette liaison ; si oui, l'accueil économise
+une manipulation à chaque inscription.
 
 ## 5. Bug applicatif trouvé en chemin — identifiant avec espace
 
