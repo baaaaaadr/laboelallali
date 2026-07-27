@@ -53,6 +53,28 @@ function readSignupRef(): string {
   }
 }
 
+/**
+ * Where to send the user once authenticated. Defaults to /profile, but honors
+ * `?redirect=<path>` when present — e.g. /resultats bounces an unauthenticated
+ * patient here with `?redirect=/fr/resultats` so that, after login, they land back
+ * on their results instead of on the profile page (they'd otherwise be stranded,
+ * not knowing how to reach what they came for). Only same-origin relative paths are
+ * accepted; anything else falls back to /profile to prevent open-redirect abuse.
+ */
+function getRedirectTarget(lang: string): string {
+  const fallback = `/${lang}/profile`;
+  try {
+    const raw = new URLSearchParams(window.location.search).get('redirect');
+    if (!raw) return fallback;
+    // Must be an internal absolute path ("/fr/resultats"). Reject protocol-relative
+    // ("//evil.com") and backslash tricks ("/\evil.com") — those are open redirects.
+    if (raw.startsWith('/') && !raw.startsWith('//') && !raw.startsWith('/\\')) return raw;
+    return fallback;
+  } catch {
+    return fallback; // no window (SSR) / malformed URL
+  }
+}
+
 export default function LoginPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params);
   const { t } = useTranslation('common');
@@ -114,10 +136,11 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
     [t]
   );
 
-  // Redirect users who are fully logged in with a complete profile
+  // Redirect users who are fully logged in with a complete profile — back to where
+  // they intended to go (?redirect=…, e.g. /resultats), or /profile by default.
   useEffect(() => {
     if (!loading && user && userProfile?.phone) {
-      router.push(`/${lang}/profile`);
+      router.push(getRedirectTarget(lang));
     }
   }, [user, loading, userProfile, router, lang]);
 
@@ -225,7 +248,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
         await persistProfile(cred.user.uid, cred.user.email);
         await refreshProfile();
         isSigningUp.current = false;
-        router.push(`/${lang}/profile`);
+        router.push(getRedirectTarget(lang));
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
@@ -250,7 +273,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       setError(null);
       await persistProfile(user.uid, user.email);
       await refreshProfile();
-      router.push(`/${lang}/profile`);
+      router.push(getRedirectTarget(lang));
     } catch (err: unknown) {
       console.error(err);
       setError(getAuthErrorMessage(err, 'error_save_profile', 'Echec de la sauvegarde du profil'));

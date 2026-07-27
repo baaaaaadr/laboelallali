@@ -24,9 +24,9 @@ Shown to all unauthenticated visitors. Switches between login mode and signup mo
 5. Telephone (`phone`)
 6. **Consent checkbox (CNDP / loi 09-08)** — `consentAccepted`, links to `/[lang]/confidentialite` (opens in a new tab). Signup is blocked (inline `consent_error`) until it is checked. The same checkbox is also shown in the Step 2 profile-completion form for Google users.
 
-On email signup submit: consent guard -> `createUserWithEmailAndPassword` -> `persistProfile` (`setDoc` merge) -> `refreshProfile` -> `router.push(/${lang}/profile)`.
+On email signup submit: consent guard -> `createUserWithEmailAndPassword` -> `persistProfile` (`setDoc` merge) -> `refreshProfile` -> `router.push(getRedirectTarget(lang))` (post-auth target; see **Redirect Logic**).
 
-On email login submit: `signInWithEmailAndPassword`. The auth context loads the Firestore profile; completed profiles are redirected to `/${lang}/profile`, incomplete profiles stay on `/login` and show step 2.
+On email login submit: `signInWithEmailAndPassword`. The auth context loads the Firestore profile; completed profiles are redirected to the post-auth target (`getRedirectTarget`, default `/${lang}/profile`), incomplete profiles stay on `/login` and show step 2.
 
 Google submit:
 - Creates `new GoogleAuthProvider()`.
@@ -53,7 +53,7 @@ Pre-fill:
 - If the Google user has a `displayName`, it is pre-filled into `fullName`.
 - The pre-fill never overwrites user input because it only runs when `fullName` is empty.
 
-On submit: `setDoc` to `users/{uid}` -> `refreshProfile` -> `router.push(/${lang}/profile)`.
+On submit: `setDoc` to `users/{uid}` -> `refreshProfile` -> `router.push(getRedirectTarget(lang))` (post-auth target; see **Redirect Logic**).
 
 ## State Management
 
@@ -80,14 +80,24 @@ On submit: `setDoc` to `users/{uid}` -> `refreshProfile` -> `router.push(/${lang
 
 ```
 loading                       -> show spinner
-user + profile.phone          -> show spinner; effect redirects to /profile
+user + profile.phone          -> show spinner; effect redirects to post-auth target
 step === 'profile'            -> show profile completion form
 step === 'forgot_password'    -> show password reset request form
 default                       -> show auth form
 ```
 
+**Post-auth target — `getRedirectTarget(lang)` (return-URL pattern):** all three success exits
+(returning login, email signup, Google profile completion) redirect through this single helper.
+It returns `?redirect=<path>` from the URL when present, else `/${lang}/profile` (unchanged default).
+`?redirect` is honored ONLY for same-origin relative paths (`/fr/resultats`); protocol-relative
+(`//host`) or backslash values fall back to `/profile` — open-redirect guard. This is what lets
+`/resultats` bounce an unauthenticated patient to `/login?redirect=/fr/resultats` and land them
+back on their results after sign-in, instead of stranding them on `/profile` (Dr Aziz's UX report:
+patients reached the profile page and didn't know how to get to the results they came for). Same
+reader idea as `readSignupRef`'s `?ref` — both parse `window.location.search`, independently.
+
 Effects:
-- Redirects to `/${lang}/profile` when `user && userProfile?.phone`.
+- Redirects to `getRedirectTarget(lang)` when `user && userProfile?.phone`.
 - Sets `step = 'profile'` when `user && !userProfile?.phone && !isSigningUp.current`.
 - Pre-fills `fullName` from `user.displayName` when entering step 2.
 - Resolves Google redirect results through `getRedirectResult(auth)` for the redirect fallback flow.
@@ -132,6 +142,7 @@ Auth errors use `public/locales/[lang]/common.json` keys:
 - **Never use `setDoc` without `{ merge: true }` on `users/{uid}`:** the doc also holds admin-set fields (`requester_id`/`type`/`role`) and consent flags. A non-merge write wipes them and breaks the results/admin flow.
 - **Consent is mandatory at registration:** `consentAccepted` gates both email signup and the Google profile-completion step. Do not remove the checkbox or its guards (CNDP / loi 09-08 requirement).
 - **No redirect to /profile for completion:** All profile data is collected on the login page itself. Do not add a redirect-to-profile-for-completion pattern.
+- **Post-auth redirect goes through `getRedirectTarget(lang)`:** do NOT hardcode `router.push(/${lang}/profile)` at the login / email-signup / profile-completion exits — all three must call the helper so a `?redirect=<internal path>` return-URL is honored (e.g. `/resultats` → login → back to `/resultats`). Keep the open-redirect guard (same-origin relative paths only, reject `//` and `/\`).
 - **isSigningUp ref:** This ref is critical. Without it, the `useEffect` that sets `step = 'profile'` would fire between `createUserWithEmailAndPassword` and `setDoc`, causing the profile form to flash before saving completes.
 - **Google pre-fill:** `user.displayName` is only available for Google users. The pre-fill effect only runs when `step === 'profile'` and `fullName` is empty.
 - **Returning user without profile:** If a user somehow has auth but no Firestore doc, the profile step appears after login; same inline flow, no redirect needed.

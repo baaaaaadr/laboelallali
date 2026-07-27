@@ -34,7 +34,7 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 - **In-memory only** (React state + refs) — PDF base64 never touches localStorage/IndexedDB/SW. Cleared on logout.
 
 ### 2. Authentication Integration (`useAuth`)
-- `user`, `loading` (aliased to `authLoading`). Unauthenticated visitors are redirected to `/${lang}/login` (same pattern as `/profile`). While `authLoading || !user`, a bordeaux spinner renders.
+- `user`, `loading` (aliased to `authLoading`). Unauthenticated visitors are redirected to `/${lang}/login?redirect=/${lang}/resultats` — the `?redirect` **return-URL** tells the login page (via its `getRedirectTarget` helper) to bring them **back here** right after sign-in, instead of the old dead-end where they landed on `/profile` and didn't know how to reach their results (Dr Aziz's UX report). While `authLoading || !user`, a bordeaux spinner renders.
 
 ### 3. Data type — `src/types/cyberlab.ts` (mirrors the lab API — `functions/src/cyberlab/client.ts`)
 `CyberlabResult`: `dossier_id`, `patient_nom`, `patient_prenom`, `date_dossier` (ISO), `etat`, `analyses_summary`, `pdf_base64`. For `type: "patient"`, `patient_nom` / `patient_prenom` come back **empty** (data minimisation), so the UI intentionally does not show them. (Shared by the page AND `ResultsContext`.) `analyses_summary` is a comma-separated list of the lab's terse internal codes (e.g. `"NFS, GLY, HBA1C, U, CR"`), passed through verbatim — see §4c.

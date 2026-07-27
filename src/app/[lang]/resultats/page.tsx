@@ -163,9 +163,13 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     setCanShare(!isDesktopViewer() && typeof navigator !== 'undefined' && typeof navigator.share === 'function');
   }, []);
 
-  // Redirect unauthenticated visitors to login (same pattern as /profile).
+  // Redirect unauthenticated visitors to login, and tell login to bring them back
+  // HERE after they sign in (?redirect=/…/resultats) — otherwise they land on
+  // /profile and don't know how to reach the results they came for.
   useEffect(() => {
-    if (!authLoading && !user) router.push(`/${lang}/login`);
+    if (!authLoading && !user) {
+      router.push(`/${lang}/login?redirect=${encodeURIComponent(`/${lang}/resultats`)}`);
+    }
   }, [user, authLoading, router, lang]);
 
   const loadAccessStatus = useCallback(async () => {
