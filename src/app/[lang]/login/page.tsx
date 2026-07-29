@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { getClientAuth } from '@/config/firebase';
+import { getClientAuth, getClientFunctions } from '@/config/firebase';
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
@@ -16,6 +16,7 @@ import {
 } from 'firebase/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { db } from '@/config/firebase';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import { Mail, Lock, LogIn, UserPlus, User, Calendar, Phone, CheckCircle, ArrowLeft } from 'lucide-react';
@@ -72,6 +73,30 @@ function getRedirectTarget(lang: string): string {
     return fallback;
   } catch {
     return fallback; // no window (SSR) / malformed URL
+  }
+}
+
+/**
+ * On every completed signup, automatically put the new account on the lab's
+ * results-access queue (the SAME `resultAccessRequests` doc the "Demander l'accès"
+ * button creates). Dr Aziz uses that queue as an onboarding/outreach list: the
+ * front desk calls each new registrant to offer and explain the online-results
+ * service — so the patient never has to find or press the button themselves.
+ *
+ * Best-effort ONLY: it must never block or break signup. The callable is
+ * idempotent (de-dupes per uid, returns early if the account is already linked),
+ * so calling it once per signup is safe and coexists with the manual button.
+ * A 2.5 s cap keeps a slow call from delaying the post-signup redirect; the
+ * request still completes in the background (soft client-side navigation).
+ */
+async function autoRequestResultsAccess(): Promise<void> {
+  try {
+    const functions = await getClientFunctions();
+    if (!functions) return;
+    const call = httpsCallable(functions, 'requestResultsAccess')();
+    await Promise.race([call, new Promise<void>((resolve) => setTimeout(resolve, 2500))]);
+  } catch {
+    // Non-blocking — the patient can still request access later from /resultats.
   }
 }
 
@@ -248,6 +273,8 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
         await persistProfile(cred.user.uid, cred.user.email);
         await refreshProfile();
         isSigningUp.current = false;
+        // New account → queue it for staff onboarding (Dr Aziz). Best-effort.
+        await autoRequestResultsAccess();
         router.push(getRedirectTarget(lang));
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -273,6 +300,8 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       setError(null);
       await persistProfile(user.uid, user.email);
       await refreshProfile();
+      // New account (Google, profile just completed) → queue for staff onboarding.
+      await autoRequestResultsAccess();
       router.push(getRedirectTarget(lang));
     } catch (err: unknown) {
       console.error(err);

@@ -24,7 +24,7 @@ Shown to all unauthenticated visitors. Switches between login mode and signup mo
 5. Telephone (`phone`)
 6. **Consent checkbox (CNDP / loi 09-08)** — `consentAccepted`, links to `/[lang]/confidentialite` (opens in a new tab). Signup is blocked (inline `consent_error`) until it is checked. The same checkbox is also shown in the Step 2 profile-completion form for Google users.
 
-On email signup submit: consent guard -> `createUserWithEmailAndPassword` -> `persistProfile` (`setDoc` merge) -> `refreshProfile` -> `router.push(getRedirectTarget(lang))` (post-auth target; see **Redirect Logic**).
+On email signup submit: consent guard -> `createUserWithEmailAndPassword` -> `persistProfile` (`setDoc` merge) -> `refreshProfile` -> **`autoRequestResultsAccess()`** (best-effort; see **Auto results-access request**) -> `router.push(getRedirectTarget(lang))` (post-auth target; see **Redirect Logic**).
 
 On email login submit: `signInWithEmailAndPassword`. The auth context loads the Firestore profile; completed profiles are redirected to the post-auth target (`getRedirectTarget`, default `/${lang}/profile`), incomplete profiles stay on `/login` and show step 2.
 
@@ -53,7 +53,7 @@ Pre-fill:
 - If the Google user has a `displayName`, it is pre-filled into `fullName`.
 - The pre-fill never overwrites user input because it only runs when `fullName` is empty.
 
-On submit: `setDoc` to `users/{uid}` -> `refreshProfile` -> `router.push(getRedirectTarget(lang))` (post-auth target; see **Redirect Logic**).
+On submit: `setDoc` to `users/{uid}` -> `refreshProfile` -> **`autoRequestResultsAccess()`** (best-effort; see **Auto results-access request**) -> `router.push(getRedirectTarget(lang))` (post-auth target; see **Redirect Logic**).
 
 ## State Management
 
@@ -102,6 +102,18 @@ Effects:
 - Pre-fills `fullName` from `user.displayName` when entering step 2.
 - Resolves Google redirect results through `getRedirectResult(auth)` for the redirect fallback flow.
 
+## Auto results-access request (staff onboarding)
+
+On **every completed signup** — email signup (`handleEmailAuth`, `isSignUp`) AND Google profile completion (`handleProfileSubmit`) — the page calls **`autoRequestResultsAccess()`** right after `refreshProfile()`, before the redirect. It invokes the shared `requestResultsAccess` callable once, creating `resultAccessRequests/{uid}` = `pending` — the exact same document the "Demander l'accès à mes résultats" button on `/resultats` creates.
+
+**Why (Dr Aziz):** the pending-requests queue doubles as the front desk's **onboarding / outreach list**. Every new registrant lands there automatically so a staff member can phone them and offer/explain the online-results service — the patient never has to find or press the button. This is deliberately fired for ALL new accounts, not only results-seekers.
+
+**Guarantees / safety:**
+- **Best-effort:** wrapped in try/catch + a 2.5 s `Promise.race` cap, so it never blocks or fails signup; a slow call still finishes in the background (soft client-side navigation keeps the request alive).
+- **Idempotent:** the callable de-dupes per uid and returns `already_granted` when `requester_id` is already set — safe to call once per signup, and harmless next to the manual button (a later click just sees the existing pending request; `/resultats` then shows "Demande en attente").
+- **Creation paths only:** NOT fired on plain login of an existing user — only the two signup exits. A team member who signs up generates one stray pending request; the dashboard already scopes request stats to non-team accounts, and staff can reject it.
+- Requires a completed profile (`fullName` + `phone`), which both signup forms enforce, so the callable's `failed-precondition` guard never trips on this path.
+
 ## Firebase Auth Methods
 - **Email login:** `signInWithEmailAndPassword`
 - **Email signup:** `createUserWithEmailAndPassword` + immediate `setDoc` to `users/{uid}`
@@ -143,6 +155,7 @@ Auth errors use `public/locales/[lang]/common.json` keys:
 - **Consent is mandatory at registration:** `consentAccepted` gates both email signup and the Google profile-completion step. Do not remove the checkbox or its guards (CNDP / loi 09-08 requirement).
 - **No redirect to /profile for completion:** All profile data is collected on the login page itself. Do not add a redirect-to-profile-for-completion pattern.
 - **Post-auth redirect goes through `getRedirectTarget(lang)`:** do NOT hardcode `router.push(/${lang}/profile)` at the login / email-signup / profile-completion exits — all three must call the helper so a `?redirect=<internal path>` return-URL is honored (e.g. `/resultats` → login → back to `/resultats`). Keep the open-redirect guard (same-origin relative paths only, reject `//` and `/\`).
+- **Auto results-access request on signup:** both signup exits call `autoRequestResultsAccess()` before the redirect — it fires the shared `requestResultsAccess` callable so every new account auto-lands on the staff onboarding queue (Dr Aziz — see **Auto results-access request**). Keep it best-effort (never block signup) and do NOT also fire it on plain login. It reuses the existing callable, so no `functions` deploy is needed to change this behavior.
 - **isSigningUp ref:** This ref is critical. Without it, the `useEffect` that sets `step = 'profile'` would fire between `createUserWithEmailAndPassword` and `setDoc`, causing the profile form to flash before saving completes.
 - **Google pre-fill:** `user.displayName` is only available for Google users. The pre-fill effect only runs when `step === 'profile'` and `fullName` is empty.
 - **Returning user without profile:** If a user somehow has auth but no Firestore doc, the profile step appears after login; same inline flow, no redirect needed.
