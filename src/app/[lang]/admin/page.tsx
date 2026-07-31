@@ -23,7 +23,7 @@ import AnalysesDetails from '@/components/features/results/AnalysesDetails';
 import TabsNavigation, { type TabItem } from '@/components/features/catalog/TabsNavigation';
 import AdminDashboard, { type DashboardStats } from '@/components/features/admin/AdminDashboard';
 import RelancesTab, { type DormantAccount } from '@/components/features/admin/RelancesTab';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle } from 'lucide-react';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
@@ -222,6 +222,20 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
           day: 'numeric',
           month: 'short',
           year: 'numeric',
+        });
+  };
+  /** Epoch ms → localized date AND time, e.g. "31 juil. 2026, 14:05" (access-request timestamps). */
+  const fmtWhenTime = (ms?: number | null) => {
+    if (!ms) return '—';
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime())
+      ? '—'
+      : d.toLocaleString(isArabic ? 'ar-MA' : 'fr-FR', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
         });
   };
   /** Whole days since an epoch ms (used for "inactif depuis N j"). */
@@ -646,6 +660,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         <p className="font-semibold text-[var(--text-primary)] truncate">{req.fullName || '—'}</p>
                         <p className="text-sm text-[var(--text-secondary)] truncate">{req.email}</p>
                         {req.phone && <p className="text-sm text-[var(--text-secondary)]">{req.phone}</p>}
+                        {req.createdAt != null && (
+                          <p className="text-xs text-[var(--text-tertiary)] mt-1 flex items-center gap-1">
+                            <Clock size={13} className="flex-shrink-0" />
+                            <span>{t('admin.req_created_at', 'Demandé le')} {fmtWhenTime(req.createdAt)}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">

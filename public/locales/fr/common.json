@@ -331,6 +331,7 @@
     "req_reject": "Refuser",
     "req_fulfilled": "Accès activé pour {{name}}.",
     "req_rejected": "Demande de {{name}} refusée.",
+    "req_created_at": "Demandé le",
     "test_title": "Tester un identifiant de résultats",
     "test_subtitle": "Vérifiez qu'un identifiant renvoie bien des résultats avant d'inviter le patient à se connecter.",
     "test_run": "Tester",
