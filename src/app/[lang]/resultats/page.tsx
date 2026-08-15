@@ -25,6 +25,7 @@ import AnalysesDetails from '@/components/features/results/AnalysesDetails';
 import CheckupReminder from '@/components/features/results/CheckupReminder';
 import ResultsIndicators from '@/components/features/results/ResultsIndicators';
 import ShareAccessCard from '@/components/features/results/ShareAccessCard';
+import OutageOptIn, { useOutageStatus } from '@/components/features/results/OutageOptIn';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import VerdictPanel from '@/components/ui/VerdictPanel';
 import { LAB_CONTACT } from '@/constants/contact';
@@ -137,6 +138,11 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   // List loads first (fast); each PDF is fetched on demand (newest one auto-loads).
   const { results, status, errorCode, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh } =
     useResults();
+
+  // On a real error (not the rate-limit case), check the monitor's health doc:
+  // if it confirms an outage we enrich the message ("le labo est déjà alerté")
+  // and offer the "notify me when it's back" opt-in. Never breaks the page.
+  const outage = useOutageStatus(status === 'error' && errorCode !== 'resource-exhausted');
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   // Which "ready-made message" was just copied ('unknown' or a dossier id) — drives
@@ -778,8 +784,13 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           </div>
         )}
 
-        {/* Error — 'resource-exhausted' (too many calls in a row) is a wait-a-minute
-            situation, not an outage; saying so stops the patient hammering Actualiser. */}
+        {/* Error — three shades:
+            · 'resource-exhausted' (too many calls in a row) → wait-a-minute, not an outage;
+            · CONFIRMED outage (the monitor flipped systemStatus/cyberlab.up=false) → say the
+              lab is already alerted + offer the "notify me when it's back" opt-in;
+            · anything else → the plain generic error.
+            The opt-in only shows on a confirmed outage, because only then is a
+            down→up recovery coming to fulfill the email promise. */}
         {status === 'error' && (
           <VerdictPanel
             tone={errorCode === 'resource-exhausted' ? 'warning' : 'error'}
@@ -794,6 +805,17 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                     'resultats.rate_limited_body',
                     "La liaison avec le laboratoire limite le nombre de demandes rapprochées. Vos résultats ne sont pas perdus."
                   )
+                : outage.down
+                ? t('resultats.outage_confirmed_body', {
+                    time: outage.downSince
+                      ? new Intl.DateTimeFormat(lang === 'ar' ? 'ar-MA' : 'fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }).format(outage.downSince)
+                      : '',
+                    defaultValue:
+                      'Panne confirmée du serveur de résultats du laboratoire (détectée à {{time}}). Notre équipe est déjà alertée automatiquement et intervient. Vos résultats ne sont pas perdus.',
+                  })
                 : t(
                     'resultats.error_generic',
                     'Impossible de récupérer vos résultats pour le moment. Veuillez réessayer plus tard.'
@@ -802,16 +824,24 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             todo={
               errorCode === 'resource-exhausted'
                 ? t('resultats.rate_limited_todo', 'Patientez une minute, puis appuyez sur « Réessayer ».')
+                : outage.down
+                ? t(
+                    'resultats.outage_confirmed_todo',
+                    'Inutile de réessayer sans arrêt : laissez-nous vous prévenir par email dès le rétablissement.'
+                  )
                 : t(
                     'resultats.error_todo',
                     "Réessayez dans quelques minutes. Si le message revient, contactez le laboratoire — cela ne vient pas de votre dossier."
                   )
             }
             actions={
-              <button onClick={refresh} className="button-bordeaux justify-center flex items-center gap-2">
-                <RotateCw size={18} />
-                {t('resultats.retry', 'Réessayer')}
-              </button>
+              <>
+                <button onClick={refresh} className="button-bordeaux justify-center flex items-center gap-2">
+                  <RotateCw size={18} />
+                  {t('resultats.retry', 'Réessayer')}
+                </button>
+                {errorCode !== 'resource-exhausted' && outage.down && <OutageOptIn lang={lang} />}
+              </>
             }
           />
         )}

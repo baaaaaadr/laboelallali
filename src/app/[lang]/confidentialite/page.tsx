@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail, Activity } from 'lucide-react';
+import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail, Activity, BellRing } from 'lucide-react';
 
 export default function ConfidentialitePage() {
   const { t } = useTranslation('common');
@@ -30,6 +30,9 @@ export default function ConfidentialitePage() {
   const afterRights = [
     { icon: Lock, title: 'confidentialite.security_title', text: 'confidentialite.security_text' },
     { icon: Clock, title: 'confidentialite.retention_title', text: 'confidentialite.retention_text' },
+    // Opt-in outage waitlist: a temporarily-kept email, deleted right after the
+    // "server is back" message. See src/components/features/results/OutageOptIn.tsx.
+    { icon: BellRing, title: 'confidentialite.outage_waitlist_title', text: 'confidentialite.outage_waitlist_text' },
     { icon: Mail, title: 'confidentialite.contact_title', text: 'confidentialite.contact_text' },
   ];
 

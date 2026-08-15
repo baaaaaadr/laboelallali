@@ -10,7 +10,8 @@ Public privacy policy page (Moroccan loi 09-08 / CNDP). Explains what personal d
 ## Context & Key Components
 - No state, no auth, no data fetching. Renders content entirely from i18n.
 - `useTranslation('common')`; all copy under `confidentialite.*` in `public/locales/{fr,ar}/common.json`.
-- Structure: intro, three cards (collect / results location / profile location), a rights list (5 items), then security / retention / contact cards. Icons from lucide-react (`ShieldCheck`, `FileText`, `Server`, `UserCog`, `Scale`, `Lock`, `Clock`, `Mail`).
+- Structure: intro, `sections` cards (collect / results location / profile location / **usage tracking**), a rights list (5 items), then `afterRights` cards (security / retention / **outage waitlist** / contact). Icons from lucide-react (`ShieldCheck`, `FileText`, `Server`, `UserCog`, `Scale`, `Lock`, `Clock`, `Mail`, `Activity`, `BellRing`).
+- **Outage waitlist card** (`confidentialite.outage_waitlist_*`, `BellRing` icon): declares the opt-in "notify me when the results server is back" processing — an email kept temporarily, only if the patient asks, deleted right after the recovery message. New PII processing → must stay declared here. See `src/components/features/results/OutageOptIn.tsx` + `docs/integrations/server-monitoring.md`.
 - Styling: `.card`, bordeaux heading, CSS vars.
 
 ## Notes for AI

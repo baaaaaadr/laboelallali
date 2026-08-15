@@ -19,6 +19,13 @@ export { fetchResults } from "./cyberlab/fetchResults";
 // Staff-only onboarding probe: test a requester_id against CyberLab (list-only).
 export { adminTestResults } from "./cyberlab/adminTestResults";
 
+// CyberLab server monitoring: 5-min health check with transition-only email
+// alerts (+ patient "notify me when back" opt-in). The scheduled check lives in
+// europe-west1 — Cloud Scheduler constraint, same as cleanupExpiredPrescriptions
+// below; the callable stays in europe-southwest1 like the others.
+export { checkCyberlabHealth } from "./monitoring/healthCheck";
+export { joinOutageWaitlist } from "./monitoring/waitlist";
+
 // Admin space callables (staff attach requester_id/type; owner/admin manage roles).
 export {
   adminLookupPatient,

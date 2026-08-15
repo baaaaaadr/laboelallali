@@ -32,6 +32,14 @@ import {
   normalizeRequesterId,
   RequesterType,
 } from "./client";
+import {
+  alertRecipients,
+  fmtCasablanca,
+  renderAlertEmail,
+  sendMail,
+  SMTP_PASS,
+  SMTP_USER,
+} from "../email/mailer";
 
 const CYBERLAB_API_KEY = defineSecret("CYBERLAB_API_KEY");
 const CYBERLAB_HMAC_SECRET = defineSecret("CYBERLAB_HMAC_SECRET");
@@ -101,6 +109,85 @@ async function touchLastResultsAt(
     ]);
   } catch {
     /* best-effort only — never fail the results fetch over a usage stamp */
+  }
+}
+
+/** Don't email the staff about impacted patients more than once per window. */
+const IMPACT_ALERT_DEDUP_MS = 30 * 60 * 1000; // 30 min
+
+/**
+ * A REAL patient just hit the results-server outage. Best-effort (mirrors
+ * `touchLastResultsAt`: whole body try/catch, never breaks the error mapping):
+ *  - bump `systemStatus/cyberlab.patientsImpacted` (recovery email + `outages`
+ *    history report it);
+ *  - at most once per 30 min, email the lab staff "un patient est bloqué" —
+ *    an early warning that can beat the 5-min monitor, and proof the outage
+ *    hurts real users. The email carries NO identity — "un patient" only.
+ * Only upstream-outage kinds count (network / 5xx incl. Cloudflare 522-523);
+ * 404/429/401 are not outages from the patient's side.
+ */
+async function recordPatientImpact(err: CyberlabError): Promise<void> {
+  try {
+    const isOutage =
+      err.kind === "network" ||
+      (err.kind === "server" && (err.status === undefined || err.status >= 500));
+    if (!isOutage) return;
+
+    const db = admin.firestore();
+    const ref = db.doc("systemStatus/cyberlab");
+    const now = admin.firestore.Timestamp.now();
+
+    // Transaction so two simultaneous patient failures can't both claim the
+    // 30-min alert slot.
+    const shouldAlert = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const last = snap.data()?.lastPatientAlertAt as
+        | admin.firestore.Timestamp
+        | undefined;
+      const lastMs = last && typeof last.toMillis === "function" ? last.toMillis() : 0;
+      const claim = now.toMillis() - lastMs >= IMPACT_ALERT_DEDUP_MS;
+      tx.set(
+        ref,
+        {
+          patientsImpacted: admin.firestore.FieldValue.increment(1),
+          lastPatientImpactAt: now,
+          ...(claim ? { lastPatientAlertAt: now } : {}),
+        },
+        { merge: true }
+      );
+      return claim;
+    });
+
+    if (shouldAlert) {
+      const html = renderAlertEmail({
+        title: "Un patient est bloqué par la panne des résultats",
+        lead:
+          "Un patient vient d'essayer de consulter ses résultats dans l'application, " +
+          "mais le serveur de résultats du laboratoire n'a pas répondu.",
+        rows: [
+          ["Heure", `${fmtCasablanca(now.toMillis())} (heure du Maroc)`],
+          [
+            "Détail technique",
+            `${err.kind}${err.status ? ` (code ${err.status})` : ""}`,
+          ],
+        ],
+        todo:
+          "La supervision automatique (test toutes les 5 minutes) confirmera la panne et " +
+          "vous préviendra du rétablissement. Cette alerte est limitée à une par 30 minutes.",
+        footer: "Aucune information sur l'identité du patient n'est transmise.",
+      });
+      // Cap the extra latency this adds to an already-failing request.
+      await Promise.race([
+        sendMail({
+          to: alertRecipients(),
+          subject: "[Labo El Allali] Un patient est bloqué par la panne des résultats",
+          html,
+        }),
+        new Promise((resolve) => setTimeout(resolve, 5000)),
+      ]);
+    }
+  } catch {
+    /* best-effort only — never fail the results fetch over an alert */
   }
 }
 
@@ -198,7 +285,9 @@ function parseOptions(data: unknown): FetchOptions {
 export const fetchResults = onCall(
   {
     region: "europe-southwest1",
-    secrets: [CYBERLAB_API_KEY, CYBERLAB_HMAC_SECRET],
+    // SMTP_* power the best-effort "un patient est bloqué" alert; if they hold
+    // placeholders the mailer degrades to log-only and results are unaffected.
+    secrets: [CYBERLAB_API_KEY, CYBERLAB_HMAC_SECRET, SMTP_USER, SMTP_PASS],
   },
   async (request: CallableRequest): Promise<CyberlabResponse> => {
     // Medical data must never be cached by any intermediary or the browser.
@@ -236,6 +325,8 @@ export const fetchResults = onCall(
           kind: err.kind,
           status: err.status ?? null,
         });
+        // Outage telemetry + rate-limited staff alert (best-effort, never throws).
+        await recordPatientImpact(err);
         switch (err.kind) {
           case "not_found":
             throw new HttpsError("not-found", "Aucun résultat disponible.");
