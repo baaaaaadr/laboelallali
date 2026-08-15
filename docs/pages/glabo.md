@@ -30,7 +30,7 @@ This page hosts the booking form for **at-home blood tests and collections (Pré
 2. Triggers sequential progress overlay `SubmitProgressModal` tracking state changes (`uploading_image` -> `saving_database` -> `sending_email` -> `success`).
 3. Uploads files to Firebase Storage in directory `ordonnances/` and maps resulting download URLs.
 4. Adds appointment record of type `"home_service_appointment"` with status `"new_home_service_request"` into Firestore collection `appointmentRequests`.
-5. Sends notification email to the lab admins via `/api/send-appointment` and displays completion state before resetting all form inputs.
+5. Sends notification email to the lab admins via `/api/send-appointment` and displays completion state before resetting all form inputs. That route sends through the **centralized `sendEmail` Cloud Function** (creds in Secret Manager; direct-SMTP fallback; HTML-escaped) — see `docs/integrations/server-monitoring.md`. Page code unchanged.
 
 #### B. Direct WhatsApp Redirection (`handleWhatsapp`)
 1. Validates details.

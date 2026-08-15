@@ -149,6 +149,10 @@ export async function sendMail(opts: {
   to: string[];
   subject: string;
   html: string;
+  cc?: string[];
+  replyTo?: string;
+  /** Display name in the From header (default: monitoring). */
+  fromName?: string;
 }): Promise<void> {
   const user = SMTP_USER.value();
   const pass = SMTP_PASS.value();
@@ -169,14 +173,21 @@ export async function sendMail(opts: {
   });
 
   await transporter.sendMail({
-    from: `"Supervision Labo El Allali" <${user}>`,
+    from: `"${opts.fromName || "Supervision Labo El Allali"}" <${user}>`,
     to: opts.to.join(", "),
+    cc: opts.cc && opts.cc.length ? opts.cc.join(", ") : undefined,
+    replyTo: opts.replyTo || undefined,
     subject: opts.subject,
     html: opts.html,
   });
 
   logger.info("mailer: sent", {
     subject: opts.subject,
-    recipients: opts.to.length,
+    recipients: opts.to.length + (opts.cc ? opts.cc.length : 0),
   });
+}
+
+/** The Gmail account address (also the default primary recipient / From). */
+export function smtpUserValue(): string {
+  return SMTP_USER.value();
 }

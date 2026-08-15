@@ -26,6 +26,10 @@ export { adminTestResults } from "./cyberlab/adminTestResults";
 export { checkCyberlabHealth } from "./monitoring/healthCheck";
 export { joinOutageWaitlist } from "./monitoring/waitlist";
 
+// The single transactional-email endpoint (appointment/glabo route calls it;
+// monitoring uses the same underlying mailer in-process). Creds in Secret Manager.
+export { sendEmail } from "./email/sendEmailHttp";
+
 // Admin space callables (staff attach requester_id/type; owner/admin manage roles).
 export {
   adminLookupPatient,

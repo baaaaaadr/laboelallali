@@ -25,6 +25,29 @@ La logique de décision est isolée, **pure et testable**, dans
 `functions/src/monitoring/stateMachine.ts` (aucun Firebase / réseau / horloge),
 exercée par `functions/scripts/test-health-check.js`.
 
+## Envoi d'email centralisé
+
+L'envoi d'email de toute l'app passe par **un seul endroit** : le mailer partagé
+`functions/src/email/mailer.ts` (`sendMail`, identifiants depuis Secret Manager
+`SMTP_USER`/`SMTP_PASS`). Deux façons de l'appeler :
+- **En interne** (même codebase) : la supervision (`healthCheck.ts`) et le hook
+  impact-patient (`fetchResults.ts`) appellent `sendMail` directement.
+- **Depuis le site Next** : la route `/api/send-appointment` (RDV + glabo) appelle
+  la fonction HTTPS **`sendEmail`** (`functions/src/email/sendEmailHttp.ts`,
+  europe-west1), protégée par le secret `INTERNAL_EMAIL_TOKEN` (en-tête
+  `X-Internal-Token`), qui appelle à son tour `sendMail`. La route garde un
+  **repli SMTP direct** si l'appel échoue, donc une notification de réservation
+  n'est jamais perdue.
+
+Config côté site (`.env.local`, non commité) : `SEND_EMAIL_FN_URL`
+(`https://europe-west1-labo-el-allali-pwa.cloudfunctions.net/sendEmail`) +
+`INTERNAL_EMAIL_TOKEN`. Sans ces variables, la route bascule sur le repli SMTP
+(`SMTP_USER`/`SMTP_PASS`). Le mot de passe Gmail est le même partout, rangé dans
+Secret Manager (source de vérité). **Historique/piège :** avant cette refonte, le
+mot de passe n'existait que dans un `.env.local` embarqué dans le build déployé
+(invisible dans Secret Manager / les variables Cloud Run) — d'où sa difficulté à
+retrouver ; il est maintenant dans Secret Manager.
+
 ## Région (piège important)
 
 La fonction planifiée tourne en **`europe-west1`**, PAS en `europe-southwest1`

@@ -27,7 +27,7 @@ This page manages **In-Laboratory Appointment Booking (Rendez-vous Laboratoire)*
 1. Validates fields, asserts correct phone numbers, and checks background pre-uploads.
 2. Displays standard sequential status tracker `SubmitProgressModal` (`uploading_image` -> `saving_database` -> `sending_email` -> `success`).
 3. Saves record of type `"lab_appointment"` and status `"new_appointment_request"` in collection `appointmentRequests`.
-4. Triggers admin email notifications via `/api/send-appointment` and resets all fields.
+4. Triggers admin email notifications via `/api/send-appointment` and resets all fields. That route now sends through the **centralized `sendEmail` Cloud Function** (creds in Secret Manager), with a direct-SMTP fallback and HTML escaping — see `docs/integrations/server-monitoring.md`. The page code is unchanged (still POSTs the same payload).
 
 #### B. WhatsApp Redirection (`handleWhatsapp`)
 1. Checks validation.
