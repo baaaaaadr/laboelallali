@@ -1,7 +1,7 @@
 // next-sitemap.config.js
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://laboelallali.vercel.app',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.laboelallali.com',
   generateRobotsTxt: true,
   exclude: ['/server-sitemap.xml', '/admin/*'],
   robotsTxtOptions: {
@@ -12,7 +12,7 @@ module.exports = {
       },
     ],
     additionalSitemaps: [
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'https://laboelallali.vercel.app'}/sitemap.xml`,
+      `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.laboelallali.com'}/sitemap.xml`,
     ],
   },
   // Handle i18n routes

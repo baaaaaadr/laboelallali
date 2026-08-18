@@ -75,8 +75,8 @@
   "find_us_text": "Notre laboratoire est situé au cœur d'Agadir, facilement accessible en voiture ou en transport en commun. Un parking est disponible à proximité pour votre commodité.",
   "emergency_contact": "Pour toute urgence en dehors des heures d'ouverture, veuillez composer le numéro d'urgence indiqué ci-dessous.",
   "working_hours_label": "Horaires :",
-  "monday_to_saturday": "Lundi au Samedi: 7h30 à 18h30",
-  "sunday": "Dimanche: 08h00 à 18h00",
+  "monday_to_saturday": "Lundi au Vendredi: 7h30 à 18h30 · Samedi: 7h30 à 13h00",
+  "sunday": "Dimanche: Fermé",
   "send": "Envoyer",
   "view_map": "Voir sur la carte",
 
