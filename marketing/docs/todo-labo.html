@@ -1,0 +1,165 @@
+<title>Actions Labo El Allali</title>
+<style>
+  :root {
+    --paper: #FFFFFF;
+    --surface: #FAF3F5;
+    --ink: #2B171D;
+    --muted: #6E5A60;
+    --line: #E9D8DD;
+    --brand: #800020;
+    --brand-deep: #600018;
+    --accent: #FF4081;
+    --chip-now: #800020;
+    --chip-soon: #A84A63;
+    --chip-always: #6E5A60;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1F1014;
+      --surface: #2A161C;
+      --ink: #F4E9EC;
+      --muted: #C9ADB6;
+      --line: #4A2F37;
+      --brand: #FF79A8;
+      --brand-deep: #FF9DBE;
+      --accent: #FF79A8;
+      --chip-now: #FF79A8;
+      --chip-soon: #D98CA4;
+      --chip-always: #A88893;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1F0F14;
+    --surface: #2A161C;
+    --ink: #F4E9EC;
+    --muted: #C9ADB6;
+    --line: #4A2F37;
+    --brand: #FF79A8;
+    --brand-deep: #FF9DBE;
+    --accent: #FF79A8;
+    --chip-now: #FF79A8;
+    --chip-soon: #D98CA4;
+    --chip-always: #A88893;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", "Public Sans", Inter, system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    margin: 0;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+  .sheet { max-width: 720px; margin: 0 auto; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0 0 0.4rem;
+  }
+  h1 {
+    color: var(--brand);
+    font-size: 1.7rem;
+    line-height: 1.2;
+    margin: 0 0 0.35rem;
+    text-wrap: balance;
+  }
+  .lede { color: var(--muted); margin: 0 0 2rem; font-size: 0.95rem; }
+  .group { margin: 0 0 1.6rem; }
+  .group-title {
+    display: flex; align-items: baseline; gap: 0.6rem;
+    border-bottom: 2px solid var(--brand);
+    padding-bottom: 0.3rem; margin-bottom: 0.85rem;
+  }
+  .group-title h2 { font-size: 1.02rem; color: var(--brand); margin: 0; letter-spacing: 0.02em; }
+  .group-title span { font-size: 0.78rem; color: var(--muted); }
+  .items { display: flex; flex-direction: column; gap: 0.65rem; margin: 0; padding: 0; list-style: none; }
+  .item {
+    display: grid; grid-template-columns: 2rem 1fr; gap: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+  }
+  .num {
+    font-weight: 700; color: var(--brand); font-size: 1.05rem;
+    font-variant-numeric: tabular-nums; text-align: center; padding-top: 0.05rem;
+  }
+  .item strong { display: block; font-size: 0.95rem; }
+  .why { color: var(--muted); font-size: 0.86rem; margin-top: 0.15rem; }
+  .why b { color: var(--ink); font-weight: 600; }
+  .foot {
+    margin-top: 2.2rem; padding-top: 0.9rem;
+    border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 0.82rem;
+  }
+  @media print {
+    :root { --paper:#fff; --surface:#fff; --ink:#111; --muted:#444; --line:#bbb; --brand:#800020; --accent:#800020; }
+    body { padding: 0; font-size: 11px; }
+    .item { break-inside: avoid; padding: 0.45rem 0.7rem; }
+    .group { margin-bottom: 1rem; }
+  }
+</style>
+
+<div class="sheet">
+  <p class="eyebrow">Laboratoire El Allali · Agadir</p>
+  <h1>Les actions qui dépendent du labo</h1>
+  <p class="lede">Neuf actions que seul le laboratoire peut faire. Tout le reste (visuels, textes, stratégie, calendrier), Hassan s'en charge. Chaque action dit <em>pourquoi</em> elle compte.</p>
+
+  <div class="group">
+    <div class="group-title"><h2>À faire tout de suite</h2><span>cette semaine</span></div>
+    <ol class="items">
+      <li class="item"><span class="num">1</span><div>
+        <strong>Récupérer l'accès administrateur de la page Facebook du labo</strong>
+        <p class="why">La page <b>facebook.com/laboallaliagadir</b> existe déjà avec <b>≈ 3 700 abonnés</b> — un capital précieux. D'après le questionnaire : c'est Hassan (du labo) qui s'en occupait, et les accès sont peut-être dans <b>Dashlane</b> — lui demander une bonne fois pour toutes et les sauvegarder. Si l'accès est réellement perdu, la procédure de récupération Meta peut prendre des semaines : à lancer maintenant.</p>
+      </div></li>
+      <li class="item"><span class="num">2</span><div>
+        <strong>Corriger les informations de la page Facebook</strong>
+        <p class="why">Elle annonce encore <b>« ouvert 7j/7 »</b>. Un patient qui se déplace un dimanche et trouve porte close, c'est une confiance perdue et un mauvais avis. À corriger : horaires réels, adresse, téléphones, lien www.laboelallali.com, photo de couverture propre.</p>
+      </div></li>
+      <li class="item"><span class="num">3</span><div>
+        <strong>Lancer la refonte de la fiche Google (elle existe et tu la contrôles — confirmé)</strong>
+        <p class="why">La fiche est déjà excellente — <b>4,9★ sur 479 avis</b>, un capital rare (78 % des Marocains lisent les avis avant de se déplacer). Comme tu l'as souhaité au questionnaire : nouvelle galerie de photos propres, horaires exacts (+ horaires exceptionnels Aïd/Ramadan), catégorie et description à revoir — c'est l'objet de l'option C du devis.</p>
+      </div></li>
+    </ol>
+  </div>
+
+  <div class="group">
+    <div class="group-title"><h2>Dès que possible</h2><span>sous 2 à 3 semaines</span></div>
+    <ol class="items" start="4">
+      <li class="item"><span class="num">4</span><div>
+        <strong>Inventorier les comptes Instagram du labo (il y en a 2 ou 3)</strong>
+        <p class="why">Retrouver leurs identifiants, identifier celui à garder, noter les autres pour fermeture ou fusion, et vérifier s'ils sont liés à la page Facebook. Des comptes en doublon non maîtrisés brouillent l'image et peuvent bloquer la connexion Facebook-Instagram. (WhatsApp Business : déjà en place ✓ — il reste à soigner profil et message d'absence avec les textes fournis au lot 2.)</p>
+      </div></li>
+      <li class="item"><span class="num">5</span><div>
+        <strong>Organiser la nouvelle galerie photos : façade de jour, accueil, matériel</strong>
+        <p class="why">Tu l'as toi-même proposé au questionnaire — une galerie propre alimentera la fiche Google, la page Facebook et les visuels. Les vraies photos inspirent bien plus confiance que les images de banque, et Google les met en avant. Pour les photos avec l'équipe : chacun signe un accord simple (modèle fourni par Hassan).</p>
+      </div></li>
+      <li class="item"><span class="num">6</span><div>
+        <strong>Afficher « Conventionné CMIM » (confirmé au questionnaire)</strong>
+        <p class="why">Le prix est le premier frein des patients : une convention affichée rassure plus qu'une promotion — et contrairement aux promotions, c'est parfaitement légal. À mettre sur la fiche Google, la page Facebook et à l'accueil. <b>Uniquement CMIM</b> : ne jamais citer CNOPS/CNSS tant qu'elles ne sont pas réellement pratiquées.</p>
+      </div></li>
+      <li class="item"><span class="num">7</span><div>
+        <strong>Décider (avec Hassan) de la déclaration à l'Ordre — tu as demandé à en discuter</strong>
+        <p class="why">Simple courrier d'information (modèle fourni). C'est ce que prévoit le code de déontologie pour les espaces numériques professionnels — et c'est la meilleure protection du labo si un confrère se plaint un jour. Rien ne sera envoyé sans ton accord.</p>
+      </div></li>
+      <li class="item"><span class="num">8</span><div>
+        <strong>Poser par écrit ta réflexion sur les médecins correspondants</strong>
+        <p class="why">Tu as indiqué au questionnaire qu'ils te semblent peu sensibles aux services du labo et que le sujet mérite « une présentation noir sur blanc » de ta part — c'est le bon réflexe : la communication vers les médecins est <b>le seul canal expressément autorisé par la loi</b> (art. 31, loi 12-01). Hassan adaptera le kit (option B) à ta vision. Toujours purement informatif : jamais de cadeau ni de commission.</p>
+      </div></li>
+    </ol>
+  </div>
+
+  <div class="group">
+    <div class="group-title"><h2>En continu</h2><span>une habitude à installer</span></div>
+    <ol class="items" start="9">
+      <li class="item"><span class="num">9</span><div>
+        <strong>Proposer à chaque patient de laisser un avis Google</strong>
+        <p class="why">Au comptoir, à la remise des résultats : « votre avis sur Google nous aide à nous améliorer » + QR code à scanner (fourni — option C du devis). <b>Sans sélection ni consigne de note</b> : on le propose à tout le monde, pas seulement aux satisfaits (Google sanctionne le tri). Avec déjà 479 avis à 4,9★, l'enjeu est la <b>fraîcheur</b> : les avis récents pèsent plus. Objectif : 5 à 10 nouveaux avis par mois — jamais de faux avis.</p>
+      </div></li>
+    </ol>
+  </div>
+
+  <p class="foot">Accompagne le questionnaire et le devis d'août 2026. Préparé par Hassan pour le Dr Aziz El Allali — Laboratoire El Allali, 61 Bis rue de Marrakech, Agadir.</p>
+</div>

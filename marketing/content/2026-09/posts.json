@@ -1,0 +1,194 @@
+{
+  "month": "2026-09",
+  "note": "Échantillon : 1 post par archétype de template, classés par date. Le lot complet (18 posts, conforme au devis) sera produit après le GO de Dr Aziz.",
+  "posts": [
+    {
+      "slug": "01-rentree-horaires",
+      "date": "2026-09-01",
+      "template": "service-info",
+      "risk": "vert",
+      "mode": "photo",
+      "accent": "bordeaux",
+      "background": "tubes-labo.jpg",
+      "fr": {
+        "eyebrow": "C'est la rentrée",
+        "title": "Le laboratoire vous accueille",
+        "lines": [
+          "Lundi – Vendredi : 7h30 – 18h30",
+          "Samedi : 7h30 – 13h00",
+          "Dimanche : fermé",
+          "61 Bis, rue de Marrakech, Agadir"
+        ],
+        "caption": "Bonne rentrée à toutes et à tous ! Le Laboratoire El Allali vous accueille du lundi au vendredi de 7h30 à 18h30 et le samedi de 7h30 à 13h00.\n📍 61 Bis, rue de Marrakech, Agadir\n📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92\n🌐 www.laboelallali.com",
+        "hashtags": ["#Agadir", "#Laboratoire", "#AnalysesMedicales", "#Sante"]
+      },
+      "ar": {
+        "eyebrow": "مع الدخول المدرسي",
+        "title": "المختبر في خدمتكم",
+        "lines": [
+          "الاثنين – الجمعة: 7:30 – 18:30",
+          "السبت: 7:30 – 13:00",
+          "الأحد: مغلق",
+          "61 مكرر، شارع مراكش، أكادير"
+        ],
+        "caption": "دخول مدرسي موفق للجميع! مختبر العلالي للتحاليل الطبية في خدمتكم من الاثنين إلى الجمعة من 7:30 إلى 18:30، والسبت من 7:30 إلى 13:00.\n📍 61 مكرر، شارع مراكش، أكادير\n📞 05 28 84 33 84 · واتساب 06 54 07 95 92\n🌐 www.laboelallali.com",
+        "hashtags": ["#أكادير", "#مختبر", "#تحاليل_طبية", "#صحة"]
+      }
+    },
+    {
+      "slug": "02-resultats-en-ligne",
+      "date": "2026-09-04",
+      "template": "service-app",
+      "risk": "vert",
+      "mode": "brand",
+      "accent": "bordeaux",
+      "screenshot": "../assets/screenshots/mobile-home-{lang}.png",
+      "fr": {
+        "eyebrow": "Nouveau service",
+        "title": "Vos résultats d'analyses, sur votre téléphone",
+        "lines": [
+          "Consultez et téléchargez vos résultats en ligne, en toute sécurité",
+          "Tous vos bilans classés par année, à portée de main",
+          "Activation à l'accueil du laboratoire"
+        ],
+        "caption": "Fini les déplacements pour récupérer une enveloppe : vos résultats d'analyses sont désormais consultables sur votre téléphone, en toute sécurité. Tous vos bilans y sont classés par année — plus besoin de chercher un ancien papier avant une consultation.\nDemandez l'activation à l'accueil du laboratoire, ou créez votre compte sur www.laboelallali.com\n📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92",
+        "hashtags": ["#Agadir", "#ResultatsEnLigne", "#AnalysesMedicales", "#Sante"]
+      },
+      "ar": {
+        "eyebrow": "خدمة جديدة",
+        "title": "نتائج تحاليلكم على هاتفكم",
+        "lines": [
+          "اطّلعوا على نتائجكم وحمّلوها عبر الإنترنت بكل أمان",
+          "جميع تحاليلكم مرتّبة حسب السنة، في متناول أيديكم",
+          "تفعيل الخدمة في مكتب الاستقبال بالمختبر"
+        ],
+        "caption": "لم تعودوا بحاجة للتنقل من أجل استلام النتائج: يمكنكم الآن الاطلاع على نتائج تحاليلكم مباشرة على هاتفكم وبكل أمان. جميع تحاليلكم مرتّبة حسب السنة — دون الحاجة للبحث عن ورقة قديمة قبل زيارة الطبيب.\nاطلبوا تفعيل الخدمة من مكتب الاستقبال بالمختبر، أو أنشئوا حسابكم عبر www.laboelallali.com\n📞 05 28 84 33 84 · واتساب 06 54 07 95 92",
+        "hashtags": ["#أكادير", "#نتائج_التحاليل", "#تحاليل_طبية", "#صحة"]
+      }
+    },
+    {
+      "slug": "03-jeune-prise-de-sang",
+      "date": "2026-09-08",
+      "template": "preparation-examen",
+      "risk": "vert",
+      "mode": "brand",
+      "accent": "pale",
+      "fr": {
+        "eyebrow": "Bien préparer son analyse",
+        "title": "Faut-il être à jeun pour votre prise de sang ?",
+        "lines": [
+          "Jeûne de 10 à 12 heures pour la glycémie et le bilan lipidique",
+          "L'eau est permise : buvez normalement",
+          "Prenez vos médicaments, sauf avis contraire de votre médecin",
+          "Un doute ? Appelez-nous avant de venir"
+        ],
+        "source": "Source : recommandations des sociétés savantes de biologie médicale — votre médecin reste la référence",
+        "caption": "À jeun ou pas ? Pour la glycémie et le bilan lipidique, un jeûne de 10 à 12 heures est nécessaire — mais l'eau est toujours permise. Continuez vos traitements sauf indication contraire de votre médecin.\nAnalyses réalisées sur prescription médicale.\nEn cas de doute, appelez-nous avant de venir : 05 28 84 33 84 · WhatsApp 06 54 07 95 92",
+        "hashtags": ["#Agadir", "#PriseDeSang", "#Conseils", "#Sante"]
+      },
+      "ar": {
+        "eyebrow": "استعدوا جيداً للتحليل",
+        "title": "هل يجب الصيام قبل سحب الدم؟",
+        "lines": [
+          "صيام من 10 إلى 12 ساعة لتحليل السكر والدهون",
+          "شرب الماء مسموح به دائماً",
+          "تناولوا أدويتكم، إلا إذا طلب طبيبكم خلاف ذلك",
+          "عندكم شك؟ اتصلوا بنا قبل الحضور"
+        ],
+        "source": "المصدر: توصيات الجمعيات العلمية للبيولوجيا الطبية — طبيبكم يبقى هو المرجع",
+        "caption": "صيام أم لا؟ بالنسبة لتحليل السكر والدهون، يلزم صيام من 10 إلى 12 ساعة — لكن شرب الماء مسموح دائماً. واصلوا تناول أدويتكم إلا إذا طلب طبيبكم خلاف ذلك.\nتُجرى هذه التحاليل بوصفة طبية.\nعندكم شك؟ اتصلوا بنا قبل الحضور: 05 28 84 33 84 · واتساب 06 54 07 95 92",
+        "hashtags": ["#أكادير", "#تحليل_الدم", "#نصائح", "#صحة"]
+      }
+    },
+    {
+      "slug": "04-nfs-le-saviez-vous",
+      "date": "2026-09-15",
+      "template": "le-saviez-vous",
+      "risk": "vert",
+      "mode": "brand",
+      "accent": "fuchsia",
+      "fr": {
+        "eyebrow": "Le saviez-vous ?",
+        "title": "Que mesure une NFS ?",
+        "lines": [
+          "La numération formule sanguine compte vos globules rouges, globules blancs et plaquettes",
+          "Elle aide votre médecin à dépister une anémie, une infection ou un trouble de la coagulation"
+        ],
+        "source": "Source : référentiels de biologie médicale (hémogramme) — analyse réalisée sur prescription médicale",
+        "caption": "Le saviez-vous ? La NFS (numération formule sanguine) est l'une des analyses les plus prescrites : elle compte vos globules rouges, globules blancs et plaquettes, et aide votre médecin à dépister une anémie, une infection ou un trouble de la coagulation.\nAnalyse réalisée sur prescription médicale.\n📞 05 28 84 33 84 · www.laboelallali.com",
+        "hashtags": ["#LeSaviezVous", "#Agadir", "#AnalysesMedicales", "#Sante"]
+      },
+      "ar": {
+        "eyebrow": "هل تعلمون؟",
+        "title": "ماذا يقيس تحليل تعداد الدم الكامل؟",
+        "lines": [
+          "يُحصي هذا التحليل كريات الدم الحمراء والبيضاء والصفائح الدموية",
+          "يساعد طبيبكم على كشف فقر الدم أو العدوى أو اضطرابات تخثر الدم"
+        ],
+        "source": "المصدر: المراجع العلمية للبيولوجيا الطبية (تعداد الدم) — يُجرى هذا التحليل بوصفة طبية",
+        "caption": "هل تعلمون؟ تحليل تعداد الدم الكامل (NFS) من أكثر التحاليل طلباً: يُحصي كريات الدم الحمراء والبيضاء والصفائح الدموية، ويساعد طبيبكم على كشف فقر الدم أو العدوى أو اضطرابات التخثر.\nيُجرى هذا التحليل بوصفة طبية.\n📞 05 28 84 33 84 · www.laboelallali.com",
+        "hashtags": ["#هل_تعلم", "#أكادير", "#تحاليل_طبية", "#صحة"]
+      }
+    },
+    {
+      "slug": "06-a-jeun-des-7h30",
+      "date": "2026-09-19",
+      "template": "annonce",
+      "risk": "vert",
+      "mode": "photo",
+      "accent": "bordeaux",
+      "background": "hero-banner.jpg",
+      "fr": {
+        "chip": "Bon à savoir",
+        "title": "À jeun ? Venez dès 7h30",
+        "lines": [
+          "Le laboratoire ouvre à 7h30, du lundi au samedi",
+          "Prélèvement tôt le matin — et vous repartez petit-déjeuner"
+        ],
+        "caption": "Pour les analyses qui demandent d'être à jeun, le plus simple est de venir tôt : le laboratoire ouvre dès 7h30, du lundi au samedi. Prélèvement rapide, et vous repartez petit-déjeuner.\nAnalyses réalisées sur prescription médicale.\n📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92 · www.laboelallali.com",
+        "hashtags": ["#Agadir", "#Conseils", "#PriseDeSang", "#Sante"]
+      },
+      "ar": {
+        "chip": "معلومة مفيدة",
+        "title": "صائمون للتحليل؟ تعالوا من 7:30 صباحاً",
+        "lines": [
+          "يفتح المختبر أبوابه في 7:30 صباحاً، من الاثنين إلى السبت",
+          "سحب الدم باكراً — ثم فطوركم مباشرة بعده"
+        ],
+        "caption": "بالنسبة للتحاليل التي تتطلب الصيام، الأفضل هو الحضور باكراً: يفتح المختبر أبوابه من 7:30 صباحاً، من الاثنين إلى السبت. سحب سريع، وتعودون لتناول فطوركم.\nتُجرى هذه التحاليل بوصفة طبية.\n📞 05 28 84 33 84 · واتساب 06 54 07 95 92 · www.laboelallali.com",
+        "hashtags": ["#أكادير", "#نصائح", "#تحليل_الدم", "#صحة"]
+      }
+    },
+    {
+      "slug": "05-journee-coeur",
+      "date": "2026-09-29",
+      "template": "journee-mondiale",
+      "risk": "vert",
+      "mode": "photo",
+      "accent": "bordeaux",
+      "background": "coeur-modele.jpg",
+      "fr": {
+        "chip": "29 septembre · Journée mondiale du cœur",
+        "title": "Prenez soin de votre cœur",
+        "lines": [
+          "Le bilan lipidique et la glycémie aident votre médecin à évaluer le risque cardiovasculaire",
+          "Parlez-en à votre médecin lors de votre prochaine consultation"
+        ],
+        "source": "Journée mondiale du cœur — World Heart Federation",
+        "caption": "Ce 29 septembre, c'est la Journée mondiale du cœur ❤️ Le bilan lipidique (cholestérol, triglycérides) et la glycémie font partie des examens qui aident votre médecin à évaluer votre risque cardiovasculaire. Parlez-en lors de votre prochaine consultation.\nExamens réalisés sur prescription médicale.\n📞 05 28 84 33 84 · www.laboelallali.com",
+        "hashtags": ["#JourneeMondialeDuCoeur", "#Agadir", "#Prevention", "#Sante"]
+      },
+      "ar": {
+        "chip": "29 شتنبر · اليوم العالمي للقلب",
+        "title": "اعتنوا بقلبكم",
+        "lines": [
+          "يساعد تحليل الدهون والسكر في الدم طبيبَكم على تقييم خطر أمراض القلب والشرايين",
+          "استشيروا طبيبكم في زيارتكم المقبلة"
+        ],
+        "source": "اليوم العالمي للقلب — الاتحاد العالمي للقلب",
+        "caption": "بمناسبة اليوم العالمي للقلب ❤️ يساعد تحليل الدهون (الكوليسترول والدهون الثلاثية) والسكر في الدم طبيبكم على تقييم خطر الإصابة بأمراض القلب والشرايين. استشيروا طبيبكم في زيارتكم المقبلة.\nتُجرى هذه التحاليل بوصفة طبية.\n📞 05 28 84 33 84 · www.laboelallali.com",
+        "hashtags": ["#اليوم_العالمي_للقلب", "#أكادير", "#وقاية", "#صحة"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="{{lang}}" dir="{{dir}}">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="base.css">
+</head>
+<body lang="{{lang}}" class="{{modeclass}}">
+  <div class="canvas">
+    <div class="bg">{{bgimg}}<div class="veil"></div><div class="deco"></div></div>
+    <main class="content">
+      <div class="split">
+        <div>
+          <p class="eyebrow">{{eyebrow}}</p>
+          <h1 class="title" style="margin-block: 0.25em 0.35em;">{{title}}</h1>
+          <ul class="lines">{{lineshtml}}</ul>
+        </div>
+        <div class="phone"><img src="{{screenshot}}" alt=""></div>
+      </div>
+    </main>
+    <footer class="brandbar">
+      <img src="../assets/logos/logo-footer.png" alt="">
+      <div class="who">
+        <span class="name">{{brandname}}</span>
+        <span class="contact">{{contact}}</span>
+      </div>
+    </footer>
+  </div>
+  <script src="_fit.js"></script>
+</body>
+</html>

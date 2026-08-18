@@ -1,0 +1,163 @@
+<title>Ajout Devis — Communication</title>
+<style>
+  :root {
+    --paper: #FFFFFF;
+    --surface: #FAF3F5;
+    --ink: #2B171D;
+    --muted: #6E5A60;
+    --line: #E9D8DD;
+    --brand: #800020;
+    --accent: #FF4081;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1F1014; --surface: #2A161C; --ink: #F4E9EC;
+      --muted: #C9ADB6; --line: #4A2F37; --brand: #FF79A8; --accent: #FF79A8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1F1014; --surface: #2A161C; --ink: #F4E9EC;
+    --muted: #C9ADB6; --line: #4A2F37; --brand: #FF79A8; --accent: #FF79A8;
+  }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: "Segoe UI", "Public Sans", Inter, system-ui, -apple-system, sans-serif;
+    line-height: 1.5; margin: 0; padding: 2.5rem 1.25rem 4rem;
+  }
+  .sheet { max-width: 780px; margin: 0 auto; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; font-weight: 600; color: var(--accent); margin: 0 0 0.4rem; }
+  h1 { color: var(--brand); font-size: 1.6rem; line-height: 1.15; margin: 0 0 0.3rem; text-wrap: balance; }
+  .sub { color: var(--muted); font-size: 0.92rem; margin: 0 0 1.5rem; }
+  .rattach {
+    background: var(--surface); border-inline-start: 4px solid var(--accent);
+    border-radius: 0 6px 6px 0; padding: 0.8rem 1rem; font-size: 0.9rem; margin: 0 0 1.6rem;
+  }
+  .rattach b { color: var(--brand); }
+  .rattach a { color: var(--brand); }
+  h2 { color: var(--brand); font-size: 1.05rem; margin: 1.8rem 0 0.6rem; border-bottom: 2px solid var(--brand); padding-bottom: 0.25rem; }
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th { text-align: start; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.7rem; color: var(--muted); border-bottom: 1px solid var(--line); padding: 0.4rem 0.5rem; }
+  td { border-bottom: 1px solid var(--line); padding: 0.55rem 0.5rem; vertical-align: top; }
+  td.n, th.n { text-align: end; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tr.total td { font-weight: 700; color: var(--brand); border-bottom: none; border-top: 2px solid var(--brand); font-size: 0.95rem; }
+  .lot b { display: block; }
+  .lot ul { margin: 0.3rem 0 0; padding-inline-start: 1.1rem; color: var(--muted); font-size: 0.82rem; }
+  .lot ul li { margin: 0.12rem 0; }
+  .statut { display: inline-block; background: var(--surface); border: 1px solid var(--line); color: var(--muted); border-radius: 99px; font-size: 0.68rem; padding: 0.05rem 0.55rem; margin-top: 0.3rem; }
+  .note { color: var(--muted); font-size: 0.82rem; }
+  .cadre { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.85rem; margin-top: 0.9rem; }
+  .cadre b { color: var(--brand); }
+  .cadre ul { margin: 0.3rem 0 0; padding-inline-start: 1.15rem; }
+  .cadre li { margin: 0.2rem 0; }
+  .rythme { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin: 0.9rem 0 0; }
+  .tri { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.7rem; font-size: 0.8rem; }
+  .tri b { display: block; color: var(--brand); font-size: 0.85rem; }
+  .tri span { color: var(--muted); }
+  @media (max-width: 620px) { .rythme { grid-template-columns: 1fr 1fr; } }
+  @media print {
+    :root { --paper:#fff; --surface:#fff; --ink:#111; --muted:#444; --line:#bbb; --brand:#800020; --accent:#800020; }
+    body { padding: 0; font-size: 11px; }
+    h2 { break-after: avoid; }
+    tr, .cadre, .rattach, .tri { break-inside: avoid; }
+  }
+</style>
+
+<div class="sheet">
+  <p class="eyebrow">Laboratoire El Allali · Août 2026</p>
+  <h1>Communication du laboratoire — lignes à ajouter au devis</h1>
+  <p class="sub">Amener plus de patients au laboratoire : stratégie, visuels bilingues et publications prêtes à poster.</p>
+
+  <p class="rattach">
+    <b>Comment ça s'articule :</b> ces lignes viennent <b>s'ajouter au devis du site et de l'application</b>, dans le même
+    tableau de suivi et au même rythme de facturation mensuel. Rien de nouveau à signer : il suffit de valider les lignes
+    souhaitées dans la colonne « Validation Dr Aziz » du tableau partagé —
+    <a href="https://docs.google.com/spreadsheets/d/12hXpiBNnbyW0vFPHf2VWsm2tASzWAhpS9qtoy63CQNY/edit">ouvrir le tableau</a>.
+    Montants en dirhams hors taxes, base 1 900 DH/jour comme pour le reste du projet.
+  </p>
+
+  <h2>Mise en route</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Prestation</th><th class="n">Jours</th><th class="n">Montant HT</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="lot"><b>Stratégie &amp; cadrage</b>
+          <ul>
+            <li>Étude de la réglementation marocaine sur la communication des laboratoires : ce qui est permis, ce qui ne l'est pas</li>
+            <li>Diagnostic complet : présence en ligne du laboratoire, marché, pratiques des autres laboratoires marocains</li>
+            <li>Dossier stratégie : 6 leviers priorisés, plan d'action, indicateurs de suivi</li>
+            <li>Liste des actions à mener côté laboratoire + questionnaire de cadrage</li>
+          </ul>
+          <span class="statut">Livré</span>
+        </td>
+        <td class="n">2,0</td><td class="n">3 800 DH</td>
+      </tr>
+      <tr>
+        <td class="lot"><b>Système de visuels &amp; pack de lancement</b>
+          <ul>
+            <li>6 modèles graphiques à la charte du laboratoire, en français et en arabe</li>
+            <li>Outil de génération réutilisable : c'est lui qui rend les packs suivants deux fois moins chers</li>
+            <li><b>18 publications</b> couvrant septembre et octobre 2026, soit <b>72 visuels</b> — chaque publication est livrée en 4 formats : carré français et arabe pour le fil d'actualité, story verticale française et arabe</li>
+            <li>Légendes rédigées dans les deux langues, hashtags, calendrier de publication daté</li>
+            <li>Textes WhatsApp prêts à l'emploi : message d'accueil, réponses types</li>
+            <li>Guide de publication en 1 page (comment poster, quoi répondre aux commentaires)</li>
+          </ul>
+        </td>
+        <td class="n">4,5</td><td class="n">8 550 DH</td>
+      </tr>
+      <tr class="total"><td>Total mise en route</td><td class="n">6,5</td><td class="n">12 350 DH HT</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Ensuite : un pack tous les 3 mois</h2>
+  <p class="note">Le laboratoire n'est jamais engagé : chaque pack est commandé quand il le souhaite. Le programme éditorial joint
+  liste <b>à l'avance les sujets de toutes les publications jusqu'en juillet 2027</b> — le laboratoire sait exactement ce qu'il achète avant de commander.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Prestation</th><th class="n">Jours</th><th class="n">Montant HT</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="lot"><b>Pack trimestriel de publications</b>
+          <ul>
+            <li><b>24 publications</b> pour 3 mois (2 par semaine), soit <b>96 visuels</b> : carré et story, en français et en arabe</li>
+            <li>Légendes bilingues, hashtags, calendrier daté du trimestre</li>
+            <li>Sujets calés sur les temps forts santé et sur la vie du laboratoire (Ramadan, fêtes, journées mondiales)</li>
+          </ul>
+        </td>
+        <td class="n">3,0</td><td class="n">5 700 DH / trimestre</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="rythme">
+    <div class="tri"><b>Sept – oct 2026</b><span>Pack de lancement, 18 publications</span></div>
+    <div class="tri"><b>Nov – janv 2027</b><span>Pack trimestriel, 24 publications</span></div>
+    <div class="tri"><b>Févr – avr 2027</b><span>Pack trimestriel — Ramadan et Aïd inclus</span></div>
+    <div class="tri"><b>Mai – juil 2027</b><span>Pack trimestriel</span></div>
+  </div>
+
+  <h2>Options</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Option</th><th class="n">Jours</th><th class="n">Montant HT</th></tr></thead>
+    <tbody>
+      <tr><td class="lot"><b>A — Affiches pour l'accueil</b><ul><li>2 affiches prêtes à imprimer (A4/A3), bilingues : « Vos résultats sur votre téléphone » avec le QR code de l'application, et « Votre avis nous aide » avec le QR code des avis Google. Mention « Conventionné CMIM ».</li></ul></td><td class="n">0,5</td><td class="n">950 DH</td></tr>
+      <tr><td class="lot"><b>B — Kit médecins correspondants</b><ul><li>Courrier de présentation + fiche des services + mini-carte à déposer au cabinet. Préparé après la note du Dr Aziz sur les médecins correspondants et adapté à sa vision. C'est le seul canal de communication expressément autorisé par la loi.</li></ul></td><td class="n">1,0</td><td class="n">1 900 DH</td></tr>
+      <tr><td class="lot"><b>C — Refonte de la fiche Google &amp; avis</b><ul><li>Refonte de la fiche existante (catégorie, description, horaires et horaires exceptionnels, intégration de la nouvelle galerie photos), process de collecte d'avis au comptoir avec QR code, nettoyage des annuaires en ligne obsolètes et des comptes Instagram en doublon, modèles de réponses aux avis respectant le secret médical.</li></ul></td><td class="n">1,0</td><td class="n">1 900 DH</td></tr>
+      <tr><td class="lot"><b>D — Annonce express, à la demande</b><ul><li>Une information à faire passer rapidement (fermeture exceptionnelle, changement d'horaires, nouvelle analyse disponible, recrutement) : 4 visuels — carré et story, français et arabe — plus les textes, livrés sous 48 heures ouvrées. Facturée à l'unité, uniquement quand le laboratoire en demande une.</li></ul></td><td class="n">0,5</td><td class="n">950 DH / annonce</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="cadre">
+    <b>Ce qui est compris, et ce qui reste au laboratoire</b>
+    <ul>
+      <li>Tous les contenus respectent la réglementation marocaine : pas de publicité payante, pas de prix ni de promotion, pas de témoignage de patient, pas de superlatif. Chaque publication est vérifiée avant livraison.</li>
+      <li>La publication sur les comptes du laboratoire (Facebook, Instagram, Google) est faite par le laboratoire ; un guide simple est fourni.</li>
+      <li>Deux séries de corrections comprises par pack. Images : libres de droits ou fournies par le laboratoire.</li>
+      <li>Facturation : ces lignes s'ajoutent au devis du site et suivent la facturation mensuelle déjà en place.</li>
+    </ul>
+  </div>
+</div>

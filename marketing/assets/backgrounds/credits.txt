@@ -1,0 +1,16 @@
+Fonds disponibles pour le mode "photo" des templates (tous vérifiés SANS personne reconnaissable).
+
+- hero-banner.jpg     — visuel existant du site (public/images/hero-banner.jpg).
+- tubes-labo.jpg      — Unsplash, licence libre commerciale sans attribution :
+                        https://images.unsplash.com/photo-1606206591513-adbfbdd7a177
+- coeur-modele.jpg    — Unsplash (modèle anatomique de cœur, pour les posts cardio) :
+                        https://images.unsplash.com/photo-1530026405186-ed1f139313f8
+- cellules-micro.jpg  — Unsplash (microscopie violette, très raccord charte) :
+                        https://images.unsplash.com/photo-1576086213369-97a306d36557
+- adn-bleu.jpg        — Unsplash (ADN 3D bleu, réserve) :
+                        https://images.unsplash.com/photo-1628595351029-c2bf17511435
+
+Licence Unsplash : usage commercial gratuit, sans attribution (unsplash.com/license).
+Règle absolue : JAMAIS de personne reconnaissable (peut être perçue comme un patient — interdit).
+À remplacer progressivement par les vraies photos du labo (galerie prévue par Dr Aziz).
+Noter ici l'URL source de chaque fichier ajouté.

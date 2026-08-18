@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Inter"; src: url("../assets/fonts/inter-latin.woff2") format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: "Public Sans"; src: url("../assets/fonts/publicsans-700-latin.woff2") format("woff2"); font-weight: 700; }
+  @font-face { font-family: "Tajawal"; src: url("../assets/fonts/tajawal-700-arabic.woff2") format("woff2"); font-weight: 700;
+               unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1240px; height: 1754px; overflow: hidden; }
+  body { font-family: "Inter", "Segoe UI", sans-serif; background: #FFFFFF; color: #3A2226; text-align: center; }
+  .band {
+    background: linear-gradient(135deg, #800020 0%, #C2185B 70%, #FF4081 140%);
+    color: #fff; padding: 70px 90px 60px;
+  }
+  .band .ar { font-family: "Tajawal", sans-serif; font-size: 40px; font-weight: 700; opacity: 0.95; margin-bottom: 18px; }
+  h1 { font-family: "Public Sans", sans-serif; font-size: 74px; line-height: 1.14; }
+  .lede { font-size: 36px; line-height: 1.45; margin: 52px auto 0; max-width: 900px; }
+  .lede .ar { display: block; font-family: "Tajawal", sans-serif; font-size: 32px; color: #7A5A62; margin-top: 14px; direction: rtl; }
+  .qrbox { display: inline-block; background: #FBF1F4; border: 3px solid #E9D8DD; border-radius: 24px; padding: 40px 52px; margin-top: 48px; }
+  .qrbox img { width: 400px; height: 400px; }
+  .qrbox .cta { font-weight: 700; font-size: 34px; color: #800020; margin-top: 22px; }
+  .qrbox .ar { font-family: "Tajawal", sans-serif; font-size: 29px; color: #7A5A62; margin-top: 10px; }
+  .note { margin: 48px 120px 0; background: #FBF1F4; border-radius: 14px; padding: 28px 36px;
+          font-size: 26px; color: #7A5A62; line-height: 1.5; text-align: center; }
+  footer { position: absolute; bottom: 0; left: 0; right: 0; background: #600018; color: #fff; padding: 40px 90px;
+           display: flex; align-items: center; gap: 28px; text-align: left; }
+  footer img { width: 72px; height: 72px; border-radius: 18px; }
+  footer .name { font-weight: 700; font-size: 33px; }
+  footer .contact { font-size: 27px; opacity: 0.9; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <div class="band">
+    <div class="ar">رأيكم يساعدنا على التحسّن</div>
+    <h1>Votre avis nous aide<br>à nous améliorer</h1>
+  </div>
+  <p class="lede">Un instant à l'accueil, un geste qui compte : scannez et partagez votre expérience sur Google.<span class="ar">لحظة واحدة تكفي: امسحوا الرمز وشاركوا تجربتكم على غوغل.</span></p>
+  <div class="qrbox">
+    <img src="qr-avis.png" alt="QR code avis Google">
+    <div class="cta">Scannez pour laisser votre avis</div>
+    <div class="ar">امسحوا الرمز لترك رأيكم</div>
+  </div>
+  <p class="note">Merci de ne mentionner aucune information médicale ou personnelle de santé dans votre avis.<br>Merci du temps que vous nous accordez.</p>
+  <footer>
+    <img src="../assets/logos/logo-footer.png" alt="">
+    <div>
+      <div class="name">Laboratoire El Allali — Agadir</div>
+      <div class="contact">61 Bis, rue de Marrakech · 05 28 84 33 84 · WhatsApp 06 54 07 95 92 · Conventionné CMIM</div>
+    </div>
+  </footer>
+</body>
+</html>

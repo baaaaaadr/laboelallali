@@ -1,0 +1,246 @@
+/* ============================================================
+   Base des visuels réseaux sociaux — Laboratoire El Allali
+   Carré 1080×1080. Deux modes de fond : "brand" (dégradé + motif)
+   et "photo" (image floutée + voile bordeaux/fuchsia).
+   RTL : propriétés logiques uniquement — un seul CSS pour FR et AR.
+   ============================================================ */
+
+@font-face {
+  font-family: "Inter";
+  src: url("../assets/fonts/inter-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Public Sans";
+  src: url("../assets/fonts/publicsans-700-latin.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("../assets/fonts/tajawal-400-arabic.woff2") format("woff2");
+  font-weight: 400;
+  unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("../assets/fonts/tajawal-700-arabic.woff2") format("woff2");
+  font-weight: 700;
+  unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("../assets/fonts/tajawal-400-latin.woff2") format("woff2");
+  font-weight: 400;
+  unicode-range: U+0000-00FF;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("../assets/fonts/tajawal-700-latin.woff2") format("woff2");
+  font-weight: 700;
+  unicode-range: U+0000-00FF;
+}
+
+:root {
+  --bordeaux: #800020;
+  --bordeaux-deep: #600018;
+  --fuchsia: #FF4081;
+  --rose-pale: #FBF1F4;
+  --white: #FFFFFF;
+  --ink-on-pale: #3A2226;
+  --muted-on-pale: #7A5A62;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { width: 1080px; height: 1080px; overflow: hidden; }
+
+body {
+  font-family: "Inter", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+body[lang="ar"] { font-family: "Tajawal", "Segoe UI", sans-serif; }
+
+.canvas { position: relative; width: 1080px; height: 1080px; overflow: hidden; }
+
+/* ---------- Couches de fond ---------- */
+.bg { position: absolute; inset: 0; }
+.bg-photo {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover;
+  filter: blur(2px) saturate(0.9);
+  transform: scale(1.06); /* évite le halo clair du blur sur les bords */
+}
+.veil { position: absolute; inset: 0; }
+
+/* Mode photo : voile dégradé par-dessus l'image */
+.mode-photo .veil { background: linear-gradient(135deg, rgba(96, 0, 24, 0.90) 0%, rgba(128, 0, 32, 0.82) 45%, rgba(255, 64, 129, 0.55) 115%); }
+.mode-photo.veil-fuchsia .veil { background: linear-gradient(135deg, rgba(255, 64, 129, 0.80) 0%, rgba(128, 0, 32, 0.85) 70%); }
+
+/* Mode brand : dégradé plein + motif de points + anneau décoratif */
+.mode-brand .bg-photo { display: none; }
+.mode-brand .veil {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Ccircle cx='4' cy='4' r='2.4' fill='%23FFFFFF' fill-opacity='0.07'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, #600018 0%, #800020 48%, #C2185B 100%);
+}
+.mode-brand.accent-fuchsia .veil {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Ccircle cx='4' cy='4' r='2.4' fill='%23FFFFFF' fill-opacity='0.08'/%3E%3C/svg%3E"),
+    linear-gradient(150deg, #800020 0%, #C2185B 55%, #FF4081 120%);
+}
+.mode-brand.accent-pale .veil {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Ccircle cx='4' cy='4' r='2.4' fill='%23800020' fill-opacity='0.05'/%3E%3C/svg%3E"),
+    linear-gradient(160deg, #FFFFFF 0%, #FBF1F4 60%, #F7E7EA 100%);
+}
+
+/* Anneau décoratif discret (coin supérieur côté fin de lecture) */
+.deco {
+  position: absolute; width: 560px; height: 560px; border-radius: 50%;
+  border: 7px solid rgba(255, 255, 255, 0.09);
+  inset-inline-end: -180px; inset-block-start: -180px;
+}
+.deco::after {
+  content: ""; position: absolute; width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  inset-inline-start: 74px; inset-block-end: 74px;
+}
+.accent-pale .deco { border-color: rgba(128, 0, 32, 0.08); }
+.accent-pale .deco::after { background: rgba(128, 0, 32, 0.10); }
+
+/* ---------- Couleurs de texte par mode ---------- */
+.canvas { color: var(--white); }
+.accent-pale .canvas-ink, .accent-pale .content { color: var(--ink-on-pale); }
+.accent-pale .title { color: var(--bordeaux); }
+.title { color: var(--white); }
+.muted { opacity: 0.86; }
+.accent-pale .muted { color: var(--muted-on-pale); opacity: 1; }
+
+/* ---------- Contenu ---------- */
+.content {
+  position: absolute; inset: 0;
+  inset-block-end: 170px; /* la zone du footer n'appartient PAS au contenu : l'anti-débordement mesure juste */
+  padding: 64px 84px 24px;
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 0.75em;
+  font-size: 44px; line-height: 1.45;
+}
+body[lang="ar"] .content { font-size: 42px; line-height: 1.7; }
+
+.eyebrow {
+  font-size: 0.64em; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.14em; opacity: 0.92;
+}
+body[lang="ar"] .eyebrow { letter-spacing: 0; font-size: 0.72em; }
+
+.chip {
+  align-self: flex-start;
+  font-size: 0.62em; font-weight: 700;
+  background: rgba(255, 255, 255, 0.16);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px; padding: 0.35em 1em;
+}
+.accent-pale .chip { background: rgba(128, 0, 32, 0.07); border-color: rgba(128, 0, 32, 0.35); color: var(--bordeaux); }
+
+.title {
+  font-family: "Public Sans", "Inter", "Segoe UI", sans-serif;
+  font-weight: 700; font-size: 1.82em; line-height: 1.14;
+  text-wrap: balance;
+}
+body[lang="ar"] .title { font-family: "Tajawal", sans-serif; font-size: 1.72em; line-height: 1.32; }
+
+.lines { list-style: none; display: flex; flex-direction: column; gap: 0.5em; margin-block-start: 0.2em; }
+.lines li { display: flex; gap: 0.55em; align-items: baseline; }
+.lines .b { flex: none; width: 0.32em; height: 0.32em; border-radius: 50%; background: currentColor; opacity: 0.75; align-self: center; }
+
+/* Checklist (préparation examen) */
+.checks { list-style: none; display: flex; flex-direction: column; gap: 0.55em; margin-block-start: 0.2em; }
+.checks li { display: flex; gap: 0.5em; align-items: flex-start; }
+.checks .ck {
+  flex: none; width: 1.05em; height: 1.05em; margin-block-start: 0.18em;
+  border-radius: 50%; display: grid; place-items: center;
+  background: var(--fuchsia); color: var(--white);
+}
+.accent-pale .checks .ck { background: var(--bordeaux); }
+.checks .ck svg { width: 0.6em; height: 0.6em; }
+
+.source {
+  font-size: 0.56em; opacity: 0.8; margin-block-start: 0.9em;
+  border-inline-start: 4px solid rgba(255, 255, 255, 0.4);
+  padding-inline-start: 0.9em;
+}
+.accent-pale .source { border-color: rgba(128, 0, 32, 0.3); color: var(--muted-on-pale); opacity: 1; }
+
+/* ---------- Template service-app : texte + téléphone ---------- */
+.split { display: grid; grid-template-columns: 1fr 340px; gap: 48px; align-items: center; }
+.split .title { font-size: 1.42em; }
+body[lang="ar"] .split .title { font-size: 1.38em; }
+.split .lines { font-size: 0.9em; }
+.phone {
+  /* 340×736 = ratio exact du screenshot 390×844 : rien n'est rogné (menu du bas visible) */
+  width: 340px; height: 736px; border-radius: 44px; overflow: hidden;
+  border: 10px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+  background: #fff;
+}
+.phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+
+/* ---------- Template annonce : centré ---------- */
+.centered { align-items: center; text-align: center; justify-content: center; }
+.centered .chip { align-self: center; }
+.centered .lines li { justify-content: center; }
+.centered .lines .b { display: none; }
+.centered .title { font-size: 2.05em; }
+body[lang="ar"] .centered .title { font-size: 1.9em; }
+
+/* ============================================================
+   Format story 1080×1920 (classe .fmt-story posée sur <body>)
+   Marges de sécurité : ~300 px en haut et ~300 px en bas, zones
+   couvertes par l'interface d'Instagram / WhatsApp / Facebook.
+   ============================================================ */
+:root:has(body.fmt-story), body.fmt-story { height: 1920px; }
+body.fmt-story .canvas { height: 1920px; }
+
+body.fmt-story .content {
+  inset-block-end: 340px;
+  padding: 320px 92px 40px;
+  font-size: 54px;
+  gap: 0.8em;
+}
+body[lang="ar"].fmt-story .content { font-size: 52px; }
+
+body.fmt-story .brandbar { inset-block-end: 150px; height: 170px; padding: 0 84px; }
+body.fmt-story .brandbar img { width: 76px; height: 76px; }
+body.fmt-story .brandbar .name { font-size: 36px; }
+body.fmt-story .brandbar .contact { font-size: 26px; white-space: nowrap; }
+
+body.fmt-story .deco {
+  width: 760px; height: 760px;
+  inset-inline-end: -240px; inset-block-start: -200px;
+}
+
+/* service-app : le téléphone passe sous le texte au lieu d'être à côté */
+body.fmt-story .split { grid-template-columns: 1fr; gap: 56px; justify-items: center; }
+body.fmt-story .split > div:first-child { width: 100%; }
+body.fmt-story .split .title { font-size: 1.7em; }
+body[lang="ar"].fmt-story .split .title { font-size: 1.62em; }
+body.fmt-story .split .lines { font-size: 1em; }
+body.fmt-story .phone { width: 380px; height: 822px; }
+
+/* ---------- Bandeau footer ---------- */
+.brandbar {
+  position: absolute; inset-inline: 0; inset-block-end: 0; height: 150px;
+  padding: 0 84px;
+  display: flex; align-items: center; gap: 26px;
+  border-block-start: 2px solid rgba(255, 255, 255, 0.28);
+}
+.accent-pale .brandbar { border-color: rgba(128, 0, 32, 0.18); }
+.brandbar img { width: 64px; height: 64px; border-radius: 16px; }
+.brandbar .who { display: flex; flex-direction: column; gap: 4px; }
+.brandbar .name { font-weight: 700; font-size: 32px; color: var(--white); }
+.brandbar .contact { font-size: 26px; opacity: 0.88; color: var(--white); font-variant-numeric: tabular-nums; }
+.accent-pale .brandbar .name { color: var(--bordeaux); }
+.accent-pale .brandbar .contact { color: var(--muted-on-pale); opacity: 1; }
+body[lang="ar"] .brandbar .name { font-size: 34px; }

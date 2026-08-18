@@ -1,0 +1,282 @@
+<title>Stratégie Labo El Allali</title>
+<style>
+  :root {
+    --paper: #FFFFFF;
+    --surface: #FAF3F5;
+    --ink: #2B171D;
+    --muted: #6E5A60;
+    --line: #E9D8DD;
+    --brand: #800020;
+    --brand-deep: #600018;
+    --accent: #FF4081;
+    --ok: #1E7B4F;      --ok-bg: #EDF7F1;
+    --warn: #A05A0B;    --warn-bg: #FBF3E6;
+    --stop: #B91C1C;    --stop-bg: #FBEEEE;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1F1014; --surface: #2A161C; --ink: #F4E9EC; --muted: #C9ADB6;
+      --line: #4A2F37; --brand: #FF79A8; --brand-deep: #FF9DBE; --accent: #FF79A8;
+      --ok: #7ED9A7;   --ok-bg: #17281E;
+      --warn: #F0B86B; --warn-bg: #2C2113;
+      --stop: #F19999; --stop-bg: #301718;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1F1014; --surface: #2A161C; --ink: #F4E9EC; --muted: #C9ADB6;
+    --line: #4A2F37; --brand: #FF79A8; --brand-deep: #FF9DBE; --accent: #FF79A8;
+    --ok: #7ED9A7;   --ok-bg: #17281E;
+    --warn: #F0B86B; --warn-bg: #2C2113;
+    --stop: #F19999; --stop-bg: #301718;
+  }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: "Segoe UI", "Public Sans", Inter, system-ui, -apple-system, sans-serif;
+    line-height: 1.55; margin: 0; padding: 2.5rem 1.25rem 4rem;
+  }
+  .sheet { max-width: 760px; margin: 0 auto; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; font-weight: 600; color: var(--accent); margin: 0 0 0.4rem; }
+  h1 { color: var(--brand); font-size: 1.85rem; line-height: 1.15; margin: 0 0 0.4rem; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0 0 2.2rem; font-size: 0.95rem; max-width: 60ch; }
+  h2 { color: var(--brand); font-size: 1.2rem; margin: 2.4rem 0 0.8rem; border-bottom: 2px solid var(--brand); padding-bottom: 0.3rem; }
+  h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
+  p { max-width: 68ch; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin: 1.2rem 0; }
+  .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 0.9rem; }
+  .kpi .n { color: var(--brand); font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .kpi .l { color: var(--muted); font-size: 0.8rem; margin-top: 0.25rem; }
+  .callout { background: var(--surface); border-inline-start: 4px solid var(--accent); border-radius: 0 6px 6px 0; padding: 0.75rem 1rem; margin: 1rem 0; font-size: 0.92rem; max-width: none; }
+  ul { padding-inline-start: 1.2rem; } li { margin: 0.25rem 0; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin: 1rem 0; }
+  .col { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.8rem 1rem; }
+  .col h3 { margin-top: 0; }
+  .feux { display: grid; gap: 0.9rem; margin: 1rem 0; }
+  .feu { border-radius: 6px; padding: 0.85rem 1.1rem; border: 1px solid var(--line); }
+  .feu h3 { margin: 0 0 0.4rem; display: flex; align-items: center; gap: 0.5rem; }
+  .feu .dot { width: 0.85rem; height: 0.85rem; border-radius: 50%; flex: none; }
+  .feu ul { margin: 0.2rem 0 0; font-size: 0.9rem; }
+  .feu.ok   { background: var(--ok-bg); }   .feu.ok h3 { color: var(--ok); }   .feu.ok .dot { background: var(--ok); }
+  .feu.warn { background: var(--warn-bg); } .feu.warn h3 { color: var(--warn); } .feu.warn .dot { background: var(--warn); }
+  .feu.stop { background: var(--stop-bg); } .feu.stop h3 { color: var(--stop); } .feu.stop .dot { background: var(--stop); }
+  .levier { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1.1rem; margin: 0.8rem 0; }
+  .levier .head { display: flex; align-items: baseline; gap: 0.7rem; margin-bottom: 0.35rem; }
+  .levier .rank { color: var(--brand); font-weight: 700; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+  .levier h3 { margin: 0; }
+  .levier .why { color: var(--muted); font-size: 0.88rem; margin: 0 0 0.5rem; }
+  .levier ul { font-size: 0.9rem; margin: 0; }
+  .tablewrap { overflow-x: auto; margin: 1rem 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th { text-align: start; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.7rem; color: var(--muted); border-bottom: 1px solid var(--line); padding: 0.4rem 0.5rem; }
+  td { border-bottom: 1px solid var(--line); padding: 0.5rem; vertical-align: top; }
+  .frise { list-style: none; margin: 1rem 0; padding: 0; }
+  .frise li { display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.8rem; padding: 0.5rem 0; border-bottom: 1px solid var(--line); }
+  .frise .mois { color: var(--brand); font-weight: 700; font-size: 0.88rem; }
+  .frise .quoi { font-size: 0.9rem; }
+  .frise .quoi span { color: var(--muted); }
+  .foot { margin-top: 2.5rem; padding-top: 0.9rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.82rem; }
+  @media (max-width: 620px) { .kpis, .cols { grid-template-columns: 1fr; } .frise li { grid-template-columns: 5.2rem 1fr; } }
+  @media print {
+    :root { --paper:#fff; --surface:#fff; --ink:#111; --muted:#444; --line:#bbb; --brand:#800020; --accent:#800020;
+            --ok:#1E7B4F; --ok-bg:#fff; --warn:#A05A0B; --warn-bg:#fff; --stop:#B91C1C; --stop-bg:#fff; }
+    body { padding: 0; font-size: 11px; }
+    h2 { break-after: avoid; page-break-after: avoid; }
+    .levier, .feu, .kpi, .col, tr { break-inside: avoid; }
+    section { break-inside: auto; }
+    .pagebreak { break-before: page; }
+  }
+</style>
+
+<div class="sheet">
+  <p class="eyebrow">Laboratoire El Allali · Agadir · Août 2026</p>
+  <h1>Stratégie pour amener plus de patients au laboratoire</h1>
+  <p class="lede">Préparée par Hassan pour le Dr Aziz El Allali. Écrite pour être lue en 15 minutes : l'essentiel d'abord, le détail ensuite. Chaque action dit qui la fait et pourquoi elle compte.</p>
+
+  <h2>L'essentiel en une page</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="n">4,9 ★</div><div class="l">la note Google du labo, sur 479 avis — devant la plupart des laboratoires d'Agadir</div></div>
+    <div class="kpi"><div class="n">≈ 3 700</div><div class="l">abonnés déjà acquis sur la page Facebook du labo — aujourd'hui laissée à l'abandon</div></div>
+    <div class="kpi"><div class="n">×3,7</div><div class="l">engagement des publications bilingues français + arabe au Maroc, par rapport au français seul</div></div>
+  </div>
+  <p><b>L'idée directrice :</b> les patients n'arrivent pas par Facebook. Ils arrivent par <b>l'ordonnance du médecin</b>, par <b>la proximité</b>, et par <b>ce que Google montre</b> quand ils cherchent « laboratoire analyses Agadir » (78 % des Marocains lisent les avis avant de se déplacer). Bonne nouvelle : la fiche Google du labo est <b>déjà excellente</b> — l'enjeu n'est plus d'exister sur Google, mais d'entretenir cet actif. Les réseaux sociaux servent à autre chose : prouver que le labo est vivant, moderne et sérieux. La stratégie attaque donc les leviers dans cet ordre-là.</p>
+  <p><b>Les 3 actions qui comptent le plus :</b></p>
+  <ul>
+    <li><b>Reprendre la main sur la page Facebook</b> (3 700 abonnés) et corriger ses informations fausses — elle annonce encore « ouvert 7j/7 ».</li>
+    <li><b>Entretenir la fiche Google</b> (4,9★ · 479 avis, contrôlée par le labo) : nouvelle galerie photos, infos exactes, et un flux régulier d'avis récents.</li>
+    <li><b>Soigner les médecins correspondants</b> : leur présenter les résultats en ligne, GLABO et la ligne sociétés — c'est le canal le plus sûr juridiquement, et le plus rentable.</li>
+  </ul>
+  <p><b>Qui fait quoi :</b> Hassan produit tout (stratégie, visuels, textes, calendrier). Le labo publie, répond, collecte les avis et fournit photos et validations. La liste précise des actions côté labo tient sur une page (document « Actions Labo »).</p>
+
+  <div class="pagebreak"></div>
+  <h2>Où en est le labo aujourd'hui</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>Les atouts — rares au Maroc</h3>
+      <ul>
+        <li><b>Résultats en ligne sur le téléphone</b> du patient, avec tous ses bilans classés par année — un vrai service de rupture, très rare chez les labos indépendants.</li>
+        <li><b>GLABO</b> : prélèvement à domicile ou au travail par le personnel du laboratoire.</li>
+        <li><b>Catalogue de ~324 analyses avec prix et devis</b> instantané envoyé par WhatsApp — transparence quasi inédite dans le secteur.</li>
+        <li><b>Application bilingue français/arabe</b>, installable, avec prise de rendez-vous et ordonnance en photo.</li>
+        <li><b>Annuaire de ~1 390 médecins d'Agadir</b> offert au public.</li>
+        <li>Une <b>fiche Google déjà excellente</b> : 4,9★ sur 479 avis, avec des réponses du propriétaire — un capital de confiance rare.</li>
+        <li>Une <b>ligne dédiée sociétés</b> (06 61 20 86 35) pour la médecine du travail.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Les faiblesses — toutes réparables</h3>
+      <ul>
+        <li>La <b>page Facebook dort</b> et diffuse des informations fausses (« ouvert 7j/7 ») ; l'accès admin est à retrouver.</li>
+        <li>La <b>fiche Google mérite une remise à niveau</b> malgré son excellente note : galerie photos à refaire, description et horaires à rafraîchir.</li>
+        <li><b>Aucune photo récente</b> du labo — Dr Aziz souhaite une nouvelle galerie propre (façade, accueil, matériel).</li>
+        <li>Deux ou trois <b>comptes Instagram</b> existent sans être maîtrisés — à inventorier et nettoyer.</li>
+        <li>Personne ne sait ce que le labo offre : les services ci-contre n'ont <b>jamais été annoncés</b>.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="callout"><b>En résumé :</b> le labo a déjà construit ce que les concurrents n'ont pas. Il ne lui manque que la visibilité. C'est exactement ce qu'une communication régulière et bien cadrée peut apporter.</p>
+  <p class="callout"><b>Un choix de communication assumé :</b> nous ne mettons <b>pas</b> en avant l'argument « vos résultats ne sont jamais conservés par l'application ». La protection des données est bien réelle et documentée dans la politique de confidentialité du site, mais au Maroc cet argument intrigue plus qu'il ne rassure — il soulève des questions au lieu d'en régler. On lui préfère un bénéfice concret : <b>tous vos bilans classés par année, à portée de main</b>.</p>
+
+  <h2>Ce que la loi permet — les feux tricolores</h2>
+  <p>Au Maroc, la publicité est en principe interdite aux laboratoires (loi 12-01, art. 31). Mais le code de déontologie de 2021 autorise expressément les sites et pages <b>d'information et d'éducation santé</b> — c'est ce que font des dizaines de labos marocains, sans qu'aucune sanction n'ait jamais été publiée. (Dr Aziz étant pharmacien biologiste, le code de déontologie des pharmaciens s'applique aussi : mêmes interdits, mêmes autorisations d'information.) Le vrai risque n'est pas le gendarme : c'est <b>la plainte d'un confrère jaloux</b>. Notre règle : tout ce qui est publié doit rester défendable devant l'Ordre. Concrètement :</p>
+  <div class="feux">
+    <div class="feu ok">
+      <h3><span class="dot"></span>Vert — on y va</h3>
+      <ul>
+        <li>Horaires, adresse, contact, jours fériés, horaires Ramadan</li>
+        <li>Préparation aux analyses : jeûne, recueil d'urines, erreurs à éviter</li>
+        <li>Éducation santé sourcée (OMS, ministère de la Santé) : comprendre une analyse, journées mondiales officielles</li>
+        <li>Présentation factuelle des services : résultats en ligne, GLABO, rendez-vous, devis</li>
+        <li>« Conventionné CMIM » (confirmé par Dr Aziz — ne citer que les conventions réellement pratiquées, jamais CNOPS/CNSS tant qu'elles ne le sont pas)</li>
+        <li>Communication vers les médecins : fiches techniques, courriers — <b>expressément autorisée par la loi</b></li>
+        <li>Recrutement, vie du labo (sans patients)</li>
+      </ul>
+    </div>
+    <div class="feu warn">
+      <h3><span class="dot"></span>Orange — avec précaution</h3>
+      <ul>
+        <li>Inciter au dépistage : uniquement en relais d'une campagne nationale (Octobre Rose, mois du diabète) et toujours « parlez-en à votre médecin »</li>
+        <li>Photos de l'équipe : accord écrit signé de chaque personne</li>
+        <li>Mentionner un délai de résultats : « à titre indicatif », jamais de promesse</li>
+        <li>Répondre aux avis Google : remercier sans jamais confirmer que la personne est venue au labo</li>
+      </ul>
+      <p style="font-size:0.85rem; margin:0.5rem 0 0;">Chaque publication orange est marquée « relecture conseillée » dans le calendrier.</p>
+    </div>
+    <div class="feu stop">
+      <h3><span class="dot"></span>Rouge — jamais</h3>
+      <ul>
+        <li>Publicité payante (posts sponsorisés, Google Ads, influenceurs)</li>
+        <li>Promotions, remises, prix barrés, packs « offre », jeux-concours</li>
+        <li>Superlatifs : « le meilleur labo », « n°1 », « le plus rapide »</li>
+        <li>Témoignages de patients, photos de patients, captures de résultats — même anonymisés</li>
+        <li>Comparaison avec d'autres laboratoires</li>
+        <li>Conseil médical individuel en commentaires ou messages</li>
+      </ul>
+    </div>
+  </div>
+  <p class="callout"><b>Une protection simple et gratuite :</b> déclarer le site et les comptes au Conseil régional de l'Ordre par un courrier d'information (modèle fourni par Hassan). C'est prévu par le code de déontologie, et cela transforme un reproche possible en démarche de conformité documentée. <i>Dr Aziz souhaite en discuter d'abord (questionnaire, question 5) — rien ne sera envoyé sans son accord.</i></p>
+
+  <div class="pagebreak"></div>
+  <h2>Les 6 leviers, dans l'ordre d'importance</h2>
+
+  <div class="levier">
+    <div class="head"><span class="rank">1</span><h3>Les médecins correspondants</h3></div>
+    <p class="why">La plupart des patients vont au labo que leur médecin a l'habitude de citer. C'est aussi le seul canal de communication expressément autorisé par la loi — et presque personne ne l'exploite bien. <b>Réserve de Dr Aziz (questionnaire) :</b> les médecins lui semblent peu sensibles à ces services — il souhaite d'abord poser sa réflexion par écrit. Le kit (option B) ne sera préparé qu'après cet échange, adapté à sa vision.</p>
+    <ul>
+      <li><b>Labo :</b> partager cette réflexion écrite sur les médecins correspondants.</li>
+      <li><b>Hassan :</b> kit de présentation (option B du devis) : courrier, fiche des services — résultats en ligne pour leurs patients, GLABO, ligne sociétés — et mini-carte à laisser au cabinet.</li>
+      <li><b>Labo :</b> déposer le kit en main propre, idéalement par le Dr Aziz lui-même.</li>
+      <li><b>Limite légale :</b> jamais de cadeau, d'avantage ou de commission à un médecin — le kit reste purement informatif.</li>
+    </ul>
+  </div>
+
+  <div class="levier">
+    <div class="head"><span class="rank">2</span><h3>Google : la fiche et les avis</h3></div>
+    <p class="why">« Laboratoire analyses Agadir » sur Google : c'est là que se décident les nouveaux patients. La fiche du labo est déjà excellente — <b>4,9★ sur 479 avis</b>, devant la plupart des laboratoires d'Agadir : c'est son meilleur actif de visibilité. L'enjeu n'est plus d'exister mais d'entretenir : les avis <b>récents</b> pèsent plus que les anciens dans le classement local, et la galerie photos mérite d'être refaite.</p>
+    <ul>
+      <li><b>Labo :</b> revendiquer la fiche (todo n°3), envoyer des photos réelles.</li>
+      <li><b>Hassan :</b> optimisation complète + process de collecte d'avis au comptoir avec QR code (option C) + nettoyage des annuaires obsolètes.</li>
+      <li><b>Labo :</b> proposer à chaque patient de laisser un avis Google à la remise des résultats — sans sélection ni consigne de note, jamais de faux avis. Et ne jamais citer ni republier un avis dans les publications du labo.</li>
+    </ul>
+  </div>
+
+  <div class="levier">
+    <div class="head"><span class="rank">3</span><h3>WhatsApp Business</h3></div>
+    <p class="why">Le canal où les patients écrivent déjà (devis, rendez-vous, GLABO). 95 % des Marocains connectés l'utilisent chaque jour. Il doit faire aussi professionnel que l'accueil du labo.</p>
+    <ul>
+      <li><b>Labo :</b> déjà en place — le 06 54 07 95 92 est sur WhatsApp Business (confirmé). Il reste à soigner le profil, les horaires et le message d'absence avec les textes fournis.</li>
+      <li><b>Hassan :</b> textes prêts à l'emploi (inclus au lot 2 du devis) : message d'accueil, réponses types (préparation, horaires, GLABO), et la réponse standard « pas d'avis médical par message ».</li>
+    </ul>
+  </div>
+
+  <div class="levier">
+    <div class="head"><span class="rank">4</span><h3>L'accueil du labo</h3></div>
+    <p class="why">Chaque patient qui attend est déjà convaincu — c'est le moment de l'équiper : un avis Google, l'appli installée, le réflexe WhatsApp.</p>
+    <ul>
+      <li><b>Hassan :</b> 2 affiches prêtes à imprimer (option A) : « Vos résultats sur votre téléphone » + QR de l'appli, et « Votre avis nous aide » + QR avis Google. Mention « Conventionné CMIM » — confirmée par Dr Aziz, déjà intégrée aux deux affiches.</li>
+      <li><b>Labo :</b> imprimer (imprimeur habituel — question 16) et afficher en salle d'attente et au comptoir.</li>
+    </ul>
+  </div>
+
+  <div class="levier">
+    <div class="head"><span class="rank">5</span><h3>Facebook et Instagram — la preuve de vie</h3></div>
+    <p class="why">Ne ramène pas directement des patients, mais rassure tous ceux qui vérifient : page vivante = labo sérieux. Une page à l'abandon fait l'effet inverse. Rythme validé par Dr Aziz : 2 publications par semaine, bilingues, 100 % conformes aux feux tricolores — trois types de contenus, comme il l'a lui-même demandé : <b>instructif, informatif, médical</b>. Jamais de prix, jamais de cadeaux.</p>
+    <ul>
+      <li><b>Hassan :</b> modèles graphiques à la charte du labo, publications prêtes (image + texte FR/AR + hashtags), calendrier de publication, guide en 1 page.</li>
+      <li><b>Labo :</b> publier selon le calendrier (copier-coller, 5 minutes par post), et suivre le guide pour les commentaires.</li>
+    </ul>
+  </div>
+
+  <div class="levier">
+    <div class="head"><span class="rank">6</span><h3>L'application elle-même</h3></div>
+    <p class="why">Chaque patient qui consulte ses résultats en ligne peut en amener un autre : le bouton « Faites-en profiter un proche » envoie un message WhatsApp tout prêt, et chaque arrivée par ce lien est comptée automatiquement. Le message décrit le service sans inciter aux analyses, et aucun avantage n'est promis à personne — c'est ce qui le distingue d'un parrainage commercial, interdit.</p>
+    <ul>
+      <li><b>Hassan :</b> déjà en production — suivi des chiffres dans le tableau de bord.</li>
+      <li><b>Labo :</b> le personnel propose l'accès aux résultats en ligne à chaque patient au moment de la remise.</li>
+    </ul>
+  </div>
+
+  <div class="pagebreak"></div>
+  <h2>Comment on saura que ça marche</h2>
+  <p>Pas d'objectif de « likes » : on mesure ce qui amène des patients. Valeurs de départ relevées au lancement, point mensuel ensuite.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Indicateur</th><th>Départ</th><th>Objectif à 6 mois</th></tr></thead>
+    <tbody>
+      <tr><td>Avis Google</td><td>4,9★ · 479 avis</td><td><b>note maintenue ≥ 4,8★ ; 5 à 10 nouveaux avis par mois</b></td></tr>
+      <tr><td>Itinéraires et appels depuis la fiche Google</td><td>à relever</td><td>en hausse chaque mois (statistiques fournies par Google)</td></tr>
+      <tr><td>Page Facebook</td><td>dormante, infos fausses</td><td>corrigée, 2 publications/semaine tenues sur 6 mois</td></tr>
+      <tr><td>Messages WhatsApp entrants</td><td>à relever</td><td>en hausse ; réponse type &lt; 2 h aux heures d'ouverture</td></tr>
+      <tr><td>Comptes patients avec accès résultats</td><td>tableau de bord actuel</td><td>en hausse régulière ; suivi des arrivées via le lien de partage</td></tr>
+      <tr><td>Médecins équipés du kit</td><td>0</td><td>3 à 5 cabinets visités</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Le calendrier — septembre 2026 → mars 2027</h2>
+  <p>La communication suit les rendez-vous santé officiels : c'est légitime, attendu, et ça donne un sujet chaque semaine sans forcer.</p>
+  <ul class="frise">
+    <li><span class="mois">Septembre</span><span class="quoi"><b>Lancement + rentrée scolaire.</b> Page Facebook corrigée, premiers posts services et conseils. <span>Journée mondiale du cœur le 29/09 (bilan lipidique).</span></span></li>
+    <li><span class="mois">Octobre</span><span class="quoi"><b>Octobre Rose</b> — relais de la campagne nationale de dépistage des cancers féminins (Fondation Lalla Salma). <span>Contenu éducatif, toujours « parlez-en à votre médecin ».</span></span></li>
+    <li><span class="mois">Novembre</span><span class="quoi"><b>Mois du diabète</b> (journée mondiale le 14/11, campagne du ministère jusqu'à mi-décembre) : l'HbA1c expliquée, glycémie, facteurs de risque. <span>Movember en second sujet.</span></span></li>
+    <li><span class="mois">Décembre</span><span class="quoi">1er décembre : journée mondiale contre le sida (dépistage). <span>Fin d'année : horaires des fêtes.</span></span></li>
+    <li><span class="mois">Janvier</span><span class="quoi"><b>Bilans de début d'année</b> — le pic naturel : bilan complet, préparation, à jeun ou pas.</span></li>
+    <li><span class="mois">Février</span><span class="quoi">4/02 : journée mondiale contre le cancer. <b>~8/02 : début du Ramadan</b> — horaires confirmés par Dr Aziz : <b>8h00 – 16h30 en semaine, samedi matin</b> ; contenu jeûne et analyses, diabète et Ramadan.</span></li>
+    <li><span class="mois">Mars</span><span class="quoi">Ramadan (fin ~9/03) puis Aïd — horaires. 8/03 : santé de la femme. <span>Mars Bleu (côlon) et journée du rein (~11/03).</span></span></li>
+  </ul>
+
+  <h2>Le partage des rôles, une fois pour toutes</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Hassan produit et livre</th><th>Le labo fait</th></tr></thead>
+    <tbody>
+      <tr><td>Stratégie, cadrage légal, indicateurs</td><td>Valide le devis, répond au questionnaire</td></tr>
+      <tr><td>Modèles graphiques + publications prêtes (image FR/AR + texte + hashtags) + calendrier</td><td>Publie selon le calendrier (5 min/post), répond selon le guide</td></tr>
+      <tr><td>Affiches, kit médecins, QR codes (options)</td><td>Imprime, affiche, dépose le kit chez les médecins</td></tr>
+      <tr><td>Optimisation fiche Google (option C), textes WhatsApp (lot 2)</td><td>Récupère les accès (Facebook, Google), envoie les photos, collecte les avis au comptoir</td></tr>
+      <tr><td>Batchs de publications suivants, à la demande</td><td>Demande un batch quand il en veut un ; valide l'arabe</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="callout"><b>Prochaine étape :</b> le questionnaire est rempli (merci !) — il reste à valider le devis, et le lot complet de publications part en production, calendrier daté inclus.</p>
+
+  <p class="foot">Stratégie établie le 18/08/2026 sur la base de : étude de la réglementation marocaine (loi 12-01, loi 131-13, code de déontologie 2021, loi 09-08), analyse du marché marocain des laboratoires (pages sociales, tarifs, leviers locaux) et diagnostic de la présence en ligne du Laboratoire El Allali. Sources détaillées disponibles sur demande.</p>
+</div>
