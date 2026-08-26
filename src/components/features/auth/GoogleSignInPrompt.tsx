@@ -32,6 +32,9 @@ const STORAGE_KEY = 'googleSignInPromptDismissedAt';
 /** Dated dismissal, not a boolean: a permanent 'true' would kill the CTA on this
  *  device forever, including for someone who simply was not ready that day. */
 const SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
+/** Let the page be read first. Appearing on the very first paint reads as a
+ *  pop-up and covers content before the visitor has seen any of it. */
+const DELAY_MS = 3000;
 
 /**
  * Routes where the prompt must stay quiet, matched on the first path segment
@@ -83,7 +86,8 @@ export default function GoogleSignInPrompt() {
     const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent);
     if (isIOS && !window.localStorage.getItem('iosInstallBannerDismissed')) return;
 
-    setAllowed(true);
+    const timer = window.setTimeout(() => setAllowed(true), DELAY_MS);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const dismiss = useCallback(() => {

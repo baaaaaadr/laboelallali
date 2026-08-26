@@ -38,7 +38,11 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ lang, onCallClick, isMobile = t
       </div>
 
       {/* Content */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10 py-8">
+      {/* pt-20 on mobile clears the absolutely-positioned Ouvert/Fermé badge that
+          HomeClient overlays at top-4. It matters since the shortcut tiles were
+          added: the hero content now exceeds min-h-screen, so `items-center` no
+          longer centres it and the title rides up under the badge. */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10 pt-20 pb-8 lg:pt-8">
         <div className="max-w-2xl mx-auto text-center">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight break-words hero-text" style={{ color: 'white !important' }}>
             {t('welcome_banner')}
