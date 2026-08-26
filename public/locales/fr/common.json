@@ -116,7 +116,8 @@
     "q2": "Dois-je être à jeun pour ma prise de sang ?",
     "a2": "Cela dépend des analyses. En général, un jeûne de 12 heures est recommandé pour la glycémie et le bilan lipidique.",
     "q3": "Comment puis-je récupérer mes résultats ?",
-    "a3": "Vous pouvez les récupérer directement au laboratoire, demander à les recevoir par email ou WhatsApp, et bientôt ils seront disponibles directement sur ce site web.",
+    "a3": "Vous pouvez les consulter dès maintenant en ligne dans votre espace patient, les récupérer directement au laboratoire, ou demander à les recevoir par email ou WhatsApp.",
+    "a3_cta": "Consulter mes résultats en ligne",
     "q4": "Proposez-vous des prélèvements à domicile ?",
     "a4": "Oui, notre service GLABO se déplace chez vous ou sur votre lieu de travail sur rendez-vous."
   },

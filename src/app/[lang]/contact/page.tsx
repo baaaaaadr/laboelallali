@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import dynamic from 'next/dynamic';
@@ -224,6 +225,19 @@ export default function ContactPage({
               <p className="text-[var(--text-secondary)] leading-relaxed">
                 {t(`faq_questions.a${num}`)}
               </p>
+              {/* Only q3 ("how do I get my results?") gets a CTA. Deliberately a
+                  separate link rather than a <Trans> with an embedded anchor: the
+                  repo uses <Trans> nowhere, and introducing it for one card would
+                  add a whole i18n pattern for no benefit. */}
+              {num === 3 && (
+                <Link
+                  href={`/${resolvedParams.lang}/resultats`}
+                  className="mt-4 inline-flex items-center gap-1.5 font-semibold text-[var(--brand-primary)] hover:underline"
+                >
+                  {t('faq_questions.a3_cta')}
+                  <ChevronRight size={18} className={isRTL ? 'rotate-180' : ''} />
+                </Link>
+              )}
             </div>
           ))}
         </div>
