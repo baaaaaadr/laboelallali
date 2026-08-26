@@ -19,6 +19,17 @@ import { LEVEL, levelOf, requireLevel, REGION } from "./roles";
 // Ids are typed by hand at the front desk; strip any whitespace (Qalam shows big
 // ids as "67 305") before storing, or the lab server answers requester_not_found.
 import { normalizeRequesterId } from "../cyberlab/client";
+// Staff alert when a patient asks for results access (best-effort, see
+// requestResultsAccess below). Same shared mailer as the CyberLab monitoring.
+import {
+  SMTP_USER,
+  SMTP_PASS,
+  APP_URL,
+  sendMail,
+  renderAlertEmail,
+  alertRecipients,
+  fmtCasablanca,
+} from "../email/mailer";
 
 const VALID_TYPES = ["patient", "medecin", "correspondant"] as const;
 type RequesterType = (typeof VALID_TYPES)[number];
@@ -317,10 +328,22 @@ export const adminListStaff = onCall(
 // Requests live in resultAccessRequests/{uid} (one per patient), only touched
 // via these callables (Admin SDK) — clients never read/write them directly.
 
+// Where the request came from — shown in the staff alert so whoever calls the
+// patient back knows whether they asked explicitly or were enrolled at signup.
+// Client input, so it is matched against this whitelist and never interpolated raw.
+const REQUEST_SOURCES: Record<string, string> = {
+  signup: "Inscription (demande envoyée automatiquement)",
+  results_page: "Bouton « demander l'accès » sur la page Résultats",
+  admin: "Espace admin",
+};
+
 /** Patient: create/refresh my access request (pending). Auth only. */
 export const requestResultsAccess = onCall(
-  { region: REGION },
-  async (request: CallableRequest) => {
+  // SMTP secrets are bound here for the staff alert below. Region MUST stay
+  // REGION (europe-southwest1): the client calls getFunctions(app, region), so
+  // changing it would create a second function and break every existing client.
+  { region: REGION, secrets: [SMTP_USER, SMTP_PASS] },
+  async (request: CallableRequest<{ source?: string }>) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentification requise.");
     }
@@ -336,11 +359,12 @@ export const requestResultsAccess = onCall(
 
     const ref = admin.firestore().doc(`resultAccessRequests/${uid}`);
     if ((await ref.get()).data()?.status === "pending") return { status: "pending" };
+    const email = u.email || request.auth.token?.email || null;
     await ref.set(
       {
         uid,
         fullName: u.fullName,
-        email: u.email || request.auth.token?.email || null,
+        email,
         phone: u.phone,
         status: "pending",
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -349,6 +373,51 @@ export const requestResultsAccess = onCall(
       },
       { merge: true }
     );
+
+    // ── Staff alert (best-effort, never blocks the patient) ──────────────────
+    // Placed AFTER the write and reached only once per genuinely new request:
+    // the two early returns above (already_granted / pending) ARE the anti-spam
+    // guard — a re-click or a re-login sends nothing. Do not change them without
+    // realising you are also changing this.
+    // Everything is wrapped: a dead SMTP, a missing param, anything — the patient
+    // must still get their "pending" answer. The 10s race stops a slow SMTP from
+    // holding the callable open (the client already gives up after 2.5s anyway).
+    try {
+      // renderAlertEmail escapes every value itself — pass raw strings here, or
+      // the staff reads "L&#39;Allali" in their inbox.
+      const html = renderAlertEmail({
+        title: "Nouvelle demande d'accès aux résultats",
+        lead: "Un patient attend l'activation de son accès aux résultats en ligne.",
+        rows: [
+          ["Nom", String(u.fullName)],
+          ["Téléphone", String(u.phone)],
+          ["E-mail", email ? String(email) : "—"],
+          ["Origine", REQUEST_SOURCES[String(request.data?.source || "")] || "Non précisée"],
+          ["Demandé le", fmtCasablanca(Date.now())],
+          ["Identifiant du compte", uid],
+          // Bare URL, not an <a>: the footer/rows are escaped, so markup would
+          // show literally. Gmail and Outlook auto-link a plain URL.
+          ["Espace admin", `${APP_URL.value()}/fr/admin`],
+        ],
+        todo:
+          "À faire : vérifier l'identité du patient, puis renseigner son identifiant " +
+          "de dossier dans l'espace admin, onglet « Demandes d'accès ».",
+      });
+      await Promise.race([
+        sendMail({
+          to: alertRecipients(),
+          subject: `Nouvelle demande d'accès aux résultats — ${u.fullName}`,
+          html,
+          replyTo: email ? String(email) : undefined,
+          fromName: "Labo El Allali — Demandes d'accès",
+        }),
+        new Promise<void>((resolve) => setTimeout(resolve, 10_000)),
+      ]);
+    } catch {
+      // uid only: never log a patient's email or phone number.
+      logger.error("requestResultsAccess: staff alert email failed", { uid });
+    }
+
     return { status: "pending" };
   }
 );

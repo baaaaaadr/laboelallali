@@ -203,8 +203,10 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     try {
       const functions = await getClientFunctions();
       if (!functions) throw new Error('functions-unavailable');
-      const fn = httpsCallable<Record<string, never>, { status: string }>(functions, 'requestResultsAccess');
-      const res = await fn();
+      // `source` distinguishes this explicit request from the automatic one sent
+      // at signup — the staff alert email shows it, the callable whitelists it.
+      const fn = httpsCallable<{ source: string }, { status: string }>(functions, 'requestResultsAccess');
+      const res = await fn({ source: 'results_page' });
       if (res.data?.status === 'already_granted') {
         refresh();
         return;

@@ -93,7 +93,9 @@ async function autoRequestResultsAccess(): Promise<void> {
   try {
     const functions = await getClientFunctions();
     if (!functions) return;
-    const call = httpsCallable(functions, 'requestResultsAccess')();
+    // `source` lands in the staff alert email so whoever calls the patient back
+    // knows they were enrolled automatically rather than asking themselves.
+    const call = httpsCallable(functions, 'requestResultsAccess')({ source: 'signup' });
     await Promise.race([call, new Promise<void>((resolve) => setTimeout(resolve, 2500))]);
   } catch {
     // Non-blocking — the patient can still request access later from /resultats.
