@@ -247,6 +247,17 @@
     "share_access_cta": "Partager",
     "share_access_message": "Bonjour, je consulte désormais mes analyses médicales en ligne, directement sur mon téléphone, avec le Laboratoire El Allali — simple et sécurisé. Voici le lien si tu veux en profiter :"
   },
+  "hero_shortcuts": {
+    "bilan": "Faire mon bilan",
+    "bilan_desc": "Choisir une formule et son tarif",
+    "prescription": "Envoyer mon ordonnance",
+    "prescription_desc": "Nous la préparons avant votre venue",
+    "results": "Mes résultats",
+    "results_desc": "Les consulter en ligne",
+    "wa_dr": "WhatsApp Dr El Allali",
+    "wa_dr_desc": "Une question médicale ?",
+    "install_desc": "Sur votre écran d'accueil"
+  },
   "services_hub": {
     "title": "Nos services",
     "results_badge": "Nouveau",

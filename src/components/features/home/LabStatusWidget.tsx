@@ -28,8 +28,7 @@ export default function LabStatusWidget() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        aria-live="polite"
-        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-white shadow-md ring-1 ring-white/30 backdrop-blur-[2px] transition-colors ${
+        className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold text-white shadow-md ring-1 ring-white/30 backdrop-blur-[2px] transition-colors sm:text-sm min-w-[7rem] ${
           !isKnown
             ? 'bg-black/30'
             : isOpen
@@ -38,9 +37,20 @@ export default function LabStatusWidget() {
         }`}
       >
         <span
-          className={`h-2 w-2 rounded-full bg-white ${isKnown && isOpen ? 'animate-pulse' : 'opacity-80'}`}
+          className={`h-2 w-2 shrink-0 rounded-full bg-white ${isKnown && isOpen ? 'animate-pulse' : 'opacity-80'}`}
         />
-        <span>{isKnown ? labStatus.statusText : '…'}</span>
+        {/* aria-live sits on the STATUS span only, never on the button: with the
+            countdown inside, the whole badge would be re-announced every minute
+            (useNow ticks at 60s) for as long as the page stays open. */}
+        <span aria-live="polite">{isKnown ? labStatus.statusText : '…'}</span>
+        {isKnown && labStatus.countdownText && (
+          <>
+            {/* Separate flex children rather than one interpolated string: a "·"
+                inside a string is mispositioned in RTL, a flex child follows dir. */}
+            <span aria-hidden="true" className="opacity-60">·</span>
+            <span className="font-medium opacity-95">{labStatus.countdownText}</span>
+          </>
+        )}
       </button>
 
       {/* Details popover — hover (desktop) or toggled by click/tap (mobile). */}
@@ -52,12 +62,9 @@ export default function LabStatusWidget() {
             <Clock size={18} className="mr-2 text-[var(--color-fuchsia-accent)]" />
             {t('opening_hours')}
           </h3>
+          {/* The countdown lives in the badge itself now — repeating it 40px
+              below was the same information twice. */}
           <p className="text-sm text-[var(--text-secondary)] whitespace-pre-line">{t('opening_hours_text')}</p>
-          {isKnown && labStatus.countdownText && (
-            <div className="mt-3 inline-block rounded-lg border border-[var(--border-default)] bg-[var(--background-secondary)] dark:bg-[var(--background-tertiary)] px-3 py-1 text-sm font-medium text-[var(--text-secondary)]">
-              {labStatus.countdownText}
-            </div>
-          )}
         </div>
       </div>
     </div>

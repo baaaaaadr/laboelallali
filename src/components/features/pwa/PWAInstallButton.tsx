@@ -33,7 +33,7 @@ declare global {
  */
 type PWAInstallButtonProps = {
   /** Visual presentation style of the button */
-  variant?: 'button' | 'banner' | 'footer' | 'icon';
+  variant?: 'button' | 'banner' | 'footer' | 'icon' | 'tile';
   /** Additional CSS classes to apply */
   className?: string;
   /** Force button to show regardless of installation state (useful for testing) */
@@ -175,6 +175,30 @@ export default function PWAInstallButton({
         style={style}
       >
         <Download size={22} className="flex-shrink-0" />
+      </div>
+    );
+  }
+
+  // Tile variant: the 5th shortcut of the home hero grid (see HeroShortcuts).
+  // Uses the shared `.hero-tile*` classes so it is indistinguishable from the four
+  // <a> tiles beside it. <div role="button"> like the footer/icon variants, to
+  // bypass the global `button { background-color: transparent }` reset.
+  if (variant === 'tile') {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={isDisabled ? undefined : handleInstallClick}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInstallClick(); } }}
+        className={`hero-tile ${className} ${isDisabled ? 'opacity-70 cursor-not-allowed pointer-events-none' : ''}`}
+        aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
+        style={style}
+      >
+        <span className="hero-tile__icon">
+          <Download size={22} aria-hidden="true" />
+        </span>
+        <span className="hero-tile__label">{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
+        <span className="hero-tile__desc">{isClientReady ? t('hero_shortcuts.install_desc') : ''}</span>
       </div>
     );
   }

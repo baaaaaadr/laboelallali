@@ -80,10 +80,11 @@ export default function HomeClient({ lang }: { lang: string }) {
     <>
       {/* Hero Banner with Opening Hours Widget */}
       <div className="relative">
-        <HeroBanner onCallClick={handleCallClick} isMobile={isMobile} />
+        <HeroBanner lang={lang} onCallClick={handleCallClick} isMobile={isMobile} />
         {/* Discreet open/closed badge overlaid on the hero (top-right desktop,
-            top-centre mobile). Expands to the full hours card on hover / tap. */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 lg:left-auto lg:right-4 lg:translate-x-0">
+            top-centre mobile). Shows status + countdown; expands to the weekly
+            hours card on hover / tap. max-w keeps it inside a 320px viewport. */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 max-w-[calc(100vw-1.5rem)] lg:left-auto lg:right-4 lg:translate-x-0">
           <LabStatusWidget />
         </div>
       </div>

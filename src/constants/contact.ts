@@ -33,6 +33,14 @@ export const LAB_CONTACT = {
     display: "0661208635",
     url: "tel:0661208635"
   },
+  // Dr El Allali's own WhatsApp — for a medical question, answered by him.
+  // Deliberately distinct from WHATSAPP above (the front desk) and from
+  // COMPANIES (0661208635 — close-looking number, NOT the same one).
+  // No "+" in a wa.me URL.
+  DR_WHATSAPP: {
+    display: "0661291411",
+    url: "https://wa.me/212661291411"
+  },
   FAX: "0528828758",
   EMAIL: {
     display: "laboelallali@gmail.com",

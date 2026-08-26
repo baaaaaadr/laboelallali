@@ -1,6 +1,8 @@
 import React from 'react';
 import { Navigation, FileText } from 'lucide-react';
-import dynamic from 'next/dynamic';
+// Quick-access tiles (demande n° 15). Client component, imported eagerly: it is
+// above the fold and its five links are the primary entry points of the site.
+import HeroShortcuts from '@/components/features/home/HeroShortcuts';
 // Import useTranslation hook without type issues
 import { useTranslation as useTranslationOriginal } from 'react-i18next';
 import { LAB_CONTACT } from '@/constants/contact';
@@ -10,21 +12,14 @@ const useTranslation = (ns: string) => {
   return useTranslationOriginal(ns);
 };
 
-// Import the PWA install button component with SSR disabled
-const PWAInstallButton = dynamic<{ className?: string, variant?: 'button' | 'banner' | 'footer' }>(
-  () => import('@/components/features/pwa/PWAInstallButton').then(mod => mod.default),
-  { 
-    ssr: false,
-    loading: () => <div className="w-full h-12"></div> // Keep the layout stable while loading
-  }
-);
-
 interface HeroBannerProps {
+  /** Locale segment, needed to build the shortcut hrefs. */
+  lang: string;
   onCallClick?: (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void;
   isMobile?: boolean;
 }
 
-const HeroBanner: React.FC<HeroBannerProps> = ({ onCallClick, isMobile = true }) => {
+const HeroBanner: React.FC<HeroBannerProps> = ({ lang, onCallClick, isMobile = true }) => {
   // Use a simpler approach without type assertions
   const { t } = useTranslation('common');
 
@@ -51,6 +46,13 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCallClick, isMobile = true })
           <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 opacity-90 break-words hero-text" style={{ color: 'white !important' }}>
             {t('welcome_description')}
           </p>
+          {/* Quick-access tiles, in the order set by the lab: bilan, ordonnance,
+              résultats, WhatsApp du Dr, installation. They come BEFORE the three
+              historical buttons below, as requested. */}
+          <div className="mb-6 sm:mb-8">
+            <HeroShortcuts lang={lang} />
+          </div>
+
           <div className="flex flex-col gap-4 justify-center items-center w-full">
             {/* First row: 3 main action buttons on desktop, stacked on mobile */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
@@ -95,14 +97,10 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCallClick, isMobile = true })
                 {t('navigate_to_lab')}
               </a>
             </div>
-
-            {/* Second row: PWA button centered on desktop, full width on mobile */}
-            <div className="flex justify-center w-full">
-              <PWAInstallButton
-                variant="button"
-                className="w-full sm:w-auto sm:min-w-[200px]"
-              />
-            </div>
+            {/* The standalone PWA install button that used to sit here was removed:
+                installation is now the 5th tile of HeroShortcuts above, and two
+                install CTAs 100px apart made no sense. It is still reachable from
+                the footer (variant="footer") and the mobile menu (variant="icon"). */}
           </div>
         </div>
       </div>
