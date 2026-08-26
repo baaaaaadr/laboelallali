@@ -150,15 +150,15 @@
   "cancel": "Annuler",
   "personal_information": "Informations Personnelles",
   "or_continue_with": "Ou continuer avec",
-  "auth_error_unauthorized_domain": "La connexion n'est pas autoris\u00e9e sur ce domaine. Veuillez contacter le laboratoire.",
-  "auth_error_network": "Connexion r\u00e9seau impossible. V\u00e9rifiez votre connexion puis r\u00e9essayez.",
-  "auth_error_popup_blocked": "La fen\u00eatre Google a \u00e9t\u00e9 bloqu\u00e9e. R\u00e9essayez ou autorisez les popups pour ce site.",
-  "auth_error_google_cancelled": "Connexion Google annul\u00e9e.",
+  "auth_error_unauthorized_domain": "La connexion n'est pas autorisée sur ce domaine. Veuillez contacter le laboratoire.",
+  "auth_error_network": "Connexion réseau impossible. Vérifiez votre connexion puis réessayez.",
+  "auth_error_popup_blocked": "La fenêtre Google a été bloquée. Réessayez ou autorisez les popups pour ce site.",
+  "auth_error_google_cancelled": "Connexion Google annulée.",
   "auth_error_invalid_email": "L'adresse email est invalide.",
   "auth_error_invalid_credentials": "Email ou mot de passe incorrect.",
-  "auth_error_email_in_use": "Un compte existe d\u00e9j\u00e0 avec cette adresse email.",
-  "auth_error_weak_password": "Le mot de passe doit contenir au moins 6 caract\u00e8res.",
-  "auth_error_too_many_requests": "Trop de tentatives. Veuillez patienter avant de r\u00e9essayer.",
+  "auth_error_email_in_use": "Un compte existe déjà avec cette adresse email.",
+  "auth_error_weak_password": "Le mot de passe doit contenir au moins 6 caractères.",
+  "auth_error_too_many_requests": "Trop de tentatives. Veuillez patienter avant de réessayer.",
   "rights_reserved": "Tous droits réservés",
   "resultats": {
     "nav": "Résultats",
@@ -247,6 +247,17 @@
     "share_access_desc": "Un proche aussi pourrait consulter ses analyses en ligne. Partagez-lui le lien en un clic.",
     "share_access_cta": "Partager",
     "share_access_message": "Bonjour, je consulte désormais mes analyses médicales en ligne, directement sur mon téléphone, avec le Laboratoire El Allali — simple et sécurisé. Voici le lien si tu veux en profiter :"
+  },
+  "continue_with_google": "Continuer avec Google",
+  "or_use_email": "Ou utiliser une adresse e-mail",
+  "login_help": {
+    "intro": "Retrouvez toutes vos analyses en vous connectant ici avec votre compte Google.",
+    "no_google": "Vous n'avez pas de compte Google ? Créez-en un en trois minutes"
+  },
+  "google_prompt": {
+    "title": "Accédez à vos analyses",
+    "body": "Connectez-vous avec Google pour consulter vos résultats.",
+    "dismiss_aria": "Fermer"
   },
   "hero_shortcuts": {
     "bilan": "Faire mon bilan",

@@ -10,6 +10,10 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
 import PWAComponents from '@/components/features/pwa/PWAComponents';
+// Mounted here rather than inside PWAComponents: that component returns null in
+// standalone display mode, i.e. exactly inside the installed app, where the
+// sign-in invitation is most useful. Self-gating (auth state, route, dismissal).
+import GoogleSignInPrompt from '@/components/features/auth/GoogleSignInPrompt';
 import SplashRemover from '@/components/ui/SplashRemover';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ToastProvider from '@/components/providers/ToastProvider';
@@ -172,6 +176,7 @@ export default async function LangLayout({
             <Footer />
             <BottomNav />
             <PWAComponents />
+            <GoogleSignInPrompt />
             <ToastProvider />
             <SplashRemover />
             <Script id="pwa-init" strategy="afterInteractive">
