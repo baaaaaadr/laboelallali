@@ -30,8 +30,10 @@ exercée par `functions/scripts/test-health-check.js`.
 L'envoi d'email de toute l'app passe par **un seul endroit** : le mailer partagé
 `functions/src/email/mailer.ts` (`sendMail`, identifiants depuis Secret Manager
 `SMTP_USER`/`SMTP_PASS`). Deux façons de l'appeler :
-- **En interne** (même codebase) : la supervision (`healthCheck.ts`) et le hook
-  impact-patient (`fetchResults.ts`) appellent `sendMail` directement.
+- **En interne** (même codebase) : la supervision (`healthCheck.ts`), le hook
+  impact-patient (`fetchResults.ts`) et l'**alerte demande d'accès**
+  (`admin/adminPatients.ts` → `requestResultsAccess`, ajoutée en août 2026)
+  appellent `sendMail` directement.
 - **Depuis le site Next** : la route `/api/send-appointment` (RDV + glabo) appelle
   la fonction HTTPS **`sendEmail`** (`functions/src/email/sendEmailHttp.ts`,
   europe-west1), protégée par le secret `INTERNAL_EMAIL_TOKEN` (en-tête
@@ -144,8 +146,18 @@ firebase functions:secrets:set SMTP_PASS
 # CYBERLAB_API_KEY / CYBERLAB_HMAC_SECRET existent déjà
 
 # 2. règles + fonctions (ciblé — pas de --only functions nu)
+#
+# ⚠ ATTENTION : `firebase.json` n'a AUCUN hook `predeploy`, et `functions/lib/`
+# est gitignoré. Un déploiement de fonctions envoie donc le JS DÉJÀ COMPILÉ sur
+# le disque, pas la source. Sans le build préalable on redéploie du code périmé
+# — parfois celui d'une session de travail antérieure — et le symptôme est
+# « j'ai déployé mais rien n'a changé ».
+cd functions && npm run build && cd ..
+
 firebase deploy --only firestore:rules
 firebase deploy --only functions:checkCyberlabHealth,functions:joinOutageWaitlist,functions:fetchResults
+# alerte email sur demande d'accès (août 2026) :
+firebase deploy --only functions:requestResultsAccess
 
 # 3. invoker allUsers pour le nouveau callable (sinon CORS/403)
 cd functions && node scripts/grant-invoker.js

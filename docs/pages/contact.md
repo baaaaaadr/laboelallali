@@ -21,7 +21,10 @@ This page acts as the laboratory's primary contact, coordinates, and FAQ screen.
 
 ### 3. Practical Information & FAQ Sections
 - Displays pre-analytical recommendations, required patient documents, and hours.
-- Incorporates a list of four common FAQs (`faq_questions.q1` to `faq_questions.q4` and responses `faq_questions.a1` to `faq_questions.a4`) loaded translation-ready via i18next namespace labels.
+- Four FAQs rendered by a `[1,2,3,4].map(...)` over `faq_questions.q{n}` / `a{n}` (namespace `common`). Plain always-visible cards — **not** an accordion, and there is no reusable disclosure component here.
+- **`a3` — "Comment puis-je récupérer mes résultats ?" — was rewritten in août 2026 (demande n° 17).** It still promised online results "bientôt" long after `/resultats` had shipped. It now says the patient can consult them right away, and card 3 alone carries a CTA to `/${lang}/resultats` via a `num === 3` condition inside the map, plus the `faq_questions.a3_cta` key.
+  - **The CTA is a separate `<Link>` on purpose, NOT a `<Trans>` with an embedded anchor.** This repo uses `<Trans>` nowhere; introducing component interpolation for one card would add a whole i18n pattern for no benefit. The chevron is flipped with `rotate-180` in RTL.
+  - **Wording constraint:** do not write "à tout moment" or "24h/24". Online consultation depends on the lab's CyberLab server, and `/resultats` shows an outage panel (`OutageOptIn` + `VerdictPanel`) that would contradict the promise two clicks later.
 
 ## Data & Constants
 All laboratory metadata is loaded from `/src/constants/contact.ts`:

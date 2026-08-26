@@ -16,8 +16,12 @@ A sub-component responsible for running parallel Firestore queries to fetch the 
 - **Module-level `catalogCache`** (top of the page file): the catalog is language-independent (each entry has both FR and AR fields), but switching language remounts the whole `[lang]` subtree. Without the cache the ~324-doc Firestore fetch re-ran on every fr↔ar switch (a multi-second "reload"). Now the fetcher reuses `catalogCache` when present (no refetch — just re-render with the other language), and the parent's `analyses`/`bilans`/`loading` state is **seeded from the cache** so there's no loader flash. Memory only; a full page reload refetches. The results page's "Détails des analyses" uses a SEPARATE loader (`src/lib/analyses/catalog.ts`).
 
 ### 2. Tab Navigation & Filtering
-- **TabsNavigation:** Switches views between `Nos Bilans` (packaged bundles), `Catalogue Complet` (individual tests), or category-specific collections.
-- **SortToolbar:** Provides controls to sort analyses by name (alphabetically) or popularity (descending request count).
+- **TabsNavigation:** switches between `Catalogue Complet` (individual tests) and `Nos Bilans` (packaged bundles), **in that order, with `Catalogue Complet` open by default** since demande n° 16 (août 2026 — the lab asked for the two tabs to swap places).
+  - **`TAB_ORDER` and `DEFAULT_TAB`, module-level constants at the top of `analyses/page.tsx`, are the SINGLE revert point.** To put the packaged bilans back in front — they carry a higher basket value, so this is a commercial decision worth revisiting — set `['bilans', 'all']` and `DEFAULT_TAB = 'bilans'`. Nothing else changes.
+  - **The ids `'all'` and `'bilans'` are contractual.** `?tab=bilans` is linked from `CheckupReminder`, `MainServices`, `UniversalSearchModal` and the `ServicesHub` tile. Renaming them silently breaks all four.
+  - `activeTab` is initialised **lazily** from `?tab=` rather than defaulted-then-corrected in an effect: with `DEFAULT_TAB = 'all'`, a deep link on `?tab=bilans` would otherwise flash the full catalogue for one frame. The effect is kept for later client-side URL changes.
+  - **Compact mode (`tabs.length <= 3`) in `TabsNavigation`:** with two tabs the rail no longer scrolls — the buttons take `flex-1` across the full width and wrap onto two lines rather than being clipped. The scroll arrows are `hidden lg:flex`, so on a phone an overflowing rail gave *no* affordance at all and "Catalogue Complet (324)" simply looked cut off at the screen edge — that was the actual bug reported. **The inline 20 px padding is dropped in compact mode**, otherwise `flex-1` is inoperative at 320 px. Above 3 tabs it reverts to the scrollable rail on its own, so re-enabling category tabs needs no change here.
+- **SortToolbar:** sorts by popularity (descending request count) or name (alphabetical). **That is all — there is no "Catégorie" option any more (demande n° 16).** See the Notes for AI for what went with it.
 - **Search Bar:** Real-time filter matching search queries against test names, category labels, or tags (supporting both French and Arabic).
 
 ### 3. Modals & Detail Popups
@@ -51,9 +55,8 @@ A sub-component responsible for running parallel Firestore queries to fetch the 
   - Type: `{ type: 'analyse'; item: AnalyseItem } | { type: 'bilan'; item: BilanItem; excludedCodes?: string[] }`
   - `excludedCodes` (bilan only): array of raw composition codes the user has unchecked in the expandable bilan view. Absent = empty = all analyses included. Backwards-compatible with existing localStorage data.
 - `cartView` (CartView): Derived state computed by `computeCartView(selectedItems, normalizedAnalysesMap, SAMPLING_FEE)` via `useMemo`. **Single source of truth** for all cart display and pricing — replaces the old manual `totalCost` computation.
-- `activeTab`: Current visual tab ('bilans', 'all', or category strings).
-- `sortBy`: Active sort option ('popularity', 'name', 'category').
-- `closedCategories`: Track accordion collapsed state when sorted by category.
+- `activeTab`: current visual tab — `'all'` (default) or `'bilans'`. Initialised lazily from `?tab=`; order and default come from `TAB_ORDER` / `DEFAULT_TAB`.
+- `sortBy`: active sort option — `'popularity'` (default) or `'name'`. `SortOption` is deliberately narrowed to those two: any leftover `sortBy === 'category'` comparison becomes a TS "no overlap" error, which is how the removal was made exhaustive (`next build` would not have caught it — `ignoreBuildErrors: true`).
 - `visibleCount`: Number of items currently shown (lazy rendering / infinite scroll, `ITEMS_PER_PAGE = 24`).
 
 ## Cart Logic Layer (`src/lib/cart/`)
@@ -91,6 +94,8 @@ Immutable helpers:
   - **PC / Desktop:** `generateDevisPdf({ download: false })` → the returned blob is turned into an object URL and shown first in a large preview modal (`PdfPreviewModal`, rendered via `<iframe>`). The user reviews the document, then clicks "Télécharger" (`downloadFromPreview`) to actually save it. While generating, the button is disabled and shows a spinner (`isGeneratingPdf`). The object URL is revoked on close/unmount to avoid leaks.
 
 ## Notes for AI
+- **The "Catégorie" sort is gone, and it was never a sort.** Selecting it switched the whole tab to an accordion of category sections. Removed wholesale in demande n° 16: the `SortOption` member, the `sortOptions` entry (its i18n key `tabs.by_category` never existed in either locale — the label was a hardcoded fallback), the `categoriesWithAnalyses` memo, the `closedCategories` state, the infinite-scroll guard `sortBy !== 'category'`, the `ChevronDown`/`ChevronUp` imports and ~145 lines of nested JSX. Done in its own commit so a `git revert` stays one command.
+- **Two pieces of dead code were KEPT ON PURPOSE — do not "finish the job".** ① the `activeTab !== 'bilans' && activeTab !== 'all'` block near the end of `analyses/page.tsx` (per-category tabs were never enabled; the `tabsList.push` for them has been commented out for a long time) and ② `src/components/features/catalog/CategoryAccordion.tsx`, already orphaned. Both share variables — `displayedAnalyses`, `getCategoryIcon`, the infinite-scroll `ref` — with live code, so removing them in the same breath would have made the category-sort revert unusable. `getCategoryIcon` must stay imported for ①.
 - **Single source of truth:** All pricing and dedup logic lives in `computeCartView`. Never recompute prices inline in components — always derive from `cartView`.
 - **Dedup visual treatment:** Duplicate analyses (already covered by another cart item) are shown with grey italic text, strikethrough price, and a `(déjà incluse dans Bilan X)` tag. Their price is 0 in the total. Do NOT present this as "savings" or "économies" — it is a transparency feature.
 - **Expandable bilans:** Clicking a bilan row in the cart expands it inline. There is no modal for bilan detail from within the cart. `BilanDetailsModal` is only for catalog browsing.

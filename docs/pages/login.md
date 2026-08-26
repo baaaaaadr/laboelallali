@@ -14,6 +14,17 @@ Google auth uses `signInWithPopup` as the primary flow on desktop, mobile browse
 ### Step 1 - Auth (`step === 'auth'`)
 Shown to all unauthenticated visitors. Switches between login mode and signup mode via `isSignUp`.
 
+**Visual order, reworked in août 2026 (demandes n° 19 and 21) — Google comes FIRST:**
+1. Header (logo tile, `sign_in`/`create_account`, subtitle).
+2. **Help texts** — `login_help.intro` ("Retrouvez toutes vos analyses en vous connectant ici avec votre compte Google.") and `login_help.no_google`, an external link to `accounts.google.com/signup?hl={fr|ar}` so Google greets the patient in their own language.
+3. **The error block** — moved OUT of the `<form>`. `handleGoogleLogin` also calls `setError`, and with Google above the form a Google error would otherwise render far below the button that produced it.
+4. **The Google button**, full width. Promoted **by hierarchy, not by colour**: Google's branding rules require the white/black/blue button with the official G mark, so it gets `border-2`, `text-base font-semibold` and a real label (`continue_with_google`) instead of the bare word "Google" it used to show.
+5. **Separator `or_use_email`** — a NEW key. `or_continue_with` ("Ou continuer avec") introduced Google; it makes no sense now that it introduces the email form. The old key is left in place, unused, rather than having its meaning silently changed.
+6. The email/password `<form>`.
+7. The login↔signup toggle.
+
+The third element the lab asked for in demande n° 21 — "un agent du laboratoire vous assiste" — is **deliberately absent**: it needs a call-back workflow (request storage, staff notification, an admin tab), which is a separately quoted line, not a sentence.
+
 **Login mode (`isSignUp = false`):** email + password only.
 
 **Signup mode (`isSignUp = true`):** 5 fields + a mandatory consent checkbox in a single form:
@@ -104,7 +115,9 @@ Effects:
 
 ## Auto results-access request (staff onboarding)
 
-On **every completed signup** — email signup (`handleEmailAuth`, `isSignUp`) AND Google profile completion (`handleProfileSubmit`) — the page calls **`autoRequestResultsAccess()`** right after `refreshProfile()`, before the redirect. It invokes the shared `requestResultsAccess` callable once, creating `resultAccessRequests/{uid}` = `pending` — the exact same document the "Demander l'accès à mes résultats" button on `/resultats` creates.
+On **every completed signup** — email signup (`handleEmailAuth`, `isSignUp`) AND Google profile completion (`handleProfileSubmit`) — the page calls **`autoRequestResultsAccess()`** right after `refreshProfile()`, before the redirect. It invokes the shared `requestResultsAccess` callable once with `{ source: 'signup' }`, creating `resultAccessRequests/{uid}` = `pending` — the exact same document the "Demander l'accès à mes résultats" button on `/resultats` creates (that one passes `{ source: 'results_page' }`).
+
+**Since août 2026 this also sends an email to the lab staff** (demande n° 18) — see `docs/pages/admin.md`. `source` is what tells whoever calls the patient back whether they asked for access themselves or were enrolled automatically at signup. It is client input, so the callable matches it against a server-side whitelist.
 
 **Why (Dr Aziz):** the pending-requests queue doubles as the front desk's **onboarding / outreach list**. Every new registrant lands there automatically so a staff member can phone them and offer/explain the online-results service — the patient never has to find or press the button. This is deliberately fired for ALL new accounts, not only results-seekers.
 
@@ -117,9 +130,18 @@ On **every completed signup** — email signup (`handleEmailAuth`, `isSignUp`) A
 ## Firebase Auth Methods
 - **Email login:** `signInWithEmailAndPassword`
 - **Email signup:** `createUserWithEmailAndPassword` + immediate `setDoc` to `users/{uid}`
-- **Google primary flow:** `signInWithPopup(auth, new GoogleAuthProvider())`
-- **Google fallback:** `signInWithRedirect(auth, provider)` + `getRedirectResult(auth)`, used when the browser blocks the popup
+- **Google:** both flows live in **`src/lib/auth/googleSignIn.ts` → `signInWithGoogle()`**, extracted in août 2026 when `GoogleSignInPrompt` became a second caller. Popup first (`signInWithPopup`), full-page `signInWithRedirect` only on `auth/popup-blocked`. **That fallback exists in exactly one place — do not re-inline it.** The popup path works on most browsers, so a divergent copy of the blocked-popup branch would go unnoticed for months. Error *messages* stay with the callers (this page has `getAuthErrorMessage` + inline state; the banner just closes).
+  - Note the contract: `signInWithGoogle()` resolving does **not** mean the user is signed in — on the redirect path the page navigates away and the result is consumed by `getRedirectResult(auth)` on mount here.
 - **Password reset:** `sendPasswordResetEmail`
+
+## Global sign-in prompt (`GoogleSignInPrompt`)
+`src/components/features/auth/GoogleSignInPrompt.tsx`, added for demande n° 19 ("proposer de se connecter par gmail dès ouverture de l'app"). Modelled on `IOSInstallBanner`: a dismissible strip, never a modal, rendering `null` until it has something to say.
+- **Mounted in `src/app/[lang]/layout.tsx`, NOT in `PWAComponents`.** That component `return null`s when `display-mode: standalone` — i.e. exactly inside the installed app, where the invitation matters most.
+- Gating, all of which must hold: `!loading && user === null`; the current section is not in `HIDDEN_ROUTES` (`login`, `rendez-vous`, `glabo`, `profile`, `admin`, `resultats`, `confidentialite` — never interrupt a booking funnel, and `/resultats` already has its own auth CTA, two competing ones cancel out); no dismissal within 30 days; and on iOS, `iosInstallBannerDismissed` must already be set (one solicitation at a time).
+- **Dismissal is a timestamp, not a boolean** (`googleSignInPromptDismissedAt` + 30-day snooze). A permanent `'true'` would kill the CTA on that device forever, including for someone who simply was not ready that day.
+- **3-second delay before appearing.** On the first paint it read as a pop-up and covered the page before the visitor had seen any of it.
+- Positioned `fixed`, `z-[900]` (below the PWA banner's `z-[999]`), offset by `var(--mobile-bottom-nav-offset)` so it never covers `BottomNav`.
+- **THE INVARIANT — every Google account creation goes through `/login`.** A first Google sign-in produces an authenticated user with no Firestore profile and no phone number. Profile completion (Step 2) and `autoRequestResultsAccess()` exist **only on this page**. So after a successful `signInWithGoogle()` the banner does `router.push('/{lang}/login')` and hands over: the existing effect either shows Step 2 or forwards a complete profile to `getRedirectTarget(lang)`. Without that push, the banner would mint accounts that are authenticated, phone-less, and never enter the lab's onboarding queue — the exact opposite of its purpose.
 
 ## Firebase Client Auth Initialization
 `getClientAuth()` in `src/config/firebase.ts` initializes Firebase Auth lazily in the browser with:
