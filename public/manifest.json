@@ -10,6 +10,10 @@
   "theme_color": "#800020",
   "scope": "/",
   "orientation": "portrait-primary",
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "icons": [
     {
       "src": "/images/icons/icon-192x192.png",
