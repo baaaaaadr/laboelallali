@@ -22,6 +22,7 @@ import toast from 'react-hot-toast';
 import { Search, Star, BookOpen, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { LAB_CONTACT } from "@/constants/contact";
+import { BILANS_ENABLED } from "@/constants/features";
 import MedicalLoader from "@/components/ui/MedicalLoader";
 import { computeCartView } from "@/lib/cart/cartView";
 import { toggleBilanCompositionExclusion } from "@/lib/cart/cartItem";
@@ -37,11 +38,16 @@ const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
 let catalogCache: { analyses: AnalyseItem[]; bilans: BilanItem[] } | null = null;
 
 // Tab display order and the tab opened by default (demande n. 16: the lab asked
-// for the two tabs to swap places). THIS IS THE SINGLE REVERT POINT — to put the
-// packaged bilans back in front, set ['bilans', 'all'] and DEFAULT_TAB = 'bilans'.
-// The ids themselves are contractual: `?tab=bilans` is linked from CheckupReminder,
+// for the two tabs to swap places). Driven by BILANS_ENABLED, which is OFF since
+// 26/08/2026 — the bilans tab is hidden while the lab reworks the bundles, so
+// only the full catalogue is left and the tab bar is not rendered at all
+// (a single tab is a decorative button, not navigation).
+// TO REVERT: flip BILANS_ENABLED back to true in src/constants/features.ts.
+// To go further and put the bilans back IN FRONT: ['bilans', 'all'] + DEFAULT_TAB.
+// The ids are contractual: `?tab=bilans` is linked from CheckupReminder,
 // MainServices, UniversalSearchModal and the ServicesHub tile — never rename them.
-const TAB_ORDER = ['all', 'bilans'] as const;
+// Those links keep working while bilans are hidden: they land on the catalogue.
+const TAB_ORDER: readonly string[] = BILANS_ENABLED ? ['all', 'bilans'] : ['all'];
 const DEFAULT_TAB = 'all';
 
 // Data fetcher component
@@ -170,13 +176,15 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   // Lazy init rather than "default then correct in an effect": with DEFAULT_TAB
   // now 'all', a deep link on ?tab=bilans would visibly flash the full catalogue
   // for one frame before switching.
+  // `?tab=bilans` is honoured only while the bilans tab exists; otherwise the
+  // visitor silently gets the catalogue instead of a tab with no button.
   const [activeTab, setActiveTab] = useState<string>(
-    () => (tabParam === 'bilans' || tabParam === 'all' ? tabParam : DEFAULT_TAB)
+    () => (TAB_ORDER.includes(tabParam || '') ? (tabParam as string) : DEFAULT_TAB)
   );
 
   // Keep following the query param if it changes after mount (client navigation)
   useEffect(() => {
-    if (tabParam && (tabParam === 'all' || tabParam === 'bilans')) {
+    if (tabParam && TAB_ORDER.includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -349,6 +357,8 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         count: sortedAnalyses.length
       }
     };
+    // Star stays imported and `defs.bilans` stays built even when hidden — the
+    // whole point of BILANS_ENABLED is that flipping it back changes nothing else.
 
     // Category tabs were never enabled (they would push tabs.length past 3 and
     // switch TabsNavigation back to its scrollable rail — which is the intended
@@ -714,15 +724,19 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
               </div>
             </div>
 
-            {/* Tabs - Directly below search */}
-            <div className="pb-2">
-              <TabsNavigation
-                tabs={tabs}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                isRtl={isArabic}
-              />
-            </div>
+            {/* Tabs - Directly below search. Hidden when only one tab remains
+                (bilans disabled): a lone tab is a decorative button, not
+                navigation, and it would read as a filter that cannot be changed. */}
+            {tabs.length > 1 && (
+              <div className="pb-2">
+                <TabsNavigation
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  isRtl={isArabic}
+                />
+              </div>
+            )}
           </div>
         </div>
 

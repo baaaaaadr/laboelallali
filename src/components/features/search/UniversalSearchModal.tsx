@@ -12,6 +12,7 @@ import type { Medecin } from '@/types/medecin';
 import { getIconComponent, getCategoryIcon } from '@/utils/iconMapper';
 import { Search, X, Stethoscope } from 'lucide-react';
 import MedicalLoader from '@/components/ui/MedicalLoader';
+import { BILANS_ENABLED } from '@/constants/features';
 
 interface Props {
   isOpen: boolean;
@@ -156,11 +157,18 @@ export default function UniversalSearchModal({ isOpen, onClose, lang }: Props) {
       .slice(0, 5)
       .map(x => x.item);
 
+    // Bilan hits are withheld while the bilans are hidden (BILANS_ENABLED,
+    // 26/08/2026): clicking one would route to ?tab=bilans, a tab that no longer
+    // exists, and land the patient on the catalogue searching for a bundle name
+    // that matches no individual test — a dead end. Scoring is left intact so
+    // flipping the flag back needs no change here.
+    const visibleBilans = BILANS_ENABLED ? scoredBilans : [];
+
     return {
-      bilans: scoredBilans,
+      bilans: visibleBilans,
       analyses: scoredAnalyses,
       medecins: scoredMedecins,
-      total: scoredBilans.length + scoredAnalyses.length + scoredMedecins.length,
+      total: visibleBilans.length + scoredAnalyses.length + scoredMedecins.length,
     };
   }, [debouncedQuery, bilans, analyses, medecins, isArabic]);
 

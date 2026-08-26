@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { BILANS_ENABLED } from '@/constants/features';
 
 interface ServicesHubProps {
   lang: string;
@@ -28,10 +29,16 @@ export default function ServicesHub({ lang }: ServicesHubProps) {
   const services = [
     { key: 'appointment', href: `/${lang}/rendez-vous`, icon: CalendarDays, label: t('services_hub.appointment'), desc: t('services_hub.appointment_desc') },
     { key: 'glabo', href: `/${lang}/glabo`, icon: Truck, label: t('services_hub.glabo'), desc: t('services_hub.glabo_desc') },
-    // `?tab=bilans` is required: this tile is labelled "Nos bilans" but the
-    // analyses page now opens on the full catalogue by default (demande n. 16),
-    // so without it the tile would contradict its own label.
-    { key: 'analyses', href: `/${lang}/analyses?tab=bilans`, icon: FlaskConical, label: t('services_hub.analyses'), desc: t('services_hub.analyses_desc') },
+    // This tile is labelled "Nos bilans", so it needs `?tab=bilans` — the
+    // analyses page opens on the full catalogue by default (demande n. 16) and
+    // the tile would otherwise contradict its own label.
+    // While the bilans are hidden (BILANS_ENABLED, 26/08/2026) it becomes a
+    // plain "Catalogue des analyses" tile on the same page: dropping it
+    // altogether would cost the home page its entry to the catalogue, and
+    // keeping the old label would have been a lie.
+    BILANS_ENABLED
+      ? { key: 'analyses', href: `/${lang}/analyses?tab=bilans`, icon: FlaskConical, label: t('services_hub.analyses'), desc: t('services_hub.analyses_desc') }
+      : { key: 'analyses', href: `/${lang}/analyses`, icon: FlaskConical, label: t('services_hub.catalog'), desc: t('services_hub.catalog_desc') },
     { key: 'medecins', href: `/${lang}/medecins`, icon: Stethoscope, label: t('services_hub.medecins'), desc: t('services_hub.medecins_desc') },
     { key: 'contact', href: `/${lang}/contact`, icon: Phone, label: t('services_hub.contact'), desc: t('services_hub.contact_desc') },
   ];

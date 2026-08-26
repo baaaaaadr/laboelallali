@@ -359,6 +359,8 @@
     "install_desc": "على شاشة هاتفك الرئيسية"
   },
   "services_hub": {
+    "catalog": "دليل التحاليل",
+    "catalog_desc": "الأثمنة ومدة الحصول على النتائج",
     "title": "خدماتنا",
     "results_badge": "جديد",
     "appointment": "حجز موعد",

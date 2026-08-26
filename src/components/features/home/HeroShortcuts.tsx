@@ -23,6 +23,7 @@ import dynamic from 'next/dynamic';
 import { FlaskConical, Upload, FileText, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LAB_CONTACT } from '@/constants/contact';
+import { BILANS_ENABLED } from '@/constants/features';
 
 const PWAInstallButton = dynamic<{ variant?: 'button' | 'banner' | 'footer' | 'icon' | 'tile' }>(
   () => import('@/components/features/pwa/PWAInstallButton'),
@@ -32,12 +33,15 @@ const PWAInstallButton = dynamic<{ variant?: 'button' | 'banner' | 'footer' | 'i
 export default function HeroShortcuts({ lang }: { lang: string }) {
   const { t } = useTranslation('common');
 
-  // Internal destinations. `?tab=bilans` is required: the analyses page now opens
-  // on the full catalogue by default (see docs/pages/analyses.md).
+  // Internal destinations. `?tab=bilans` is needed while that tab exists — the
+  // analyses page opens on the full catalogue by default (docs/pages/analyses.md).
+  // With the bilans hidden the tile points at the catalogue, which actually
+  // matches the lab's own wording better: they asked for "faites votre PROPRE
+  // bilan", i.e. compose your own from the catalogue, not pick a packaged one.
   const tiles = [
     {
       key: 'bilan',
-      href: `/${lang}/analyses?tab=bilans`,
+      href: BILANS_ENABLED ? `/${lang}/analyses?tab=bilans` : `/${lang}/analyses`,
       icon: FlaskConical,
       label: t('hero_shortcuts.bilan'),
       desc: t('hero_shortcuts.bilan_desc'),

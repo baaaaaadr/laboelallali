@@ -271,6 +271,8 @@
     "install_desc": "Sur votre écran d'accueil"
   },
   "services_hub": {
+    "catalog": "Catalogue des analyses",
+    "catalog_desc": "Tarifs et délais de résultat",
     "title": "Nos services",
     "results_badge": "Nouveau",
     "appointment": "Prendre rendez-vous",

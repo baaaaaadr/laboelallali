@@ -18,6 +18,7 @@
 import Link from 'next/link';
 import { CalendarClock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { BILANS_ENABLED } from '@/constants/features';
 import { useAuth } from '@/contexts/AuthContext';
 import { useResults } from '@/contexts/ResultsContext';
 import { computeResultsStats } from '@/lib/results/stats';
@@ -100,12 +101,18 @@ export default function CheckupReminder({
             >
               {t('resultats.checkup_cta_appointment', 'Prendre rendez-vous')}
             </Link>
-            <Link
-              href={`/${lang}/analyses?tab=bilans`}
-              className="button-bordeaux-outline justify-center"
-            >
-              {t('resultats.checkup_cta_bilans', 'Découvrir nos bilans')}
-            </Link>
+            {/* "Découvrir nos bilans" is dropped while the bilans are hidden
+                (BILANS_ENABLED, 26/08/2026) rather than repointed at the
+                catalogue: the label promises the bundles specifically. The
+                "Prendre rendez-vous" button above still carries the reminder. */}
+            {BILANS_ENABLED && (
+              <Link
+                href={`/${lang}/analyses?tab=bilans`}
+                className="button-bordeaux-outline justify-center"
+              >
+                {t('resultats.checkup_cta_bilans', 'Découvrir nos bilans')}
+              </Link>
+            )}
           </div>
         </div>
       </div>
