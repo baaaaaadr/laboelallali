@@ -27,6 +27,13 @@ export function TabsNavigation({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
+  // Compact mode: with 2 or 3 tabs, spread them across the full width instead of
+  // using a scrollable rail. The scroll arrows are `hidden lg:flex`, so on a phone
+  // an overflowing rail offers NO affordance at all — "Catalogue Complet (324)"
+  // simply looks cut off at the screen edge, which is exactly what was reported.
+  // Turns itself off again if category tabs are ever re-enabled (length > 3).
+  const compact = tabs.length <= 3;
+
   // Update scroll button states
   const updateScrollButtons = () => {
     if (scrollContainerRef.current) {
@@ -95,7 +102,9 @@ export function TabsNavigation({
       {/* Tabs container */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-2 overflow-x-auto scrollbar-hide px-1 py-2 scroll-smooth"
+        className={`flex gap-2 px-1 py-2 ${
+          compact ? 'w-full' : 'overflow-x-auto scrollbar-hide scroll-smooth'
+        }`}
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none'
@@ -111,8 +120,11 @@ export function TabsNavigation({
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`
-                flex items-center gap-2 rounded-lg
-                whitespace-nowrap flex-shrink-0 min-w-max
+                flex items-center justify-center gap-2 rounded-lg
+                ${compact
+                  ? 'flex-1 min-w-0 whitespace-normal text-center leading-tight px-3 py-2.5 sm:px-5'
+                  : 'whitespace-nowrap flex-shrink-0 min-w-max'
+                }
                 min-h-[44px]
                 transition-all duration-200
                 focus:outline-none focus:ring-2 focus:ring-[#E3004F] focus:ring-offset-2
@@ -121,7 +133,10 @@ export function TabsNavigation({
                   : 'bg-transparent text-[var(--text-primary)] border-2 border-[var(--border-default)] hover:border-[var(--color-fuchsia-accent)]'
                 }
               `}
-              style={{
+              // The inline padding wins over any Tailwind class, so it MUST be
+              // dropped in compact mode: 20px on each side makes flex-1 useless
+              // on a 320px screen.
+              style={compact ? undefined : {
                 paddingLeft: '20px',
                 paddingRight: '20px',
                 paddingTop: '10px',

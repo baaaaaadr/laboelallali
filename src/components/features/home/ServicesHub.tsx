@@ -28,7 +28,10 @@ export default function ServicesHub({ lang }: ServicesHubProps) {
   const services = [
     { key: 'appointment', href: `/${lang}/rendez-vous`, icon: CalendarDays, label: t('services_hub.appointment'), desc: t('services_hub.appointment_desc') },
     { key: 'glabo', href: `/${lang}/glabo`, icon: Truck, label: t('services_hub.glabo'), desc: t('services_hub.glabo_desc') },
-    { key: 'analyses', href: `/${lang}/analyses`, icon: FlaskConical, label: t('services_hub.analyses'), desc: t('services_hub.analyses_desc') },
+    // `?tab=bilans` is required: this tile is labelled "Nos bilans" but the
+    // analyses page now opens on the full catalogue by default (demande n. 16),
+    // so without it the tile would contradict its own label.
+    { key: 'analyses', href: `/${lang}/analyses?tab=bilans`, icon: FlaskConical, label: t('services_hub.analyses'), desc: t('services_hub.analyses_desc') },
     { key: 'medecins', href: `/${lang}/medecins`, icon: Stethoscope, label: t('services_hub.medecins'), desc: t('services_hub.medecins_desc') },
     { key: 'contact', href: `/${lang}/contact`, icon: Phone, label: t('services_hub.contact'), desc: t('services_hub.contact_desc') },
   ];
