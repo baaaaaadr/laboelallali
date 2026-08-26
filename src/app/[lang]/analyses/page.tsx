@@ -18,7 +18,8 @@ import CartSidePanel from "@/components/features/catalog/CartSidePanel";
 import { getCategoryIcon } from '@/utils/iconMapper';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { Search, Star, BookOpen, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X } from 'lucide-react';
+// ChevronDown/ChevronUp went away with the "by category" accordion (demande n. 16).
+import { Search, Star, BookOpen, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { LAB_CONTACT } from "@/constants/contact";
 import MedicalLoader from "@/components/ui/MedicalLoader";
@@ -34,6 +35,14 @@ const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
 // Firestore fetch runs again every fr↔ar switch). Memory only; a full page reload
 // refetches (picks up any catalog change).
 let catalogCache: { analyses: AnalyseItem[]; bilans: BilanItem[] } | null = null;
+
+// Tab display order and the tab opened by default (demande n. 16: the lab asked
+// for the two tabs to swap places). THIS IS THE SINGLE REVERT POINT — to put the
+// packaged bilans back in front, set ['bilans', 'all'] and DEFAULT_TAB = 'bilans'.
+// The ids themselves are contractual: `?tab=bilans` is linked from CheckupReminder,
+// MainServices, UniversalSearchModal and the ServicesHub tile — never rename them.
+const TAB_ORDER = ['all', 'bilans'] as const;
+const DEFAULT_TAB = 'all';
 
 // Data fetcher component
 const CatalogDataFetcher = ({
@@ -158,9 +167,14 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
   const qParam = searchParams.get('q');
-  const [activeTab, setActiveTab] = useState<string>('bilans');
+  // Lazy init rather than "default then correct in an effect": with DEFAULT_TAB
+  // now 'all', a deep link on ?tab=bilans would visibly flash the full catalogue
+  // for one frame before switching.
+  const [activeTab, setActiveTab] = useState<string>(
+    () => (tabParam === 'bilans' || tabParam === 'all' ? tabParam : DEFAULT_TAB)
+  );
 
-  // Handle initial tab from query param
+  // Keep following the query param if it changes after mount (client navigation)
   useEffect(() => {
     if (tabParam && (tabParam === 'all' || tabParam === 'bilans')) {
       setActiveTab(tabParam);
@@ -172,7 +186,6 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
     if (qParam) setSearchTerm(qParam);
   }, [qParam]);
   const [sortBy, setSortBy] = useState<SortOption>('popularity');
-  const [closedCategories, setClosedCategories] = useState<Set<string>>(new Set());
 
   // Create analyses map for fast lookups
   const analysesMap = useMemo(() => {
@@ -312,61 +325,37 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
         return nameA.localeCompare(nameB, lang);
       });
     } else {
-      // popularity (default) and category both sort by popularity
+      // popularity — the default and only other sort since 'category' was removed
       sorted.sort((a, b) => (b.Nombre_Demandes || 0) - (a.Nombre_Demandes || 0));
     }
 
     return sorted;
   }, [filteredAnalyses, sortBy, isArabic, lang]);
 
-  // Categories with analyses — uses sortedAnalyses to keep popularity order within each group
-  const categoriesWithAnalyses = useMemo(() => {
-    const categoryMap = new Map<string, AnalyseItem[]>();
-
-    sortedAnalyses.forEach(analyse => {
-      const category = isArabic ? analyse.Categorie_AR : analyse.Categorie_FR;
-      if (!categoryMap.has(category)) categoryMap.set(category, []);
-      categoryMap.get(category)!.push(analyse);
-    });
-
-    return Array.from(categoryMap.entries())
-      .map(([name, analyses]) => ({ name, analyses }))
-      .sort((a, b) => a.name.localeCompare(b.name, lang))
-      .filter(cat => cat.analyses.length > 0);
-  }, [sortedAnalyses, isArabic, lang]);
-
-  // NEW: Build tabs list dynamically
+  // Tabs, rendered in TAB_ORDER (see the constant at the top of the file for the
+  // revert instructions). Category tabs stay disabled — see the note below.
   const tabs: TabItem[] = useMemo(() => {
-    const tabsList: TabItem[] = [];
+    const defs: Record<string, TabItem> = {
+      bilans: {
+        id: 'bilans',
+        label: t('tabs.our_bilans', 'Nos Bilans'),
+        icon: Star,
+        count: sortedBilans.length
+      },
+      all: {
+        id: 'all',
+        label: t('tabs.full_catalog', 'Catalogue Complet'),
+        icon: BookOpen,
+        count: sortedAnalyses.length
+      }
+    };
 
-    // 1. Nos Bilans tab (always visible)
-    tabsList.push({
-      id: 'bilans',
-      label: t('tabs.our_bilans', 'Nos Bilans'),
-      icon: Star,
-      count: sortedBilans.length
-    });
+    // Category tabs were never enabled (they would push tabs.length past 3 and
+    // switch TabsNavigation back to its scrollable rail — which is the intended
+    // behaviour, nothing to change there if they ever come back).
 
-    // 2. Catalogue Complet tab
-    tabsList.push({
-      id: 'all',
-      label: t('tabs.full_catalog', 'Catalogue Complet'),
-      icon: BookOpen,
-      count: sortedAnalyses.length
-    });
-
-    // 3. Category tabs (only non-empty) - HIDDEN FOR NOW
-    // categoriesWithAnalyses.forEach(({ name, analyses }) => {
-    //   tabsList.push({
-    //     id: name, // Category name as ID
-    //     label: name,
-    //     icon: getCategoryIcon(name),
-    //     count: analyses.length
-    //   });
-    // });
-
-    return tabsList;
-  }, [sortedBilans, sortedAnalyses, categoriesWithAnalyses, t]);
+    return TAB_ORDER.map((id) => defs[id]);
+  }, [sortedBilans, sortedAnalyses, t]);
 
 
   // Cart operations
@@ -647,10 +636,10 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   });
 
   useEffect(() => {
-    if (inView && !loading && sortBy !== 'category' && displayedAnalyses.length > visibleCount) {
+    if (inView && !loading && displayedAnalyses.length > visibleCount) {
       setVisibleCount(prev => prev + ITEMS_PER_PAGE);
     }
-  }, [inView, loading, sortBy, displayedAnalyses.length, visibleCount]);
+  }, [inView, loading, displayedAnalyses.length, visibleCount]);
 
   // Reset pagination when tab, search or sort changes
   useEffect(() => {
@@ -787,162 +776,61 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
                   {/* Sort toolbar */}
                   <SortToolbar
                     sortBy={sortBy}
-                    onSortChange={(next) => {
-                      setSortBy(next);
-                      // Reset all closed categories when entering category view
-                      if (next === 'category') setClosedCategories(new Set());
-                    }}
+                    onSortChange={setSortBy}
                     isRtl={isArabic}
                   />
 
-                  {/* ── Category view ── */}
-                  {sortBy === 'category' ? (
-                    categoriesWithAnalyses.length > 0 ? (
-                      <div className="space-y-3">
-                        {categoriesWithAnalyses.map(({ name: catName, analyses: catAnalyses }) => {
-                          const isOpen = !closedCategories.has(catName);
-                          const CategoryIcon = getCategoryIcon(catName);
-                          const toggleCategory = () => {
-                            setClosedCategories(prev => {
-                              const next = new Set(prev);
-                              if (next.has(catName)) next.delete(catName);
-                              else next.add(catName);
-                              return next;
-                            });
-                          };
-
-                          return (
-                            <div
-                              key={catName}
-                              className="rounded-lg overflow-hidden transition-shadow duration-200"
-                              style={{
-                                border: '1px solid var(--border-default)',
-                                backgroundColor: 'var(--background-card)',
-                              }}
-                            >
-                              {/* Category header */}
-                              <button
-                                onClick={toggleCategory}
-                                className="w-full flex items-center justify-between px-5 py-4 transition-colors duration-150 focus:outline-none"
-                                style={{ backgroundColor: isOpen ? 'var(--color-bordeaux-pale)' : 'transparent' }}
-                                onMouseEnter={e => {
-                                  if (!isOpen) (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--background-secondary)';
-                                }}
-                                onMouseLeave={e => {
-                                  if (!isOpen) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                                }}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{ backgroundColor: isOpen ? 'rgba(128,0,32,0.12)' : 'var(--background-secondary)' }}
-                                  >
-                                    <CategoryIcon
-                                      className="h-4 w-4"
-                                      style={{ color: 'var(--color-bordeaux-primary)' }}
-                                    />
-                                  </div>
-                                  <span
-                                    className="font-semibold text-sm"
-                                    style={{ color: isOpen ? 'var(--color-bordeaux-primary)' : 'var(--text-primary)' }}
-                                  >
-                                    {catName}
-                                  </span>
-                                  <span
-                                    className="text-xs font-medium px-2 py-0.5 rounded-full"
-                                    style={{
-                                      backgroundColor: isOpen ? 'rgba(128,0,32,0.1)' : 'var(--background-secondary)',
-                                      color: isOpen ? 'var(--color-bordeaux-primary)' : 'var(--text-secondary)',
-                                    }}
-                                  >
-                                    {catAnalyses.length}
-                                  </span>
-                                </div>
-                                {isOpen
-                                  ? <ChevronUp className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--color-bordeaux-primary)' }} />
-                                  : <ChevronDown className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--text-secondary)' }} />
-                                }
-                              </button>
-
-                              {/* Analyses grid — visible when open */}
-                              {isOpen && (
-                                <div className="px-4 pb-4 pt-2">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {catAnalyses.map((analyse) => (
-                                      <AnalysisMiniCard
-                                        key={analyse.id}
-                                        analysis={analyse}
-                                        lang={lang}
-                                        isSelected={isAnalyseInCart(analyse)}
-                                        onSelect={() => toggleAnalyseInCart(analyse)}
-                                        onShowDetails={() => handleShowAnalysisDetails(analyse)}
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                  {/* Flat list (popularity / A-Z). The alternative "by category"
+                      rendering that used to sit here was removed together with the
+                      « Catégorie » sort option — see docs/pages/analyses.md. */}
+                  {displayedAnalyses.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {displayedAnalyses.slice(0, visibleCount).map((analyse) => (
+                          <AnalysisMiniCard
+                            key={analyse.id}
+                            analysis={analyse}
+                            lang={lang}
+                            isSelected={isAnalyseInCart(analyse)}
+                            onSelect={() => toggleAnalyseInCart(analyse)}
+                            onShowDetails={() => handleShowAnalysisDetails(analyse)}
+                          />
+                        ))}
                       </div>
-                    ) : (
-                      <div className="text-center py-12">
-                        <p className="text-[var(--text-secondary)] text-lg">
-                          {t('no_results', 'Aucun résultat trouvé.')}
-                        </p>
-                      </div>
-                    )
-                  ) : (
-                    /* ── Flat view (popularity / A-Z) ── */
-                    displayedAnalyses.length > 0 ? (
-                      <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {displayedAnalyses.slice(0, visibleCount).map((analyse) => (
-                            <AnalysisMiniCard
-                              key={analyse.id}
-                              analysis={analyse}
-                              lang={lang}
-                              isSelected={isAnalyseInCart(analyse)}
-                              onSelect={() => toggleAnalyseInCart(analyse)}
-                              onShowDetails={() => handleShowAnalysisDetails(analyse)}
-                            />
-                          ))}
+
+                      {/* Infinite Scroll Trigger */}
+                      {filteredAnalyses.length > visibleCount && (
+                        <div ref={ref} className="mt-12 flex flex-col items-center justify-center gap-4 py-8">
+                          <MedicalLoader size="sm" />
+                          <p className="text-sm text-[var(--text-tertiary)] transition-colors">
+                            {isArabic ? 'جاري تحميل المزيد...' : 'Chargement de plus d\'analyses...'}
+                          </p>
                         </div>
+                      )}
 
-                        {/* Infinite Scroll Trigger */}
-                        {filteredAnalyses.length > visibleCount && (
-                          <div ref={ref} className="mt-12 flex flex-col items-center justify-center gap-4 py-8">
-                            <MedicalLoader size="sm" />
-                            <p className="text-sm text-[var(--text-tertiary)] transition-colors">
-                              {isArabic ? 'جاري تحميل المزيد...' : 'Chargement de plus d\'analyses...'}
-                            </p>
-                          </div>
-                        )}
-
-                        {filteredAnalyses.length > 0 && filteredAnalyses.length <= visibleCount && (
-                          <div className="mt-12 text-center py-8 opacity-50">
-                            <p className="text-sm text-[var(--text-tertiary)]">
-                              {isArabic ? 'نهاية القائمة' : 'Fin de la liste'}
-                            </p>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="text-center py-12">
-                        <p className="text-[var(--text-secondary)] text-lg">
-                          {t('no_results', 'Aucun résultat trouvé.')}
-                        </p>
-                        {searchTerm && (
-                          <button
-                            onClick={() => setSearchTerm('')}
-                            className="mt-4 px-6 py-2 rounded-lg text-white transition-colors duration-200"
-                            style={{ backgroundColor: 'var(--color-bordeaux-primary)' }}
-                          >
-                            {t('clear_filters', 'Effacer les filtres')}
-                          </button>
-                        )}
-                      </div>
-                    )
+                      {filteredAnalyses.length > 0 && filteredAnalyses.length <= visibleCount && (
+                        <div className="mt-12 text-center py-8 opacity-50">
+                          <p className="text-sm text-[var(--text-tertiary)]">
+                            {isArabic ? 'نهاية القائمة' : 'Fin de la liste'}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-[var(--text-secondary)] text-lg">
+                        {t('no_results', 'Aucun résultat trouvé.')}
+                      </p>
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="mt-4 px-6 py-2 rounded-lg text-white transition-colors duration-200"
+                          style={{ backgroundColor: 'var(--color-bordeaux-primary)' }}
+                        >
+                          {t('clear_filters', 'Effacer les filtres')}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </section>
               )}

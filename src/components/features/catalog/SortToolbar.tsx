@@ -3,7 +3,10 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
 
-export type SortOption = 'popularity' | 'name' | 'category';
+// 'category' was removed (demande n. 16): it was not a sort but a whole
+// alternative rendering mode of the analyses page. Narrowing this union is also
+// what makes `tsc --noEmit` flag any leftover `sortBy === 'category'` comparison.
+export type SortOption = 'popularity' | 'name';
 
 interface SortToolbarProps {
   sortBy: SortOption;
@@ -21,7 +24,6 @@ export function SortToolbar({
   const sortOptions: { id: SortOption; labelKey: string; label: string }[] = [
     { id: 'popularity', labelKey: 'tabs.popularity', label: 'Popularité' },
     { id: 'name', labelKey: 'tabs.alphabetical', label: 'A-Z' },
-    { id: 'category', labelKey: 'tabs.by_category', label: 'Catégorie' },
   ];
 
   return (
