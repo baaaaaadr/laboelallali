@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://laboelallali.vercel.app
+Host: https://www.laboelallali.com
 
 # Sitemaps
-Sitemap: https://laboelallali.vercel.app/sitemap.xml
+Sitemap: https://www.laboelallali.com/sitemap.xml
