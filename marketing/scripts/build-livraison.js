@@ -20,10 +20,16 @@ const DOCS = [
   { src: "programme-editorial.html", nom: "5 - Programme editorial jusqu'en juillet 2027.pdf" },
 ];
 
+// Les affiches relèvent de l'option A, non validée : elles ne sont incluses
+// que si on le demande explicitement (--avec-affiches).
+const avecAffiches = process.argv.includes("--avec-affiches");
+
 const COPIES = [
   { from: path.join(ROOT, "output", "2026-09"), to: "Images des publications", filtre: (f) => f.endsWith(".png") },
   { from: path.join(ROOT, "output", "modeles-vierges"), to: "Modeles vierges", filtre: (f) => f.endsWith(".png") },
-  { from: path.join(ROOT, "output", "affiches"), to: "Affiches pour l'accueil", filtre: (f) => f.endsWith(".png") },
+  ...(avecAffiches
+    ? [{ from: path.join(ROOT, "output", "affiches"), to: "Affiches pour l'accueil", filtre: (f) => f.endsWith(".png") }]
+    : []),
 ];
 
 (async () => {
