@@ -16,6 +16,16 @@ const OUT = path.resolve(__dirname, "..", "assets", "screenshots");
     isMobile: true,
     hasTouch: true,
   });
+  // Les sollicitations (invite Google, bannière d'installation iOS) se rappellent
+  // d'avoir été fermées via localStorage : on pré-remplit ces clés pour qu'elles
+  // ne recouvrent pas la capture. Voir src/components/features/auth/GoogleSignInPrompt.tsx
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("googleSignInPromptDismissedAt", String(Date.now()));
+      localStorage.setItem("iosInstallBannerDismissed", "1");
+    } catch {}
+  });
+
   for (const lang of ["fr", "ar"]) {
     const url = `https://www.laboelallali.com/${lang}`;
     console.log(`Capture ${url} ...`);
