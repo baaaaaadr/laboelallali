@@ -234,6 +234,14 @@ ${sections}
   <p class="foot">Chaque publication a été relue sous l'angle juridique (réglementation marocaine sur la communication des laboratoires) et rédactionnel avant d'entrer dans ce programme : pas de prix, pas de promotion, pas de témoignage de patient, pas de superlatif, source citée pour tout contenu d'éducation santé, et mention « sur prescription médicale » dès qu'un examen est nommé. Les dates des jours fériés et des fêtes religieuses sont indicatives et seront confirmées avant publication.</p>
 </div>`;
 
+/* Version corrigée, réutilisée par le calendrier remis au laboratoire :
+   sans elle, les titres écartés par la relecture juridique ressortiraient. */
+fs.writeFileSync(
+  path.join(ROOT, "content", "programme-editorial-final.json"),
+  JSON.stringify({ trimestres: trimestres.map((t) => ({ key: t.key, libelle: t.libelle, periode: t.periode, posts: t.posts })) }, null, 2),
+  "utf8"
+);
+
 const out = path.join(ROOT, "docs", "programme-editorial.html");
 fs.writeFileSync(out, html, "utf8");
 console.log(`OK  ${path.relative(ROOT, out)} — ${trimestres.length} packs, ${total} publications`);

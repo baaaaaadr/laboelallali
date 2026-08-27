@@ -1,0 +1,113 @@
+<title>Guide de Publication</title>
+<style>
+  :root { --paper:#FFFFFF; --surface:#FAF3F5; --ink:#2B171D; --muted:#6E5A60; --line:#E9D8DD; --brand:#800020; --accent:#FF4081;
+          --ok:#1E7B4F; --ok-bg:#EDF7F1; --stop:#B91C1C; --stop-bg:#FBEEEE; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --paper:#1F1014; --surface:#2A161C; --ink:#F4E9EC; --muted:#C9ADB6; --line:#4A2F37; --brand:#FF79A8; --accent:#FF79A8;
+    --ok:#7ED9A7; --ok-bg:#17281E; --stop:#F19999; --stop-bg:#301718; } }
+  :root[data-theme="dark"] { --paper:#1F1014; --surface:#2A161C; --ink:#F4E9EC; --muted:#C9ADB6; --line:#4A2F37; --brand:#FF79A8; --accent:#FF79A8;
+    --ok:#7ED9A7; --ok-bg:#17281E; --stop:#F19999; --stop-bg:#301718; }
+  body { background:var(--paper); color:var(--ink); font-family:"Segoe UI",system-ui,sans-serif; line-height:1.55; margin:0; padding:2.5rem 1.25rem 4rem; }
+  .sheet { max-width:760px; margin:0 auto; }
+  .eyebrow { text-transform:uppercase; letter-spacing:.14em; font-size:.72rem; font-weight:600; color:var(--accent); margin:0 0 .4rem; }
+  h1 { color:var(--brand); font-size:1.7rem; line-height:1.15; margin:0 0 .35rem; text-wrap:balance; }
+  .lede { color:var(--muted); font-size:.95rem; margin:0 0 1.8rem; max-width:62ch; }
+  h2 { color:var(--brand); font-size:1.08rem; margin:2rem 0 .7rem; border-bottom:2px solid var(--brand); padding-bottom:.25rem; }
+  ol.steps { list-style:none; counter-reset:s; padding:0; margin:0; display:flex; flex-direction:column; gap:.8rem; }
+  ol.steps li { counter-increment:s; display:grid; grid-template-columns:2.2rem 1fr; gap:.8rem; background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:.75rem .9rem; }
+  ol.steps li::before { content:counter(s); color:var(--brand); font-weight:700; font-size:1.1rem; text-align:center; }
+  ol.steps b { display:block; }
+  ol.steps p { margin:.15rem 0 0; color:var(--muted); font-size:.88rem; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; margin:1rem 0; }
+  .box { border-radius:6px; padding:.8rem 1rem; border:1px solid var(--line); }
+  .box.ok { background:var(--ok-bg); } .box.ok h3 { color:var(--ok); }
+  .box.stop { background:var(--stop-bg); } .box.stop h3 { color:var(--stop); }
+  .box h3 { margin:0 0 .4rem; font-size:.95rem; }
+  .box ul { margin:0; padding-inline-start:1.1rem; font-size:.88rem; }
+  .box li { margin:.2rem 0; }
+  .cadre { background:var(--surface); border-inline-start:4px solid var(--accent); border-radius:0 6px 6px 0; padding:.8rem 1rem; font-size:.9rem; margin:1rem 0; }
+  .cadre b { color:var(--brand); }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; margin:.8rem 0; }
+  th { text-align:start; text-transform:uppercase; letter-spacing:.06em; font-size:.68rem; color:var(--muted); border-bottom:1px solid var(--line); padding:.35rem .5rem; }
+  td { border-bottom:1px solid var(--line); padding:.5rem; vertical-align:top; }
+  code { background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:.05rem .35rem; font-size:.85em; }
+  .foot { margin-top:2rem; padding-top:.9rem; border-top:1px solid var(--line); color:var(--muted); font-size:.82rem; }
+  @media (max-width:620px) { .two { grid-template-columns:1fr; } }
+  @media print { :root { --paper:#fff; --surface:#fff; --ink:#111; --muted:#444; --line:#bbb; --brand:#800020; --accent:#800020; --ok:#1E7B4F; --ok-bg:#fff; --stop:#B91C1C; --stop-bg:#fff; }
+    body { padding:0; font-size:11px; } li, .box, .cadre { break-inside:avoid; } }
+</style>
+
+<div class="sheet">
+  <p class="eyebrow">Laboratoire El Allali · Guide pratique</p>
+  <h1>Publier une publication en 5 minutes</h1>
+  <p class="lede">Tout est déjà prêt : l'image et le texte. Il n'y a rien à écrire, seulement à copier et à coller. Ce guide tient en une page — gardez-le à côté de vous les premières fois.</p>
+
+  <h2>Comment publier</h2>
+  <ol class="steps">
+    <li><div><b>Ouvrez le calendrier de publication</b>
+      <p>Il indique quoi publier et quel jour. Vous y trouvez le nom du fichier image correspondant.</p></div></li>
+    <li><div><b>Prenez l'image du jour dans le dossier « Images des publications »</b>
+      <p>Chaque publication existe en quatre versions. Pour une publication sur le fil d'actualité, prenez celle qui finit par <code>carre</code>. Pour une story, celle qui finit par <code>story</code>. Choisissez <code>fr</code> ou <code>ar</code> selon la langue.</p></div></li>
+    <li><div><b>Copiez le texte depuis le document « Textes des publications »</b>
+      <p>Le texte est écrit et vérifié. Copiez-le tel quel, y compris les hashtags à la fin.</p></div></li>
+    <li><div><b>Publiez sur Facebook, puis sur Instagram</b>
+      <p>Sur Facebook : « Créer une publication », ajoutez l'image, collez le texte, publiez. Meilleur moment : entre 18 h et 20 h.</p></div></li>
+    <li><div><b>Publiez aussi la story</b>
+      <p>La version verticale se publie en story Facebook et Instagram, et en statut WhatsApp. C'est très vu et cela ne coûte rien de plus.</p></div></li>
+  </ol>
+
+  <div class="cadre"><b>Deux langues, deux publications :</b> publiez la version française et la version arabe <b>séparément</b>, à quelques heures d'intervalle ou en alternance d'une semaine sur l'autre. Ne collez jamais les deux textes sous la même image : personne ne lit un texte deux fois plus long.</div>
+
+  <h2>Répondre aux commentaires</h2>
+  <p>Un commentaire sans réponse fait mauvais effet. Répondez sous 24 heures, brièvement.</p>
+  <div class="two">
+    <div class="box ok">
+      <h3>Ce que vous pouvez répondre</h3>
+      <ul>
+        <li>Les horaires, l'adresse, comment prendre rendez-vous</li>
+        <li>S'il faut être à jeun, quoi apporter</li>
+        <li>« Appelez-nous au 05 28 84 33 84, nous vous expliquons »</li>
+        <li>Un simple « Merci pour votre message »</li>
+      </ul>
+    </div>
+    <div class="box stop">
+      <h3>Ce qu'il ne faut jamais faire</h3>
+      <ul>
+        <li>Donner un avis médical ou interpréter un résultat</li>
+        <li>Communiquer un résultat par message ou commentaire</li>
+        <li>Confirmer publiquement qu'une personne est venue au laboratoire</li>
+        <li>Citer un prix, ou promettre un délai</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cadre"><b>Réponse à utiliser quand on vous demande un avis médical :</b><br>
+  « Bonjour, nous ne pouvons pas donner d'avis médical ni communiquer de résultat par ce canal. Appelez-nous au 05 28 84 33 84 ou parlez-en à votre médecin traitant. »<br>
+  <span dir="rtl" style="display:block; margin-top:.4rem;">«مرحباً، لا يمكننا تقديم استشارة طبية أو إرسال النتائج عبر هذه القناة. اتصلوا بنا على 05 28 84 33 84 أو استشيروا طبيبكم المعالج.»</span></div>
+
+  <h2>Faire une publication vous-même</h2>
+  <p>Le dossier « Modèles vierges » contient 24 décors prêts à l'emploi : six styles, chacun en carré et en story, en français et en arabe. Le logo et les coordonnées y sont déjà. Il ne reste qu'à écrire votre texte par-dessus.</p>
+  <table>
+    <thead><tr><th>Avec quel outil</th><th>Comment faire</th></tr></thead>
+    <tbody>
+      <tr><td><b>Canva</b> (gratuit, sur téléphone ou ordinateur)</td><td>Créer un design → importer le modèle vierge comme fond → ajouter une zone de texte → écrire → télécharger en PNG.</td></tr>
+      <tr><td><b>PowerPoint ou Word</b></td><td>Insérer l'image, ajouter une zone de texte par-dessus, puis clic droit sur l'image → « Enregistrer en tant qu'image ».</td></tr>
+    </tbody>
+  </table>
+  <p><b>Deux règles pour que ça reste lisible :</b> écrivez en blanc sur les modèles foncés et en bordeaux sur le modèle rose clair ; et laissez le bas de l'image libre — les coordonnées du laboratoire s'y trouvent déjà.</p>
+
+  <div class="cadre"><b>Une information urgente à faire passer ?</b> Fermeture exceptionnelle, changement d'horaires, nouvelle analyse disponible, recrutement : demandez-la, elle est préparée dans les quatre formats et livrée sous 48 heures.</div>
+
+  <h2>Les quatre interdits, à ne jamais oublier</h2>
+  <p>La loi marocaine interdit la publicité aux laboratoires d'analyses. Tout ce qui vous a été livré respecte ce cadre. Si vous publiez quelque chose vous-même, vérifiez ces quatre points :</p>
+  <div class="box stop">
+    <ul>
+      <li><b>Aucun prix, aucune promotion, aucune remise, aucun cadeau, aucun jeu-concours.</b></li>
+      <li><b>Aucun superlatif</b> : ni « le meilleur », ni « n°1 », ni « le plus rapide ».</li>
+      <li><b>Aucun témoignage de patient</b>, aucune photo de patient, aucune capture de résultat — même anonymisée.</li>
+      <li><b>Aucune publicité payante</b> : ne cliquez jamais sur « Booster la publication ».</li>
+    </ul>
+  </div>
+  <p style="font-size:.9rem; color:var(--muted); margin-top:.7rem;">En cas de doute sur une publication : ne la publiez pas et demandez une relecture. Une publication non faite ne coûte rien ; une publication à reprendre, si.</p>
+
+  <p class="foot">Guide remis avec le pack de lancement — Laboratoire El Allali, 61 Bis rue de Marrakech, Agadir. Pour toute question sur les publications, contactez Hassan.</p>
+</div>

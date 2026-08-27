@@ -1,6 +1,6 @@
 {
   "month": "2026-09",
-  "note": "Échantillon : 1 post par archétype de template, classés par date. Le lot complet (18 posts, conforme au devis) sera produit après le GO de Dr Aziz.",
+  "note": "Pack de lancement : 18 publications de septembre et octobre 2026, chacune en 4 visuels (carré et story, français et arabe).",
   "posts": [
     {
       "slug": "01-rentree-horaires",
@@ -20,7 +20,12 @@
           "61 Bis, rue de Marrakech, Agadir"
         ],
         "caption": "Bonne rentrée à toutes et à tous ! Le Laboratoire El Allali vous accueille du lundi au vendredi de 7h30 à 18h30 et le samedi de 7h30 à 13h00.\n📍 61 Bis, rue de Marrakech, Agadir\n📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92\n🌐 www.laboelallali.com",
-        "hashtags": ["#Agadir", "#Laboratoire", "#AnalysesMedicales", "#Sante"]
+        "hashtags": [
+          "#Agadir",
+          "#Laboratoire",
+          "#AnalysesMedicales",
+          "#Sante"
+        ]
       },
       "ar": {
         "eyebrow": "مع الدخول المدرسي",
@@ -32,7 +37,12 @@
           "61 مكرر، شارع مراكش، أكادير"
         ],
         "caption": "دخول مدرسي موفق للجميع! مختبر العلالي للتحاليل الطبية في خدمتكم من الاثنين إلى الجمعة من 7:30 إلى 18:30، والسبت من 7:30 إلى 13:00.\n📍 61 مكرر، شارع مراكش، أكادير\n📞 05 28 84 33 84 · واتساب 06 54 07 95 92\n🌐 www.laboelallali.com",
-        "hashtags": ["#أكادير", "#مختبر", "#تحاليل_طبية", "#صحة"]
+        "hashtags": [
+          "#أكادير",
+          "#مختبر",
+          "#تحاليل_طبية",
+          "#صحة"
+        ]
       }
     },
     {
@@ -52,7 +62,12 @@
           "Activation à l'accueil du laboratoire"
         ],
         "caption": "Fini les déplacements pour récupérer une enveloppe : vos résultats d'analyses sont désormais consultables sur votre téléphone, en toute sécurité. Tous vos bilans y sont classés par année — plus besoin de chercher un ancien papier avant une consultation.\nDemandez l'activation à l'accueil du laboratoire, ou créez votre compte sur www.laboelallali.com\n📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92",
-        "hashtags": ["#Agadir", "#ResultatsEnLigne", "#AnalysesMedicales", "#Sante"]
+        "hashtags": [
+          "#Agadir",
+          "#ResultatsEnLigne",
+          "#AnalysesMedicales",
+          "#Sante"
+        ]
       },
       "ar": {
         "eyebrow": "خدمة جديدة",
@@ -63,7 +78,12 @@
           "تفعيل الخدمة في مكتب الاستقبال بالمختبر"
         ],
         "caption": "لم تعودوا بحاجة للتنقل من أجل استلام النتائج: يمكنكم الآن الاطلاع على نتائج تحاليلكم مباشرة على هاتفكم وبكل أمان. جميع تحاليلكم مرتّبة حسب السنة — دون الحاجة للبحث عن ورقة قديمة قبل زيارة الطبيب.\nاطلبوا تفعيل الخدمة من مكتب الاستقبال بالمختبر، أو أنشئوا حسابكم عبر www.laboelallali.com\n📞 05 28 84 33 84 · واتساب 06 54 07 95 92",
-        "hashtags": ["#أكادير", "#نتائج_التحاليل", "#تحاليل_طبية", "#صحة"]
+        "hashtags": [
+          "#أكادير",
+          "#نتائج_التحاليل",
+          "#تحاليل_طبية",
+          "#صحة"
+        ]
       }
     },
     {
@@ -84,7 +104,12 @@
         ],
         "source": "Source : recommandations des sociétés savantes de biologie médicale — votre médecin reste la référence",
         "caption": "À jeun ou pas ? Pour la glycémie et le bilan lipidique, un jeûne de 10 à 12 heures est nécessaire — mais l'eau est toujours permise. Continuez vos traitements sauf indication contraire de votre médecin.\nAnalyses réalisées sur prescription médicale.\nEn cas de doute, appelez-nous avant de venir : 05 28 84 33 84 · WhatsApp 06 54 07 95 92",
-        "hashtags": ["#Agadir", "#PriseDeSang", "#Conseils", "#Sante"]
+        "hashtags": [
+          "#Agadir",
+          "#PriseDeSang",
+          "#Conseils",
+          "#Sante"
+        ]
       },
       "ar": {
         "eyebrow": "استعدوا جيداً للتحليل",
@@ -97,7 +122,55 @@
         ],
         "source": "المصدر: توصيات الجمعيات العلمية للبيولوجيا الطبية — طبيبكم يبقى هو المرجع",
         "caption": "صيام أم لا؟ بالنسبة لتحليل السكر والدهون، يلزم صيام من 10 إلى 12 ساعة — لكن شرب الماء مسموح دائماً. واصلوا تناول أدويتكم إلا إذا طلب طبيبكم خلاف ذلك.\nتُجرى هذه التحاليل بوصفة طبية.\nعندكم شك؟ اتصلوا بنا قبل الحضور: 05 28 84 33 84 · واتساب 06 54 07 95 92",
-        "hashtags": ["#أكادير", "#تحليل_الدم", "#نصائح", "#صحة"]
+        "hashtags": [
+          "#أكادير",
+          "#تحليل_الدم",
+          "#نصائح",
+          "#صحة"
+        ]
+      }
+    },
+    {
+      "slug": "04-glabo-domicile",
+      "date": "2026-09-11",
+      "template": "service-info",
+      "risk": "vert",
+      "mode": "photo",
+      "accent": "bordeaux",
+      "background": "hero-banner.jpg",
+      "fr": {
+        "eyebrow": "Le laboratoire se déplace",
+        "title": "GLABO : le prélèvement vient à vous",
+        "lines": [
+          "Le prélèvement est réalisé à votre domicile ou sur votre lieu de travail",
+          "Il est effectué par un membre du personnel du Laboratoire El Allali",
+          "Le service fonctionne sur rendez-vous et sur prescription médicale",
+          "Organisez votre passage par téléphone ou par WhatsApp"
+        ],
+        "caption": "Avec GLABO, c'est le laboratoire qui se déplace : le prélèvement est réalisé chez vous ou sur votre lieu de travail.\nIl est effectué par un membre du personnel du Laboratoire El Allali.\nLe service fonctionne sur rendez-vous et sur prescription médicale, aux horaires d'ouverture du laboratoire.\nPour convenir d'un passage, appelez-nous ou écrivez-nous sur WhatsApp 🏠\n📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92\n🌐 www.laboelallali.com",
+        "hashtags": [
+          "#Agadir",
+          "#GLABO",
+          "#PrelevementADomicile",
+          "#Sante"
+        ]
+      },
+      "ar": {
+        "eyebrow": "المختبر يتنقل إليكم",
+        "title": "غلابو: نأتي إليكم لسحب العينة",
+        "lines": [
+          "يتم سحب العينة في منزلكم أو في مكان عملكم",
+          "يقوم به أحد موظفي مختبر العلالي المكلَّفين بسحب العينات",
+          "تُقدَّم الخدمة بموعد مسبق وبناءً على وصفة طبية",
+          "حدّدوا موعد الزيارة عبر الهاتف أو عبر الواتساب"
+        ],
+        "caption": "مع خدمة غلابو، المختبر هو الذي يتنقل إليكم: يتم سحب العينة في منزلكم أو في مكان عملكم.\nيقوم بذلك أحد موظفي مختبر العلالي المكلَّفين بسحب العينات.\nتُقدَّم الخدمة بموعد مسبق وبناءً على وصفة طبية، خلال أوقات عمل المختبر.\nلتحديد موعد الزيارة، اتصلوا بنا أو راسلونا عبر الواتساب 🏠\n📞 05 28 84 33 84 · واتساب 06 54 07 95 92\n🌐 www.laboelallali.com",
+        "hashtags": [
+          "#أكادير",
+          "#غلابو",
+          "#سحب_العينة_في_المنزل",
+          "#صحة"
+        ]
       }
     },
     {
@@ -116,7 +189,12 @@
         ],
         "source": "Source : référentiels de biologie médicale (hémogramme) — analyse réalisée sur prescription médicale",
         "caption": "Le saviez-vous ? La NFS (numération formule sanguine) est l'une des analyses les plus prescrites : elle compte vos globules rouges, globules blancs et plaquettes, et aide votre médecin à dépister une anémie, une infection ou un trouble de la coagulation.\nAnalyse réalisée sur prescription médicale.\n📞 05 28 84 33 84 · www.laboelallali.com",
-        "hashtags": ["#LeSaviezVous", "#Agadir", "#AnalysesMedicales", "#Sante"]
+        "hashtags": [
+          "#LeSaviezVous",
+          "#Agadir",
+          "#AnalysesMedicales",
+          "#Sante"
+        ]
       },
       "ar": {
         "eyebrow": "هل تعلمون؟",
@@ -127,7 +205,53 @@
         ],
         "source": "المصدر: المراجع العلمية للبيولوجيا الطبية (تعداد الدم) — يُجرى هذا التحليل بوصفة طبية",
         "caption": "هل تعلمون؟ تحليل تعداد الدم الكامل (NFS) من أكثر التحاليل طلباً: يُحصي كريات الدم الحمراء والبيضاء والصفائح الدموية، ويساعد طبيبكم على كشف فقر الدم أو العدوى أو اضطرابات التخثر.\nيُجرى هذا التحليل بوصفة طبية.\n📞 05 28 84 33 84 · www.laboelallali.com",
-        "hashtags": ["#هل_تعلم", "#أكادير", "#تحاليل_طبية", "#صحة"]
+        "hashtags": [
+          "#هل_تعلم",
+          "#أكادير",
+          "#تحاليل_طبية",
+          "#صحة"
+        ]
+      }
+    },
+    {
+      "slug": "06-analyses-ordonnance-en-ligne",
+      "date": "2026-09-18",
+      "template": "service-app",
+      "risk": "vert",
+      "mode": "brand",
+      "accent": "bordeaux",
+      "screenshot": "../assets/screenshots/mobile-home-{lang}.png",
+      "fr": {
+        "eyebrow": "Le catalogue en ligne",
+        "title": "Retrouvez les analyses de votre ordonnance",
+        "lines": [
+          "Recherchez sur le site chaque analyse inscrite sur votre ordonnance",
+          "Vérifiez les conditions de préparation : à jeun ou non, type de prélèvement",
+          "Envoyez ensuite votre demande au laboratoire depuis votre téléphone"
+        ],
+        "caption": "Avant votre visite, le catalogue en ligne vous aide à vous organiser : retrouvez une à une les analyses inscrites sur votre ordonnance.\nPour chacune, vous voyez les conditions de préparation — à jeun ou non, type de prélèvement.\nVous pouvez ensuite envoyer votre demande au laboratoire directement depuis votre téléphone 📱\nAnalyses réalisées sur prescription médicale.\nLe laboratoire vous répond ensuite par WhatsApp pour organiser votre passage.\n🌐 www.laboelallali.com · 📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92",
+        "hashtags": [
+          "#Agadir",
+          "#AnalysesMedicales",
+          "#Ordonnance",
+          "#Sante"
+        ]
+      },
+      "ar": {
+        "eyebrow": "الدليل الإلكتروني للتحاليل",
+        "title": "ابحثوا عن تحاليل وصفتكم الطبية",
+        "lines": [
+          "ابحثوا في الموقع عن كل تحليل مسجَّل في وصفتكم الطبية",
+          "تحقّقوا من شروط التحضير: الصيام أو عدمه، ونوع العينة",
+          "ثم أرسلوا طلبكم إلى المختبر مباشرة من هاتفكم"
+        ],
+        "caption": "قبل زيارتكم للمختبر، يساعدكم الدليل الإلكتروني على التنظيم: ابحثوا عن كل تحليل مسجَّل في وصفتكم الطبية.\nستجدون لكل تحليل شروط التحضير — الصيام أو عدمه، ونوع العينة المطلوبة.\nبعدها يمكنكم إرسال طلبكم إلى المختبر مباشرة من هاتفكم 📱\nتُجرى التحاليل بوصفة طبية.\nيجيبكم المختبر بعد ذلك عبر الواتساب لتنظيم زيارتكم.\n🌐 www.laboelallali.com · 📞 05 28 84 33 84 · واتساب 06 54 07 95 92",
+        "hashtags": [
+          "#أكادير",
+          "#تحاليل_طبية",
+          "#الوصفة_الطبية",
+          "#صحة"
+        ]
       }
     },
     {
@@ -146,7 +270,12 @@
           "Prélèvement tôt le matin — et vous repartez petit-déjeuner"
         ],
         "caption": "Pour les analyses qui demandent d'être à jeun, le plus simple est de venir tôt : le laboratoire ouvre dès 7h30, du lundi au samedi. Prélèvement rapide, et vous repartez petit-déjeuner.\nAnalyses réalisées sur prescription médicale.\n📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92 · www.laboelallali.com",
-        "hashtags": ["#Agadir", "#Conseils", "#PriseDeSang", "#Sante"]
+        "hashtags": [
+          "#Agadir",
+          "#Conseils",
+          "#PriseDeSang",
+          "#Sante"
+        ]
       },
       "ar": {
         "chip": "معلومة مفيدة",
@@ -156,7 +285,56 @@
           "سحب الدم باكراً — ثم فطوركم مباشرة بعده"
         ],
         "caption": "بالنسبة للتحاليل التي تتطلب الصيام، الأفضل هو الحضور باكراً: يفتح المختبر أبوابه من 7:30 صباحاً، من الاثنين إلى السبت. سحب سريع، وتعودون لتناول فطوركم.\nتُجرى هذه التحاليل بوصفة طبية.\n📞 05 28 84 33 84 · واتساب 06 54 07 95 92 · www.laboelallali.com",
-        "hashtags": ["#أكادير", "#نصائح", "#تحليل_الدم", "#صحة"]
+        "hashtags": [
+          "#أكادير",
+          "#نصائح",
+          "#تحليل_الدم",
+          "#صحة"
+        ]
+      }
+    },
+    {
+      "slug": "08-erreurs-qui-faussent",
+      "date": "2026-09-22",
+      "template": "preparation-examen",
+      "risk": "vert",
+      "mode": "brand",
+      "accent": "pale",
+      "fr": {
+        "eyebrow": "Avant votre prélèvement",
+        "title": "Les erreurs qui faussent une analyse",
+        "lines": [
+          "Pas de sport intense la veille : l'effort modifie certains résultats",
+          "Respectez le jeûne demandé, sans café ni cigarette avant le prélèvement",
+          "Buvez de l'eau normalement : une bonne hydratation facilite la prise de sang",
+          "Signalez vos traitements en cours, sans jamais les arrêter vous-même"
+        ],
+        "source": "Source : recommandations de la Société Française de Biologie Clinique sur la phase pré-analytique",
+        "caption": "Une analyse fiable commence avant le prélèvement, et quelques habitudes suffisent à en modifier le résultat.\nÉvitez le sport intense la veille, et présentez-vous sans café ni cigarette lorsque le jeûne est demandé — en général 10 à 12 heures, l'eau restant permise.\nBuvez de l'eau normalement : une bonne hydratation facilite la prise de sang.\nEnfin, signalez à l'accueil du laboratoire les traitements que vous prenez. N'arrêtez jamais un traitement sans l'avis de votre médecin.\nAnalyses réalisées sur prescription médicale. Un doute ? Parlez-en à votre médecin.\n📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92 · www.laboelallali.com",
+        "hashtags": [
+          "#Agadir",
+          "#PriseDeSang",
+          "#Conseils",
+          "#Sante"
+        ]
+      },
+      "ar": {
+        "eyebrow": "قبل سحب الدم",
+        "title": "أخطاء شائعة تُفسد نتيجة التحليل",
+        "lines": [
+          "تجنّبوا الرياضة العنيفة في اليوم السابق لأنها تغيّر بعض النتائج",
+          "احترموا مدة الصيام المطلوبة، دون قهوة ولا سجائر قبل السحب",
+          "اشربوا الماء بشكل عادي: الترطيب الجيد يسهّل سحب الدم",
+          "أخبِرونا بالأدوية التي تتناولونها، ولا توقفوها من تلقاء أنفسكم"
+        ],
+        "source": "المصدر: توصيات الجمعية الفرنسية للبيولوجيا السريرية حول المرحلة ما قبل التحليلية",
+        "caption": "نتيجة التحليل الدقيقة تبدأ قبل السحب، وبعض العادات البسيطة كافية لتغييرها.\nتجنّبوا الرياضة العنيفة في اليوم السابق، واحضروا دون قهوة ولا سجائر عندما يُطلب منكم الصيام — عادةً من 10 إلى 12 ساعة، مع السماح بشرب الماء.\nاشربوا الماء بشكل عادي: الترطيب الجيد يسهّل سحب الدم.\nوأخيراً، أخبِروا مكتب الاستقبال بالمختبر بالأدوية التي تتناولونها. ولا توقفوا أي دواء دون استشارة طبيبكم.\nتُجرى التحاليل بوصفة طبية. عندكم شك؟ استشيروا طبيبكم.\n📞 05 28 84 33 84 · واتساب 06 54 07 95 92 · www.laboelallali.com",
+        "hashtags": [
+          "#أكادير",
+          "#تحليل_الدم",
+          "#نصائح",
+          "#صحة"
+        ]
       }
     },
     {
@@ -176,7 +354,12 @@
         ],
         "source": "Journée mondiale du cœur — World Heart Federation",
         "caption": "Ce 29 septembre, c'est la Journée mondiale du cœur ❤️ Le bilan lipidique (cholestérol, triglycérides) et la glycémie font partie des examens qui aident votre médecin à évaluer votre risque cardiovasculaire. Parlez-en lors de votre prochaine consultation.\nExamens réalisés sur prescription médicale.\n📞 05 28 84 33 84 · www.laboelallali.com",
-        "hashtags": ["#JourneeMondialeDuCoeur", "#Agadir", "#Prevention", "#Sante"]
+        "hashtags": [
+          "#JourneeMondialeDuCoeur",
+          "#Agadir",
+          "#Prevention",
+          "#Sante"
+        ]
       },
       "ar": {
         "chip": "29 شتنبر · اليوم العالمي للقلب",
@@ -187,7 +370,406 @@
         ],
         "source": "اليوم العالمي للقلب — الاتحاد العالمي للقلب",
         "caption": "بمناسبة اليوم العالمي للقلب ❤️ يساعد تحليل الدهون (الكوليسترول والدهون الثلاثية) والسكر في الدم طبيبكم على تقييم خطر الإصابة بأمراض القلب والشرايين. استشيروا طبيبكم في زيارتكم المقبلة.\nتُجرى هذه التحاليل بوصفة طبية.\n📞 05 28 84 33 84 · www.laboelallali.com",
-        "hashtags": ["#اليوم_العالمي_للقلب", "#أكادير", "#وقاية", "#صحة"]
+        "hashtags": [
+          "#اليوم_العالمي_للقلب",
+          "#أكادير",
+          "#وقاية",
+          "#صحة"
+        ]
+      }
+    },
+    {
+      "slug": "10-octobre-rose-campagne",
+      "date": "2026-10-02",
+      "template": "journee-mondiale",
+      "risk": "vert",
+      "mode": "photo",
+      "accent": "bordeaux",
+      "veil": "fuchsia",
+      "background": "cellules-micro.jpg",
+      "fr": {
+        "chip": "Octobre Rose · campagne nationale",
+        "title": "Détection précoce : le Maroc se mobilise",
+        "lines": [
+          "Le ministère de la Santé et la Fondation Lalla Salma mobilisent tout le Maroc.",
+          "Cette campagne vise la détection précoce du cancer du sein et du col utérin.",
+          "La campagne se déroule pendant tout le mois d'octobre dans le Royaume.",
+          "Parlez-en à votre médecin : lui seul évalue votre situation personnelle."
+        ],
+        "source": "Source : ministère de la Santé et de la Protection sociale et Fondation Lalla Salma.",
+        "caption": "🎗️ Octobre Rose : pendant tout le mois d'octobre, le ministère de la Santé et de la Protection sociale et la Fondation Lalla Salma conduisent la campagne nationale de sensibilisation et de détection précoce des cancers du sein et du col de l'utérus.\nLe Laboratoire El Allali relaie cette campagne auprès de ses patientes et de leurs proches.\nLa conduite à tenir se décide avec un professionnel de santé : parlez-en à votre médecin, qui vous orientera selon votre situation.\nTout examen de biologie médicale est réalisé sur prescription médicale.\nLaboratoire El Allali — 61 Bis, rue de Marrakech, Agadir. Tél 05 28 84 33 84 · WhatsApp 06 54 07 95 92.\nDu lundi au vendredi de 7h30 à 18h30, samedi de 7h30 à 13h00. www.laboelallali.com",
+        "hashtags": [
+          "#OctobreRose",
+          "#Agadir",
+          "#SantéDesFemmes",
+          "#LaboratoireElAllali"
+        ]
+      },
+      "ar": {
+        "chip": "أكتوبر الوردي · حملة وطنية",
+        "title": "الكشف المبكر: تعبئة في كل المغرب",
+        "lines": [
+          "وزارة الصحة والحماية الاجتماعية ومؤسسة للا سلمى تعبّئان المغرب بأكمله.",
+          "تهدف الحملة إلى الكشف المبكر عن سرطان الثدي وعنق الرحم.",
+          "تتواصل الحملة طوال شهر أكتوبر في جميع أنحاء المملكة.",
+          "تحدثوا إلى طبيبكم: هو وحده من يقيّم حالتكم الشخصية."
+        ],
+        "source": "المصدر: وزارة الصحة والحماية الاجتماعية ومؤسسة للا سلمى.",
+        "caption": "🎗️ أكتوبر الوردي: طوال شهر أكتوبر، تقود وزارة الصحة والحماية الاجتماعية ومؤسسة للا سلمى الحملة الوطنية للتحسيس والكشف المبكر عن سرطان الثدي وعنق الرحم.\nمختبر العلالي يساهم في نشر هذه الحملة بين مرتاديه.\nما ينبغي فعله يُقرَّر مع أحد مهنيي الصحة: تحدثوا إلى طبيبكم، فهو من يوجّهكم حسب حالتكم.\nكل التحاليل الطبية تُنجز بناءً على وصفة طبية.\nمختبر العلالي — 61 مكرر، زنقة مراكش، أكادير. الهاتف 05 28 84 33 84 · واتساب 06 54 07 95 92.",
+        "hashtags": [
+          "#أكتوبر_الوردي",
+          "#أكادير",
+          "#صحة_المرأة",
+          "#مختبر_العلالي"
+        ]
+      }
+    },
+    {
+      "slug": "11-rdv-ordonnance-photo",
+      "date": "2026-10-06",
+      "template": "service-app",
+      "risk": "vert",
+      "mode": "brand",
+      "accent": "bordeaux",
+      "screenshot": "../assets/screenshots/mobile-home-{lang}.png",
+      "fr": {
+        "eyebrow": "Rendez-vous en ligne",
+        "title": "Votre rendez-vous en trois étapes",
+        "lines": [
+          "Choisissez votre créneau : seuls les horaires réellement ouverts sont proposés.",
+          "Joignez la photo de votre ordonnance directement depuis votre téléphone.",
+          "Recevez la confirmation de votre rendez-vous une fois la demande validée.",
+          "Toute analyse de biologie médicale se fait sur prescription médicale."
+        ],
+        "caption": "La prise de rendez-vous au laboratoire se fait désormais en ligne, sur www.laboelallali.com 📅\n1) Vous choisissez votre créneau : seuls les horaires réellement ouverts apparaissent.\n2) Vous joignez la photo de votre ordonnance depuis votre téléphone.\n3) Vous recevez la confirmation de votre rendez-vous une fois la demande validée.\nToute analyse de biologie médicale se fait sur prescription médicale ; pour toute question sur vos examens, parlez-en à votre médecin. L'ordonnance figurant sur l'image est un exemple fictif.\n61 Bis, rue de Marrakech, Agadir — 05 28 84 33 84 — WhatsApp 06 54 07 95 92",
+        "hashtags": [
+          "#Agadir",
+          "#LaboratoireElAllali",
+          "#RendezVousEnLigne",
+          "#AnalysesMedicales"
+        ]
+      },
+      "ar": {
+        "eyebrow": "حجز موعد عبر الإنترنت",
+        "title": "موعدكم في ثلاث خطوات",
+        "lines": [
+          "اختاروا التوقيت المناسب: لا تُعرض إلا المواعيد المتاحة فعلاً.",
+          "أرفقوا صورة الوصفة الطبية مباشرة من هاتفكم.",
+          "يصلكم تأكيد الموعد بمجرد المصادقة على طلبكم.",
+          "كل تحليل طبي يتم بوصفة طبية من طبيبكم."
+        ],
+        "caption": "حجز موعدكم بالمختبر أصبح متاحاً عبر الإنترنت على www.laboelallali.com 📅\n1) تختارون التوقيت المناسب: لا تظهر إلا المواعيد المتاحة فعلاً.\n2) ترفقون صورة الوصفة الطبية من هاتفكم.\n3) يصلكم تأكيد الموعد بعد المصادقة على طلبكم.\nكل تحليل طبي يتم بوصفة طبية، ولأي سؤال حول تحاليلكم تحدثوا مع طبيبكم. الوصفة الظاهرة في الصورة نموذج وهمي.\n61 مكرر، زنقة مراكش، أكادير — الهاتف 05 28 84 33 84 — واتساب 06 54 07 95 92",
+        "hashtags": [
+          "#أكادير",
+          "#مختبر_العلالي",
+          "#حجز_موعد",
+          "#تحاليل_طبية"
+        ]
+      }
+    },
+    {
+      "slug": "12-depistage-sein-medecin",
+      "date": "2026-10-09",
+      "template": "le-saviez-vous",
+      "risk": "orange",
+      "mode": "brand",
+      "accent": "fuchsia",
+      "fr": {
+        "eyebrow": "Le saviez-vous · Octobre Rose",
+        "title": "Le dépistage précoce fait la différence",
+        "lines": [
+          "Détecté tôt, un cancer du sein se prend en charge dans de meilleures conditions.",
+          "Il n'existe pas de conduite unique : chaque situation est différente.",
+          "Votre médecin décide des examens utiles selon votre âge et vos antécédents.",
+          "Parlez-en à votre médecin, même en l'absence de tout symptôme."
+        ],
+        "source": "Source : Fondation Lalla Salma et ministère de la Santé et de la Protection sociale.",
+        "caption": "Le saviez-vous ? Plus un cancer du sein est repéré tôt, plus sa prise en charge se déroule dans de bonnes conditions. 🎗️\nIl n'existe pas de règle unique valable pour toutes : le rythme et la nature des examens dépendent de votre âge et de vos antécédents personnels et familiaux.\nC'est votre médecin qui évalue votre situation et vous oriente. Parlez-en à votre médecin, même si vous ne ressentez rien de particulier.\nAu laboratoire, tout examen de biologie médicale est réalisé sur prescription médicale.\nLaboratoire El Allali — 61 Bis, rue de Marrakech, Agadir. Tél 05 28 84 33 84 · WhatsApp 06 54 07 95 92. www.laboelallali.com",
+        "hashtags": [
+          "#OctobreRose",
+          "#Agadir",
+          "#DépistagePrécoce",
+          "#LaboratoireElAllali"
+        ]
+      },
+      "ar": {
+        "eyebrow": "هل تعلم · أكتوبر الوردي",
+        "title": "الكشف المبكر يُحدث فرقاً",
+        "lines": [
+          "عندما يُكتشف سرطان الثدي مبكراً، يكون التكفل به في ظروف أفضل.",
+          "لا توجد قاعدة واحدة للجميع: كل حالة تختلف عن الأخرى.",
+          "طبيبكم هو من يحدد الفحوصات المفيدة حسب سنّكم وتاريخكم الصحي.",
+          "تحدثوا إلى طبيبكم، حتى إن لم تظهر عليكم أي أعراض."
+        ],
+        "source": "المصدر: مؤسسة للا سلمى ووزارة الصحة والحماية الاجتماعية.",
+        "caption": "هل تعلم؟ كلما اكتُشف سرطان الثدي مبكراً، كان التكفل به في ظروف أفضل. 🎗️\nلا توجد قاعدة واحدة صالحة لجميع النساء: وتيرة الفحوصات ونوعها يتوقفان على السن وعلى التاريخ الصحي الشخصي والعائلي.\nطبيبكم هو من يقيّم حالتكم ويوجّهكم. تحدثوا إلى طبيبكم، حتى إن لم تشعروا بأي شيء غير عادي.\nفي المختبر، كل التحاليل الطبية تُنجز بناءً على وصفة طبية.\nمختبر العلالي — 61 مكرر، زنقة مراكش، أكادير. الهاتف 05 28 84 33 84 · واتساب 06 54 07 95 92. www.laboelallali.com",
+        "hashtags": [
+          "#أكتوبر_الوردي",
+          "#أكادير",
+          "#الكشف_المبكر",
+          "#مختبر_العلالي"
+        ]
+      }
+    },
+    {
+      "slug": "13-echantillon-urine",
+      "date": "2026-10-13",
+      "template": "preparation-examen",
+      "risk": "vert",
+      "mode": "brand",
+      "accent": "pale",
+      "fr": {
+        "eyebrow": "Recueil d'urine, pas à pas",
+        "title": "Recueillir un échantillon d'urine sans erreur",
+        "lines": [
+          "Faites une toilette intime avant le recueil, puis séchez soigneusement",
+          "Éliminez le premier jet et recueillez le milieu du jet",
+          "Utilisez le flacon fourni par le laboratoire, sans toucher l'intérieur",
+          "Notez l'heure du recueil et apportez le flacon rapidement"
+        ],
+        "source": "Source : Référentiel en microbiologie médicale (REMIC), Société Française de Microbiologie",
+        "caption": "Un recueil d'urine mal réalisé peut rendre le résultat ininterprétable et vous obliger à recommencer. Quelques gestes simples suffisent 💧\nCommencez par une toilette intime, puis éliminez le premier jet et recueillez le milieu du jet dans le flacon fourni par le laboratoire, sans en toucher l'intérieur.\nRefermez bien le flacon, notez l'heure du recueil, et apportez-le rapidement au laboratoire ; si ce n'est pas possible, conservez-le au frais.\nExamen réalisé sur prescription médicale. Une question sur la préparation ? Parlez-en à votre médecin ou appelez-nous.\n📞 05 28 84 33 84 · WhatsApp 06 54 07 95 92 · www.laboelallali.com",
+        "hashtags": [
+          "#Agadir",
+          "#AnalysesMedicales",
+          "#Conseils",
+          "#Sante"
+        ]
+      },
+      "ar": {
+        "eyebrow": "جمع عيّنة البول خطوة بخطوة",
+        "title": "كيف تجمعون عيّنة البول دون خطأ",
+        "lines": [
+          "نظّفوا المنطقة الحميمة قبل الجمع ثم جفّفوها جيداً",
+          "تخلّصوا من الدفقة الأولى واجمعوا الجزء الأوسط من البول",
+          "استعملوا القارورة التي يسلّمها لكم المختبر دون لمس داخلها",
+          "سجّلوا ساعة الجمع وأحضروا القارورة إلى المختبر بسرعة"
+        ],
+        "source": "المصدر: المرجع الفرنسي في الميكروبيولوجيا الطبية (REMIC)، الجمعية الفرنسية للميكروبيولوجيا",
+        "caption": "جمع عيّنة البول بطريقة خاطئة قد يجعل النتيجة غير قابلة للتفسير ويضطركم إلى إعادة التحليل. بعض الخطوات البسيطة تكفي 💧\nابدأوا بتنظيف المنطقة الحميمة، ثم تخلّصوا من الدفقة الأولى واجمعوا الجزء الأوسط من البول في القارورة التي يسلّمها لكم المختبر، دون لمس داخلها.\nأغلقوا القارورة جيداً، سجّلوا ساعة الجمع، وأحضروها بسرعة إلى المختبر؛ وإذا تعذّر ذلك احفظوها في مكان بارد.\nيُجرى هذا التحليل بوصفة طبية. عندكم سؤال حول التحضير؟ استشيروا طبيبكم أو اتصلوا بنا.\n📞 05 28 84 33 84 · واتساب 06 54 07 95 92 · www.laboelallali.com",
+        "hashtags": [
+          "#أكادير",
+          "#تحاليل_طبية",
+          "#نصائح",
+          "#صحة"
+        ]
+      }
+    },
+    {
+      "slug": "14-nous-joindre",
+      "date": "2026-10-16",
+      "template": "service-info",
+      "risk": "vert",
+      "mode": "photo",
+      "accent": "bordeaux",
+      "background": "tubes-labo.jpg",
+      "fr": {
+        "eyebrow": "Joindre le laboratoire",
+        "title": "Nous joindre : téléphone, WhatsApp, itinéraire",
+        "lines": [
+          "Téléphone 05 28 84 33 84 et WhatsApp 06 54 07 95 92.",
+          "Ligne dédiée aux sociétés : 06 61 20 86 35, médecine du travail.",
+          "Le site indique en temps réel l'ouverture et l'itinéraire vers le laboratoire.",
+          "Aucun résultat ni avis médical n'est donné par message."
+        ],
+        "caption": "Pour joindre le laboratoire, plusieurs chemins simples. 📞\nTéléphone : 05 28 84 33 84, du lundi au vendredi de 7h30 à 18h30 et le samedi de 7h30 à 13h00.\nWhatsApp : 06 54 07 95 92 pour vos questions pratiques et l'organisation de votre passage.\nSociétés et médecine du travail : ligne dédiée 06 61 20 86 35.\nSur www.laboelallali.com, vous voyez en temps réel si le laboratoire est ouvert et vous lancez l'itinéraire en un geste.\nAucun résultat ni avis médical n'est communiqué par téléphone ou par message : pour cela, parlez-en à votre médecin ou présentez-vous au laboratoire, 61 Bis, rue de Marrakech, Agadir.",
+        "hashtags": [
+          "#Agadir",
+          "#LaboratoireElAllali",
+          "#NousJoindre",
+          "#MedecineDuTravail"
+        ]
+      },
+      "ar": {
+        "eyebrow": "التواصل مع المختبر",
+        "title": "للتواصل معنا: الهاتف، واتساب، الطريق",
+        "lines": [
+          "الهاتف 05 28 84 33 84 وواتساب 06 54 07 95 92.",
+          "خط خاص بالشركات: 06 61 20 86 35 لطب الشغل.",
+          "الموقع يبيّن في الوقت الفعلي ما إذا كان المختبر مفتوحاً والطريق إليه.",
+          "لا تُعطى أي نتيجة ولا استشارة طبية عبر الرسائل."
+        ],
+        "caption": "هناك عدة طرق بسيطة للتواصل مع المختبر. 📞\nالهاتف: 05 28 84 33 84، من الاثنين إلى الجمعة من 7:30 إلى 18:30، والسبت من 7:30 إلى 13:00.\nواتساب: 06 54 07 95 92 للأسئلة العملية وتنظيم زيارتكم.\nالشركات وطب الشغل: خط خاص 06 61 20 86 35.\nعلى موقع www.laboelallali.com تعرفون في الوقت الفعلي ما إذا كان المختبر مفتوحاً، وتفتحون الطريق إليه بضغطة واحدة.\nلا تُعطى أي نتيجة ولا استشارة طبية عبر الهاتف أو الرسائل؛ لذلك تحدثوا مع طبيبكم أو مرّوا إلى مكتب الاستقبال بالمختبر، 61 مكرر، زنقة مراكش، أكادير.",
+        "hashtags": [
+          "#أكادير",
+          "#مختبر_العلالي",
+          "#تواصلوا_معنا",
+          "#طب_الشغل"
+        ]
+      }
+    },
+    {
+      "slug": "15-octobre-rose-facteurs",
+      "date": "2026-10-20",
+      "template": "journee-mondiale",
+      "risk": "orange",
+      "mode": "photo",
+      "accent": "bordeaux",
+      "veil": "fuchsia",
+      "background": "coeur-modele.jpg",
+      "fr": {
+        "chip": "Octobre Rose · facteurs de risque",
+        "title": "Certains risques peuvent être réduits",
+        "lines": [
+          "L'OMS cite l'âge et les antécédents familiaux parmi les facteurs de risque.",
+          "Le surpoids, la sédentarité, le tabac et l'alcool augmentent aussi ce risque.",
+          "Bouger, ne pas fumer et éviter l'alcool restent à votre portée.",
+          "Ces facteurs ne sont pas une fatalité : seul votre médecin évalue votre situation."
+        ],
+        "source": "Source : Organisation mondiale de la Santé (OMS).",
+        "caption": "🎗️ Octobre Rose, second temps. Selon l'Organisation mondiale de la Santé, certains facteurs augmentent le risque de cancer du sein : l'âge et les antécédents familiaux, sur lesquels on ne peut pas agir, mais aussi le surpoids, la sédentarité, le tabac et l'alcool.\nCes derniers, eux, peuvent être modifiés : une activité physique régulière, l'arrêt du tabac et l'absence d'alcool font partie des recommandations.\nAvoir un facteur de risque ne veut pas dire développer la maladie : ce n'est pas une fatalité. Seul votre médecin peut évaluer votre situation personnelle, parlez-en avec lui lors de votre prochaine consultation.\nTout examen de biologie médicale est réalisé sur prescription médicale.\nLaboratoire El Allali — 61 Bis, rue de Marrakech, Agadir. Tél 05 28 84 33 84 · WhatsApp 06 54 07 95 92. www.laboelallali.com",
+        "hashtags": [
+          "#OctobreRose",
+          "#Agadir",
+          "#Prévention",
+          "#SantéDesFemmes"
+        ]
+      },
+      "ar": {
+        "chip": "أكتوبر الوردي · عوامل الخطر",
+        "title": "بعض عوامل الخطر يمكن تقليصها",
+        "lines": [
+          "تذكر منظمة الصحة العالمية السن والسوابق العائلية ضمن عوامل الخطر.",
+          "زيادة الوزن وقلة الحركة والتدخين والكحول ترفع بدورها هذا الخطر.",
+          "الحركة المنتظمة والإقلاع عن التدخين وتجنب الكحول في متناول أيديكم.",
+          "هذه العوامل ليست قدراً محتوماً: طبيبكم وحده يقيّم حالتكم."
+        ],
+        "source": "المصدر: منظمة الصحة العالمية.",
+        "caption": "🎗️ أكتوبر الوردي، المحطة الثانية. حسب منظمة الصحة العالمية، هناك عوامل ترفع خطر الإصابة بسرطان الثدي: السن والسوابق العائلية وهي عوامل لا يمكن تغييرها، وكذلك زيادة الوزن وقلة الحركة والتدخين والكحول.\nهذه الأخيرة يمكن التحكم فيها: النشاط البدني المنتظم والإقلاع عن التدخين وتجنب الكحول من التوصيات المعروفة.\nوجود عامل خطر لا يعني الإصابة بالمرض: الأمر ليس قدراً محتوماً. طبيبكم وحده يستطيع تقييم حالتكم الشخصية، تحدثوا إليه في زيارتكم المقبلة.\nكل تحليل بيولوجي يُنجز بوصفة طبية.\nمختبر العلالي — 61 مكرر، زنقة مراكش، أكادير. الهاتف 05 28 84 33 84 · واتساب 06 54 07 95 92. www.laboelallali.com",
+        "hashtags": [
+          "#أكتوبر_الوردي",
+          "#أكادير",
+          "#الوقاية",
+          "#صحة_المرأة"
+        ]
+      }
+    },
+    {
+      "slug": "16-annuaire-medecins",
+      "date": "2026-10-23",
+      "template": "service-app",
+      "risk": "vert",
+      "mode": "brand",
+      "accent": "bordeaux",
+      "screenshot": "../assets/screenshots/mobile-home-{lang}.png",
+      "fr": {
+        "eyebrow": "Annuaire des médecins",
+        "title": "Trouver un médecin à Agadir",
+        "lines": [
+          "L'annuaire réunit environ 1 390 médecins d'Agadir, classés par spécialité.",
+          "Vous cherchez par spécialité ou par commune, en français comme en arabe.",
+          "L'annuaire est présenté sans classement ni mise en avant d'un praticien.",
+          "Toute analyse de biologie médicale se fait sur prescription médicale."
+        ],
+        "caption": "Vous cherchez un médecin à Agadir ? L'annuaire du site réunit environ 1 390 praticiens de la ville. 🩺\nVous filtrez par spécialité et par commune, en français comme en arabe.\nD'un seul geste, vous appelez le cabinet ou vous lancez l'itinéraire depuis votre téléphone.\nL'annuaire est présenté sans classement ni mise en avant : il sert uniquement à vous orienter.\nToute analyse de biologie médicale se fait sur prescription médicale : parlez-en à votre médecin.\nwww.laboelallali.com — 61 Bis, rue de Marrakech, Agadir — 05 28 84 33 84 — WhatsApp 06 54 07 95 92",
+        "hashtags": [
+          "#Agadir",
+          "#LaboratoireElAllali",
+          "#AnnuaireMedecins",
+          "#Sante"
+        ]
+      },
+      "ar": {
+        "eyebrow": "دليل الأطباء",
+        "title": "ابحثوا عن طبيب بأكادير",
+        "lines": [
+          "يضم الدليل حوالي 1390 طبيباً بأكادير، مرتبين حسب التخصص.",
+          "تبحثون حسب التخصص أو حسب الجماعة، بالفرنسية وبالعربية.",
+          "يُعرض الدليل دون أي ترتيب أو تفضيل لطبيب على آخر.",
+          "كل تحليل طبي يتم بوصفة طبية من طبيبكم."
+        ],
+        "caption": "تبحثون عن طبيب بأكادير؟ دليل الموقع يضم حوالي 1390 طبيباً بالمدينة. 🩺\nتبحثون حسب التخصص وحسب الجماعة، بالفرنسية وبالعربية.\nبضغطة واحدة تتصلون بالعيادة أو تفتحون الطريق إليها من هاتفكم.\nالدليل يُعرض دون أي ترتيب تفضيلي ودون إبراز لطبيب على آخر: الهدف منه هو التوجيه فقط.\nكل تحليل طبي يتم بوصفة طبية: تحدثوا مع طبيبكم.\nwww.laboelallali.com — 61 مكرر، زنقة مراكش، أكادير — 05 28 84 33 84 — واتساب 06 54 07 95 92",
+        "hashtags": [
+          "#أكادير",
+          "#مختبر_العلالي",
+          "#دليل_الأطباء",
+          "#صحة"
+        ]
+      }
+    },
+    {
+      "slug": "17-quoi-apporter",
+      "date": "2026-10-27",
+      "template": "preparation-examen",
+      "risk": "vert",
+      "mode": "photo",
+      "accent": "bordeaux",
+      "background": "tubes-labo.jpg",
+      "fr": {
+        "eyebrow": "Le jour de votre analyse",
+        "title": "Que faut-il apporter au laboratoire ?",
+        "lines": [
+          "Apportez l'ordonnance de votre médecin : toute analyse se fait sur prescription.",
+          "Prévoyez une pièce d'identité au nom de la personne prélevée.",
+          "Ajoutez votre carte de mutuelle ou d'assurance maladie, si vous en avez une.",
+          "Glissez vos anciens résultats : ils permettent de comparer avec le nouveau bilan."
+        ],
+        "caption": "Le jour de votre passage au laboratoire, quatre choses à préparer. 📋\nL'ordonnance de votre médecin : toute analyse de biologie médicale se fait sur prescription médicale.\nUne pièce d'identité au nom de la personne prélevée.\nVotre carte de mutuelle ou d'assurance maladie, si vous en disposez.\nVos anciens résultats : ils permettent au biologiste de comparer avec votre nouveau bilan.\nUne question avant votre passage ? Appelez le 05 28 84 33 84 ou écrivez sur WhatsApp au 06 54 07 95 92 — 61 Bis, rue de Marrakech, Agadir.",
+        "hashtags": [
+          "#Agadir",
+          "#LaboratoireElAllali",
+          "#PriseDeSang",
+          "#PreparationExamen"
+        ]
+      },
+      "ar": {
+        "eyebrow": "يوم إجراء تحاليلكم",
+        "title": "ماذا تحضرون معكم إلى المختبر؟",
+        "lines": [
+          "أحضروا وصفة طبيبكم: كل تحليل يتم بوصفة طبية.",
+          "خذوا معكم بطاقة التعريف باسم الشخص المعني بالتحاليل.",
+          "أضيفوا بطاقة التأمين أو التغطية الصحية، إن كانت لديكم.",
+          "لا تنسوا نتائجكم السابقة، فهي تسمح بمقارنتها بالتحاليل الجديدة."
+        ],
+        "caption": "يوم زيارتكم للمختبر، هذه أربعة أشياء تحضرونها معكم. 📋\nوصفة طبيبكم: كل تحليل طبي يتم بوصفة طبية.\nبطاقة التعريف باسم الشخص المعني بسحب الدم أو بالتحاليل.\nبطاقة التأمين أو التغطية الصحية، إن كانت لديكم.\nنتائجكم السابقة: تمكّن البيولوجي المختص من مقارنتها بالتحاليل الجديدة.\nلأي سؤال قبل زيارتكم، اتصلوا بالرقم 05 28 84 33 84 أو راسلونا على واتساب 06 54 07 95 92 — 61 مكرر، زنقة مراكش، أكادير.",
+        "hashtags": [
+          "#أكادير",
+          "#مختبر_العلالي",
+          "#سحب_الدم",
+          "#تحاليل_طبية"
+        ]
+      }
+    },
+    {
+      "slug": "18-laboratoire-recrute",
+      "date": "2026-10-30",
+      "template": "annonce",
+      "risk": "vert",
+      "mode": "brand",
+      "accent": "bordeaux",
+      "fr": {
+        "chip": "Recrutement",
+        "title": "Le laboratoire accueille vos candidatures",
+        "lines": [
+          "Le Laboratoire El Allali reçoit les candidatures spontanées, emploi comme stage.",
+          "Déposez votre CV au bureau d'accueil, avec quelques mots de motivation",
+          "Vous pouvez aussi le déposer au bureau d'accueil du laboratoire.",
+          "Chaque candidature est examinée en fonction des besoins du laboratoire"
+        ],
+        "caption": "Le Laboratoire El Allali étudie les candidatures 👋\nVous souhaitez rejoindre notre équipe, en poste ou en stage ? Déposez votre CV au bureau d'accueil du laboratoire, avec quelques mots sur vos motivations, ou envoyez-le à laboelallali@gmail.com.\nPrécisez le poste qui vous intéresse, votre formation et vos disponibilités.\nChaque candidature reçue est examinée avec attention, en fonction des besoins du laboratoire.\nLaboratoire El Allali — 61 Bis, rue de Marrakech, Agadir · 05 28 84 33 84",
+        "hashtags": [
+          "#Recrutement",
+          "#Agadir",
+          "#Emploi",
+          "#LaboratoireElAllali"
+        ]
+      },
+      "ar": {
+        "chip": "توظيف",
+        "title": "المختبر يستقبل طلبات الترشيح",
+        "lines": [
+          "مختبر العلالي يستقبل الترشيحات التلقائية، للعمل أو للتدريب.",
+          "أودعوا سيرتكم الذاتية في مكتب الاستقبال مع بضع كلمات عن دوافعكم",
+          "يمكنكم أيضاً إيداعها في مكتب الاستقبال بالمختبر.",
+          "كل ترشيح يُدرس حسب حاجيات المختبر"
+        ],
+        "caption": "مختبر العلالي يدرس طلبات الترشيح 👋\nترغبون في الانضمام إلى فريقنا، للعمل أو للتدريب؟ أودعوا سيرتكم الذاتية في مكتب الاستقبال بالمختبر مع بضع كلمات عن دوافعكم، أو أرسلوها إلى laboelallali@gmail.com.\nحدّدوا المنصب الذي يهمكم، وتكوينكم، والفترة التي تكونون فيها متاحين.\nكل ترشيح يصلنا يُدرس بعناية حسب حاجيات المختبر.\nمختبر العلالي — 61 مكرر، زنقة مراكش، أكادير · 05 28 84 33 84",
+        "hashtags": [
+          "#توظيف",
+          "#أكادير",
+          "#شغل",
+          "#مختبر_العلالي"
+        ]
       }
     }
   ]

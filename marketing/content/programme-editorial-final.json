@@ -1,0 +1,779 @@
+{
+  "trimestres": [
+    {
+      "key": "T1",
+      "libelle": "Pack de lancement",
+      "periode": "septembre → octobre 2026",
+      "posts": [
+        {
+          "periode": "mar. 1er sept.",
+          "titre_fr": "Le laboratoire vous accueille",
+          "type": "informatif",
+          "template": "service-info",
+          "feu": "vert",
+          "fait": true
+        },
+        {
+          "periode": "ven. 4 sept.",
+          "titre_fr": "Vos résultats d'analyses, sur votre téléphone",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert",
+          "fait": true
+        },
+        {
+          "periode": "mar. 8 sept.",
+          "titre_fr": "Faut-il être à jeun pour votre prise de sang ?",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert",
+          "fait": true
+        },
+        {
+          "periode": "ven. 11 sept.",
+          "titre_fr": "GLABO : le prélèvement à domicile ou au travail",
+          "type": "informatif",
+          "template": "service-info",
+          "feu": "vert"
+        },
+        {
+          "periode": "mar. 15 sept.",
+          "titre_fr": "Que mesure une NFS ?",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "vert",
+          "fait": true
+        },
+        {
+          "periode": "ven. 18 sept.",
+          "titre_fr": "Les analyses de votre ordonnance, en ligne",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert"
+        },
+        {
+          "periode": "sam. 19 sept.",
+          "titre_fr": "À jeun ? Venez dès 7h30",
+          "type": "instructif",
+          "template": "annonce",
+          "feu": "vert",
+          "fait": true
+        },
+        {
+          "periode": "mar. 22 sept.",
+          "titre_fr": "5 erreurs qui faussent vos analyses",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "mar. 29 sept.",
+          "titre_fr": "Prenez soin de votre cœur",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "vert",
+          "fait": true
+        },
+        {
+          "periode": "ven. 2 oct.",
+          "titre_fr": "Octobre Rose : la campagne nationale de dépistage",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "vert"
+        },
+        {
+          "periode": "mar. 6 oct.",
+          "titre_fr": "Prendre rendez-vous avec votre ordonnance en photo",
+          "type": "instructif",
+          "template": "service-app",
+          "feu": "vert"
+        },
+        {
+          "periode": "ven. 9 oct.",
+          "titre_fr": "Dépistage du sein : en parler à son médecin",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange"
+        },
+        {
+          "periode": "mar. 13 oct.",
+          "titre_fr": "Recueillir un échantillon d'urine sans erreur",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "ven. 16 oct.",
+          "titre_fr": "Nous joindre : téléphone, WhatsApp, itinéraire",
+          "type": "informatif",
+          "template": "service-info",
+          "feu": "vert"
+        },
+        {
+          "periode": "mar. 20 oct.",
+          "titre_fr": "Octobre Rose : ce qui augmente le risque",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange"
+        },
+        {
+          "periode": "ven. 23 oct.",
+          "titre_fr": "Rechercher un médecin par spécialité à Agadir",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert"
+        },
+        {
+          "periode": "mar. 27 oct.",
+          "titre_fr": "Ce qu'il faut apporter le jour de l'analyse",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "ven. 30 oct.",
+          "titre_fr": "Le laboratoire recrute : comment postuler",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert"
+        }
+      ]
+    },
+    {
+      "key": "T2",
+      "libelle": "Pack trimestriel 1",
+      "periode": "novembre 2026 → janvier 2027",
+      "posts": [
+        {
+          "periode": "semaine du 2 novembre",
+          "titre_fr": "Novembre : qui est concerné par le diabète",
+          "angle": "Relais de la campagne nationale du ministère de la Santé : uniquement les facteurs de risque identifiés par l'OMS (antécédents familiaux, surpoids, sédentarité, âge, hypertension). Les signes d'alerte sont réservés à la publication du 14 novembre.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "ven. 6 novembre",
+          "titre_fr": "Vendredi 6 novembre : nos horaires",
+          "angle": "Anniversaire de la Marche Verte : organisation du laboratoire ce jour-là et reprise des horaires habituels. Horaires exacts à confirmer avant publication.",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 2 novembre",
+          "titre_fr": "Glycémie à jeun : bien préparer sa prise de sang",
+          "angle": "Checklist pratique en cinq points avant une glycémie à jeun (8 à 12 heures de jeûne, eau plate autorisée, ni café ni cigarette, venir de préférence le matin, apporter l'ordonnance et sa carte CMIM), examen réalisé sur prescription médicale.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 9 novembre",
+          "titre_fr": "HbA1c : une prise de sang sans être à jeun",
+          "angle": "Explique que l'hémoglobine glyquée reflète l'équilibre du sucre sur environ trois mois et qu'elle peut être prélevée à n'importe quelle heure de la journée, sans jeûne — un argument pratique très utile ; dosage sur prescription médicale, parlez-en à votre médecin.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange"
+        },
+        {
+          "periode": "14 novembre",
+          "titre_fr": "14 novembre : journée mondiale du diabète",
+          "angle": "Relais officiel de la journée mondiale (OMS et ministère de la Santé), avec les signes qui doivent amener à consulter (soif inhabituelle, fatigue, urines fréquentes, amaigrissement) et l'invitation à en parler à son médecin, le bilan étant réalisé sur prescription médicale.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 16 novembre",
+          "titre_fr": "Accéder à son espace résultats en trois étapes",
+          "angle": "Mode d'emploi en trois étapes. La capture d'écran ne montre que l'accueil et l'écran de connexion — jamais une ligne d'examen, un nom ou une valeur.",
+          "type": "instructif",
+          "template": "service-app",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 16 novembre",
+          "titre_fr": "Santé des hommes : pourquoi consulter plus tôt",
+          "angle": "Donnée sourcée OMS sur le moindre recours des hommes au suivi médical, invitation générale à ne pas repousser une consultation. Sans citer Movember (campagne privée étrangère), sans âge cible ni examen.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "mer. 18 novembre",
+          "titre_fr": "Mercredi 18 novembre : nos horaires",
+          "angle": "Fête de l'Indépendance : organisation du laboratoire ce jour-là et reprise des horaires habituels. Horaires exacts à confirmer avant publication.",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 23 novembre",
+          "titre_fr": "Antécédents familiaux : pourquoi votre médecin les demande",
+          "angle": "À quoi sert l'histoire familiale dans la décision médicale, source OMS, sans nommer aucun examen ni aucun organe. Remplace une publication sur le PSA, jugée trop proche de l'incitation à demander un examen précis.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 23 novembre",
+          "titre_fr": "GLABO : le prélèvement vient à vous",
+          "angle": "Présentation du service GLABO, prélèvement réalisé à domicile ou sur le lieu de travail par le personnel du laboratoire, utile pour les personnes âgées, à mobilité réduite ou aux horaires contraints ; organisation par téléphone 05 28 84 33 84 ou WhatsApp 06 54 07 95 92, sur prescription médicale.",
+          "type": "informatif",
+          "template": "service-info",
+          "feu": "vert"
+        },
+        {
+          "periode": "1er décembre",
+          "titre_fr": "1er décembre : journée mondiale contre le sida",
+          "angle": "Relais de la journée mondiale (OMS et ministère de la Santé) : rappelle que la sérologie VIH s'inscrit dans un accompagnement médical, qu'elle se réalise sur prescription médicale et oriente vers son médecin traitant ou les structures publiques de dépistage — parlez-en à votre médecin.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 30 novembre",
+          "titre_fr": "Bilan lipidique : 12 heures sans manger",
+          "angle": "Checklist avant un bilan de cholestérol et de triglycérides (12 heures de jeûne, repas léger la veille, pas d'alcool les trois jours précédents, ne jamais interrompre un traitement sans avis médical), examen réalisé sur prescription médicale.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 7 décembre",
+          "titre_fr": "Diabète : les examens du suivi, expliqués",
+          "angle": "Dans le cadre de la campagne du ministère de la Santé qui se poursuit jusqu'à mi-décembre, explique en langage simple ce que le médecin surveille chez une personne diabétique (hémoglobine glyquée, fonction rénale, bilan lipidique) en précisant que le rythme et la liste des examens sont fixés par le médecin — sur prescription médicale.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 7 décembre",
+          "titre_fr": "Prendre rendez-vous avec l'ordonnance en photo",
+          "angle": "Mode d'emploi pas à pas de la prise de rendez-vous en ligne sur www.laboelallali.com : choisir un créneau, joindre la photo de son ordonnance depuis son téléphone et recevoir la confirmation, capture d'écran à l'appui.",
+          "type": "instructif",
+          "template": "service-app",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 14 décembre",
+          "titre_fr": "Nos horaires d'ouverture, à garder sous la main",
+          "angle": "Rappel clair des horaires (lundi au vendredi 7h30-18h30, samedi 7h30-13h00, dimanche fermé), du téléphone 05 28 84 33 84, du WhatsApp 06 54 07 95 92 et du conventionnement CMIM.",
+          "type": "informatif",
+          "template": "service-info",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 21 décembre",
+          "titre_fr": "TSH : le rôle de la thyroïde expliqué",
+          "angle": "Le rôle de la thyroïde dans l'organisme et ce que le médecin y cherche, source citée. Dosage sur prescription médicale.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 21 décembre",
+          "titre_fr": "Le devis des analyses de votre ordonnance",
+          "angle": "Le point de départ est l'ordonnance : le patient retrouve dans le catalogue les examens prescrits et reçoit un document individuel sur WhatsApp. Aucun montant, aucune fourchette.",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 28 décembre",
+          "titre_fr": "Vendredi 1er janvier : nos horaires",
+          "angle": "Organisation du laboratoire le vendredi 1er janvier (férié), ouverture du samedi 2 en matinée, retour aux horaires habituels le lundi 4. Horaires exacts à confirmer avant publication.",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 4 janvier",
+          "titre_fr": "Bilan prescrit : comment se déroule la visite",
+          "angle": "Déroulé concret de la visite : accueil, ordonnance, jeûne éventuel, temps sur place, résultats en ligne. Sans référence au « bilan annuel » de début d'année, qui reviendrait à créer la demande.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 4 janvier",
+          "titre_fr": "Le foie, ce filtre discret de l'organisme",
+          "angle": "Le rôle du foie et ce que le médecin regarde dans un bilan hépatique (ASAT, ALAT, GGT), sans référence à « Dry January » ni à l'alcool. Sur prescription médicale.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "11 janvier",
+          "titre_fr": "11 janvier : nos horaires ce jour férié",
+          "angle": "Annonce l'organisation du laboratoire pour la fête du Manifeste de l'Indépendance et la reprise des horaires habituels dès le lendemain — ouverture ou fermeture à confirmer par la direction avant publication.",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 18 janvier",
+          "titre_fr": "Prise de sang de l'enfant : bien l'accompagner",
+          "angle": "Conseils aux parents : expliquer avec des mots simples, ne pas promettre qu'il ne sentira rien, apporter un objet rassurant, privilégier la matinée. La durée de jeûne d'un enfant est fixée par le médecin.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 18 janvier",
+          "titre_fr": "Rechercher un médecin par spécialité à Agadir",
+          "angle": "Présentation neutre de la fonction de recherche, en français comme en arabe. Sans le mot « gratuitement », sans nom de praticien affiché ni classement.",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 25 janvier",
+          "titre_fr": "Installer le laboratoire sur votre écran d'accueil",
+          "angle": "Mode d'emploi en trois étapes pour ajouter l'application du laboratoire à l'écran d'accueil de son téléphone (Android et iPhone) et accéder d'un geste à ses résultats, à la prise de rendez-vous et à GLABO, en français ou en arabe.",
+          "type": "instructif",
+          "template": "service-app",
+          "feu": "vert"
+        }
+      ]
+    },
+    {
+      "key": "T3",
+      "libelle": "Pack trimestriel 2",
+      "periode": "février → avril 2027",
+      "posts": [
+        {
+          "periode": "semaine du 1er février",
+          "titre_fr": "Nos horaires pendant le mois de Ramadan",
+          "angle": "Annoncer avant le début du mois les horaires du laboratoire pendant le Ramadan (8h00-16h30 du lundi au vendredi, samedi matin), avec le téléphone 05 28 84 33 84 et le WhatsApp 06 54 07 95 92 pour s'organiser.",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert"
+        },
+        {
+          "periode": "4 février",
+          "titre_fr": "Journée mondiale contre le cancer, le 4 février",
+          "angle": "Relayer la journée mondiale contre le cancer (OMS/UICC) en rappelant que le suivi biologique se fait toujours sur prescription médicale et en invitant chacun à parler avec son médecin du dépistage adapté à son âge.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 8 février",
+          "titre_fr": "Analyses à jeun : quel créneau pendant le Ramadan",
+          "angle": "Pour les examens qui demandent 8 à 12 heures de jeûne, le meilleur créneau pendant le Ramadan est la fin d'après-midi, avant le ftour — le laboratoire est ouvert jusqu'à 16h30. Beaucoup d'analyses ne demandent aucun jeûne. Aucun avis religieux : la question de la compatibilité avec le jeûne se pose au médecin.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 1er février",
+          "titre_fr": "Diabète et jeûne : préparez-vous avec votre médecin",
+          "angle": "Publiée avant le début du mois : inviter les personnes diabétiques à faire le point avec leur médecin avant de jeûner. Sur prescription médicale.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 15 février",
+          "titre_fr": "Bien boire entre le ftour et le shour",
+          "angle": "Repères généraux d'hydratation de l'OMS, sans inventer un référentiel « Ramadan » qui n'existe pas. Le lien avec le prélèvement est présenté comme un constat pratique de l'équipe.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 15 février",
+          "titre_fr": "Vos résultats d'analyses sur votre téléphone",
+          "angle": "Retrouver ses bilans sans se déplacer, utile pendant le mois. La capture ne montre que l'écran de connexion ou la liste des années d'un compte de démonstration.",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 22 février",
+          "titre_fr": "Le prélèvement à domicile, étape par étape",
+          "angle": "Détailler en quatre étapes le déroulement d'un prélèvement GLABO à domicile ou au travail (contact, créneau convenu, venue du personnel du laboratoire, résultats consultables), toujours sur prescription médicale.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 22 février",
+          "titre_fr": "Trouver un médecin à Agadir depuis notre site",
+          "angle": "L'annuaire d'environ 1 390 médecins d'Agadir, avec recherche par spécialité. Remplace un second rappel des horaires du Ramadan, qui faisait doublon — le rappel passe en story.",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 1er mars",
+          "titre_fr": "Cancer colorectal : en parler avec son médecin",
+          "angle": "Ce qu'est le cancer colorectal et les signes qui doivent amener à consulter, source OMS. Sans citer « Mars Bleu » (campagne française) ni aucun seuil d'âge : le dépistage relève du médecin.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 1er mars",
+          "titre_fr": "Nos horaires pour l'Aïd al-Fitr",
+          "angle": "Annoncer les horaires du laboratoire pour les jours de l'Aïd al-Fitr (vers le 10-11 mars) et la date de reprise des horaires habituels, avec les coordonnées téléphone et WhatsApp.",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert"
+        },
+        {
+          "periode": "8 mars",
+          "titre_fr": "8 mars : ne repoussez pas votre suivi",
+          "angle": "Beaucoup de femmes font passer leur santé après celle de leur famille : ne pas laisser une consultation ou une ordonnance en attente. Aucun dosage nommé — le 8 mars 2027 tombe dans les derniers jours du Ramadan, parler de fatigue serait mal lu.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "lun. 9 mars",
+          "titre_fr": "Vos reins travaillent sans faire de bruit",
+          "angle": "Publiée la veille de l'Aïd, en annonçant la journée mondiale du rein du 11 mars. Le rôle des reins et ce que le médecin surveille.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 15 mars",
+          "titre_fr": "Après le Ramadan, reprendre votre suivi",
+          "angle": "Après un mois au rythme différent, inviter les personnes suivies pour un diabète, une tension ou un cholestérol à reprendre le calendrier de contrôle fixé par leur médecin — parlez-en à votre médecin, analyses sur prescription médicale.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 15 mars",
+          "titre_fr": "Préparer sa liste d'analyses avant de venir",
+          "angle": "Le catalogue comme outil d'organisation : retrouver les examens de son ordonnance et connaître leurs conditions de préparation. Sans faire du devis, donc du prix, le sujet de la publication.",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 22 mars",
+          "titre_fr": "Recueillir un échantillon d'urine sans erreur",
+          "angle": "Donner la checklist du recueil d'urine (toilette préalable, premier jet écarté, flacon stérile fourni par le laboratoire, acheminement rapide) pour éviter un résultat ininterprétable — examen sur prescription médicale.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "24 mars",
+          "titre_fr": "24 mars, journée mondiale de la tuberculose",
+          "angle": "Relayer la journée mondiale de la tuberculose (OMS) en rappelant qu'une toux qui dure plus de trois semaines doit amener à consulter et que le diagnostic repose sur des examens demandés par un médecin.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 29 mars",
+          "titre_fr": "Rhume ou allergie de printemps ?",
+          "angle": "Les symptômes du printemps et pourquoi seule une consultation permet de faire la différence. Sans nommer aucun dosage.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 29 mars",
+          "titre_fr": "Prendre rendez-vous avec votre ordonnance en photo",
+          "angle": "Les trois étapes de la prise de rendez-vous. L'ordonnance montrée est entièrement fictive : aucun nom de patient, aucun cachet de médecin, aucun médicament lisible.",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 5 avril",
+          "titre_fr": "Être à jeun, ce que cela veut dire",
+          "angle": "Expliquer concrètement la consigne « à jeun » (8 à 12 heures sans manger, eau plate autorisée, ni café, ni thé, ni cigarette) et rappeler de ne jamais interrompre un traitement sans avis de son médecin.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "7 avril",
+          "titre_fr": "7 avril, journée mondiale de la santé",
+          "angle": "Relayer la journée mondiale de la santé (OMS) en rappelant le rôle du médecin traitant dans le suivi et que les examens biologiques viennent en complément d'une consultation, sur prescription médicale.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 12 avril",
+          "titre_fr": "Ce qu'il faut apporter le jour de l'analyse",
+          "angle": "Ordonnance, pièce d'identité, carte de mutuelle ou d'assurance (formulation générique, sans nommer d'organisme), anciens résultats pour la comparaison.",
+          "type": "instructif",
+          "template": "service-info",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 12 avril",
+          "titre_fr": "Les traitements à signaler avant une prise de sang",
+          "angle": "Inviter à signaler à l'équipe les traitements en cours au moment du prélèvement, car certains peuvent influencer les résultats, sans jamais arrêter un traitement de soi-même — parlez-en à votre médecin.",
+          "type": "instructif",
+          "template": "le-saviez-vous",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 19 avril",
+          "titre_fr": "Comprendre les valeurs de référence d'un résultat",
+          "angle": "Expliquer pourquoi des valeurs de référence figurent à côté de chaque résultat, qu'elles varient selon l'âge, le sexe et la technique utilisée, et que l'interprétation revient au médecin prescripteur.",
+          "type": "instructif",
+          "template": "le-saviez-vous",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 19 avril",
+          "titre_fr": "Semaine de la vaccination : faites le point sur votre carnet",
+          "angle": "Relais de la campagne OMS : ressortir son carnet et celui de ses enfants, en parler à son médecin ou à son centre de santé. Sans mention de sérologie de contrôle.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange",
+          "corrige": true
+        }
+      ]
+    },
+    {
+      "key": "T4",
+      "libelle": "Pack trimestriel 3",
+      "periode": "mai → juillet 2027",
+      "posts": [
+        {
+          "periode": "semaine du 17 mai",
+          "titre_fr": "Une fatigue qui dure : plusieurs causes possibles",
+          "angle": "Une fatigue prolongée a de multiples causes ; aucun bilan ne se décide seul. Source citée, aucune analyse nommée.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 10 mai",
+          "titre_fr": "Être à jeun : ce que cela veut dire",
+          "angle": "Expliquer concrètement le jeûne avant une prise de sang (8 à 12 heures sans manger, eau plate autorisée, ni café ni thé ni cigarette) et rappeler que seul le médecin indique si le jeûne est nécessaire pour les analyses prescrites.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 10 mai",
+          "titre_fr": "Aïd al-Adha : organisation du laboratoire",
+          "angle": "Publiée AVANT la fête (attendue vers le 16-19 mai selon l'annonce officielle) : le laboratoire adapte ses horaires, les horaires définitifs seront publiés dès l'annonce officielle. Anticiper les prélèvements programmés.",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 17 mai",
+          "titre_fr": "Pourquoi apporter vos anciens résultats",
+          "angle": "Comparer un résultat à ceux des contrôles précédents aide le médecin : comment retrouver ses anciens bilans et les apporter le jour de l'analyse.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 24 mai",
+          "titre_fr": "Prendre rendez-vous avec l'ordonnance en photo",
+          "angle": "Montrer en trois étapes la prise de rendez-vous en ligne sur www.laboelallali.com : choisir le créneau, photographier l'ordonnance, confirmer, avec une capture d'écran du téléphone à l'appui.",
+          "type": "instructif",
+          "template": "service-app",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 24 mai",
+          "titre_fr": "L'acide urique, un déchet éliminé par les reins",
+          "angle": "D'où vient l'acide urique et comment il est éliminé, source citée. Sans évoquer de symptôme ni de liste d'aliments, qui transformeraient la publication en incitation.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "31 mai",
+          "titre_fr": "31 mai, journée mondiale sans tabac",
+          "angle": "Relayer la journée mondiale sans tabac de l'OMS en rappelant les effets du tabac sur le cœur, les poumons et les vaisseaux, et orienter vers le médecin traitant pour un accompagnement à l'arrêt.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 31 mai",
+          "titre_fr": "Votre ordonnance, à apporter au laboratoire",
+          "angle": "Rappeler que toutes les analyses sont réalisées sur prescription médicale et lister ce qu'il faut présenter à l'accueil : l'ordonnance, une pièce d'identité et la carte CMIM pour les assurés conventionnés.",
+          "type": "instructif",
+          "template": "service-info",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 7 juin",
+          "titre_fr": "Fortes chaleurs : repérer la déshydratation",
+          "angle": "Donner les repères d'hydratation par forte chaleur à Agadir et les signes d'alerte chez les personnes âgées et les jeunes enfants (bouche sèche, urines foncées, somnolence), en citant l'OMS, et consulter le médecin en cas de doute.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange"
+        },
+        {
+          "periode": "semaine du 7 juin",
+          "titre_fr": "GLABO : le prélèvement à domicile ou au travail",
+          "angle": "Description factuelle du service : un membre du personnel du laboratoire se déplace, sur rendez-vous et sur ordonnance. Sans s'adresser à un tiers pour inscrire un proche âgé.",
+          "type": "informatif",
+          "template": "service-info",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "14 juin",
+          "titre_fr": "14 juin, journée mondiale du don du sang",
+          "angle": "Relayer la journée mondiale du don du sang (OMS) en expliquant que le don s'effectue au centre de transfusion sanguine et non au laboratoire, et rappeler les conditions générales pour donner.",
+          "type": "informatif",
+          "template": "journee-mondiale",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 14 juin",
+          "titre_fr": "Ce que devient votre tube de sang au laboratoire",
+          "angle": "Les étapes entre le prélèvement, l'acheminement, l'analyse et la validation par le biologiste. Sans citer d'examen ni annoncer de délai.",
+          "type": "informatif",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 21 juin",
+          "titre_fr": "Vos questions par WhatsApp : ce que l'on peut vous répondre",
+          "angle": "Ce que l'équipe peut traiter par message (horaires, préparation, organisation d'un prélèvement à domicile) et ce qui relève du médecin : aucun résultat ni avis médical par messagerie.",
+          "type": "informatif",
+          "template": "service-info",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 21 juin",
+          "titre_fr": "Les analyses de votre ordonnance, en ligne",
+          "angle": "Retrouver les analyses prescrites et préparer sa venue. L'estimation personnalisée est mentionnée en une ligne, jamais dans le titre ni sur le visuel.",
+          "type": "instructif",
+          "template": "service-app",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 28 juin",
+          "titre_fr": "Nos horaires pendant l'été à Agadir",
+          "angle": "Confirmer que le laboratoire reste ouvert tout l'été aux horaires habituels (lundi-vendredi 7h30-18h30, samedi 7h30-13h00, dimanche fermé) et que toute modification sera annoncée sur cette page.",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 28 juin",
+          "titre_fr": "Venir au laboratoire avec un enfant",
+          "angle": "Conseils pratiques pour une prise de sang chez l'enfant : expliquer le geste avec des mots simples, bien l'hydrater sauf consigne contraire du médecin, apporter l'ordonnance et le carnet de santé, rester à ses côtés pendant le prélèvement.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 5 juillet",
+          "titre_fr": "Sodium et potassium : ce que le médecin surveille",
+          "angle": "L'équilibre des sels minéraux dans le sang et pourquoi le médecin peut demander un ionogramme. Sans reprendre l'argument « forte chaleur », déjà traité en juin.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 5 juillet",
+          "titre_fr": "Partir en vacances avec ses ordonnances",
+          "angle": "Checklist avant le départ : emporter ses ordonnances en cours et ses derniers comptes rendus, vérifier avec son médecin s'il faut renouveler une ordonnance. Sans mention de l'application, traitée la semaine suivante.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 12 juillet",
+          "titre_fr": "Vos résultats vous suivent en vacances",
+          "angle": "Rappeler que les résultats sont consultables depuis le téléphone, classés par année, et qu'ils peuvent être montrés à un médecin pendant un déplacement ou un séjour hors d'Agadir.",
+          "type": "informatif",
+          "template": "service-app",
+          "feu": "vert"
+        },
+        {
+          "periode": "semaine du 12 juillet",
+          "titre_fr": "Vitamine D : son rôle dans l'organisme",
+          "angle": "Le rôle de la vitamine D et la contribution de l'exposition solaire habituelle, source citée. Sans laisser entendre que chacun devrait se faire doser.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 19 juillet",
+          "titre_fr": "Chaleur et repas d'été : les bons réflexes",
+          "angle": "Conservation des aliments, lavage des mains, eau de boisson par forte chaleur, source OMS. Consulter en cas de troubles digestifs qui durent.",
+          "type": "médical",
+          "template": "le-saviez-vous",
+          "feu": "orange",
+          "corrige": true
+        },
+        {
+          "periode": "semaine du 19 juillet",
+          "titre_fr": "Signaler un malaise avant la prise de sang",
+          "angle": "Le malaise pendant un prélèvement est fréquent et sans gravité : le signaler à l'accueil pour être installé allongé, et les gestes qui aident.",
+          "type": "instructif",
+          "template": "preparation-examen",
+          "feu": "vert",
+          "corrige": true
+        },
+        {
+          "periode": "28 juillet",
+          "titre_fr": "28 juillet, journée mondiale contre les hépatites",
+          "angle": "Relayer la journée mondiale contre les hépatites (OMS) : les hépatites B et C évoluent longtemps sans symptômes, les sérologies se réalisent sur prescription médicale — parlez-en à votre médecin.",
+          "type": "médical",
+          "template": "journee-mondiale",
+          "feu": "orange"
+        },
+        {
+          "periode": "30 juillet",
+          "titre_fr": "Fête du Trône : nos horaires d'ouverture",
+          "angle": "Annoncer l'organisation du laboratoire autour de la Fête du Trône du 30 juillet, avec les horaires du jour férié et ceux du samedi matin qui suit.",
+          "type": "informatif",
+          "template": "annonce",
+          "feu": "vert"
+        }
+      ]
+    }
+  ]
+}

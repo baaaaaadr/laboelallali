@@ -85,3 +85,4 @@ nul
 
 # Marketing: generated post images (re-render with node marketing/scripts/render-posts.js)
 marketing/output/
+marketing/livraison/
