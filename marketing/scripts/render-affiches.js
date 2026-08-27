@@ -16,9 +16,9 @@ const OUT = path.join(ROOT, "output", "affiches");
 
 const QRS = [
   { file: "qr-site.png", url: "https://www.laboelallali.com" },
-  // Lien Maps du labo — à remplacer par le lien « demander des avis » exact du
-  // tableau de bord Google Business Profile dès que Dr Aziz le fournit.
-  { file: "qr-avis.png", url: "https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA" },
+  // Lien « Demander des avis » officiel, fourni par Dr Aziz depuis le tableau de
+  // bord de sa fiche Google : il ouvre directement la fenêtre de dépôt d'avis.
+  { file: "qr-avis.png", url: "https://g.page/r/Ce6V_SOBrPJxEAE/review" },
 ];
 
 (async () => {
