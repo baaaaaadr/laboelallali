@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Plan de fenêtre — enveloppe Laboratoire El Allali</title>
+<style>
+  /* Planche A4 PAYSAGE (297 x 210 mm), enveloppe dessinee a l'ECHELLE 1:1.
+     Imprimer a 100 % (« taille reelle », sans ajustement a la page) : on peut
+     alors poser une enveloppe reelle sur le dessin pour verifier les cotes. */
+  @font-face { font-family:"Inter"; src:url("../assets/fonts/inter-latin.woff2") format("woff2"); font-weight:100 900; font-display:block; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:297mm; height:210mm; }
+  body { font-family:"Inter","Segoe UI",sans-serif; background:#fff; }
+  svg { display:block; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="297mm" height="210mm" viewBox="0 0 297 210">
+  <!-- 1 unite = 1 mm -->
+  <defs>
+    <marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,1 L10,5 L0,9 z" fill="#800020"/>
+    </marker>
+    <marker id="fl2" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M10,1 L0,5 L10,9 z" fill="#800020"/>
+    </marker>
+    <pattern id="hach" width="3" height="3" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="3" stroke="#9DC3E6" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <g font-family="Inter, sans-serif" fill="#3A2226">
+
+    <!-- ================= enveloppe : 229 x 162, coin haut-gauche (34,24) -->
+    <rect x="34" y="24" width="229" height="162" fill="#FCFAFB" stroke="#3A2226" stroke-width="0.5"/>
+
+    <!-- ================= fenetre : 100 x 45, a 109 du bord gauche, 57 du haut -->
+    <rect x="143" y="81" width="100" height="45" rx="2.5" fill="url(#hach)" stroke="#2E75B6" stroke-width="0.5"/>
+    <text x="193" y="105.5" font-size="4" font-weight="700" fill="#1F4E79" text-anchor="middle">FENÊTRE</text>
+    <text x="193" y="111" font-size="3.4" fill="#1F4E79" text-anchor="middle">100 × 45 mm</text>
+
+    <!-- ================= cotes ============================================ -->
+    <g stroke="#800020" stroke-width="0.35" fill="#800020" font-size="3.6">
+
+      <!-- largeur totale 229, sous l'enveloppe -->
+      <line x1="34" y1="196" x2="263" y2="196" marker-start="url(#fl2)" marker-end="url(#fl)"/>
+      <line x1="34" y1="187" x2="34" y2="198" stroke-width="0.25"/>
+      <line x1="263" y1="187" x2="263" y2="198" stroke-width="0.25"/>
+      <rect x="140" y="192.4" width="17" height="5" fill="#fff" stroke="none"/>
+      <text x="148.5" y="196.6" text-anchor="middle" stroke="none" font-weight="700">229</text>
+
+      <!-- hauteur totale 162, a gauche -->
+      <line x1="22" y1="24" x2="22" y2="186" marker-start="url(#fl2)" marker-end="url(#fl)"/>
+      <line x1="20" y1="24" x2="33" y2="24" stroke-width="0.25"/>
+      <line x1="20" y1="186" x2="33" y2="186" stroke-width="0.25"/>
+      <rect x="17" y="102.5" width="10" height="5" fill="#fff" stroke="none"/>
+      <text x="22" y="106.6" text-anchor="middle" stroke="none" font-weight="700">162</text>
+
+      <!-- largeur fenetre 100, au-dessus de la fenetre -->
+      <line x1="143" y1="74" x2="243" y2="74" marker-start="url(#fl2)" marker-end="url(#fl)"/>
+      <line x1="143" y1="72" x2="143" y2="80" stroke-width="0.25"/>
+      <line x1="243" y1="72" x2="243" y2="80" stroke-width="0.25"/>
+      <rect x="185" y="70.4" width="16" height="5" fill="#fff" stroke="none"/>
+      <text x="193" y="74.6" text-anchor="middle" stroke="none" font-weight="700">100</text>
+
+      <!-- hauteur fenetre 45, a gauche de la fenetre -->
+      <line x1="135" y1="81" x2="135" y2="126" marker-start="url(#fl2)" marker-end="url(#fl)"/>
+      <line x1="133" y1="81" x2="142" y2="81" stroke-width="0.25"/>
+      <line x1="133" y1="126" x2="142" y2="126" stroke-width="0.25"/>
+      <rect x="130.5" y="101" width="9" height="5" fill="#fff" stroke="none"/>
+      <text x="135" y="105.1" text-anchor="middle" stroke="none" font-weight="700">45</text>
+
+      <!-- marge droite 20 -->
+      <line x1="243" y1="136" x2="263" y2="136" marker-start="url(#fl2)" marker-end="url(#fl)"/>
+      <line x1="243" y1="127" x2="243" y2="138" stroke-width="0.25"/>
+      <line x1="263" y1="127" x2="263" y2="138" stroke-width="0.25"/>
+      <rect x="248.5" y="132.4" width="9" height="5" fill="#fff" stroke="none"/>
+      <text x="253" y="136.6" text-anchor="middle" stroke="none" font-weight="700">20</text>
+
+      <!-- marge haute 57 -->
+      <line x1="253" y1="24" x2="253" y2="81" marker-start="url(#fl2)" marker-end="url(#fl)"/>
+      <rect x="248.5" y="50" width="9" height="5" fill="#fff" stroke="none"/>
+      <text x="253" y="54.1" text-anchor="middle" stroke="none" font-weight="700">57</text>
+
+      <!-- marge gauche 109 -->
+      <line x1="34" y1="60" x2="143" y2="60" marker-start="url(#fl2)" marker-end="url(#fl)"/>
+      <line x1="143" y1="58" x2="143" y2="80" stroke-width="0.25"/>
+      <rect x="82.5" y="56.4" width="12" height="5" fill="#fff" stroke="none"/>
+      <text x="88.5" y="60.6" text-anchor="middle" stroke="none" font-weight="700">109</text>
+
+      <!-- marge basse 60 -->
+      <line x1="193" y1="126" x2="193" y2="186" marker-start="url(#fl2)" marker-end="url(#fl)"/>
+      <rect x="188.5" y="153.5" width="9" height="5" fill="#fff" stroke="none"/>
+      <text x="193" y="157.6" text-anchor="middle" stroke="none" font-weight="700">60</text>
+    </g>
+
+    <!-- ================= bloc de texte, dans la zone vide a gauche ======== -->
+    <g font-size="3.3" fill="#3A2226">
+      <text x="40" y="34" font-size="5.2" font-weight="700" fill="#800020">Enveloppe à fenêtre — cotes relevées</text>
+      <text x="40" y="40.5" font-size="3.4" fill="#7A5A62">Laboratoire El Allali · planche à l'échelle 1:1 · imprimer à 100 %</text>
+
+      <text x="40" y="80" font-weight="700">Format</text>
+      <text x="40" y="85.5">C5 — 229 × 162 mm (paysage)</text>
+
+      <text x="40" y="95" font-weight="700">Fenêtre</text>
+      <text x="40" y="100.5">100 × 45 mm, angles arrondis</text>
+      <text x="40" y="105.5">à 20 mm du bord droit</text>
+      <text x="40" y="110.5">à 57 mm du bord supérieur</text>
+
+      <text x="40" y="122" font-weight="700" fill="#800020">À confirmer par l'imprimeur</text>
+      <text x="40" y="127.5" fill="#7A5A62">Cotes déduites d'une photographie (correction de</text>
+      <text x="40" y="132" fill="#7A5A62">perspective par homographie), précision ± 3 mm.</text>
+      <text x="40" y="136.5" fill="#7A5A62">Le rapport mesuré des côtés est 1,43 — soit √2,</text>
+      <text x="40" y="141" fill="#7A5A62">ce qui exclut le format DL (rapport 2,0).</text>
+
+      <text x="40" y="152" font-weight="700">Vérification en 10 secondes</text>
+      <text x="40" y="157.5" fill="#7A5A62">Imprimer cette page à 100 %, poser une enveloppe</text>
+      <text x="40" y="162" fill="#7A5A62">sur le tracé : les bords et la fenêtre doivent</text>
+      <text x="40" y="166.5" fill="#7A5A62">coïncider. Sinon, noter les écarts en mm.</text>
+    </g>
+
+    <!-- reperes de coin, pour controler que l'impression est bien a 100 % -->
+    <g stroke="#3A2226" stroke-width="0.3">
+      <line x1="8" y1="8" x2="18" y2="8"/><line x1="8" y1="8" x2="8" y2="18"/>
+      <line x1="289" y1="202" x2="279" y2="202"/><line x1="289" y1="202" x2="289" y2="192"/>
+    </g>
+    <text x="8" y="20.5" font-size="2.6" fill="#7A5A62">Contrôle d'échelle : le trait d'angle mesure 10 mm.</text>
+  </g>
+</svg>
+</body>
+</html>

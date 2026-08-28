@@ -86,3 +86,10 @@ nul
 # Marketing: generated post images (re-render with node marketing/scripts/render-posts.js)
 marketing/output/
 marketing/livraison/
+
+# Imprimerie: materiel source fourni par le laboratoire.
+# Les archives WhatsApp brutes sont inutiles (les photos extraites sont versionnees),
+# mais le PDF du logo est la SOURCE du kit de marque : il echappe au *.pdf ci-dessus,
+# sinon marketing/scripts/extract-logo-svg.js n'a plus rien a lire.
+imprimerie/*.zip
+!imprimerie/*.pdf

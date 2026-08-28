@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Enveloppe C5 — Laboratoire El Allali</title>
+<style>
+  /* ------------------------------------------------------------------
+     Enveloppe a fenetre C5 — 229 x 162 mm, format FINI exact.
+
+     PAS de fond perdu : aucun element n'atteint le bord. L'enveloppe peut
+     donc etre imprimee sur des enveloppes deja formees, sans rognage —
+     c'est le cas le plus courant et le moins cher.
+
+     FENETRE (cotes relevees sur la photo, +/- 3 mm, cf.
+     plan-fenetre-enveloppe.html) : 100 x 45 mm, a 20 mm du bord droit et
+     57 mm du bord superieur. Elle est donc a X 109..209, Y 57..102.
+     Rien n'est imprime dans cette zone, ni dans les 4 mm qui l'entourent.
+
+     Deux tons, choisis par l'URL :
+       (defaut)     degrade fuchsia -> bordeaux, pour une impression quadri
+       ?ton=mono    aplat bordeaux seul, pour un offset 1 couleur
+     Et un mode de controle : ?reperes=1 trace la fenetre (apercu seulement).
+     ------------------------------------------------------------------ */
+  @font-face { font-family:"Inter";       src:url("../assets/fonts/inter-latin.woff2") format("woff2"); font-weight:100 900; font-display:block; }
+  @font-face { font-family:"Public Sans"; src:url("../assets/fonts/publicsans-700-latin.woff2") format("woff2"); font-weight:700; font-display:block; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-700-arabic.woff2") format("woff2"); font-weight:700; font-display:block;
+               unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-400-arabic.woff2") format("woff2"); font-weight:400; font-display:block;
+               unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF; }
+  /* Faces latines de Tajawal : sans elles, les espaces et la ponctuation
+     latine des lignes arabes sortent des unicode-range ci-dessus et
+     retombent sur la generique (Chromium embarquait alors de l'Arial). */
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-700-latin.woff2") format("woff2"); font-weight:700; font-display:block;
+               unicode-range:U+0000-024F,U+2000-206F; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-400-latin.woff2") format("woff2"); font-weight:400; font-display:block;
+               unicode-range:U+0000-024F,U+2000-206F; }
+
+  :root {
+    --bordeaux:#800020;
+    --fuchsia:#FF4081;
+    --encre:#3A2226;
+    --gris:#7A5A62;
+    --filet:linear-gradient(90deg, var(--fuchsia), var(--bordeaux));
+    --accent:var(--fuchsia);
+  }
+  /* Aplat 1 ton. En offset 1 couleur il n'y a qu'une encre : toute teinte
+     neutre (le gris #3A2226 du texte courant) demanderait une 2e plaque.
+     On ramene donc TOUT sur le bordeaux, les nuances etant obtenues par des
+     trames de cette meme encre (#A64C63 = bordeaux a 70 % sur blanc). */
+  body.mono {
+    --filet:var(--bordeaux);
+    --accent:var(--bordeaux);
+    --encre:var(--bordeaux);
+    --gris:#A64C63;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:229mm; height:162mm; }
+  body {
+    font-family:"Inter","Segoe UI",sans-serif;
+    color:var(--encre); background:#FFFFFF;
+    position:relative; overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ------------------------------------------------------------- en-tete */
+  header {
+    position:absolute; top:13mm; left:14mm; right:14mm;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:3mm;
+  }
+  .marque    { width:87mm; }
+  .marque.ar { text-align:right; direction:rtl; font-family:"Tajawal",sans-serif; }
+
+  .nom    { font-family:"Public Sans",sans-serif; font-weight:700; font-size:13pt;
+            line-height:1.15; color:var(--bordeaux); letter-spacing:-0.2pt; }
+  .nom .leger { font-weight:400; color:var(--encre); }
+  .metier { font-size:8pt; margin-top:0.5mm; }
+  .marque.ar .nom    { font-family:"Tajawal",sans-serif; font-size:14pt; letter-spacing:0; }
+  .marque.ar .metier { font-family:"Tajawal",sans-serif; font-size:9pt; }
+
+  .docteur { font-weight:700; font-size:8pt; color:var(--bordeaux); margin-top:2.6mm; }
+  .marque.ar .docteur { font-family:"Tajawal",sans-serif; font-size:9pt; }
+
+  ul { list-style:none; margin-top:1.1mm; }
+  li { font-size:5.8pt; line-height:1.5; color:var(--gris); padding-left:2mm; position:relative; }
+  /* Puce dessinee en CSS plutot qu'avec le caractere U+2022 : ce glyphe est
+     absent du sous-ensemble Inter, et Chromium basculait sur Arial pour lui. */
+  li::before { content:""; position:absolute; left:0; top:0.85mm;
+               width:0.85mm; height:0.85mm; border-radius:50%; background:var(--accent); }
+  .marque.ar li { font-family:"Tajawal",sans-serif; font-size:6.6pt; padding-left:0; padding-right:2mm; }
+  .marque.ar li::before { left:auto; right:0; }
+
+  .logo { width:16mm; height:16mm; flex:0 0 auto; margin-top:0.5mm; }
+
+  /* Filet de separation, juste au-dessus de la zone de la fenetre */
+  .filet { position:absolute; left:14mm; right:14mm; top:47mm; height:0.5mm; background:var(--filet); }
+
+  /* ------------------------------------- bloc « en ligne », a gauche de la fenetre
+     Largeur limitee a 91 mm : la fenetre commence a X 109, on garde 18 mm d'air. */
+  .enligne {
+    position:absolute; left:14mm; top:66mm; width:91mm;
+    display:flex; align-items:center; gap:5mm;
+  }
+  .enligne img { width:26mm; height:26mm; flex:0 0 auto; }
+  .enligne .titre { font-family:"Public Sans",sans-serif; font-weight:700; font-size:9pt;
+                    color:var(--bordeaux); line-height:1.25; }
+  .enligne .ar { font-family:"Tajawal",sans-serif; font-size:7.6pt; color:var(--gris);
+                 direction:rtl; margin-top:1.1mm; line-height:1.4; }
+  .enligne .site { font-weight:700; font-size:8.2pt; color:var(--bordeaux); margin-top:1.8mm; }
+
+  /* ---------------------------------------------------------------- pied */
+  footer { position:absolute; bottom:16mm; left:14mm; right:14mm; text-align:center; }
+  footer .filet2 { height:0.35mm; background:var(--filet); margin-bottom:2.4mm; opacity:0.85; }
+  .horaires { font-size:7pt; line-height:1.5; }
+  .horaires strong { color:var(--bordeaux); font-weight:700; }
+  .coord { font-size:6.6pt; line-height:1.5; color:var(--gris); margin-top:0.8mm; }
+
+  /* ------------------------------------------- reperes (apercu seulement) */
+  .fenetre { display:none; }
+  body.reperes .fenetre {
+    display:block; position:absolute;
+    left:109mm; top:57mm; width:100mm; height:45mm;
+    border:0.4mm dashed #2E75B6; border-radius:2.5mm;
+    background:repeating-linear-gradient(45deg,#EAF2FA 0 2mm,#DCE9F6 2mm 4mm);
+  }
+  body.reperes .fenetre span {
+    position:absolute; left:0; right:0; top:19mm; text-align:center;
+    font-size:7.5pt; font-weight:700; color:#1F4E79;
+  }
+</style>
+</head>
+<body>
+  <div class="fenetre"><span>FENÊTRE 100 × 45 mm<br>(le nom apparaît ici)</span></div>
+
+  <header>
+    <div class="marque">
+      <div class="nom"><span class="leger">Laboratoire</span> EL ALLALI</div>
+      <div class="metier">de biologie médicale</div>
+      <div class="docteur">Dr. Mohamed Aziz EL ALLALI</div>
+      <ul>
+        <li>Pharmacien Biologiste lauréat de l'université ULB - Bruxelles</li>
+        <li>Titulaire de DU - Management de la Qualité - Bordeaux</li>
+        <li>Formation pratique à l'hôpital militaire Moulay Ismail - Meknès</li>
+      </ul>
+    </div>
+
+    <img class="logo" src="../assets/logos/logo-icone-degrade.svg" alt="Laboratoire El Allali" id="logo">
+
+    <div class="marque ar">
+      <div class="nom">مختبر العلالي</div>
+      <div class="metier">للتحليلات الطبية</div>
+      <div class="docteur">الدكتور محمد عزيز العلالي</div>
+      <ul>
+        <li>صيدلاني إحيائي خريج جامعة بروكسيل</li>
+        <li>حاصل على شهادة جامعية "تسيير الجودة" - بوردو</li>
+        <li>متمرن سابق بالمستشفى العسكري مولاي إسماعيل - مكناس</li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="filet"></div>
+
+  <div class="enligne">
+    <img src="../affiches/qr-site.png" alt="">
+    <div>
+      <div class="titre">Vos résultats et vos<br>rendez-vous en ligne</div>
+      <div class="ar">نتائجكم ومواعيدكم عبر الإنترنت</div>
+      <div class="site">www.laboelallali.com</div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="filet2"></div>
+    <div class="horaires">
+      Du lundi au vendredi de <strong>7h30 à 18h30</strong> · Le samedi de <strong>7h30 à 13h00</strong>
+    </div>
+    <div class="coord">
+      61 Bis, rue de Marrakech, Quartier Industriel - Agadir · Tél : 05 28 84 33 84 · G.S.M : 06 54 07 95 92 · laboelallali@gmail.com
+    </div>
+  </footer>
+
+<script>
+  // Le ton et les reperes se pilotent par l'URL, pour garder un seul fichier source.
+  var p = new URLSearchParams(location.search);
+  if (p.get('ton') === 'mono') {
+    document.body.classList.add('mono');
+    document.getElementById('logo').src = '../assets/logos/logo-icone-bordeaux.svg';
+  }
+  if (p.get('reperes')) document.body.classList.add('reperes');
+</script>
+</body>
+</html>
