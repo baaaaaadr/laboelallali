@@ -267,6 +267,172 @@ html, body {
   }
 }
 
+/* === HERO PERSONAL PANEL === */
+
+/* The personalised block between the welcome paragraph and the shortcut tiles.
+   Same reasoning as .hero-tile: `.card` is an opaque light surface, unusable on
+   the darkened photo. Slightly denser glass than the tiles (.14 vs .12) because
+   this one carries a sentence, not two words.
+   MUST stay declared AFTER `.hero-banner * { color: white !important }` above —
+   at equal specificity and equal !important, source order decides, and that is
+   the entire mechanism keeping the CTA readable. */
+.hero-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  /* beats the text-center inherited from the hero, and stays RTL-correct */
+  text-align: start;
+  background-color: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  /* Logical edge: mirrors itself in RTL, and echoes the border-s-4 of
+     CheckupReminder on /resultats — same object, two contexts. */
+  border-inline-start: 4px solid var(--color-fuchsia-accent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--color-white) !important;
+}
+
+.hero-panel__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.hero-panel__title {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+
+.hero-panel__desc {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.hero-panel__link {
+  font-size: 0.8125rem;
+  color: var(--color-white) !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.9;
+}
+
+.hero-panel__link:hover {
+  opacity: 1;
+}
+
+/* White pill CTA. THE TRAP: `.hero-banner * { color: white !important }` beats
+   even an inline style (an !important stylesheet declaration wins over a plain
+   inline one), so the ServicesHub recipe (style={{color}} on .results-cta) does
+   NOT work here — white on white. Hence a class with !important, declared after
+   that rule. Smaller than .button-fuchsia (40px vs 48px) so it reads as
+   secondary despite the high contrast, and .button-bordeaux is avoided: it is
+   the same hue as the hero overlay in light mode, and remaps to pink in dark
+   mode right next to three fuchsia buttons. */
+.hero-panel__cta,
+.dark .hero-panel__cta {
+  background-color: var(--color-white) !important;
+  color: var(--color-fuchsia-bright) !important;
+  text-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  min-height: 40px;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-panel__cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.hero-panel__cta:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 2px;
+}
+
+/* Reserved slot. The height is in the SSR HTML, so filling it in after
+   hydration shifts nothing — without this the five tiles and three buttons
+   below would jump, on the most visible element of the whole site. Being
+   transparent over a photo, an unfilled slot reads as a bit of extra air
+   rather than a hole. min-height, not height: a long Arabic string may grow. */
+/* Measured with the Playwright driver across the 4 states × fr/ar × 4 widths.
+   The slot has to fit the TALLEST state (French "guest", whose extra link wraps
+   under the button), so the three shorter states leave some air below them —
+   that is the price of a zero-shift hero, and over a photo it reads as spacing
+   rather than as a hole. Always round UP: a few pixels too many are invisible,
+   a few too few make the whole hero jump when the panel fills in.
+   320px → 204px measured · 390px → 186px · ≥768px → 147px. */
+.hero-panel-slot {
+  min-height: 208px;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 380px) {
+  .hero-panel-slot {
+    min-height: 190px;
+  }
+}
+
+/* médecin / correspondant: nothing to say to them, take the space back. */
+.hero-panel-slot--collapsed {
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.hero-panel-enter {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.hero-panel-enter.is-visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-panel-enter {
+    transition: none;
+  }
+}
+
+@media (min-width: 640px) {
+  /* tallest measured at >= 768px: 147px (the "activate access" state) */
+  .hero-panel-slot {
+    min-height: 152px;
+  }
+
+  .hero-panel {
+    padding: 1rem 1.25rem;
+    align-items: center;
+  }
+
+  .hero-panel__title {
+    font-size: 1rem;
+  }
+
+  .hero-panel__desc {
+    font-size: 0.875rem;
+  }
+}
+
 /* === BUTTON STYLES === */
 
 /* FIXED: Button utilities with proper sizing and visibility */

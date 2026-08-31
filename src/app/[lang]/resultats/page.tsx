@@ -777,7 +777,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
         {status === 'ready' && <ResultsIndicators results={results} lang={lang} />}
 
         {/* Checkup reminder — always shown for linked patients once results are ready */}
-        <CheckupReminder lang={lang} variant="results" />
+        <CheckupReminder lang={lang} />
 
         {/* Loading (idle = prefetch not resolved yet → also show the loader) */}
         {(status === 'loading' || status === 'idle') && (

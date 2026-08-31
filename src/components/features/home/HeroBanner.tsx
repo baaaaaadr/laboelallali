@@ -3,6 +3,9 @@ import { Navigation, FileText } from 'lucide-react';
 // Quick-access tiles (demande n° 15). Client component, imported eagerly: it is
 // above the fold and its five links are the primary entry points of the site.
 import HeroShortcuts from '@/components/features/home/HeroShortcuts';
+// Personalised block (4 states). Inside the hero on purpose: below it, at
+// ~1100px down a min-h-screen hero, nobody ever scrolled far enough to see it.
+import HeroPersonalPanel from '@/components/features/home/HeroPersonalPanel';
 // Import useTranslation hook without type issues
 import { useTranslation as useTranslationOriginal } from 'react-i18next';
 import { LAB_CONTACT } from '@/constants/contact';
@@ -47,13 +50,17 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ lang, onCallClick, isMobile = t
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight break-words hero-text" style={{ color: 'white !important' }}>
             {t('welcome_banner')}
           </h1>
-          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 opacity-90 break-words hero-text" style={{ color: 'white !important' }}>
+          <p className="text-base sm:text-lg md:text-xl mb-4 opacity-90 break-words hero-text" style={{ color: 'white !important' }}>
             {t('welcome_description')}
           </p>
+
+          {/* Personalised panel — reserves its own height, so filling it in after
+              hydration shifts nothing below. */}
+          <HeroPersonalPanel lang={lang} />
           {/* Quick-access tiles, in the order set by the lab: bilan, ordonnance,
               résultats, WhatsApp du Dr, installation. They come BEFORE the three
               historical buttons below, as requested. */}
-          <div className="mb-6 sm:mb-8">
+          <div className="mb-5">
             <HeroShortcuts lang={lang} />
           </div>
 

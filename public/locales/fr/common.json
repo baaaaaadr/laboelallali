@@ -259,6 +259,15 @@
     "body": "Connectez-vous avec Google pour consulter vos résultats.",
     "dismiss_aria": "Fermer"
   },
+  "hero_panel": {
+    "guest_title": "Déjà venu au laboratoire ?",
+    "guest_desc": "Créez votre compte pour retrouver tous vos résultats en ligne.",
+    "guest_cta": "Créer mon compte",
+    "guest_link": "Première visite ? Voir nos analyses et nos tarifs",
+    "access_desc": "Activez l'accès à vos résultats : le laboratoire vérifie votre identité, puis tout est en ligne.",
+    "access_cta": "Activer mon accès",
+    "checkup_generic_title": "Pensez à votre prochain bilan"
+  },
   "hero_shortcuts": {
     "bilan": "Faire mon bilan",
     "bilan_desc": "Choisir une formule et son tarif",
