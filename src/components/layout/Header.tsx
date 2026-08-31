@@ -216,7 +216,10 @@ const Header = () => {
         <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 lg:max-w-7xl relative">
         {/* Hauteur pilotée par --header-height : .header-main y ajoute l'encoche
             (barre d'état PWA) via padding-top, cette rangée garde ses 64px. */}
-        <div className="flex items-center justify-between transition-all text-white h-[var(--header-height)]">
+        {/* gap-3 is a floor, not spacing: `justify-between` gives zero room once
+            the row is full, which is how the active "Accueil" pill came to touch
+            the logo at 1024px. Direction-neutral, so it holds in RTL too. */}
+        <div className="flex items-center justify-between gap-3 transition-all text-white h-[var(--header-height)]">
           {/* Logo and name */}
           <Link href={currentLanguagePath} className="flex items-center h-full flex-shrink-0">
             <img

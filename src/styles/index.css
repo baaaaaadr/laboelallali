@@ -130,6 +130,21 @@ html, body {
   white-space: nowrap;
 }
 
+/* Between 1024 and 1279px the French nav (7 links, 8 for staff) is 693px wide
+   inside a 976px row: with `justify-between` the leftover space fell to ZERO and
+   the white "Accueil" pill ended up touching the logo. Trimming 6px of padding
+   per side on each link frees ~84px, which `justify-between` then splits evenly
+   on either side of the nav. Not fixed with a `gap` alone: at 1024px there was
+   simply no space left to give, so a gap would have pushed the bar into an
+   overflow. Above 1280px the row is wide enough and the full padding returns. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .header-main nav a,
+  .header-main .nav-link {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+}
+
 .header-main nav a:hover,
 .header-main .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
