@@ -35,10 +35,18 @@
  * account switch) the base64 disappears and the modal closes by itself, instead
  * of sitting there showing another account's PDF.
  *
-
+ * ── Portal ───────────────────────────────────────────────────────────────────
+ * Rendered into `document.body`. An ancestor with `backdrop-filter`, `filter` or
+ * `transform` becomes the containing block for `position: fixed` descendants —
+ * and the home hero panel has `backdrop-filter: blur(10px)`. Without the portal
+ * the "full-screen" modal would resolve against a 340×220 panel and then get
+ * clipped by the hero's `overflow-hidden`. The portal lives here, not at the call
+ * site, so the fix travels with the component rather than with the caller's
+ * discipline.
  */
 
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   ChevronLeft,
@@ -83,6 +91,7 @@ export default function PdfViewerModal({ base64, dossierId, onClose }: PdfViewer
   const [zoom, setZoom] = useState(() => (isDesktopViewer() ? 1.05 : 1.6));
   const [containerWidth, setContainerWidth] = useState(0);
   const [canShare, setCanShare] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Pinch-to-zoom + one-finger pan on the PDF (touch-action: none so the browser
   // never steals the gesture; preventDefault needs non-passive native listeners).
@@ -96,6 +105,7 @@ export default function PdfViewerModal({ base64, dossierId, onClose }: PdfViewer
   );
 
   useEffect(() => {
+    setMounted(true);
     setCanShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function');
   }, []);
 
@@ -135,6 +145,15 @@ export default function PdfViewerModal({ base64, dossierId, onClose }: PdfViewer
       pendingScrollRef.current = null;
     }
   }, []);
+
+  // Escape closes, like any dialog.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   useEffect(() => {
     const el = pdfScrollRef.current;
@@ -272,7 +291,9 @@ export default function PdfViewerModal({ base64, dossierId, onClose }: PdfViewer
     }
   }, [base64, dossierId, t]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     // Plein écran : sans le paddingTop, le titre et le bouton « Fermer »
     // passent sous la barre d'état en PWA. Vaut 0 hors PWA installée.
     <div
@@ -401,6 +422,7 @@ export default function PdfViewerModal({ base64, dossierId, onClose }: PdfViewer
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
