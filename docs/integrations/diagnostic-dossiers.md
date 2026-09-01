@@ -294,3 +294,20 @@ Corrigé par `normalizeRequesterId()` (`functions/src/cyberlab/client.ts`), qui 
   sans migration de données.
 
 Un simple `.trim()` ne suffit pas : l'espace est **à l'intérieur** de l'identifiant.
+
+---
+
+## Question ouverte : `date_dossier` est-il vraiment en UTC ? (01/09/2026)
+
+**À poser à Si Brahim / CyberLab. Un e-mail referme le sujet.**
+
+Les horodatages arrivent suffixés `Z` (donc UTC) — par exemple `2026-07-13T08:42:19Z` — mais tout indique qu'ils transportent en réalité **l'heure murale marocaine** : dans ce document même, ce `08:42:19Z` est lu comme « 13/07 08h42 », c'est-à-dire l'heure locale du labo. Or le Maroc est à UTC+1.
+
+**Ce que ça casse.** Tant qu'on n'affichait que des mois, l'écart d'une heure était invisible. Il ne l'est plus :
+
+1. Un bilan prélevé il y a dix minutes se parse **jusqu'à une heure dans le futur**. `monthsSince` rendait alors `null`, ce qui éteignait le rappel de bilan sur `/resultats` **et** dans le panneau d'accueil pendant l'heure qui suit chaque bilan — précisément quand le patient ouvre l'application pour voir son résultat. Corrigé par une fenêtre de tolérance de 6 h (`src/lib/results/stats.ts`), qui rend « 0 mois » plutôt que rien.
+2. Le compteur vivant du hero (mois / jours / heures / minutes / secondes) affiche donc `0 j 00:00:00` **figé pendant une heure** après un bilan frais, avant de se mettre à courir. Stable et jamais négatif, mais c'est le contraire de « vivant ».
+
+**Ce qu'on n'a pas fait, et pourquoi.** Aucune correction de fuseau en dur. Le Maroc repasse à UTC+0 pendant le Ramadan, donc un `−1 h` constant serait faux plusieurs semaines par an ; et si le serveur corrige un jour son sérialiseur, ce `−1 h` deviendrait une erreur de `+1 h` que personne ne surveille. Décaler silencieusement un horodatage médical est pire qu'être grossier d'une heure.
+
+**La question exacte :** le champ `date_dossier` de l'API résultats est-il exprimé en UTC, ou s'agit-il de l'heure locale du laboratoire avec un `Z` ajouté par le sérialiseur ? Si c'est le second cas, l'idéal est un décalage explicite (`+01:00`) plutôt qu'un `Z`.
