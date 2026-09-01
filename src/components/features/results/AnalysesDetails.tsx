@@ -3,13 +3,17 @@
 /**
  * Collapsible "Détails des analyses" for a result card. Collapsed by default; on
  * first expand it lazy-loads the analyses catalog and maps each terse lab code to
- * its patient-facing name (unknown codes are shown as-is). See src/lib/analyses/catalog.ts.
+ * its patient-facing name (unknown codes are shown as-is).
+ *
+ * This is the light-surface skin, used by `/resultats` and `/admin`. The parsing
+ * and code→name resolution live in `useAnalysesLabels` so the home hero can wear
+ * a different skin over the same brain — see that hook, and
+ * `src/components/features/home/HeroAnalysesDisclosure.tsx`.
  */
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { AnalyseItem } from '@/components/features/catalog/AnalysisCard';
-import { loadAnalysesCatalog, buildCodeMap, resolveAnalysisName } from '@/lib/analyses/catalog';
+import { useAnalysesLabels } from '@/hooks/useAnalysesLabels';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 
 export default function AnalysesDetails({
@@ -21,31 +25,14 @@ export default function AnalysesDetails({
 }) {
   const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
-  const [map, setMap] = useState<Map<string, AnalyseItem> | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { codes, labels, ready, loading, load } = useAnalysesLabels(summary, isArabic);
 
-  // The lab's real separator is a caret "^" (e.g. "C HBA1^C U^C CR^EZALAT"). Codes
-  // are the FULL prefixed ids and DO contain internal spaces ("C HBA1"), so we must
-  // NOT split on whitespace — only on ^ / , / ; / | . Lookup normalization strips the
-  // spaces so "C HBA1" matches the catalog id "C  HBA1".
-  const codes = (summary || '')
-    .split(/[\^,;|]+/)
-    .map((c) => c.trim())
-    .filter(Boolean);
   if (!codes.length) return null;
 
   const toggle = async () => {
     const next = !open;
     setOpen(next);
-    if (next && !map && !loading) {
-      setLoading(true);
-      try {
-        const catalog = await loadAnalysesCatalog();
-        setMap(buildCodeMap(catalog));
-      } finally {
-        setLoading(false);
-      }
-    }
+    if (next) await load();
   };
 
   const ClosedChevron = isArabic ? ChevronLeft : ChevronRight;
@@ -63,13 +50,13 @@ export default function AnalysesDetails({
 
       {open && (
         <div className="mt-2 ps-5">
-          {loading || !map ? (
+          {loading || !ready ? (
             <MedicalLoader size="sm" />
           ) : (
             <ul className="space-y-1 list-disc ps-4">
-              {codes.map((code, i) => (
-                <li key={`${code}-${i}`} className="text-[var(--text-primary)]">
-                  {resolveAnalysisName(code, map, isArabic)}
+              {labels.map((label, i) => (
+                <li key={`${codes[i]}-${i}`} className="text-[var(--text-primary)]">
+                  {label}
                 </li>
               ))}
             </ul>
