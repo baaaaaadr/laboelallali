@@ -363,6 +363,17 @@ sudo systemctl status cyberlab-api
 
 #### **7.7 Configuration réseau et certificats — état et tâches**
 
+> ⚠️ **NE JAMAIS SUPPRIMER NI LAISSER EXPIRER `coraliaflat.com`.** Ce domaine
+> porte le sous-domaine qui sert de pont entre l'application et le serveur de
+> résultats (valeur de `CYBERLAB_API_URL` dans `functions/.env`, fichier gitignoré
+> — donc cette dépendance est invisible pour qui lit seulement le dépôt).
+> Le site web associé est mort et son dossier `public_html` est vide : le domaine a
+> **l'apparence d'un résidu supprimable**, il ne l'est pas. Sa zone DNS vit chez
+> **Cloudflare**, pas chez l'hébergeur cPanel. Registrar Bluehost, **expiration
+> 2027-09-08** — échéance à surveiller : non renouvelé, les patients perdent
+> l'accès à leurs résultats. Tout changement de nom impose de basculer en même temps
+> `CYBERLAB_API_URL`, la zone Cloudflare et le certificat mTLS côté Si Brahim.
+
 **Côté passerelle (Hassan / Cloudflare) — FAIT :**
 
 * Domaine dédié à l'API : un sous-domaine privé de `coraliaflat.com`, placé derrière Cloudflare (le nom exact est communiqué à Si Brahim en privé).  
