@@ -53,8 +53,10 @@ import { CalendarClock, KeyRound, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useResults } from '@/contexts/ResultsContext';
-import { computeResultsStats } from '@/lib/results/stats';
+import { monthsSince } from '@/lib/results/stats';
 import { checkupTitle } from '@/lib/results/checkupCopy';
+import type { CyberlabResult } from '@/types/cyberlab';
+import HeroLastBilan from './HeroLastBilan';
 
 type PanelState = 'guest' | 'noaccess' | 'reminder' | 'generic' | 'none';
 /** What we remember between visits. A category, never a value. */
@@ -65,12 +67,15 @@ const HINT_KEY = 'laboElAllali_heroPanel';
 export default function HeroPersonalPanel({ lang }: { lang: string }) {
   const { t } = useTranslation('common');
   const { user, userProfile, loading } = useAuth();
-  const { results, status } = useResults();
+  const { results, status, newestDossierId } = useResults();
 
   // null until mounted → server and first client render both emit an empty slot.
   const [hint, setHint] = useState<Hint | null>(null);
   const [forced, setForced] = useState<PanelState | null>(null);
   const [faded, setFaded] = useState(false);
+  // Dev fixture only — see heroPanelFixture.ts. Never populated in production.
+  const [demo, setDemo] = useState<CyberlabResult | null>(null);
+  const [demoPdf, setDemoPdf] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // Dev-only state override, so the four states can be driven from a Playwright
@@ -82,6 +87,14 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
       const param = new URLSearchParams(window.location.search).get('heroPanel');
       if (param === 'guest' || param === 'noaccess' || param === 'reminder' || param === 'generic' || param === 'none') {
         setForced(param);
+        // `&heroDemo=1` also injects fake data so the enriched reminder state can
+        // be exercised without a real CyberLab account.
+        if (param === 'reminder' && new URLSearchParams(window.location.search).get('heroDemo') === '1') {
+          void import('./heroPanelFixture').then(async (m) => {
+            setDemo(m.DEMO_RESULT);
+            setDemoPdf(await m.demoPdfBase64());
+          });
+        }
         return;
       }
     }
@@ -96,10 +109,20 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
     setHint(stored === 'linked' || stored === 'noaccess' ? stored : 'guest');
   }, []);
 
-  const monthsTitle = useMemo(() => {
+  // ONE source for both the dossier and its age. `newestDossierId` compares
+  // date_dossier lexicographically while computeResultsStats parses it; using one
+  // for the PDF and the other for the counter could pick two different dossiers
+  // on a malformed date.
+  const newest = useMemo(() => {
+    if (demo) return demo;
     if (status !== 'ready') return null; // invariant 3
-    return checkupTitle(computeResultsStats(results).newestMonthsAgo);
-  }, [status, results]);
+    return results.find((r) => r.dossier_id === newestDossierId) ?? null;
+  }, [demo, status, results, newestDossierId]);
+
+  const monthsTitle = useMemo(
+    () => (newest ? checkupTitle(monthsSince(newest.date_dossier)) : null),
+    [newest]
+  );
 
   const state: PanelState | null = useMemo(() => {
     if (forced) return forced;
@@ -129,6 +152,13 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
   }, [loading, forced, user, userProfile]);
 
   const showsPanel = state !== null && state !== 'none';
+  // Second slot tier for the linked population only. The enriched reminder is
+  // taller than the four original messages, and `generic` — which stands in for
+  // it during the ~2.5s of loading — must reserve the same height so the
+  // generic→reminder swap moves nothing. Anonymous visitors keep the base tier
+  // and pay nothing. The hint already means exactly "has a requester_id", so it
+  // predicts this tier without any new stored value.
+  const tallSlot = state === 'reminder' || state === 'generic';
 
   useEffect(() => {
     if (!showsPanel) return;
@@ -190,12 +220,20 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
   const { Icon } = content;
 
   return (
-    <div className={`hero-panel-slot${state === 'none' ? ' hero-panel-slot--collapsed' : ''}`}>
+    <div
+      className={`hero-panel-slot${tallSlot ? ' hero-panel-slot--tall' : ''}${
+        state === 'none' ? ' hero-panel-slot--collapsed' : ''
+      }`}
+    >
       {showsPanel && (
         <section
           aria-label={content.title}
           className={`hero-panel hero-panel-enter${faded ? ' is-visible' : ''}`}
         >
+          {state === 'reminder' && newest ? (
+            <HeroLastBilan result={newest} title={content.title} lang={lang} demoBase64={demoPdf} />
+          ) : (
+            <>
           <span className="hero-panel__icon">
             <Icon size={20} aria-hidden="true" />
           </span>
@@ -213,6 +251,8 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
               )}
             </div>
           </div>
+            </>
+          )}
         </section>
       )}
     </div>

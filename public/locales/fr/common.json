@@ -260,6 +260,12 @@
     "dismiss_aria": "Fermer"
   },
   "hero_panel": {
+    "unit_month_short_one": "mois",
+    "unit_month_short_other": "mois",
+    "unit_day_short_one": "j",
+    "unit_day_short_other": "j",
+    "view_last_bilan": "Voir mon dernier bilan",
+    "last_bilan_label": "Votre dernier bilan",
     "guest_title": "Déjà venu au laboratoire ?",
     "guest_desc": "Créez votre compte pour retrouver tous vos résultats en ligne.",
     "guest_cta": "Créer mon compte",

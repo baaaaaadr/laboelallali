@@ -407,10 +407,114 @@ html, body {
   }
 }
 
-/* médecin / correspondant: nothing to say to them, take the space back. */
+/* Second tier, for linked patients only: the enriched "reminder" state carries a
+   live counter, a "Voir" pill and a collapsed analyses row, so it is taller than
+   the four plain messages. `generic` — which stands in for it during the ~2.5s
+   the results take to load — reserves the same height, so the generic→reminder
+   swap moves nothing below it. Anonymous visitors keep the base tier.
+   ⚠ MEASURED with the Playwright driver, not guessed: tallest panel is 208px
+   below 640px and 165px above, in fr and ar, reminder and generic. Re-measure
+   after ANY copy change, in both languages, and always round up. */
+.hero-panel-slot--tall {
+  min-height: 216px;
+}
+
+@media (min-width: 640px) {
+  .hero-panel-slot--tall {
+    min-height: 172px;
+  }
+}
+
+/* médecin / correspondant: nothing to say to them, take the space back.
+   Declared AFTER --tall so it always wins. */
 .hero-panel-slot--collapsed {
   min-height: 0;
   margin-bottom: 0;
+}
+
+/* The live counter. `contain` matters: this text changes once a second on top of
+   a backdrop-filter, and without it the browser re-evaluates the whole panel's
+   blur on every tick. tabular-nums + 2-digit padding keep the digits from
+   jittering — the line has its own row, so a width change shifts nothing, but it
+   looks cheap. */
+.hero-panel__count {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  opacity: 0.9;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  contain: content;
+}
+
+.hero-panel__clock {
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+/* Collapsed analyses list. Its own skin rather than AnalysesDetails: that one is
+   built on light-surface tokens which `.hero-banner *` flattens to a single
+   white, losing every level of hierarchy without looking broken. */
+.hero-panel__analyses {
+  margin-top: 0.625rem;
+  font-size: 0.8125rem;
+}
+
+.hero-panel__analyses-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0;
+  background-color: transparent !important;
+  color: var(--color-white) !important;
+  opacity: 0.9;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  border: none;
+}
+
+.hero-panel__analyses-toggle:hover {
+  opacity: 1;
+}
+
+.hero-panel__analyses-toggle:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Capped and scrollable: a 13-analysis list would otherwise add several hundred
+   pixels to a hero that already overflows the screen. `overscroll-behavior`
+   stops the page from scrolling when the list reaches its end — a genuinely
+   unpleasant gesture inside a 250px panel. */
+.hero-panel__analyses-list {
+  max-height: 8.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 0.375rem;
+  padding-inline-start: 1.1rem;
+  list-style: disc;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  opacity: 0.92;
+  /* fades the last line, so it reads as "there is more" rather than "cut off" */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 1.25rem), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.25rem), transparent);
+}
+
+@media (min-width: 380px) {
+  .hero-panel__analyses-list {
+    columns: 2;
+    column-gap: 1rem;
+  }
 }
 
 .hero-panel-enter {
