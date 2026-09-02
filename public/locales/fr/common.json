@@ -266,6 +266,7 @@
     "unit_day_short_other": "j",
     "view_last_bilan": "Voir mon dernier bilan",
     "last_bilan_label": "Votre dernier bilan",
+    "last_bilan_since": "Votre dernier bilan remonte à :",
     "guest_title": "Déjà venu au laboratoire ?",
     "guest_desc": "Créez votre compte pour retrouver tous vos résultats en ligne.",
     "guest_cta": "Créer mon compte",

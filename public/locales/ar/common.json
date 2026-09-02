@@ -362,6 +362,7 @@
     "unit_day_short_other": "يوم",
     "view_last_bilan": "عرض آخر فحص",
     "last_bilan_label": "آخر فحص لك",
+    "last_bilan_since": "يعود آخر فحص لك إلى:",
     "guest_title": "سبق أن زرت المختبر؟",
     "guest_desc": "أنشئ حسابك لتجد كل نتائجك عبر الإنترنت.",
     "guest_cta": "إنشاء حسابي",

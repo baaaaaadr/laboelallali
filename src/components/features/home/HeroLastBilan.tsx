@@ -40,7 +40,9 @@ export default function HeroLastBilan({
 }: {
   /** The newest dossier — chosen by the panel, which already knows it is usable. */
   result: CyberlabResult;
-  /** "Votre dernier bilan remonte à plus de 4 mois", from the shared checkupCopy. */
+  /** "Votre dernier bilan remonte à plus de 4 mois", from the shared checkupCopy.
+   *  No longer displayed: it is the accessible text behind the visual label, and
+   *  the accessible name of the panel. Keep it a complete, self-standing sentence. */
   title: string;
   lang: string;
   /** Dev fixture only (see heroPanelFixture.ts): lets the driver open the viewer
@@ -83,7 +85,19 @@ export default function HeroLastBilan({
         <CalendarClock size={20} aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="hero-panel__title">{title}</p>
+        {/* Visually a bare label: the duration now lives in the counter below, in
+            big type. Printing "remonte a plus de 3 mois" above "3 mois 10 j" said
+            the same thing twice and buried the live part — the counter IS the
+            headline now.
+            Screen readers keep the full, stable sentence instead: the counter is
+            aria-hidden (a 1 Hz live region is unusable), so without this span the
+            duration would be lost to them entirely. */}
+        <p className="hero-panel__title">
+          <span aria-hidden="true">
+            {t('hero_panel.last_bilan_since', 'Votre dernier bilan remonte à :')}
+          </span>
+          <span className="sr-only">{title}</span>
+        </p>
 
         <BilanCountdown iso={result.date_dossier} isArabic={isArabic} />
 

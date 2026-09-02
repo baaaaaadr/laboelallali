@@ -12,8 +12,10 @@
  * **No `aria-live`, ever.** Documented precedent: a live region on the
  * open/closed badge made screen readers re-announce the whole badge every 60s,
  * forever (docs/pages/home.md §3). At 1 Hz it would be unusable. The digits are
- * `aria-hidden`; the sentence right above ("Votre dernier bilan remonte à plus
- * de 4 mois") already carries the information, in a stable form.
+ * `aria-hidden`; the screen-reader-only sentence right above ("Votre dernier
+ * bilan remonte à plus de 4 mois", see HeroLastBilan) carries the information in
+ * a stable form. Do not drop that span: it is now the ONLY accessible source of
+ * the duration, since the visible label above says only "remonte à :".
  */
 
 import { memo, useEffect, useRef, useState } from 'react';
