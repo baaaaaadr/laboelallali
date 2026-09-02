@@ -96,7 +96,11 @@ export default function HeroLastBilan({
           <span aria-hidden="true">
             {t('hero_panel.last_bilan_since', 'Votre dernier bilan remonte à :')}
           </span>
-          <span className="sr-only">{title}</span>
+          {/* `visually-hidden` (src/styles/utilities/layout.css) and not Tailwind's
+              `sr-only`: if that utility ever failed to be generated, this full
+              sentence would render VISIBLY next to the label, duplicated. The
+              hand-written class exists in the repo for exactly this reason. */}
+          <span className="visually-hidden">{title}</span>
         </p>
 
         <BilanCountdown iso={result.date_dossier} isArabic={isArabic} />
