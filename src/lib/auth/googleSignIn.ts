@@ -10,9 +10,12 @@
  * Error MESSAGES stay with the callers: the login page has its own
  * `getAuthErrorMessage` + inline error state, the banner just closes itself.
  *
- * Both flows are first-party because NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN is the
- * app's own domain (laboelallali.com) — no cross-domain auth relay, no
- * third-party-cookie failure. See docs/pages/login.md.
+ * NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN is set to laboelallali.com to keep both flows
+ * first-party, but ⚠ that is not what production actually does: the deployed app
+ * opens labo-el-allali-pwa.firebaseapp.com/__/auth/handler (Firebase auto-init
+ * defaults win over the env value), so the relay IS cross-domain in prod. Popup
+ * is unaffected; the redirect fallback is the one that depends on third-party
+ * storage. Measured septembre 2026 — see docs/pages/login.md.
  */
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { getClientAuth } from '@/config/firebase';
