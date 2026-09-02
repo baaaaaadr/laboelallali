@@ -39,8 +39,9 @@ On email signup submit: consent guard -> `createUserWithEmailAndPassword` -> `pe
 
 On email login submit: `signInWithEmailAndPassword`. The auth context loads the Firestore profile; completed profiles are redirected to the post-auth target (`getRedirectTarget`, default `/${lang}/profile`), incomplete profiles stay on `/login` and show step 2.
 
-Google submit:
+Google submit (all of it lives in `src/lib/auth/googleSignIn.ts`, shared with `GoogleSignInPrompt`):
 - Creates `new GoogleAuthProvider()`.
+- **`provider.setCustomParameters({ prompt: 'select_account' })` — do not remove.** Without it Firebase sends NO `prompt` parameter to `accounts.google.com/o/oauth2/auth` (verifiable by capturing the popup's request), and Google is then allowed to reuse the browser's existing session once consent has been granted: the account chooser flashes open, closes on its own, and the patient is signed in as an account they never selected. Reported from the field in septembre 2026. On a phone shared within a family — the normal case for this lab — that silently opens the wrong person's account, on an app that displays medical results. `select_account` forces the chooser on every sign-in, for the redirect fallback too.
 - Tries `signInWithPopup(auth, provider)` first.
 - If the browser blocks the popup (`auth/popup-blocked`), falls back to `signInWithRedirect`.
 - Any other popup error (e.g. the user closed the popup) is mapped to a readable message and displayed inline.

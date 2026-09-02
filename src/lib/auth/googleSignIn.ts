@@ -29,6 +29,9 @@ function errorCode(err: unknown): string | undefined {
 /**
  * Sign in with Google. Resolves once the popup flow completed.
  *
+ * Always asks Google to show the account chooser (`prompt: 'select_account'`),
+ * for both the popup and the redirect fallback — never silently reuse a session.
+ *
  * On `auth/popup-blocked` it falls back to a full-page redirect and resolves
  * WITHOUT the user being signed in yet — the page navigates away and the result
  * is consumed by `getRedirectResult` on the login page. Callers must therefore
@@ -42,6 +45,15 @@ export async function signInWithGoogle(): Promise<void> {
   if (!auth) throw new Error('Auth not initialized');
 
   const provider = new GoogleAuthProvider();
+  // Without this, Google's authorization endpoint receives NO `prompt` parameter
+  // (verified: the popup requests accounts.google.com/o/oauth2/auth with prompt
+  // absent). Google is then free to reuse whatever session the browser already
+  // has and to skip the chooser entirely once consent was granted once: the
+  // account picker flashes open, closes by itself, and the patient is signed in
+  // as an account they never picked. On a phone shared inside a family — the
+  // normal case here — that silently opens the wrong person's account.
+  // `select_account` forces the picker on every single sign-in.
+  provider.setCustomParameters({ prompt: 'select_account' });
   try {
     await signInWithPopup(auth, provider);
   } catch (err: unknown) {
