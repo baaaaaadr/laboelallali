@@ -225,8 +225,8 @@ html, body {
   border-radius: 0.875rem;
   background-color: rgba(255, 255, 255, 0.12) !important;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--color-white) !important;
   text-decoration: none;
   cursor: pointer;
@@ -243,6 +243,21 @@ html, body {
 .hero-tile:focus-visible {
   outline: 2px solid var(--color-white);
   outline-offset: 2px;
+}
+
+/* The install tile in its non-actionable states — already installed, or a
+   browser with no install command to offer. It STAYS in the grid (a missing 5th
+   cell next to four filled ones reads as a broken layout) but must not look
+   pressable. Double class so it beats `.hero-tile:hover`, which is a class plus
+   a pseudo-class and would otherwise win on specificity. */
+.hero-tile.hero-tile--static {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.hero-tile.hero-tile--static:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.12) !important;
 }
 
 .hero-tile__icon {
@@ -304,8 +319,8 @@ html, body {
   /* Logical edge: mirrors itself in RTL, and echoes the border-s-4 of
      CheckupReminder on /resultats — same object, two contexts. */
   border-inline-start: 4px solid var(--color-fuchsia-accent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--color-white) !important;
 }
 

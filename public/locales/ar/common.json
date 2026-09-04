@@ -385,6 +385,11 @@
     "results_desc": "اطّلع عليها عبر الإنترنت",
     "wa_dr": "واتساب د. العلالي",
     "wa_dr_desc": "سؤال طبي؟ تواصل مباشرة",
+    "installed_label": "التطبيق مثبَّت",
+    "installed_desc": "أنت تستعمله الآن",
+    "install_ios_label": "أضفه إلى الشاشة الرئيسية",
+    "install_ios_desc": "من قائمة المشاركة في متصفحك",
+    "install_menu_desc": "من قائمة متصفحك",
     "install_desc": "على شاشة هاتفك الرئيسية"
   },
   "services_hub": {

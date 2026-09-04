@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Download } from 'lucide-react';
+import { Check, Download, Share } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -58,6 +58,8 @@ export default function PWAInstallButton({
   const [showButton, setShowButton] = useState(process.env.NODE_ENV === 'development' || forceShow);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [isClientReady, setIsClientReady] = useState(false);
+  /** iOS never fires `beforeinstallprompt`; the tile has to say something else. */
+  const [isIOS, setIsIOS] = useState(false);
   
   useEffect(() => {
     setIsClientReady(true);
@@ -71,6 +73,7 @@ export default function PWAInstallButton({
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    setIsIOS(isIOS);
     
     if (isStandalone || (isIOS && !isSafari)) {
       setIsAppInstalled(true);
@@ -135,7 +138,17 @@ export default function PWAInstallButton({
 
   if (!isClientReady) return null;
   
-  if ((isAppInstalled || !showButton) && process.env.NODE_ENV !== 'development' && !forceShow) {
+  // The hero tile is the ONE variant that must never vanish: it is the 5th cell
+  // of a 5-column grid, and returning null left a visible hole next to four
+  // filled tiles — which reads as a broken layout, not as "nothing to offer".
+  // It stays, and says something true instead. Every other variant keeps the
+  // old behaviour: a footer or banner with nothing to propose should disappear.
+  if (
+    variant !== 'tile' &&
+    (isAppInstalled || !showButton) &&
+    process.env.NODE_ENV !== 'development' &&
+    !forceShow
+  ) {
     return null;
   }
   
@@ -184,21 +197,69 @@ export default function PWAInstallButton({
   // <a> tiles beside it. <div role="button"> like the footer/icon variants, to
   // bypass the global `button { background-color: transparent }` reset.
   if (variant === 'tile') {
+    // Three states, one cell. Whatever happens, the grid keeps its five tiles.
+    //   installed  → acknowledge it, quietly (this is the case the lab sees most,
+    //                since the staff all run the installed app)
+    //   installable→ the real install button
+    //   otherwise  → tell the visitor where the command lives in THEIR browser,
+    //                rather than offering a button that cannot do anything
+    const canInstall = !isAppInstalled && !!(typeof window !== 'undefined' && window.deferredPrompt);
+
+    const state = isAppInstalled
+      ? {
+          Icon: Check,
+          label: t('hero_shortcuts.installed_label', 'Application installée'),
+          desc: t('hero_shortcuts.installed_desc', 'Vous y êtes déjà'),
+        }
+      : canInstall
+        ? {
+            Icon: Download,
+            label: t('pwa.install_app_button', "Installer l'appli"),
+            desc: t('hero_shortcuts.install_desc', "Sur votre écran d'accueil"),
+          }
+        : isIOS
+          ? {
+              Icon: Share,
+              label: t('hero_shortcuts.install_ios_label', "Ajouter à l'écran d'accueil"),
+              desc: t('hero_shortcuts.install_ios_desc', 'Menu Partager de votre navigateur'),
+            }
+          : {
+              Icon: Download,
+              label: t('pwa.install_app_button', "Installer l'appli"),
+              desc: t('hero_shortcuts.install_menu_desc', 'Depuis le menu de votre navigateur'),
+            };
+
+    const { Icon } = state;
+
+    // Non-actionable states are plain <div>s: no role="button", no tabIndex, no
+    // handler. A focusable control that does nothing is worse than static text.
+    if (!canInstall) {
+      return (
+        <div className={`hero-tile hero-tile--static ${className}`} style={style}>
+          <span className="hero-tile__icon">
+            <Icon size={22} aria-hidden="true" />
+          </span>
+          <span className="hero-tile__label">{state.label}</span>
+          <span className="hero-tile__desc">{state.desc}</span>
+        </div>
+      );
+    }
+
     return (
       <div
         role="button"
         tabIndex={0}
-        onClick={isDisabled ? undefined : handleInstallClick}
+        onClick={handleInstallClick}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInstallClick(); } }}
-        className={`hero-tile ${className} ${isDisabled ? 'opacity-70 cursor-not-allowed pointer-events-none' : ''}`}
-        aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
+        className={`hero-tile ${className}`}
+        aria-label={state.label}
         style={style}
       >
         <span className="hero-tile__icon">
-          <Download size={22} aria-hidden="true" />
+          <Icon size={22} aria-hidden="true" />
         </span>
-        <span className="hero-tile__label">{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
-        <span className="hero-tile__desc">{isClientReady ? t('hero_shortcuts.install_desc') : ''}</span>
+        <span className="hero-tile__label">{state.label}</span>
+        <span className="hero-tile__desc">{state.desc}</span>
       </div>
     );
   }

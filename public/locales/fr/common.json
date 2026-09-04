@@ -289,6 +289,11 @@
     "results_desc": "Les consulter en ligne",
     "wa_dr": "WhatsApp Dr El Allali",
     "wa_dr_desc": "Une question médicale ?",
+    "installed_label": "Application installée",
+    "installed_desc": "Vous y êtes déjà",
+    "install_ios_label": "Ajouter à l'écran d'accueil",
+    "install_ios_desc": "Menu Partager de votre navigateur",
+    "install_menu_desc": "Depuis le menu de votre navigateur",
     "install_desc": "Sur votre écran d'accueil"
   },
   "services_hub": {
