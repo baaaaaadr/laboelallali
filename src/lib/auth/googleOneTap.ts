@@ -29,8 +29,27 @@
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { getClientAuth } from '@/config/firebase';
 
-/** Public by nature — it travels in every OAuth URL the browser already sends. */
-export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+/**
+ * The Web OAuth client Firebase auto-created for this project.
+ *
+ * **Public by nature** — it already travels in every OAuth URL the browser
+ * sends, and it is useless from an origin that is not authorized in Google Cloud
+ * Console. It is not a secret and must not be treated as one.
+ *
+ * ⚠ The literal fallback is deliberate, and load-bearing. **The Firebase
+ * web-frameworks deploy does NOT apply `.env.local` to the client build.** Proof
+ * that is not a guess: `.env.local` sets
+ * `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=laboelallali.com`, yet production has always
+ * relayed through `labo-el-allali-pwa.firebaseapp.com` — Firebase injects its own
+ * config and our file is ignored. Shipping this value only through the env
+ * therefore produced an EMPTY client id in the bundle, `isOneTapConfigured()`
+ * returned false, the GSI script was never even requested, and One Tap silently
+ * did nothing in production while working perfectly in dev.
+ * Keep the env override first so another environment can point elsewhere.
+ */
+const FALLBACK_CLIENT_ID = '611850340982-901b8smpi7o89dq4db5tt9a9ect199mj.apps.googleusercontent.com';
+export const GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || FALLBACK_CLIENT_ID;
 
 const GSI_SRC = 'https://accounts.google.com/gsi/client';
 

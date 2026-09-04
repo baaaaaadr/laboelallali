@@ -70,6 +70,7 @@ without a tap.**
 - Invariant preserved: after `signInWithCredential`, it still hands over to
   `/login?redirect=<current path>`. Profile completion and `autoRequestResultsAccess()`
   live only there; One Tap must never become a second place that creates accounts.
+- **⚠⚠ THE FIREBASE DEPLOY DOES NOT APPLY `.env.local` TO THE CLIENT BUNDLE.** Discovered the hard way: One Tap worked in dev and did *nothing* in production — no card, and no request to `gsi/client` at all — because `NEXT_PUBLIC_GOOGLE_CLIENT_ID` was empty in the built JS, so `isOneTapConfigured()` returned false and the script was never even fetched. Independent proof it is not a fluke: `.env.local` sets `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=laboelallali.com`, yet production has always relayed through `labo-el-allali-pwa.firebaseapp.com` — firebase-tools injects its own web config and our file is ignored. **Any `NEXT_PUBLIC_*` value that lives only in `.env.local` will be `undefined` in production.** Ship such values as a literal fallback in the code (fine here — the client id is public), and verify by grepping the deployed chunk: `curl <chunk>.js | grep <the value>`.
 - **`NEXT_PUBLIC_GOOGLE_CLIENT_ID`** — the Web client Firebase auto-created. **Not a
   secret**: it already travels in every OAuth URL the browser sends, and it is useless
   from an unauthorized origin. Declared in `.env.local`, `.env.example` (real value, so a
