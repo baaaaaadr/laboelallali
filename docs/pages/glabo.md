@@ -30,7 +30,28 @@ This page hosts the booking form for **at-home blood tests and collections (Pré
 2. Triggers sequential progress overlay `SubmitProgressModal` tracking state changes (`uploading_image` -> `saving_database` -> `sending_email` -> `success`).
 3. Uploads files to Firebase Storage in directory `ordonnances/` and maps resulting download URLs.
 4. Adds appointment record of type `"home_service_appointment"` with status `"new_home_service_request"` into Firestore collection `appointmentRequests`.
-5. Sends notification email to the lab admins via `/api/send-appointment` and displays completion state before resetting all form inputs. That route sends through the **centralized `sendEmail` Cloud Function** (creds in Secret Manager; direct-SMTP fallback; HTML-escaped) — see `docs/integrations/server-monitoring.md`. Page code unchanged.
+5. Sends notification email to the lab admins via `/api/send-appointment` and displays completion state before resetting all form inputs. That route sends through the **centralized `sendEmail` Cloud Function** (creds in Secret Manager; direct-SMTP fallback; HTML-escaped) — see `docs/integrations/server-monitoring.md`.
+
+### ⚠ The address used to never reach the lab (fixed 04/09/2026)
+
+`src/app/api/send-appointment/route.ts` destructured 10 fields and `adresse` / `lieuPrelevement` /
+`instructionsAcces` appeared **nowhere else in the file**. Since launch, every home-sampling request
+sent by e-mail arrived **without the address** — only the WhatsApp path carried it
+(`glabo/page.tsx`, `handleWhatsapp`). Staff had to call the patient back to ask where they live.
+
+Now, when `isHomeService`:
+- a bordered "Lieu de prélèvement" block carries the location type, the address and the access
+  instructions; a missing address renders a red **"Adresse non renseignée — rappeler le patient"**
+  instead of silently nothing;
+- the header reads "Nouvelle Demande de Prélèvement à Domicile" and the **subject** is
+  `Nouveau RDV WEB — DOMICILE : …`, so the staff triage from the inbox list without opening;
+- every new value goes through `esc()` — the address is patient-typed free text and is now the most
+  injection-prone string on the site.
+
+**`lieuPrelevement` is now sent as the RAW key** (`domicile` / `travail`). It used to be sent through
+`t()`, i.e. translated into the *patient's* language, so an Arabic-speaking patient put المنزل in the
+lab's French inbox. The route maps the key to a French label and **still accepts the old translated
+strings**, so a browser holding a cached bundle mid-deploy does not lose the information.
 
 #### B. Direct WhatsApp Redirection (`handleWhatsapp`)
 1. Validates details.

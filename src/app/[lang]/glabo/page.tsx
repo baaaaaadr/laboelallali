@@ -190,7 +190,10 @@ export default function GlaboPage({ params }: { params: Promise<GlaboParams> }) 
             telephone,
             email,
             adresse,
-            lieuPrelevement: lieuPrelevement === 'domicile' ? t('home') : t('workplace'),
+            // Raw key, NOT t(): the lab reads its notifications in French, and
+            // translating here put Arabic labels in their inbox. The API route
+            // maps it (and still accepts the old translated strings).
+            lieuPrelevement,
             instructionsAcces,
             date_souhaitee: formattedDate,
             heure_souhaitee: selectedTime,

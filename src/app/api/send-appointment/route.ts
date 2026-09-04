@@ -44,7 +44,25 @@ export async function POST(request: Request) {
       commentaires,
       ordonnanceUrls = [],
       isHomeService,
+      // Home-sampling fields. They were POSTed by /glabo since launch but never
+      // read here, so every home-visit email reached the lab WITHOUT THE ADDRESS
+      // — the staff had to call the patient back to ask where they live.
+      adresse,
+      lieuPrelevement,
+      instructionsAcces,
     } = data;
+
+    // `lieuPrelevement` used to be sent already translated INTO THE PATIENT'S
+    // LANGUAGE, so an Arabic-speaking patient put المنزل in a French email. The client
+    // now sends the raw key; we still accept the old translated strings so a
+    // browser holding a cached bundle mid-deploy does not lose the information.
+    const LIEU_LABELS: Record<string, string> = {
+      domicile: 'Domicile du patient',
+      travail: 'Lieu de travail',
+    };
+    const lieuLabel = LIEU_LABELS[String(lieuPrelevement ?? '').toLowerCase()]
+      || String(lieuPrelevement ?? '').trim()
+      || 'Non précisé';
 
     // Prescription links (URLs escaped for both href and visible text).
     let ordonnancesHtml = '';
@@ -68,7 +86,7 @@ export async function POST(request: Request) {
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
         <div style="background-color: #800020; color: white; padding: 20px; text-align: center;">
-          <h2 style="margin: 0;">Nouvelle Demande de Rendez-vous</h2>
+          <h2 style="margin: 0;">${isHomeService ? 'Nouvelle Demande de Prélèvement à Domicile' : 'Nouvelle Demande de Rendez-vous'}</h2>
           <p style="margin: 5px 0 0 0; opacity: 0.9;">Laboratoire El Allali</p>
         </div>
 
@@ -83,6 +101,27 @@ export async function POST(request: Request) {
           <p><strong>Heure souhaitée :</strong> ${esc(heure_souhaitee)}</p>
           <p><strong>Type d'analyse :</strong> ${esc(type_analyse)}</p>
           <p><strong>Service à domicile :</strong> ${isHomeService ? 'Oui' : 'Non'}</p>
+
+          ${
+            isHomeService
+              ? `
+            <div style="background-color: #FFF3F6; border: 2px solid #800020; border-radius: 6px; padding: 15px; margin-top: 20px;">
+              <p style="margin: 0 0 10px 0; color: #800020; font-weight: bold; font-size: 15px;">Lieu de prélèvement</p>
+              <p style="margin: 0 0 6px 0;"><strong>Type de lieu :</strong> ${esc(lieuLabel)}</p>
+              ${
+                adresse && String(adresse).trim()
+                  ? `<p style="margin: 0 0 6px 0;"><strong>Adresse :</strong> ${esc(adresse)}</p>`
+                  : `<p style="margin: 0 0 6px 0; color: #B00020;"><strong>Adresse non renseignée — rappeler le patient.</strong></p>`
+              }
+              ${
+                instructionsAcces && String(instructionsAcces).trim()
+                  ? `<p style="margin: 0;"><strong>Indications d'accès :</strong> ${esc(instructionsAcces)}</p>`
+                  : ''
+              }
+            </div>
+          `
+              : ''
+          }
 
           ${
             commentaires
@@ -106,7 +145,10 @@ export async function POST(request: Request) {
 
     const labMail = process.env.SMTP_USER || 'laboelallali@gmail.com';
     const replyTo = email && String(email).includes('@') ? String(email) : labMail;
-    const subject = `Nouveau Rendez-vous WEB : ${nom} ${prenom} - ${date_souhaitee}`;
+    // The lab triages from the inbox list: the location has to be in the subject.
+    const subject = isHomeService
+      ? `Nouveau RDV WEB — DOMICILE : ${nom} ${prenom} - ${date_souhaitee}`
+      : `Nouveau Rendez-vous WEB : ${nom} ${prenom} - ${date_souhaitee}`;
 
     // ── PRIMARY: the central sendEmail Cloud Function (Secret Manager creds) ──
     const fnUrl = process.env.SEND_EMAIL_FN_URL;
