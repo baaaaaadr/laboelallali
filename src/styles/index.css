@@ -214,6 +214,15 @@ html, body {
    It also neutralises `@layer base { button { background-color: transparent } }`
    for the install tile. Works in both themes: the overlay is dark in light AND
    dark mode (see .hero-banner-overlay above). */
+/* Glass recipe for the hero bubbles, arrived at by comparison on the real photo:
+   blur(24px) brightness(0.82). Two things matter and only one is obvious.
+   - The blur had to DOUBLE, not grow 20%: at 12px the test tubes behind the
+     tiles were still legible through the glass.
+   - The darkening is what actually makes the text readable. The text here is
+     WHITE, and the white veil (rgba 255,255,255) lightens the photo, i.e. works
+     against it — raising that opacity makes things worse, not better. Dimming
+     the backdrop INSIDE the bubble is what gives the contrast.
+   `backdrop-filter` affects what is seen THROUGH the element, never around it. */
 .hero-tile {
   display: flex;
   flex-direction: column;
@@ -225,8 +234,13 @@ html, body {
   border-radius: 0.875rem;
   background-color: rgba(255, 255, 255, 0.12) !important;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* ⚠ Do NOT hand-write `-webkit-backdrop-filter` next to this. Lightning CSS
+     collapsed the pair and kept ONLY the prefixed one, so the standard property
+     never reached the browser and the blur silently did nothing — on this page,
+     for months. Declare the standard property alone and let the build add
+     whatever prefix the browser targets require. Verify in the SERVED css, not
+     in the source: `curl <the css chunk> | grep backdrop-filter`. */
+  backdrop-filter: blur(24px) brightness(0.82);
   color: var(--color-white) !important;
   text-decoration: none;
   cursor: pointer;
@@ -319,8 +333,7 @@ html, body {
   /* Logical edge: mirrors itself in RTL, and echoes the border-s-4 of
      CheckupReminder on /resultats — same object, two contexts. */
   border-inline-start: 4px solid var(--color-fuchsia-accent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(24px) brightness(0.82);
   color: var(--color-white) !important;
 }
 

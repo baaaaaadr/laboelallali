@@ -41,6 +41,7 @@ interface GsiMoment {
 interface GsiId {
   initialize: (config: Record<string, unknown>) => void;
   prompt: (listener?: (n: GsiMoment) => void) => void;
+  renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
   cancel: () => void;
 }
 type GsiWindow = Window & { google?: { accounts?: { id?: GsiId } } };
@@ -78,6 +79,82 @@ function loadGsi(): Promise<boolean> {
     document.head.appendChild(s);
   });
   return scriptPromise;
+}
+
+/**
+ * `initialize()` may only be called once per page; both consumers below go
+ * through here, and the credential is routed to whoever asked last.
+ */
+let initialized = false;
+let credentialSink: ((idToken: string) => void) | null = null;
+
+async function ensureGsi(): Promise<GsiId | null> {
+  if (!isOneTapConfigured()) return null;
+  const ok = await loadGsi();
+  const id = (window as GsiWindow).google?.accounts?.id;
+  if (!ok || !id) return null;
+  if (!initialized) {
+    id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      // ⚠ NEVER true. See the header of this file, and googleSignIn.ts.
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      context: 'signin',
+      itp_support: true,
+      // Chrome removed the legacy iframe path; without this the card simply
+      // never appears in recent versions.
+      use_fedcm_for_prompt: true,
+      callback: (res: { credential?: string }) => {
+        if (res?.credential) credentialSink?.(res.credential);
+      },
+    });
+    initialized = true;
+  }
+  return id;
+}
+
+/**
+ * Render Google's OWN button inside `parent`.
+ *
+ * This is the answer to "can the signed-in account show up directly in the
+ * widget?". When the visitor has a Google session and has already granted
+ * consent, Google renders a **personalized** button — "Continuer en tant que
+ * <Nom>", with their avatar — and clicking it signs them in **without opening
+ * any popup**: the ID token arrives straight in the callback. With no session it
+ * degrades to the ordinary "Continuer avec Google", which opens the chooser.
+ *
+ * It shows ONE account (the browser's active session), not a list — that is a
+ * Google constraint, not ours. Someone with several accounts still gets the
+ * chooser, from the button or from One Tap.
+ *
+ * Resolves false if the button could not be rendered, so the caller keeps its
+ * own fallback markup.
+ */
+export async function renderGoogleButton(
+  parent: HTMLElement,
+  opts: { locale?: string; width?: number; dark?: boolean; onCredential: (idToken: string) => void }
+): Promise<boolean> {
+  const id = await ensureGsi();
+  if (!id) return false;
+  credentialSink = opts.onCredential;
+  try {
+    parent.innerHTML = '';
+    id.renderButton(parent, {
+      type: 'standard',
+      // Google's own dark variant; `outline` on a dark card reads as a hole.
+      theme: opts.dark ? 'filled_black' : 'outline',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'rectangular',
+      logo_alignment: 'left',
+      locale: opts.locale === 'ar' ? 'ar' : 'fr',
+      // Google caps this at 400px and ignores anything larger.
+      width: Math.min(400, Math.max(200, Math.round(opts.width || 320))),
+    });
+    return parent.childElementCount > 0;
+  } catch {
+    return false;
+  }
 }
 
 export interface OneTapOutcome {
@@ -137,26 +214,12 @@ export function promptOneTap(
     return () => {};
   }
 
-  void loadGsi().then((ok) => {
+  void ensureGsi().then((id) => {
     if (settled) return;
-    const id = (window as GsiWindow).google?.accounts?.id;
-    if (!ok || !id) return settle({ unavailable: true });
+    if (!id) return settle({ unavailable: true });
 
     try {
-      id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        // ⚠ NEVER true. See the header of this file, and googleSignIn.ts.
-        auto_select: false,
-        cancel_on_tap_outside: true,
-        context: 'signin',
-        itp_support: true,
-        // Chrome removed the legacy iframe path; without this the card simply
-        // never appears in recent versions.
-        use_fedcm_for_prompt: true,
-        callback: (res: { credential?: string }) => {
-          if (res?.credential) settle({ credential: res.credential });
-        },
-      });
+      credentialSink = (idToken) => settle({ credential: idToken });
 
       id.prompt((n: GsiMoment) => {
         // Under FedCM only the dismissal moment survives — and a dismissal whose

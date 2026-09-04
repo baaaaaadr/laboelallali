@@ -45,7 +45,11 @@ import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { signInWithGoogle } from '@/lib/auth/googleSignIn';
-import { promptOneTap, signInWithOneTapCredential } from '@/lib/auth/googleOneTap';
+import {
+  promptOneTap,
+  renderGoogleButton,
+  signInWithOneTapCredential,
+} from '@/lib/auth/googleOneTap';
 
 const STORAGE_KEY = 'googleSignInPromptDismissedAt';
 /** Dated dismissal, not a boolean: a permanent 'true' would kill the CTA on this
@@ -98,6 +102,10 @@ export default function GoogleSignInPrompt() {
   const [showCard, setShowCard] = useState(false);
   /** One attempt per mount: pathname changes must not re-prompt on every step. */
   const attempted = useRef(false);
+  /** Where Google draws its own button — personalized when a session exists. */
+  const googleSlot = useRef<HTMLDivElement>(null);
+  /** True once Google's button is in the DOM; our hand-made one then steps aside. */
+  const [nativeButton, setNativeButton] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -158,6 +166,35 @@ export default function GoogleSignInPrompt() {
     });
   }, [allowed, loading, user, hidden, handleCredential, dismiss]);
 
+  /**
+   * Draw Google's own button inside the card.
+   *
+   * This is what puts the account IN the widget: with an active Google session
+   * and consent already given, Google renders "Continuer en tant que <Nom>" with
+   * the avatar, and a click signs the patient in **with no popup at all**. With
+   * no session it falls back to the plain "Continuer avec Google", which opens
+   * the chooser — exactly what our own button did.
+   */
+  useEffect(() => {
+    if (!showCard) return;
+    const slot = googleSlot.current;
+    if (!slot) return;
+    let alive = true;
+    void renderGoogleButton(slot, {
+      locale: localeOf(pathname),
+      width: slot.clientWidth || 320,
+      dark: document.documentElement.classList.contains('dark'),
+      onCredential: (idToken) => {
+        if (alive) void handleCredential(idToken);
+      },
+    }).then((ok) => {
+      if (alive && ok) setNativeButton(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [showCard, pathname, handleCredential]);
+
   const handleSignIn = useCallback(async () => {
     setBusy(true);
     try {
@@ -200,6 +237,11 @@ export default function GoogleSignInPrompt() {
         {t('google_prompt.body', 'Connectez-vous avec Google pour consulter vos résultats.')}
       </p>
 
+      {/* Google draws here. Empty and zero-height until it succeeds, so nothing
+          moves if it never does. */}
+      <div ref={googleSlot} className="mt-3 flex justify-center [&:empty]:hidden" />
+
+      {!nativeButton && (
       <button
         type="button"
         onClick={handleSignIn}
@@ -214,6 +256,7 @@ export default function GoogleSignInPrompt() {
         </svg>
         {t('continue_with_google', 'Continuer avec Google')}
       </button>
+      )}
     </div>
   );
 }

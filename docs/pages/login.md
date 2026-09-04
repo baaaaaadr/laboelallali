@@ -63,6 +63,7 @@ without a tap.**
   cooldown). Falling back **closes the One Tap card first** (`google.accounts.id.cancel()`):
   two solicitations at once is the one thing that component has always refused.
   Closing the One Tap card counts as an answer → 30-day snooze, nothing else shown.
+- **Google draws its OWN button inside the fallback card** (`renderGoogleButton`). This is the answer to "can the signed-in account appear directly in the widget?": with an active Google session and consent already granted, Google renders a **personalized** button — "Continuer en tant que <Nom>" with the avatar — and a click signs the patient in **with no popup at all**, the ID token arriving straight in the callback. With no session it degrades to the plain "Continuer avec Google", which opens the chooser. It shows ONE account (the browser's active session), never a list — a Google constraint, not ours. Our hand-made button is removed from the render as soon as Google's succeeds, and stays as the fallback when it does not. `initialize()` may only run once per page, so both One Tap and the button go through a single `ensureGsi()` and the credential is routed to whoever asked last.
 - Invariant preserved: after `signInWithCredential`, it still hands over to
   `/login?redirect=<current path>`. Profile completion and `autoRequestResultsAccess()`
   live only there; One Tap must never become a second place that creates accounts.

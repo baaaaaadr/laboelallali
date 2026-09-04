@@ -72,8 +72,32 @@ This is the main landing page of the Laboratoire El Allali PWA. It serves as the
 - `.hero-tile--static` is a **double-class** selector (`.hero-tile.hero-tile--static`) because `.hero-tile:hover` is a class plus a pseudo-class and would otherwise win on specificity.
 - Note the dev-mode quirk: `showButton` starts `true` in development, so a headless driver sees the "browser menu" state, not the install button.
 
-#### Glass surfaces — blur raised to 12px (septembre 2026)
-`.hero-tile` and `.hero-panel` went from `blur(10px)` to `blur(12px)` (+20%) at the owner's request, to lift the white text off a busy photograph. Note that **the build strips the `-webkit-` prefix** as redundant, so the served CSS shows two declarations, not four — that is correct, not a missing rule. Headless Chromium reports `backdrop-filter: none`, so a driver must assert against the served stylesheet, never against `getComputedStyle`.
+#### ⚠ The hero blur was silently dead — and how (septembre 2026)
+The owner reported that raising the blur "changed nothing". He was right, for a deeper reason:
+**`backdrop-filter` was never reaching the browser on this page.**
+
+`.hero-tile` and `.hero-panel` each declared the standard property *followed by* a hand-written
+`-webkit-backdrop-filter`. Lightning CSS collapsed the pair and kept **only the prefixed one**, so
+the served rule had no standard `backdrop-filter` at all. Chromium reported
+`getComputedStyle(...).backdropFilter === 'none'` and rendered no blur; Firefox would have shown
+none either. Tiles with `blur(4px)`/`blur(8px)` elsewhere were fine — they declare only the
+standard property, and the build adds the prefix itself, keeping both.
+
+**Rule: declare `backdrop-filter` alone. Never hand-write the `-webkit-` twin beside it.**
+And verify in the SERVED stylesheet, never in the source:
+`curl <the /_next/static css chunk> | grep backdrop-filter` must show BOTH lines.
+
+The recipe is now `blur(24px) brightness(0.82)`:
+- the blur had to **double**, not grow 20% — at 12px the test tubes behind the tiles were still
+  legible through the glass;
+- **the darkening is what actually makes the text readable.** The text is WHITE and the veil is
+  `rgba(255,255,255,.12)`, which *lightens* the photo, i.e. works against it — raising that opacity
+  makes things worse. Dimming the backdrop inside the bubble is what buys the contrast.
+- `backdrop-filter` affects what is seen THROUGH the element, never around it.
+
+Headless Chromium **does** render backdrop-filter (verified by hashing three screenshots at 0/12/24px),
+so a driver can assert on it — but assert on the computed value or the pixels, and remember that a
+`none` computed value means the declaration was dropped, not that the engine lacks support.
 
 #### The `guest` state — two doors (septembre 2026)
 - File: `HeroGuestDoors.tsx`. `HeroPersonalPanel` only supplies the headline (which is also the panel's accessible name) and branches on `state === 'guest'`, exactly as it does for `reminder`.
