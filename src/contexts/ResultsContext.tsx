@@ -130,10 +130,15 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
       const inflight = pdfPromisesRef.current[dossierId];
       if (inflight) return inflight;
 
+      // Whose session asked for this. Everything committed after the await is
+      // checked against it — see the block comment on `load`.
+      const uidAtCall = currentUidRef.current;
+
       const p = (async (): Promise<PdfState> => {
         setPdfState(dossierId, { status: 'loading' });
         try {
           const data = await callFetch({ dossier_id: dossierId });
+          if (currentUidRef.current !== uidAtCall) return { status: 'idle' };
           // Match by id ONLY. The server returns just this dossier, but if a build
           // ever ignored `dossier_id` and answered with the full list, falling back
           // to results[0] would show the patient ANOTHER dossier's PDF under this
@@ -148,6 +153,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
           setPdfState(dossierId, next);
           return next;
         } catch {
+          if (currentUidRef.current !== uidAtCall) return { status: 'idle' };
           const next: PdfState = { status: 'error' };
           setPdfState(dossierId, next);
           return next;
@@ -169,6 +175,18 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
       if (loadingRef.current) return;
       if (!force && loadedForUidRef.current === current.uid) return;
 
+      // ⚠ WHOSE session this load belongs to. Every commit below happens AFTER an
+      // await, and this provider lives in the ROOT layout: it survives logout and
+      // a One Tap sign-in happens in place, with no reload. So on a shared family
+      // phone — the documented normal case for this lab — patient A's slow
+      // in-flight call (the lab server has a 20s timeout and is down often enough
+      // to justify a monitoring subsystem) could land AFTER patient B signed in,
+      // and write A's dossiers into B's context with status 'ready'. Nothing
+      // recomputed it afterwards: the prefetch effect only fires on 'idle'.
+      // The error branches matter just as much — a stale 'need_access' would lock
+      // B out of their own results.
+      const uidAtCall = current.uid;
+
       loadingRef.current = true;
       setStatus('loading');
       setErrorCode(null);
@@ -176,6 +194,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
       try {
         // Phase 1 — list only (fast, no PDFs embedded).
         const data = await callFetch({ include_pdf: 'none' });
+        if (currentUidRef.current !== uidAtCall) return;
         const list = Array.isArray(data?.results) ? data.results : [];
         loadedForUidRef.current = current.uid;
         bgRetryRef.current = 0;
@@ -188,6 +207,7 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
         if (newest) void loadPdf(newest);
       } catch (err: unknown) {
         const code = ((err as { code?: string })?.code || '').replace('functions/', '');
+        if (currentUidRef.current !== uidAtCall) return;
         if (code === 'not-found') {
           // The lab server answered 404 requester_not_found: the id on the profile
           // is unknown lab-side (account never created/published in CyberLab, or a
@@ -211,7 +231,6 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
           // of times so a cold-start blip doesn't leave the prefetch stuck.
           if (!force && bgRetryRef.current < 2) {
             bgRetryRef.current += 1;
-            const uidAtCall = current.uid;
             setTimeout(() => {
               if (
                 currentUidRef.current === uidAtCall &&
@@ -224,7 +243,10 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } finally {
-        loadingRef.current = false;
+        // Release only if this load still owns the guard. A late load from the
+        // previous account must not clear it while the new account's load is in
+        // flight — that would let a third concurrent load start.
+        if (currentUidRef.current === uidAtCall) loadingRef.current = false;
       }
     },
     [user, callFetch, loadPdf, resetPdfs]

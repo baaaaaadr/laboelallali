@@ -185,15 +185,44 @@ export default function GoogleSignInPrompt() {
 
   const hidden = HIDDEN_ROUTES.has(sectionOf(pathname));
 
+  /**
+   * ⚠ The One Tap teardown is UNMOUNT-ONLY, and the callbacks are read through
+   * refs. Both halves are needed, and the reason is not obvious.
+   *
+   * This component is mounted in the layout, so it survives every client-side
+   * navigation — but `pathname` changes, which changed `handleCredential`, which
+   * re-ran the effect, whose cleanup called `google.accounts.id.cancel()`. So the
+   * card was destroyed the moment the visitor tapped anything in the nav, and
+   * `attempted.current` then blocked any re-prompt: **one navigation silenced the
+   * sign-in offer for the rest of the session.** Removing `handleCredential` from
+   * the deps is not enough either — `hidden` flips on entering /rendez-vous,
+   * /glabo or /resultats and tears it down just the same.
+   *
+   * Reading `credRef.current` at call time is also strictly more correct: the
+   * `?redirect=` then points at the page the visitor is actually on, not the one
+   * they were on when the card appeared.
+   */
+  const credRef = useRef(handleCredential);
+  const dismissRef = useRef(dismiss);
+  useEffect(() => {
+    credRef.current = handleCredential;
+    dismissRef.current = dismiss;
+  });
+
+  const cleanupRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     if (!allowed || loading || user || hidden || attempted.current) return;
     attempted.current = true;
-    return promptOneTap((outcome) => {
-      if (outcome.credential) void handleCredential(outcome.credential);
-      else if (outcome.dismissed) dismiss();
+    cleanupRef.current = promptOneTap((outcome) => {
+      if (outcome.credential) void credRef.current(outcome.credential);
+      else if (outcome.dismissed) dismissRef.current();
       else setShowCard(true);
     });
-  }, [allowed, loading, user, hidden, handleCredential, dismiss]);
+  }, [allowed, loading, user, hidden]);
+
+  // Unmount only — never on a re-render or a route change.
+  useEffect(() => () => cleanupRef.current?.(), []);
 
   /**
    * Draw Google's own button inside the card.
