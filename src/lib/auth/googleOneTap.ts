@@ -156,6 +156,34 @@ async function ensureGsi(): Promise<GsiId | null> {
 }
 
 /**
+ * Did Google really DRAW the button, or only insert an empty shell?
+ *
+ * ⚠ This exists because of a production outage (septembre 2026). The old check
+ * was `parent.childElementCount > 0`, which is ALWAYS true: `renderButton()`
+ * synchronously inserts its wrapper + iframe even when Google refuses to serve
+ * the button. The refusal that bit us is an origin that is not an **Authorized
+ * JavaScript origin** of the OAuth client — the console shows
+ * `[GSI_LOGGER]: The given origin is not allowed for the given client ID`, the
+ * iframe stays 0x0, and the old check still reported success. Both callers then
+ * hid their own fallback (`{!nativeButton && ...}`), so the page ended up with
+ * **no Google button at all** — measured on `labo-el-allali-pwa.web.app`, which
+ * serves the very same app and is NOT in the origin list.
+ *
+ * A laid-out, non-zero-height node is therefore the only honest success signal.
+ * On a slow connection the timeout can expire before the iframe paints; the
+ * consequence is two buttons side by side for a moment, which is the harmless
+ * side of the trade — the other side was a login page nobody could use.
+ */
+async function buttonActuallyDrawn(parent: HTMLElement, timeoutMs = 5000): Promise<boolean> {
+  const started = performance.now();
+  while (performance.now() - started < timeoutMs) {
+    if (parent.getBoundingClientRect().height > 0) return true;
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+  }
+  return false;
+}
+
+/**
  * Render Google's OWN button inside `parent`.
  *
  * Google renders the PERSONALIZED button — "Continuer en tant que <Nom>" with
@@ -183,7 +211,8 @@ async function ensureGsi(): Promise<GsiId | null> {
  * chooser, from the button or from One Tap.
  *
  * Resolves false if the button could not be rendered, so the caller keeps its
- * own fallback markup.
+ * own fallback markup. "Rendered" means DRAWN AND MEASURABLE — see
+ * `buttonActuallyDrawn` for why the obvious check was not enough.
  */
 export async function renderGoogleButton(
   parent: HTMLElement,
@@ -206,7 +235,7 @@ export async function renderGoogleButton(
       // Google caps this at 400px and ignores anything larger.
       width: Math.min(400, Math.max(200, Math.round(opts.width || 320))),
     });
-    return parent.childElementCount > 0;
+    return await buttonActuallyDrawn(parent);
   } catch {
     return false;
   }

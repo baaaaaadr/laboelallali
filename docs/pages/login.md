@@ -286,3 +286,71 @@ Auth errors use `public/locales/[lang]/common.json` keys:
 - **Returning user without profile:** If a user somehow has auth but no Firestore doc, the profile step appears after login; same inline flow, no redirect needed.
 - **Authorized domains:** Firebase Auth requires every production host used by patients (`laboelallali.com`, `www.laboelallali.com` if used, Firebase/Vercel hosts if still reachable) to be present in Firebase Console -> Authentication -> Settings -> Authorized domains. Missing domains produce `auth/unauthorized-domain`, now mapped to a readable inline message.
 - **authDomain = app domain:** `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` is `laboelallali.com` (served by Firebase Hosting at `/__/auth/handler`, confirmed via `/__/firebase/init.json`). This keeps Google auth first-party, so both popup and redirect work without the third-party-cookie failure that previously returned from account selection with no signed-in user. If the app is ever served from a domain that does NOT serve `/__/auth/handler`, revert authDomain to `labo-el-allali-pwa.firebaseapp.com` and use popup only.
+
+### ⛔ Panne « Error 400: origin_mismatch » — septembre 2026 (à lire avant de toucher au bouton Google)
+
+**Symptôme.** Desktop : connexion Google OK. Téléphones (Android **et** iPhone) : la page
+`accounts.google.com` affiche *« Access blocked: Authorization Error — register the JavaScript
+origin in the Google Cloud Console. Error 400: origin_mismatch »*, avec le compte déjà choisi
+affiché en haut.
+
+**Ce que `origin_mismatch` veut dire, exactement.** Ce n'est PAS une erreur de code. C'est Google
+qui refuse la requête parce que **l'origine de la page** (schéma + hôte + port) n'est pas dans les
+*Authorized JavaScript origins* du client OAuth. Le chemin (`/fr/login`) n'entre pas en compte.
+C'est donc, mécaniquement, la preuve que la page n'était **pas** servie depuis une origine
+autorisée. Corollaire à retenir : si l'erreur revient, la première question n'est jamais « quel
+code ? » mais **« quelle adresse exacte y avait-il dans la barre d'adresse ? »**
+
+**Inventaire mesuré des origines autorisées du client `611850340982-901b8s…`** (méthode plus bas) :
+
+| Origine | Sert l'app ? | Autorisée |
+|---|---|---|
+| `https://laboelallali.com` | oui | ✅ |
+| `https://www.laboelallali.com` | oui | ✅ |
+| `https://labo-el-allali-pwa.firebaseapp.com` | oui | ✅ |
+| **`https://labo-el-allali-pwa.web.app`** | **oui** | **❌ manquante** |
+| `http://localhost` et `http://localhost:3000` | dev | ✅ |
+| `http://localhost:3003` | dev (scripts Playwright) | ❌ |
+
+`web.app` est la seule origine qui sert l'application entière et qui n'est pas déclarée : un
+appareil ouvrant l'app par cette URL (PWA installée depuis l'ancienne adresse, lien partagé…)
+tombe forcément sur `origin_mismatch`. **Les quatre hôtes servent le même site sans redirection** —
+Firebase Hosting ne redirige pas `web.app`/`firebaseapp.com` vers le domaine personnalisé.
+
+**Pourquoi le desktop ne voyait rien.** Le desktop est sur `laboelallali.com` (origine autorisée),
+et Chrome desktop passe par **FedCM**. Les navigateurs sans FedCM (Safari/iOS — Safari n'implémente
+pas FedCM —, Firefox, Samsung Internet) retombent sur le popup OAuth classique
+`accounts.google.com/o/oauth2/auth?…&gsiwebsdk=gis_attributes&origin=<origine>&redirect_uri=gis_transform`,
+et c'est **cette** requête qui renvoie `origin_mismatch`. D'où « ça marche sur PC, pas sur téléphone ».
+
+**Bug de code corrigé au passage (`googleOneTap.ts` → `buttonActuallyDrawn`).** `renderButton()`
+insère toujours son wrapper + son iframe, **même quand Google refuse de dessiner le bouton**.
+L'ancien test de succès `parent.childElementCount > 0` était donc toujours vrai. Sur une origine
+non autorisée, le résultat mesuré est : console `[GSI_LOGGER]: The given origin is not allowed for
+the given client ID`, iframe en 0×0, `renderGoogleButton()` qui renvoie `true`, les deux appelants
+qui masquent leur propre bouton (`{!nativeButton && …}`) — **et une page de connexion sans aucun
+bouton Google**. Le succès se mesure maintenant sur une hauteur réelle non nulle (attente ≤ 5 s).
+Effet de bord assumé : sur connexion lente, les deux boutons peuvent cohabiter quelques secondes.
+
+**Recette de diagnostic reproductible (aucun accès à la Console Google nécessaire).**
+Google valide l'origine *avant* toute authentification, donc une simple requête suffit :
+
+```bash
+CID=611850340982-901b8smpi7o89dq4db5tt9a9ect199mj.apps.googleusercontent.com
+ORIGIN=https%3A%2F%2Flaboelallali.com   # l'origine à tester, URL-encodée
+curl -s -L -o /dev/null -w '%{url_effective}\n' \
+  "https://accounts.google.com/o/oauth2/auth?client_id=$CID&display=popup\
+&gsiwebsdk=gis_attributes&o2v=1&origin=$ORIGIN&prompt=select_account\
+&redirect_uri=gis_transform&response_type=id_token&scope=openid%20email%20profile\
+&response_mode=form_post&nonce=abc123"
+```
+URL finale sur `…/signin/identifier` → origine **autorisée**. URL finale sur
+`…/signin/oauth/error?authError=…` → **refusée** ; le blob `authError` est du base64url et contient
+en clair le code (`origin_mismatch`) **et l'origine rejetée** — c'est la façon la plus rapide de
+lire une capture d'écran d'erreur envoyée par un patient. Contre-épreuve indispensable : tester
+aussi une origine bidon, qui doit être refusée, sinon le test ne discrimine rien.
+Deuxième méthode, côté navigateur : ouvrir la page et regarder la console — GSI journalise
+`The given origin is not allowed for the given client ID` uniquement sur une origine refusée.
+`redirect_uri` (`…/__/auth/handler`, flux Firebase popup/redirect) se teste pareil, mais il donne
+`redirect_uri_mismatch` et c'est une **liste différente** : `laboelallali.com` et
+`firebaseapp.com` y sont, `www.laboelallali.com` et `web.app` n'y sont pas.
