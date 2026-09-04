@@ -15,6 +15,11 @@
  * interaction there is not even a flash of a popup for the patient to notice.
  * **Do not "optimize" it.**
  *
+ * The same interdiction applies, by name, to **`button_auto_select`** — the
+ * button-flow twin, which re-creates the same bug after the click.
+ * `use_fedcm_for_button: true` is the opposite and IS required: FedCM still
+ * shows the name, the e-mail and the avatar before anything happens.
+ *
  * This module never touches `googleSignIn.ts`. Two paths, two guarantees:
  *   - the One Tap card  → "continue as <named person>", identity visible, 1 tap
  *   - the explicit button → the full chooser, via `prompt: 'select_account'`
@@ -119,10 +124,28 @@ async function ensureGsi(): Promise<GsiId | null> {
       auto_select: false,
       cancel_on_tap_outside: true,
       context: 'signin',
+      // ITP browsers only (Safari, Firefox, Chrome iOS). Inert on Chrome
+      // desktop; kept for iPhone patients.
       itp_support: true,
-      // Chrome removed the legacy iframe path; without this the card simply
-      // never appears in recent versions.
-      use_fedcm_for_prompt: true,
+      // Routes the BUTTON through Chrome's own FedCM dialog instead of the
+      // accounts.google.com "Selectionnez un compte" popup — and, decisively,
+      // it is the ONLY thing that records {this origin <-> google.com <-> that
+      // account} in the browser. That record is the precondition for the
+      // personalized "Continuer en tant que <Nom>" button on LATER visits.
+      // Defaults to false, which is why the button had always been generic.
+      // IdConfiguration only: renderButton() silently ignores it.
+      use_fedcm_for_button: true,
+      // ⚠ NEVER add `button_auto_select`. It is the button-flow twin of
+      // `auto_select`: it signs a returning visitor in while bypassing the
+      // account chooser. That is exactly the wrong-account incident described
+      // at the top of this file — shared family phone, patient signed in as
+      // someone else, on an app that shows medical results.
+      //
+      // `use_fedcm_for_prompt` used to sit here. Google's reference now marks it
+      // "Deprecated: this attribute will be ignored if used" — One Tap goes
+      // through FedCM unconditionally. It was removed rather than left in place,
+      // because the comment that justified it ("without this the card never
+      // appears") was simply false and sent the next reader down a dead end.
       callback: (res: { credential?: string }) => {
         if (res?.credential) credentialSink?.(res.credential);
       },
@@ -135,12 +158,25 @@ async function ensureGsi(): Promise<GsiId | null> {
 /**
  * Render Google's OWN button inside `parent`.
  *
- * This is the answer to "can the signed-in account show up directly in the
- * widget?". When the visitor has a Google session and has already granted
- * consent, Google renders a **personalized** button — "Continuer en tant que
- * <Nom>", with their avatar — and clicking it signs them in **without opening
- * any popup**: the ID token arrives straight in the callback. With no session it
- * degrades to the ordinary "Continuer avec Google", which opens the chooser.
+ * Google renders the PERSONALIZED button — "Continuer en tant que <Nom>" with
+ * the avatar — only when ALL of these hold:
+ *   1. an active Google session in this browser, AND
+ *   2. **that account has already completed a Sign In With Google flow on THIS
+ *      origin, in THIS browser, not cleared since.** A Firebase
+ *      `signInWithPopup` through `firebaseapp.com/__/auth/handler` does NOT
+ *      count — different origin, and not a FedCM flow. This is the condition
+ *      that had never once been met in production, which is why the button was
+ *      always generic no matter what was configured.
+ *   3. `use_fedcm_for_button: true` in initialize()   (set above)
+ *   4. `type: 'standard'` and `size: 'large'`         (set below)
+ *   5. width >= 200px                                 (clamped below)
+ * Otherwise it degrades — silently and by design — to "Continuer avec Google".
+ * SEVERAL active Google sessions also degrade it. Safari and Firefox have no
+ * FedCM button mode and always get the generic one.
+ *
+ * Consequence to state plainly rather than discover: the FIRST visit after this
+ * ships still shows the generic button and the chooser, for everyone. That first
+ * flow is what CREATES the record. Personalization starts on the second visit.
  *
  * It shows ONE account (the browser's active session), not a list — that is a
  * Google constraint, not ours. Someone with several accounts still gets the

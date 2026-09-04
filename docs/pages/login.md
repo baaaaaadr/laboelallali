@@ -64,6 +64,53 @@ without a tap.**
   two solicitations at once is the one thing that component has always refused.
   Closing the One Tap card counts as an answer → 30-day snooze, nothing else shown.
 - **Google draws its OWN button inside the fallback card** (`renderGoogleButton`). This is the answer to "can the signed-in account appear directly in the widget?": with an active Google session and consent already granted, Google renders a **personalized** button — "Continuer en tant que <Nom>" with the avatar — and a click signs the patient in **with no popup at all**, the ID token arriving straight in the callback. With no session it degrades to the plain "Continuer avec Google", which opens the chooser. It shows ONE account (the browser's active session), never a list — a Google constraint, not ours. Our hand-made button is removed from the render as soon as Google's succeeds, and stays as the fallback when it does not. `initialize()` may only run once per page, so both One Tap and the button go through a single `ensureGsi()` and the credential is routed to whoever asked last.
+### Why the button stayed generic — the answer, researched 04/09/2026
+
+Reported repeatedly: the button says "Continuer avec Google", never "Continuer en tant que <Nom>",
+and clicking it opens the `accounts.google.com` chooser. **Two causes composed**, and fixing either
+one alone changes nothing on screen.
+
+1. **`use_fedcm_for_button: true` was missing** (it defaults to `false`), so the button ran in legacy
+   non-FedCM mode. It is an `IdConfiguration` option — `renderButton()` silently ignores it.
+   Chrome desktop M125+ / Android M128+.
+2. **No account had ever completed a Sign In With Google flow on the `laboelallali.com` origin.**
+   The personalized button is only shown to a **returning** user: active Google session **plus** a
+   prior SIWG flow on *this* origin, in *this* browser. A Firebase `signInWithPopup` does **not**
+   qualify — it hands off to `labo-el-allali-pwa.firebaseapp.com/__/auth/handler`, a different
+   origin, and it is not a FedCM flow. Since every patient signed in through the hand-made button,
+   that record was never created, so the button could never personalize — whatever was configured.
+   **Hence the second half of the fix: Google's own button is now the primary Google CTA on `/login`.**
+
+**`use_fedcm_for_prompt` was REMOVED, not kept.** Google's reference now marks it
+*"Deprecated: this attribute will be ignored if used"* — One Tap goes through FedCM unconditionally.
+The comment that justified it ("without this the card never appears") was simply false.
+
+**⛔ Never set `button_auto_select`.** It is the button-flow twin of `auto_select`: it signs a
+returning visitor in while bypassing the account chooser — the exact wrong-account incident that
+`googleOneTap.ts` exists to prevent. "Zero clicks, no dialog" is therefore **not** a deliverable here.
+
+**Free side effect worth knowing:** under FedCM the dialog is drawn by Chrome and names
+`laboelallali.com`, not the OAuth app. The ugly "Accéder à l'application
+labo-el-allali-pwa.firebaseapp.com" line disappears on that path — **without** brand verification.
+(Renaming the app in Google Auth Platform → Branding changes nothing until the brand is *verified*:
+Google only shows the app name for verified apps, otherwise just the domain.)
+
+**Testing it takes TWO visits, and the first one "failing" is the expected result.** Visit 1 shows the
+generic button and the chooser — that flow is what CREATES the record. Personalization starts on
+visit 2. Before testing: `chrome://settings/content/federatedIdentityApi` must not list the domain as
+blocked, and the site's permissions may need resetting (Chrome mutes One Tap for weeks after ~3
+dismissals). Add `?connexion=1` or the 30-day snooze will hide everything and look like a bad deploy.
+
+**Who will still see the generic button, permanently:** a fresh Chrome profile, private browsing,
+anyone who cleared site data, Safari and Firefox (no FedCM button mode), Chrome older than M125, and
+**anyone with several Google sessions active** — Google degrades it deliberately. This is a
+statistical improvement, not a universal change of screen. The hand-made button stays as the fallback.
+
+**Still unverified empirically:** Google's own docs say the personalized button "has no impact on the
+UX flows after the button is clicked" and that the displayed account "is not automatically selected".
+Whether a short Chrome confirmation dialog appears after the click could not be settled from the
+documentation — it needs a human on a real browser.
+
 - **⚠ What CANNOT be done, asked twice and worth writing down once.** A website cannot read, list or display the visitor's Google accounts. There is no API for it — it is a deliberate privacy boundary, not a missing feature. Only Google's own surfaces may show them: the One Tap card (drawn by Chrome, anchored where Chrome decides — top-right on desktop — never inside our markup) or the account chooser popup. The personalized button (`renderButton`) shows **one** account at most, and Google degrades it to the plain "Continuer avec Google" when **several sessions are active**, which is the common case. So "list my accounts inside the little corner widget" is not achievable, and no amount of configuration changes that.
 - **⚠ Do not `cancel()` One Tap on the fallback timeout.** An earlier version closed the card when falling back to ours, to guarantee a single solicitation. FedCM negotiates with Google over the network and is slower when several accounts are signed in, so the timeout was closing the card at the very moment it appeared — indistinguishable, from the field, from "One Tap never works". The window is 12s and the card is left alone; on desktop Chrome anchors it top-right and ours sits bottom-right, so they do not collide.
 - **⚠ The 30-day snooze now silences One Tap too**, since both are the same solicitation arbitrated in one place. Consequence discovered in the field: someone who had closed the OLD card saw **absolutely nothing** — no card, no One Tap — and the console showed no `gsi/client` request at all, which reads like a broken deploy. It is not. The dismissal key is therefore **versioned** (`googleSignInPromptDismissedAt_v2`); bumping the suffix re-asks once, because the offer changed materially. Bump it only for a change of that size — it is not a way to re-ask someone who said no. **Debug recipe: if a tester reports "nothing appears", check `localStorage` for that key before suspecting anything else.** **`?connexion=1` on any page forgets the snooze and re-opens the prompt on the spot** — deliberately not dev-only, because the owner tests on a real phone where clearing a localStorage key by hand is not an option. Harmless: the worst it can do is offer a sign-in to someone who asked for it in the URL.

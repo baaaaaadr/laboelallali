@@ -13,6 +13,7 @@ import {
 } from 'firebase/auth';
 // Popup + blocked-popup redirect fallback, shared with GoogleSignInPrompt.
 import { signInWithGoogle } from '@/lib/auth/googleSignIn';
+import { renderGoogleButton, signInWithOneTapCredential } from '@/lib/auth/googleOneTap';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -125,6 +126,9 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  /** Where Google draws its own button. See the effect below for why it matters. */
+  const googleSlot = useRef<HTMLDivElement | null>(null);
+  const [nativeGoogleButton, setNativeGoogleButton] = useState(false);
 
   // Guards against a race where onAuthStateChanged fires before the profile is saved
   const isSigningUp = useRef(false);
@@ -228,6 +232,59 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
     // written by the admin space). Records the CNDP consent given at registration.
     await setDoc(doc(db, 'users', uid), payload, { merge: true });
   };
+
+  /**
+   * Let Google draw its own button here, and make it the primary Google CTA.
+   *
+   * **This is the load-bearing half of the personalized-button fix, not a
+   * cosmetic upgrade.** Google only renders "Continuer en tant que <Nom>" for an
+   * account that has already completed a Sign In With Google flow **on this
+   * origin**. A Firebase `signInWithPopup` does not qualify: it hands off to
+   * `labo-el-allali-pwa.firebaseapp.com/__/auth/handler`, a different origin,
+   * and it is not a FedCM flow. So as long as every patient signs in through the
+   * hand-made button below, that record is never created and the button stays
+   * generic forever — which is exactly what was observed in production.
+   *
+   * Putting the real GSI button on the page someone actually uses is what
+   * eventually earns the personalization. The hand-made button stays underneath
+   * for the cases Google cannot serve (ad blocker, Safari, Firefox).
+   *
+   * No `router.push` on success: we are already on /login, and the existing
+   * step-2 effect takes over to complete the profile or forward the user.
+   */
+  useEffect(() => {
+    if (step !== 'auth') return;
+    const slot = googleSlot.current;
+    if (!slot) return;
+    let alive = true;
+    void renderGoogleButton(slot, {
+      locale: lang,
+      width: slot.clientWidth || 320,
+      dark: document.documentElement.classList.contains('dark'),
+      onCredential: (idToken) => {
+        if (!alive) return;
+        void (async () => {
+          try {
+            setIsSubmitting(true);
+            setError(null);
+            await signInWithOneTapCredential(idToken);
+          } catch (err: unknown) {
+            console.error(err);
+            setError(getAuthErrorMessage(err, 'error_google_login', 'Echec de la connexion avec Google'));
+          } finally {
+            setIsSubmitting(false);
+          }
+        })();
+      },
+    }).then((ok) => {
+      if (alive && ok) setNativeGoogleButton(true);
+    });
+    return () => {
+      alive = false;
+    };
+    // `getAuthErrorMessage` is a useCallback and is listed for the same reason
+    // the redirect-result effect above lists it: stable identity, no re-runs.
+  }, [step, lang, getAuthErrorMessage]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -598,6 +655,11 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
             Google's branding rules require the white/black/blue button with the
             official G mark, so it gets the full width, a heavier border and a
             real label instead of a bare "Google". */}
+        {/* Google's own button. Empty and collapsed until it renders, so nothing
+            moves if it never does. */}
+        <div ref={googleSlot} className="flex justify-center [&:empty]:hidden" />
+
+        {!nativeGoogleButton && (
         <button
           type="button"
           onClick={handleGoogleLogin}
@@ -612,6 +674,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
           </svg>
           {t('continue_with_google', 'Continuer avec Google')}
         </button>
+        )}
 
         {/* Separator. New key rather than reusing `or_continue_with`: that string
             ("Ou continuer avec") introduced Google, it makes no sense now that it
