@@ -126,8 +126,18 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  /** Where Google draws its own button. See the effect below for why it matters. */
-  const googleSlot = useRef<HTMLDivElement | null>(null);
+  /**
+   * Where Google draws its own button.
+   *
+   * ⚠ A CALLBACK ref in state, not `useRef`. This page returns a `<MedicalLoader />`
+   * early while params and auth resolve, so on first mount the slot does not
+   * exist yet. With a ref object the effect ran once against `null`, returned,
+   * and never re-ran — `step` and `lang` do not change when the loader lifts. It
+   * worked in development only because StrictMode double-invokes effects, and
+   * failed silently in production: no button, no error, nothing in the console.
+   * Putting the node in state makes its arrival itself the trigger.
+   */
+  const [googleSlot, setGoogleSlot] = useState<HTMLDivElement | null>(null);
   const [nativeGoogleButton, setNativeGoogleButton] = useState(false);
 
   // Guards against a race where onAuthStateChanged fires before the profile is saved
@@ -253,9 +263,8 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
    * step-2 effect takes over to complete the profile or forward the user.
    */
   useEffect(() => {
-    if (step !== 'auth') return;
-    const slot = googleSlot.current;
-    if (!slot) return;
+    if (step !== 'auth' || !googleSlot) return;
+    const slot = googleSlot;
     let alive = true;
     void renderGoogleButton(slot, {
       locale: lang,
@@ -284,7 +293,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
     };
     // `getAuthErrorMessage` is a useCallback and is listed for the same reason
     // the redirect-result effect above lists it: stable identity, no re-runs.
-  }, [step, lang, getAuthErrorMessage]);
+  }, [step, lang, googleSlot, getAuthErrorMessage]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -657,7 +666,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
             real label instead of a bare "Google". */}
         {/* Google's own button. Empty and collapsed until it renders, so nothing
             moves if it never does. */}
-        <div ref={googleSlot} className="flex justify-center [&:empty]:hidden" />
+        <div ref={setGoogleSlot} className="flex justify-center [&:empty]:hidden" />
 
         {!nativeGoogleButton && (
         <button
