@@ -87,9 +87,9 @@ standard property, and the build adds the prefix itself, keeping both.
 And verify in the SERVED stylesheet, never in the source:
 `curl <the /_next/static css chunk> | grep backdrop-filter` must show BOTH lines.
 
-The recipe is now `blur(24px) brightness(0.82)`:
-- the blur had to **double**, not grow 20% — at 12px the test tubes behind the tiles were still
-  legible through the glass;
+The recipe is now `blur(16px) brightness(0.84)`, settled by rendering the real page at 12/16/20/24 and comparing — 24px read as too blurred, flattening the photograph and costing the hero its depth:
+- the blur has to be substantial — but 24px dissolved the photograph entirely, so 16px is the
+  point where the test tubes soften without disappearing;
 - **the darkening is what actually makes the text readable.** The text is WHITE and the veil is
   `rgba(255,255,255,.12)`, which *lightens* the photo, i.e. works against it — raising that opacity
   makes things worse. Dimming the backdrop inside the bubble is what buys the contrast.

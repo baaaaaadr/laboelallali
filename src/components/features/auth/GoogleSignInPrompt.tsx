@@ -51,7 +51,20 @@ import {
   signInWithOneTapCredential,
 } from '@/lib/auth/googleOneTap';
 
-const STORAGE_KEY = 'googleSignInPromptDismissedAt';
+/**
+ * Dismissal key, **versioned**.
+ *
+ * The `_v2` suffix is a deliberate one-time reset. The snooze below now silences
+ * One Tap as well as this card — they are the same solicitation, arbitrated in
+ * one place — so anyone who had closed the OLD card would have been locked out
+ * of the new one-click sign-in for 30 days without ever seeing it. The offer
+ * changed materially (Google's button now names the account and signs in with no
+ * popup), so it is asked once more, and then respected for 30 days as before.
+ *
+ * Bump this suffix only for a change of that size. It is not a way to re-ask
+ * someone who said no.
+ */
+const STORAGE_KEY = 'googleSignInPromptDismissedAt_v2';
 /** Dated dismissal, not a boolean: a permanent 'true' would kill the CTA on this
  *  device forever, including for someone who simply was not ready that day. */
 const SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
