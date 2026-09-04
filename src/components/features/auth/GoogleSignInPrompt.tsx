@@ -123,6 +123,22 @@ export default function GoogleSignInPrompt() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // `?connexion=1` forgets the snooze and shows the prompt again, on the spot.
+    // Deliberately NOT dev-only: the owner tests on a real phone, where opening
+    // devtools to clear a localStorage key is not an option. Harmless — the worst
+    // it can do is offer a sign-in to someone who asked for it in the URL.
+    // Read from window.location and not useSearchParams(): that hook forces a
+    // <Suspense> boundary and would drop every page out of static rendering.
+    if (new URLSearchParams(window.location.search).get('connexion') === '1') {
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // Private mode — nothing stored, nothing to forget.
+      }
+      setAllowed(true);
+      return;
+    }
+
     const dismissedAt = Number(window.localStorage.getItem(STORAGE_KEY) || 0);
     if (dismissedAt && Date.now() - dismissedAt < SNOOZE_MS) return;
 
