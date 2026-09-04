@@ -20,13 +20,32 @@
  * Mounted from src/app/[lang]/layout.tsx and NOT from PWAComponents: that one
  * returns null in standalone display mode, i.e. precisely inside the installed
  * app, where this prompt is most useful.
+ *
+ * ── One Tap arbitration (septembre 2026) ────────────────────────────────────
+ * This component now owns BOTH solicitations, so there is exactly one place
+ * deciding which appears — the rule its header has always stated.
+ *
+ *   1. Google One Tap is tried first. Its card names the account, so a visitor
+ *      with a Google session signs in with a single tap. See googleOneTap.ts
+ *      for why that is SAFER than the popup, not laxer.
+ *   2. Only if One Tap cannot run — no client id, script blocked by an
+ *      extension, or ten silent seconds (usually: no Google session at all, or
+ *      Chrome's post-dismissal cooldown) — does this card appear.
+ *   3. If the visitor closes the One Tap card, that is an answer: we snooze for
+ *      30 days and show nothing. Asking twice in a row is how a prompt becomes
+ *      a nuisance.
+ *
+ * Under FedCM a page can no longer ask whether the card was displayed, so step
+ * 2 is a timeout, not a signal. During those ten seconds both could in theory
+ * be on screen — accepted knowingly, and the reason the delay is long.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { signInWithGoogle } from '@/lib/auth/googleSignIn';
+import { promptOneTap, signInWithOneTapCredential } from '@/lib/auth/googleOneTap';
 
 const STORAGE_KEY = 'googleSignInPromptDismissedAt';
 /** Dated dismissal, not a boolean: a permanent 'true' would kill the CTA on this
@@ -75,6 +94,10 @@ export default function GoogleSignInPrompt() {
   // therefore identical on server and client, no hydration mismatch.
   const [allowed, setAllowed] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** Our own card. Stays false while One Tap has a chance of showing its own. */
+  const [showCard, setShowCard] = useState(false);
+  /** One attempt per mount: pathname changes must not re-prompt on every step. */
+  const attempted = useRef(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -99,13 +122,49 @@ export default function GoogleSignInPrompt() {
     setAllowed(false);
   }, []);
 
+  /**
+   * A One Tap credential. The handover to /login is NOT optional: profile
+   * completion and `requestResultsAccess()` live only there (see header).
+   * `?redirect=` sends a patient whose profile is already complete back to the
+   * page they were reading; /login validates it and ignores anything unsafe.
+   */
+  const handleCredential = useCallback(
+    async (idToken: string) => {
+      setBusy(true);
+      try {
+        await signInWithOneTapCredential(idToken);
+        const lang = localeOf(pathname);
+        router.push(`/${lang}/login?redirect=${encodeURIComponent(pathname)}`);
+      } catch {
+        // Revoked token, offline, disabled account… fall back to the explicit
+        // button, which has the full chooser and real error handling.
+        setShowCard(true);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [pathname, router]
+  );
+
+  const hidden = HIDDEN_ROUTES.has(sectionOf(pathname));
+
+  useEffect(() => {
+    if (!allowed || loading || user || hidden || attempted.current) return;
+    attempted.current = true;
+    return promptOneTap((outcome) => {
+      if (outcome.credential) void handleCredential(outcome.credential);
+      else if (outcome.dismissed) dismiss();
+      else setShowCard(true);
+    });
+  }, [allowed, loading, user, hidden, handleCredential, dismiss]);
+
   const handleSignIn = useCallback(async () => {
     setBusy(true);
     try {
       await signInWithGoogle();
       // See the header comment: /login owns profile completion and the access
       // request. Also covers the popup-blocked path, which navigates away first.
-      router.push(`/${localeOf(pathname)}/login`);
+      router.push(`/${localeOf(pathname)}/login?redirect=${encodeURIComponent(pathname)}`);
     } catch {
       // Closed popup, offline, blocked account… nothing to say here: the full
       // login page has the error handling. Just step out of the way.
@@ -115,8 +174,9 @@ export default function GoogleSignInPrompt() {
     }
   }, [dismiss, pathname, router]);
 
-  if (!allowed || loading || user) return null;
-  if (HIDDEN_ROUTES.has(sectionOf(pathname))) return null;
+  if (!allowed || loading || user || hidden) return null;
+  // One Tap may still be about to show its own card — do not compete with it.
+  if (!showCard) return null;
 
   return (
     <div

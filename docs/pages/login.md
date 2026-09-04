@@ -39,6 +39,50 @@ On email signup submit: consent guard -> `createUserWithEmailAndPassword` -> `pe
 
 On email login submit: `signInWithEmailAndPassword`. The auth context loads the Firestore profile; completed profiles are redirected to the post-auth target (`getRedirectTarget`, default `/${lang}/profile`), incomplete profiles stay on `/login` and show step 2.
 
+### Google One Tap — one-click sign-in (septembre 2026)
+
+Dr Aziz asked for "autodetection des comptes google loggués et login en un clic".
+That is the *same mechanism* as the wrong-account bug fixed two days earlier, so the
+resolution is: **make the identity visible before anything happens, and never sign in
+without a tap.**
+
+- `src/lib/auth/googleOneTap.ts` — loads the GSI script on demand, shows the One Tap
+  card, exchanges the ID token via `signInWithCredential`. **`googleSignIn.ts` is not
+  touched**: two paths, two guarantees — the card names the person, the explicit button
+  keeps the full chooser.
+- **`auto_select: false` is load-bearing and must never be flipped.** It is the one
+  setting that re-creates the wrong-account bug, and worse: with zero interaction there
+  is not even a flash of a popup for the patient to notice.
+- `use_fedcm_for_prompt: true` is required (Chrome removed the legacy iframe path). The
+  consequence is that `isNotDisplayed()` / `isSkippedMoment()` no longer report anything,
+  so **a page cannot know whether the card appeared**. Only `isDismissedMoment()` survives
+  — and a dismissal whose reason is `credential_returned` is a SUCCESS, not a refusal.
+- **`GoogleSignInPrompt` arbitrates both solicitations**, so one component decides:
+  One Tap first; its own card only if One Tap cannot run (no client id, script blocked,
+  or six silent seconds — usually no Google session, or Chrome's post-dismissal
+  cooldown). Falling back **closes the One Tap card first** (`google.accounts.id.cancel()`):
+  two solicitations at once is the one thing that component has always refused.
+  Closing the One Tap card counts as an answer → 30-day snooze, nothing else shown.
+- Invariant preserved: after `signInWithCredential`, it still hands over to
+  `/login?redirect=<current path>`. Profile completion and `autoRequestResultsAccess()`
+  live only there; One Tap must never become a second place that creates accounts.
+- **`NEXT_PUBLIC_GOOGLE_CLIENT_ID`** — the Web client Firebase auto-created. **Not a
+  secret**: it already travels in every OAuth URL the browser sends, and it is useless
+  from an unauthorized origin. Declared in `.env.local`, `.env.example` (real value, so a
+  fresh clone works) and the `env:` block of `next.config.js`, which enumerates public vars.
+- **Verified 04/09/2026: `www.laboelallali.com`, `laboelallali.com` and
+  `http://localhost:3000` are ALREADY authorized JavaScript origins** — no Cloud Console
+  change was needed. If One Tap ever stops appearing everywhere at once, re-check that
+  list first: an unauthorized origin fails **silently**, with no error and no card.
+- QA gotchas: Chrome puts One Tap in a cooldown after 3 dismissals ("I don't see it" is
+  not a bug); and a browser with no Google session logs "Provider's accounts list is
+  empty" + a FedCM `NetworkError` — both are expected there, and are exactly the case the
+  fallback exists for.
+- ⚠ **Not covered by an automated driver**: the signed-in path. A headless browser has no
+  Google session, so the card itself cannot be exercised. Verified by driver: script loads,
+  fallback timing, silent routes, 30-day snooze. **The one-tap-and-you-are-in path needs a
+  human on a real browser signed into Google.**
+
 Google submit (all of it lives in `src/lib/auth/googleSignIn.ts`, shared with `GoogleSignInPrompt`):
 - Creates `new GoogleAuthProvider()`.
 - **`provider.setCustomParameters({ prompt: 'select_account' })` — do not remove.** Without it Firebase sends NO `prompt` parameter to `accounts.google.com/o/oauth2/auth` (verifiable by capturing the popup's request), and Google is then allowed to reuse the browser's existing session once consent has been granted: the account chooser flashes open, closes on its own, and the patient is signed in as an account they never selected. Reported from the field in septembre 2026. On a phone shared within a family — the normal case for this lab — that silently opens the wrong person's account, on an app that displays medical results. `select_account` forces the chooser on every sign-in, for the redirect fallback too.
