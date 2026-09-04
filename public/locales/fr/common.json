@@ -271,6 +271,11 @@
     "guest_desc": "Créez votre compte pour retrouver tous vos résultats en ligne.",
     "guest_cta": "Créer mon compte",
     "guest_link": "Première visite ? Voir nos analyses et nos tarifs",
+    "guest_headline": "Sélectionnez vous-même vos analyses et recevez vos résultats dans l'application",
+    "guest_door_account_q": "Déjà venu au laboratoire ?",
+    "guest_door_account_a": "Créer mon compte",
+    "guest_door_first_q": "Première visite ?",
+    "guest_door_first_a": "Faites votre première analyse et recevez vos résultats ici",
     "access_desc": "Activez l'accès à vos résultats : le laboratoire vérifie votre identité, puis tout est en ligne.",
     "access_cta": "Activer mon accès",
     "checkup_generic_title": "Pensez à votre prochain bilan"

@@ -54,7 +54,7 @@ const set = {
 const URLS = {
   home:     'https://www.laboelallali.com',
   analyses: 'https://www.laboelallali.com/fr/analyses',
-  rdv:      'https://www.laboelallali.com/fr/appointment',
+  rdv:      'https://www.laboelallali.com/fr/rendez-vous',
   glabo:    'https://www.laboelallali.com/fr/glabo',
   contact:  'https://www.laboelallali.com/fr/contact',
   tel:      'tel:0528843384',

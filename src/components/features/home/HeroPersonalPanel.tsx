@@ -56,6 +56,7 @@ import { useResults } from '@/contexts/ResultsContext';
 import { monthsSince } from '@/lib/results/stats';
 import { checkupTitle } from '@/lib/results/checkupCopy';
 import type { CyberlabResult } from '@/types/cyberlab';
+import HeroGuestDoors from './HeroGuestDoors';
 import HeroLastBilan from './HeroLastBilan';
 
 type PanelState = 'guest' | 'noaccess' | 'reminder' | 'generic' | 'none';
@@ -158,7 +159,15 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
   // generic→reminder swap moves nothing. Anonymous visitors keep the base tier
   // and pay nothing. The hint already means exactly "has a requester_id", so it
   // predicts this tier without any new stored value.
-  const tallSlot = state === 'reminder' || state === 'generic';
+  // Three hint categories, three reserved heights. `guest` gets its OWN tier
+  // since the two doors made it the tallest state of all; `noaccess` keeps the
+  // base tier instead of paying for space it does not use. A visitor never
+  // crosses two tiers within a session — the hint predicts the category before
+  // Firebase answers — so reserving per category is exact, not approximate.
+  const slotTier =
+    state === 'guest' ? ' hero-panel-slot--guest'
+    : state === 'reminder' || state === 'generic' ? ' hero-panel-slot--tall'
+    : '';
 
   useEffect(() => {
     if (!showsPanel) return;
@@ -170,17 +179,21 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
   const content = (() => {
     switch (state) {
       case 'guest':
+        // Rendered by HeroGuestDoors, which owns the two doors and their hrefs.
+        // Only `title` is read here — it is also the panel's accessible name.
+        // The old guest_title / guest_desc / guest_cta / guest_link keys are left
+        // in the locale files, unused, rather than silently changing meaning.
         return {
           Icon: UserPlus,
-          title: t('hero_panel.guest_title', 'Déjà venu au laboratoire ?'),
-          desc: t('hero_panel.guest_desc', 'Créez votre compte pour retrouver tous vos résultats en ligne.'),
-          cta: t('hero_panel.guest_cta', 'Créer mon compte'),
-          // Always /login, never signInWithGoogle() straight from here: account
-          // creation has to go through that page or the profile ends up with no
-          // phone number and never enters the lab's onboarding queue.
-          href: `/${lang}/login`,
-          link: t('hero_panel.guest_link', 'Première visite ? Voir nos analyses et nos tarifs'),
-          linkHref: `/${lang}/analyses`,
+          title: t(
+            'hero_panel.guest_headline',
+            "Sélectionnez vous-même vos analyses et recevez vos résultats dans l'application"
+          ),
+          desc: '',
+          cta: '',
+          href: `/${lang}/analyses`,
+          link: null,
+          linkHref: '',
         };
       case 'noaccess':
         return {
@@ -221,7 +234,7 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
 
   return (
     <div
-      className={`hero-panel-slot${tallSlot ? ' hero-panel-slot--tall' : ''}${
+      className={`hero-panel-slot${slotTier}${
         state === 'none' ? ' hero-panel-slot--collapsed' : ''
       }`}
     >
@@ -232,6 +245,8 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
         >
           {state === 'reminder' && newest ? (
             <HeroLastBilan result={newest} title={content.title} lang={lang} demoBase64={demoPdf} />
+          ) : state === 'guest' ? (
+            <HeroGuestDoors lang={lang} headline={content.title} />
           ) : (
             <>
           <span className="hero-panel__icon">
