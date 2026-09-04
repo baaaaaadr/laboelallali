@@ -177,14 +177,13 @@ export interface OneTapOutcome {
  * the card actually appeared. The only honest reading of "nothing happened" is
  * elapsed time — most often it means the visitor has no Google session at all,
  * or Chrome put One Tap in its post-dismissal cooldown. After that delay the
- * card is CLOSED and the caller may show its own, so only one solicitation is
- * ever on screen. Six seconds is the compromise: long enough that a visitor who
- * is about to tap is not interrupted, short enough that someone with no Google
- * account is not left staring at nothing.
+ * caller may show its own card; the One Tap card is NOT closed (see `settle`).
+ * Twelve seconds, not six: FedCM negotiates with Google over the network and is
+ * slower when several accounts are signed in.
  */
 export function promptOneTap(
   onOutcome: (o: OneTapOutcome) => void,
-  silenceAfterMs = 6000
+  silenceAfterMs = 12000
 ): () => void {
   let settled = false;
   let timer: number | undefined;
@@ -201,11 +200,13 @@ export function promptOneTap(
     if (settled) return;
     settled = true;
     if (timer) window.clearTimeout(timer);
-    // Reporting `unavailable` makes the caller show ITS card, so any One Tap
-    // card that did quietly appear has to go: two solicitations at once is the
-    // one thing GoogleSignInPrompt has always refused. Harmless when nothing
-    // was displayed, which is the likely case anyway.
-    if (o.unavailable) closeCard();
+    // ⚠ We used to `closeCard()` here, to guarantee a single solicitation. That
+    // was a mistake: FedCM can take several seconds to answer Google (longer
+    // with many signed-in accounts), so the timeout was closing the One Tap card
+    // at the very moment it was about to appear — which is exactly what "I never
+    // see the Google card" looked like from the field. The window is now long
+    // (12s) and the card is left alone; on desktop Chrome anchors it top-right
+    // while our own card sits bottom-right, so they do not collide.
     onOutcome(o);
   };
 
