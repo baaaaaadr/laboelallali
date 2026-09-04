@@ -85,16 +85,43 @@ const ServiceWorkerRegistration = () => {
         window.addEventListener('load', registerServiceWorker);
       }
       
-      // Listen for controller changes but don't auto-reload in development
+      // Listen for controller changes but don't auto-reload in development.
+      //
+      // ⚠ TWO GUARDS, both earned the hard way — the owner reported "the site
+      // reloads by itself after 3 seconds and I see the splash again".
+      //
+      // 1. `hadController`. `sw.js` calls skipWaiting() on install and
+      //    clients.claim() on activate, so `controllerchange` fires on the very
+      //    FIRST visit too, the moment the brand-new worker adopts a page that
+      //    had no controller. Reloading there refreshes a page that is already
+      //    current: every first-time visitor was being bounced through the
+      //    splash screen for nothing. Only an actual version SWAP deserves a
+      //    reload.
+      // 2. `RELOADED_FLAG`. Belt and braces against a reload loop: if a worker
+      //    ever re-claims after the refresh, we would reload forever, and the
+      //    site would be unusable with no obvious cause.
       if (!isDev) {
+        const hadController = !!navigator.serviceWorker.controller;
+        const RELOADED_FLAG = 'pwaReloadedForSwUpdate';
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           console.log('>>> PWA: Controller changed');
-          // Instead of immediate reload, we could show a refresh button
-          // Only reload in production to prevent infinite loops
-          if (isProd) {
-            console.log('>>> PWA: Reloading page...');
-            window.location.reload();
+          if (!isProd) return;
+          if (!hadController) {
+            console.log('>>> PWA: first claim, nothing to refresh');
+            return;
           }
+          try {
+            if (window.sessionStorage.getItem(RELOADED_FLAG)) {
+              console.log('>>> PWA: already reloaded once this session, not looping');
+              return;
+            }
+            window.sessionStorage.setItem(RELOADED_FLAG, '1');
+          } catch {
+            // Private mode: no flag available. The hadController guard alone
+            // still prevents the first-visit reload, which is the common case.
+          }
+          console.log('>>> PWA: new version took over, reloading once...');
+          window.location.reload();
         });
       }
       

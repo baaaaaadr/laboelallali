@@ -233,12 +233,19 @@ export interface OneTapOutcome {
  * elapsed time — most often it means the visitor has no Google session at all,
  * or Chrome put One Tap in its post-dismissal cooldown. After that delay the
  * caller may show its own card; the One Tap card is NOT closed (see `settle`).
- * Twelve seconds, not six: FedCM negotiates with Google over the network and is
- * slower when several accounts are signed in.
+ *
+ * THIRTY seconds, deliberately long. The owner saw both cards at once — the One
+ * Tap list top-right and our own bottom-right — and only wants the first. Under
+ * FedCM a page cannot ask whether the card is displayed, so the only lever is
+ * time. A visitor who ACTS on the card gives us a credential, and one who CLOSES
+ * it gives us a dismissal (→ 30-day snooze, our card never appears): both end
+ * the wait immediately. The remaining overlap is only "displayed and ignored for
+ * half a minute", which is rare and harmless — whereas dropping the fallback
+ * entirely would leave anyone WITHOUT a Google session with nothing at all.
  */
 export function promptOneTap(
   onOutcome: (o: OneTapOutcome) => void,
-  silenceAfterMs = 12000
+  silenceAfterMs = 30000
 ): () => void {
   let settled = false;
   let timer: number | undefined;

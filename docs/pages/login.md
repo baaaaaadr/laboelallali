@@ -122,9 +122,15 @@ documentation — it needs a human on a real browser.
   secret**: it already travels in every OAuth URL the browser sends, and it is useless
   from an unauthorized origin. Declared in `.env.local`, `.env.example` (real value, so a
   fresh clone works) and the `env:` block of `next.config.js`, which enumerates public vars.
-- **Verified 04/09/2026: `www.laboelallali.com`, `laboelallali.com` and
-  `http://localhost:3000` are ALREADY authorized JavaScript origins** — no Cloud Console
-  change was needed. If One Tap ever stops appearing everywhere at once, re-check that
+- **❌ CORRECTION (04/09/2026, from a real console log). An earlier note here claimed the three
+  origins were already authorized and that no Cloud Console change was needed. That was WRONG, and
+  the test behind it was insufficient: `initialize()` + `prompt()` do NOT validate the JavaScript
+  origin, so they pass on an unauthorized one. `renderButton()` does — it loads an iframe from
+  `accounts.google.com/gsi/button`, which returned **403** with
+  `[GSI_LOGGER]: The given origin is not allowed for the given client ID`, and
+  `accounts.google.com/gsi/status` returned 403 too. Interestingly **One Tap still worked** (FedCM
+  does not go through that check), which is why the failure looked so selective.
+  **To validate an origin, always exercise `renderButton`, never just `initialize`.** If One Tap ever stops appearing everywhere at once, re-check that
   list first: an unauthorized origin fails **silently**, with no error and no card.
 - QA gotchas: Chrome puts One Tap in a cooldown after 3 dismissals ("I don't see it" is
   not a bug); and a browser with no Google session logs "Provider's accounts list is
