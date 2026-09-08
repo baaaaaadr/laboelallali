@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -135,6 +135,9 @@ const Header = () => {
 
   const currentLanguagePath = `/${urlLang}`;
   const isStaff = ['owner', 'admin', 'staff'].includes(userProfile?.role || '');
+  // Libelle du lien de validation du parcours patient (namespace `journey`,
+  // charge par le layout). Disparait quand le parcours deviendra /rendez-vous.
+  const journeyTestLabel = t('journey:nav.test_link', 'Parcours (test)');
 
   // « Vous êtes ici » — un seul canal visuel dans toute l'appli : un fond PLEIN.
   // Le fuchsia, lui, ne signale que la mise en avant de Résultats (contour/badge/point).
@@ -230,9 +233,19 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation - Only visible at lg (1024px) and above */}
-          {/* Espacement resserré entre 1024 et 1279 px : à space-x-4 la barre
-              débordait horizontalement en français (7 liens, 8 pour le staff). */}
-          <nav className="desktop-nav hidden lg:flex items-center space-x-2 xl:space-x-6">
+          {/* Espacements resserrés (space-x-1.5 / xl:space-x-4) : mesuré le
+              08/09/2026, il manquait exactement 71 px à un membre de l'équipe
+              (8 liens) pour que « Admin » tienne, et 11 px à 1024 px.
+
+              ⚠ `min-w-0` + `overflow-x-auto` : SANS eux, un membre de l'équipe
+              (8 liens, 959 px de nav) faisait déborder la PAGE ENTIÈRE — mesuré
+              le 08/09/2026 : 69 px à 1280, 26 px à 1366, 45 px à 1024. Une barre
+              de défilement horizontale apparaissait et tout le site se décalait.
+              Un élément flex refuse par défaut de rétrécir sous la largeur de son
+              contenu : il pousse alors son parent au lieu de se contenir. Avec
+              ces deux classes, c'est la nav qui défile, pas la page. La barre de
+              défilement de la nav est masquée (elle ne sert que de soupape). */}
+          <nav className="desktop-nav hidden lg:flex items-center space-x-1.5 xl:space-x-4 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <Link
               href={`${currentLanguagePath}/`}
               className={`nav-link text-sm lg:text-base ${isHere('/') ? 'active' : ''}`}
@@ -295,6 +308,20 @@ const Header = () => {
                 <UserCog size={16} /> {t('admin.nav', 'Admin')}
               </Link>
             )}
+            {/* ⛔ PAS de lien "Parcours (test)" ICI, et c'est mesuré.
+                La barre desktop est PLEINE : 7 liens = 860 px, et un membre de
+                l'equipe en a deja 8 avec "Admin". Un 9e la porte a 1114 px et
+                fait DEBORDER la page horizontalement jusqu'a ~1900 px de large
+                (24 px de debordement a 1680 px, 144 px a 1440 px) — la page
+                entiere se decale et une barre de defilement horizontale
+                apparait. `hidden xl:flex` n'y change rien : le probleme n'est
+                pas la petite largeur, c'est la GRANDE.
+                docs/pages/resultats.md l'annoncait deja : "Adding an 8th
+                permanent link would put this back on the edge - re-measure
+                before doing so."
+                Le lien vit donc uniquement dans le tiroir mobile (liste
+                verticale, aucune contrainte de largeur) et sur /admin pour les
+                postes fixes. */}
           </nav>
 
           {/* Action Buttons */}
@@ -556,6 +583,21 @@ const Header = () => {
                 <UserCog size={20} style={drawerIconStyle(isHere('/admin'))} />
                 <span style={drawerTextStyle(isHere('/admin'))}>
                   {t('admin.nav', 'Admin')}
+                </span>
+              </Link>
+            )}
+
+            {/* Parcours patient unifie - mobile, equipe uniquement */}
+            {isStaff && (
+              <Link
+                href={`${currentLanguagePath}/test-rdv`}
+                style={drawerLinkStyle(isHere('/test-rdv'))}
+                aria-current={isHere('/test-rdv') ? 'page' : undefined}
+                onClick={toggleMenu}
+              >
+                <ClipboardList size={20} style={drawerIconStyle(isHere('/test-rdv'))} />
+                <span style={drawerTextStyle(isHere('/test-rdv'))}>
+                  {journeyTestLabel}
                 </span>
               </Link>
             )}

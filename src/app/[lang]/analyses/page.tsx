@@ -26,6 +26,7 @@ import { BILANS_ENABLED } from "@/constants/features";
 import MedicalLoader from "@/components/ui/MedicalLoader";
 import { computeCartView } from "@/lib/cart/cartView";
 import { toggleBilanCompositionExclusion } from "@/lib/cart/cartItem";
+import { readCart, writeCart, clearCartStorage } from "@/lib/cart/storage";
 
 const normalizeId = (id: string) => id.replace(/\s+/g, '').toUpperCase();
 
@@ -145,7 +146,6 @@ const CatalogDataFetcher = ({
 
 // Main page component
 export function AnalysesCatalogPageContents({ params: langParams }: { params: { lang: string } }) {
-  const STORAGE_KEY = 'laboElAllali_selectedItems_v2';
   const { t } = useTranslation(['catalog']);
   const lang = langParams.lang;
   const isArabic = lang === "ar";
@@ -235,21 +235,14 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
   useEffect(() => {
     if (isFirstLoad.current) {
       isFirstLoad.current = false;
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setSelectedItems(parsed);
-            return; // state will update → effect re-runs → save happens then
-          }
-        }
-      } catch {}
+      const saved = readCart();
+      if (saved.length > 0) {
+        setSelectedItems(saved);
+        return; // state will update → effect re-runs → save happens then
+      }
       return; // nothing to load, nothing to save on initial empty mount
     }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedItems));
-    } catch {}
+    writeCart(selectedItems);
   }, [selectedItems]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-open side panel on first item add (desktop only, one-shot)
@@ -493,14 +486,14 @@ export function AnalysesCatalogPageContents({ params: langParams }: { params: { 
       });
 
       // Sauvegarder dans localStorage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      writeCart(updated);
       return updated;
     });
   }, []);
 
   const clearCart = useCallback(() => {
     setSelectedItems([]);
-    localStorage.removeItem(STORAGE_KEY);
+    clearCartStorage();
     setIsCartModalOpen(false);
   }, []);
 

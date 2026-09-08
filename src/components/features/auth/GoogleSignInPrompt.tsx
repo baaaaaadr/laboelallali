@@ -83,6 +83,7 @@ const HIDDEN_ROUTES = new Set([
   'login',
   'rendez-vous',
   'glabo',
+  'test-rdv',
   'profile',
   'admin',
   'resultats',

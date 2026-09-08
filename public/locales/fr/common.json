@@ -11,7 +11,6 @@
   "closes_in": "ferme dans",
   "hours_short": "h",
   "minutes_short": "min",
-
   "why_choose_us": "Pourquoi Nous Choisir ?",
   "certified_quality": "Qualité de haut niveau",
   "certified_quality_text": "Laboratoire aux normes internationales pour des résultats fiables.",
@@ -21,7 +20,6 @@
   "experienced_team_text": "Biologistes et techniciens hautement qualifiés à votre service.",
   "dedicated_patient_service": "Service patient dédié",
   "dedicated_patient_service_text": "Attention personnalisée et accompagnement à chaque étape.",
-
   "our_main_services": "Nos Services Principaux",
   "about": "À propos",
   "about_description": "Laboratoire d'analyses médicales offrant une gamme complète de services de diagnostic avec des équipements de pointe et une équipe expérimentée pour des résultats précis et rapides.",
@@ -33,7 +31,6 @@
   "home_service_text": "Service de prélèvement à domicile pour votre confort et sécurité.",
   "health_checks": "Bilans de santé",
   "health_checks_text": "Bilans personnalisés pour le suivi préventif de votre santé.",
-
   "get_directions": "Itinéraire",
   "call_us": "Appeler",
   "our_location": "Notre Localisation",
@@ -41,7 +38,6 @@
   "laboratory_name_short": "Labo El Allali",
   "laboratory_address": "61 Bis, Rue de Marrakech, 80020, Agadir, Maroc",
   "loading_map": "Chargement de la carte",
-
   "home": "Accueil",
   "appointment": "RDV",
   "glabo": "à Domicile",
@@ -54,7 +50,6 @@
   "french": "Français",
   "arabic": "العربية",
   "close_menu": "Fermer le menu",
-
   "contact_on_whatsapp": "Contactez-nous sur WhatsApp",
   "assistance": "Assistance",
   "hotline_contact": "Hotline & Contact",
@@ -79,7 +74,6 @@
   "sunday": "Dimanche: Fermé",
   "send": "Envoyer",
   "view_map": "Voir sur la carte",
-
   "appointment_title": "Prendre Rendez-vous",
   "name": "Nom",
   "phone": "Téléphone",
@@ -95,17 +89,14 @@
   "send_whatsapp": "Envoyer par WhatsApp",
   "required_fields_alert": "Veuillez remplir tous les champs obligatoires (nom, téléphone, date, heure).",
   "success_message": "Votre demande a bien été envoyée.",
-
   "glabo_title": "Prélèvement à Domicile",
   "sampling_place": "Lieu de prélèvement",
   "lab_contact": "Contact Laboratoire :",
-
   "welcome_banner": "Bienvenue au Laboratoire El Allali",
   "welcome_description": "Votre santé, notre priorité. Analyses médicales précises et rapides à Agadir.",
   "banner_alt": "Laboratoire El Allali Banner",
   "navigate_to_lab": "Localisation",
   "send_prescription": "Whatsapp",
-
   "practical_info": "Informations pratiques",
   "faq": "Questions fréquentes",
   "optional": "Optionnel",
@@ -405,11 +396,9 @@
     "test_error_body": "Le test n'a pas pu aboutir : la liaison avec le laboratoire n'a pas répondu.",
     "test_error_todo": "À faire : patientez une minute et refaites le test. Si le message revient, prévenez l'administrateur — cela ne vient pas du dossier du patient.",
     "test_pdf_empty_todo": "Le patient verra ce bilan dans sa liste mais ne pourra pas l'ouvrir. Le dossier existe au laboratoire, seul le document manque : signalez ce numéro de dossier au laboratoire pour qu'il le republie.",
-    "test_count_one": "{{count}} bilan trouvé",
-    "test_count_other": "{{count}} bilans trouvés",
-    "test_error": "Test impossible pour le moment. Réessayez.",
     "test_count_one": "{{count}} dossier trouvé",
     "test_count_other": "{{count}} dossiers trouvés",
+    "test_error": "Test impossible pour le moment. Réessayez.",
     "test_pdf_view": "Voir le PDF",
     "test_pdf_loading": "Chargement…",
     "test_pdf_ok": "PDF récupéré ✓",
@@ -530,7 +519,9 @@
     "rel_last": "Dernière relance il y a {{days}} j",
     "rel_never": "Jamais relancé",
     "rel_no_phone": "Pas de téléphone",
-    "rel_hint": "Chaque relance est enregistrée (date uniquement) pour éviter de recontacter deux fois la même personne."
+    "rel_hint": "Chaque relance est enregistrée (date uniquement) pour éviter de recontacter deux fois la même personne.",
+    "journey_test_title": "Parcours patient unifié (test)",
+    "journey_test_desc": "Nouvelle page qui remplacera « RDV » et « à domicile ». À valider avant mise en ligne."
   },
   "theme": {
     "toggle": "Changer le thème",
@@ -602,4 +593,3 @@
     "section_medecins": "Médecins"
   }
 }
-

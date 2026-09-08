@@ -28,7 +28,7 @@ import { LAB_SITE_URL } from '@/constants/contact';
 // Initialize i18next for Server Components within this layout
 async function initServerI18next(
   lang: string,
-  namespaces: string[] = [defaultNS, 'appointment', 'glabo', 'catalog']
+  namespaces: string[] = [defaultNS, 'appointment', 'glabo', 'catalog', 'journey']
 ) {
   const i18nInstance = createInstance();
   await i18nInstance
@@ -148,7 +148,7 @@ export default async function LangLayout({
   let resources;
 
   try {
-    i18nInstance = await initServerI18next(lang, [defaultNS, 'appointment', 'glabo', 'catalog']);
+    i18nInstance = await initServerI18next(lang, [defaultNS, 'appointment', 'glabo', 'catalog', 'journey']);
     resources = i18nInstance.services.resourceStore.data;
   } catch {
     // Fallback to create a minimal instance
@@ -163,7 +163,7 @@ export default async function LangLayout({
       <ThemeProvider>
         <TranslationsProvider
           locale={lang}
-          namespaces={[defaultNS, 'appointment', 'glabo', 'catalog']}
+          namespaces={[defaultNS, 'appointment', 'glabo', 'catalog', 'journey']}
           resources={resources}
         >
             <div className="flex flex-col min-h-screen">

@@ -146,7 +146,7 @@ export function CartDetailsModal({
                 )}
               </div>
 
-              {/* ── Footer: WhatsApp + PDF ── */}
+              {/* ── Footer: Prendre RDV + WhatsApp + PDF ── */}
               {selectedItems.length > 0 && (
                 <CartActions
                   cartView={cartView}
@@ -154,6 +154,9 @@ export function CartDetailsModal({
                   currencyLabel={currencyLabel}
                   onWhatsAppSend={onWhatsAppSend}
                   onAuthFail={onClose}
+                  // La modale DOIT se fermer avant la navigation douce vers le
+                  // parcours, sinon elle reste montee par-dessus la nouvelle page.
+                  onBeforeNavigate={onClose}
                   isRtl={isRtl}
                   compact
                 />

@@ -3,7 +3,14 @@
 module.exports = {
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.laboelallali.com',
   generateRobotsTxt: true,
-  exclude: ['/server-sitemap.xml', '/admin/*'],
+  // '/admin/*' ne couvre PAS '/admin' lui-meme, ni '/fr/admin' : l'espace
+  // du personnel se retrouvait dans le sitemap public. Les pages sont
+  // protegees, mais elles n'ont rien a faire dans l'index de Google.
+  exclude: [
+    '/server-sitemap.xml',
+    '/admin', '/admin/*', '/*/admin', '/*/admin/*',
+    '/test-rdv', '/*/test-rdv',
+  ],
   robotsTxtOptions: {
     policies: [
       {

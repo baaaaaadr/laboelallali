@@ -45,8 +45,29 @@ A sub-component responsible for running parallel Firestore queries to fetch the 
 - **CartCompositionItem.tsx**: One composition analysis with a checkbox. Four visual states: normal (✓ enabled), excluded by user (✗ enabled, grey italic, strikethrough), duplicate from another item (✓ disabled, grey italic, strikethrough, source tag), duplicate+excluded (✗ enabled, same grey treatment).
 - **CartTotalsBreakdown.tsx**: Encadré showing sub-total / frais de prélèvement / **Total** based on `cartView`.
 - **CartPreparation.tsx**: Shared content for the "Ma Préparation" tab — administrative documents, sample types, special instructions, fasting warning, result delay + total.
-- **CartActions.tsx**: Shared footer — WhatsApp button + PDF button (delegates to `useCartPdfHandler`). The PDF button shows a spinner (`Loader2`) and is disabled while a PDF is being generated (`isGeneratingPdf`). Renders `<PdfPreviewModal>` for the desktop preview flow. Accepts an optional `isRtl` prop (forwarded by CartSidePanel / CartDetailsModal) to set the preview modal direction.
+- **CartActions.tsx**: Shared footer — **3 boutons sur UNE ligne** : « Prendre RDV » + WhatsApp + PDF (ce dernier delegue a `useCartPdfHandler`). The PDF button shows a spinner (`Loader2`) and is disabled while a PDF is being generated (`isGeneratingPdf`). Renders `<PdfPreviewModal>` for the desktop preview flow. Accepts an optional `isRtl` prop (forwarded by CartSidePanel / CartDetailsModal) to set the preview modal direction.
 - **PdfPreviewModal.tsx** (`src/components/features/catalog/cart/PdfPreviewModal.tsx`): Large Headless UI `<Dialog>` (`z-[60]`, `max-w-5xl h-[92vh]`) that previews the generated PDF in an `<iframe>` (browser-native PDF viewer via a blob object URL). Footer has a "Fermer" button and a `.button-bordeaux` "Télécharger" button. **Desktop only** — never mounted with content on mobile (mobile downloads directly). Props: `isOpen`, `onClose`, `pdfUrl` (blob URL | null), `onDownload`, `isRtl`.
+
+#### Le bouton « Prendre RDV » (septembre 2026)
+- 3e bouton de `CartActions.tsx`, **sur la meme ligne** que WhatsApp et PDF. Il mene au parcours
+  patient unifie via `journeyPath(lang, { service: 'labo', from: 'catalogue' })`
+  (`src/lib/journey/route.ts` — **seul** endroit a modifier quand `/test-rdv` deviendra
+  `/rendez-vous`). Il repond au constat de depart : le patient qui composait son panier n'avait
+  aucun moyen de prendre rendez-vous, et le labo recevait une demande sans les analyses.
+- **Rien n'est transporte** : `/analyses` ecrit deja `laboElAllali_selectedItems_v2` a chaque
+  modification, le parcours le lit au montage. Voir `docs/pages/test-rdv.md`.
+- **Nouvelle prop `onBeforeNavigate?: () => void`.** `CartDetailsModal` y passe son `onClose` : sans
+  cela la modale mobile reste montee par-dessus la nouvelle page lors d'une navigation douce.
+  `CartSidePanel` ne la passe pas (rien a fermer).
+- **Largeurs mesurees a 320 px** (budget reel : 280 px pour trois boutons) : « Prendre RDV » 125 px
+  (libelle entier), WhatsApp 111 px, PDF **42 px en icone seule** — son libelle revient a partir de
+  640 px (`hidden sm:inline`). Repartition inegale (`flex-[1.15]` / `flex-1` / `flex-shrink-0`),
+  jamais `grid-cols-3`.
+- ⚠ **`basis-0 min-w-0` sur CHAQUE enfant flex.** Sans `min-w-0` un element flex refuse de retrecir
+  sous la largeur de son contenu et la rangee deborde horizontalement — premiere cause d'une rangee
+  de boutons cassee. `truncate` va sur le `<span>`, jamais sur le `<button>` (lui-meme conteneur flex).
+- Cle i18n : `catalog:cart.book_appointment` (fr « Prendre RDV » / ar « حجز موعد »).
+
 - **useCartPdfHandler.ts**: Shared hook encapsulating PDF auth check + generation + the adaptive download/preview behavior. Accepts optional `onAuthFail()` callback (used by CartDetailsModal to close itself before redirecting to login). Detects mobile vs PC (same heuristic as `/contact`: mobile UA OR `window.innerWidth < 768`). Returns `{ handleDownloadPdf, isAuthReady, isGeneratingPdf, pdfPreview, closePdfPreview, downloadFromPreview }`. Manages the preview object URL via a ref and revokes it on close/unmount.
 
 #### Floating UI
@@ -55,6 +76,9 @@ A sub-component responsible for running parallel Firestore queries to fetch the 
 ## State Management
 - `analyses` & `bilans`: The raw arrays loaded from the Firestore databases.
 - `selectedItems` (CartItem[]): Holds items currently in the cart. Persisted via `localStorage` under `laboElAllali_selectedItems_v2`.
+  - **La cle et les acces vivent desormais dans `src/lib/cart/storage.ts`** (`CART_STORAGE_KEY`,
+    `readCart`/`writeCart`/`clearCartStorage`), importe ici. Le parcours patient lit le meme
+    panier : deux litteraux dans deux fichiers auraient fini par diverger.
   - Type: `{ type: 'analyse'; item: AnalyseItem } | { type: 'bilan'; item: BilanItem; excludedCodes?: string[] }`
   - `excludedCodes` (bilan only): array of raw composition codes the user has unchecked in the expandable bilan view. Absent = empty = all analyses included. Backwards-compatible with existing localStorage data.
 - `cartView` (CartView): Derived state computed by `computeCartView(selectedItems, normalizedAnalysesMap, SAMPLING_FEE)` via `useMemo`. **Single source of truth** for all cart display and pricing — replaces the old manual `totalCost` computation.

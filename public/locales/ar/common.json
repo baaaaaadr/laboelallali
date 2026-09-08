@@ -11,7 +11,6 @@
   "closes_in": "يغلق خلال",
   "hours_short": "س",
   "minutes_short": "د",
-
   "why_choose_us": "لماذا تختارنا؟",
   "certified_quality": "جودة عالية",
   "certified_quality_text": "مختبر يتبع المعايير الدولية لنتائج موثوقة.",
@@ -21,7 +20,6 @@
   "experienced_team_text": "أخصائيون وفنيون مؤهلون لخدمتكم.",
   "dedicated_patient_service": "خدمة مخصصة للمرضى",
   "dedicated_patient_service_text": "رعاية شخصية ومرافقة في كل خطوة.",
-
   "our_main_services": "خدماتنا الرئيسية",
   "about": "نبذة عنا",
   "about_description": "مختبر للتحاليل الطبية يقدم مجموعة كاملة من خدمات التشخيص مع معدات متطورة وفريق ذو خبرة لنتائج دقيقة وسريعة.",
@@ -33,7 +31,6 @@
   "home_service_text": "خدمة سحب العينات في المنزل لراحتكم وسلامتكم.",
   "health_checks": "فحوصات صحية",
   "health_checks_text": "فحوصات مخصصة للمتابعة الوقائية لصحتك.",
-
   "get_directions": "اتجاهات",
   "call_us": "اتصل",
   "our_location": "موقعنا",
@@ -41,7 +38,6 @@
   "laboratory_name_short": "مختبر العلالي",
   "laboratory_address": "61 مكرر، شارع مراكش، 80020، أكادير، المغرب",
   "loading_map": "جاري تحميل الخريطة...",
-
   "home": "الرئيسية",
   "appointment": "موعد",
   "glabo": "منزلي",
@@ -54,7 +50,6 @@
   "french": "Français",
   "arabic": "العربية",
   "close_menu": "إغلاق القائمة",
-
   "contact_on_whatsapp": "اتصل بنا على واتساب",
   "assistance": "دعم ومساعدة",
   "hotline_contact": "الخط الساخن والاتصال",
@@ -79,7 +74,6 @@
   "sunday": "الأحد: مغلق",
   "send": "إرسال",
   "view_map": "عرض على الخريطة",
-
   "appointment_title": "حجز موعد",
   "name": "الاسم",
   "phone": "الهاتف",
@@ -95,17 +89,15 @@
   "send_whatsapp_appointment": "إرسال عبر واتساب",
   "required_fields_alert": "يرجى ملء جميع الحقول الإلزامية (الاسم، الهاتف، التاريخ، الوقت).",
   "success_message": "تم إرسال طلبك بنجاح.",
-
   "glabo_title": "فحص منزلي",
   "sampling_place": "مكان أخذ العينة",
   "lab_contact": "الاتصال بالمختبر :",
-  
   "at_home": "في المنزل",
   "at_work": "في مكان العمل",
   "home_sampling": "في المنزل",
   "work_sampling": "في مكان العمل",
   "address_instructions": "العنوان (للفحص)",
-  "address_placeholder": "أدخل عنوانك الكامل", 
+  "address_placeholder": "أدخل عنوانك الكامل",
   "locate_position": "تحديد موقعي",
   "access_instructions": "تعليمات الدخول (رمز المبنى، الطابق، إلخ.)",
   "optional": "اختياري",
@@ -132,12 +124,10 @@
   "address_not_specified": "لم يتم تحديد العنوان (سيتم التأكيد عبر الهاتف).",
   "glabo_request_subject": "طلب فحص GLABO - {{name}}",
   "glabo_email_template": "مرحباً،\n\nأود طلب فحص في المنزل/مكان العمل (GLABO):\n\nالاسم: {{name}}\nالهاتف: {{phone}}{{email}}\nمكان الفحص: {{samplingPlace}}\n{{address}}{{accessInstructions}}\nالتاريخ المطلوب: {{date}}\nالوقت المطلوب: {{time}}{{comments}}\n\n{{prescription}}\n\nشكراً لكم للتواصل معي لتأكيد التفاصيل.\n\nمع أطيب التحيات.",
-
   "welcome_banner": "مرحبًا بكم في مختبر العلالي",
   "welcome_description": "صحتك هي أولويتنا. تحاليل طبية دقيقة وسريعة في أكادير.",
   "banner_alt": "صورة مختبر العلالي",
   "send_prescription": "واتساب",
-  
   "analyses_catalog": {
     "selection": {
       "count_zero": "{{count}} تحليل محدد",
@@ -180,9 +170,7 @@
     "currency": "درهم",
     "button": "حساب التكلفة"
   },
-
   "navigate_to_lab": "الموقع",
-
   "practical_info": "معلومات عملية",
   "select_date": "اختر تاريخًا",
   "faq_questions": {
@@ -501,19 +489,13 @@
     "test_error_body": "تعذّر إتمام الاختبار: لم يستجب الاتصال بالمختبر.",
     "test_error_todo": "المطلوب: انتظر دقيقة وأعد الاختبار. إذا تكرّرت الرسالة، أبلغ المسؤول — فالأمر لا يتعلّق بملف المريض.",
     "test_pdf_empty_todo": "سيرى المريض هذه الحصيلة في قائمته لكنه لن يتمكّن من فتحها. الملف موجود لدى المختبر، والمفقود هو المستند فقط: أبلغ المختبر برقم الملف لإعادة نشره.",
-    "test_count_zero": "لا توجد نتائج",
-    "test_count_one": "نتيجة واحدة",
-    "test_count_two": "نتيجتان",
-    "test_count_few": "{{count}} نتائج",
-    "test_count_many": "{{count}} نتيجة",
-    "test_count_other": "{{count}} نتيجة",
-    "test_error": "تعذّر الاختبار حالياً. حاول مرة أخرى.",
     "test_count_zero": "لا ملفات",
     "test_count_one": "ملف واحد",
     "test_count_two": "ملفان",
     "test_count_few": "{{count}} ملفات",
     "test_count_many": "{{count}} ملفًا",
     "test_count_other": "{{count}} ملف",
+    "test_error": "تعذّر الاختبار حالياً. حاول مرة أخرى.",
     "test_pdf_view": "عرض ملف PDF",
     "test_pdf_loading": "جارٍ التحميل…",
     "test_pdf_ok": "تم جلب ملف PDF ✓",
@@ -634,7 +616,9 @@
     "rel_last": "آخر متابعة منذ {{days}} يوماً",
     "rel_never": "لم تتم متابعته أبداً",
     "rel_no_phone": "لا يوجد هاتف",
-    "rel_hint": "تُسجَّل كل متابعة (التاريخ فقط) لتفادي الاتصال بالشخص نفسه مرتين."
+    "rel_hint": "تُسجَّل كل متابعة (التاريخ فقط) لتفادي الاتصال بالشخص نفسه مرتين.",
+    "journey_test_title": "المسار الموحد للمريض (تجريبي)",
+    "journey_test_desc": "صفحة جديدة ستعوض « المواعيد » و « في المنزل ». للتحقق قبل النشر."
   },
   "theme": {
     "toggle": "تغيير المظهر",
