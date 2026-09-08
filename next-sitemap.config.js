@@ -16,6 +16,9 @@ module.exports = {
       {
         userAgent: '*',
         allow: '/',
+        // Ceinture et bretelles : ces pages portent deja une balise `robots`
+        // noindex servie dans le HTML et sont absentes du sitemap.
+        disallow: ['/admin', '/*/admin', '/test-rdv', '/*/test-rdv'],
       },
     ],
     additionalSitemaps: [

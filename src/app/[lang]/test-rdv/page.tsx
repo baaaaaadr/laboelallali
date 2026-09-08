@@ -18,8 +18,11 @@ import { variantFromService } from '@/lib/journey/route';
  * ⚠ `useSearchParams()` impose une frontière `<Suspense>` et sort la page du
  * rendu statique — même motif que `/analyses`.
  *
- * ⚠ Page non indexable tant qu'elle est en test : exclue du sitemap
- * (`next-sitemap.config.js`) et marquée `noindex` ci-dessous. Un tunnel de
+ * ⚠ Page non indexable tant qu'elle est en test. Le `noindex` vit dans
+ * `layout.tsx` (composant SERVEUR) et non ici : un composant client ne peut pas
+ * exporter `metadata`, et la version précédente injectait la balise en
+ * JavaScript — donc absente du HTML servi, vérifié en production. S'y ajoutent
+ * l'exclusion du sitemap et une règle `Disallow` dans `robots.txt`. Un tunnel de
  * réservation à moitié construit, indexé au nom d'un laboratoire d'analyses
  * médicales, est un vrai risque d'image.
  */
@@ -36,18 +39,6 @@ export default function Page({ params }: { params: Promise<{ lang: string }> }) 
   useEffect(() => {
     params.then(setResolvedParams);
   }, [params]);
-
-  // `noindex` posé côté client : la page est un composant client, elle ne peut
-  // pas exporter `metadata`. Retiré le jour où elle deviendra /rendez-vous.
-  useEffect(() => {
-    const meta = document.createElement('meta');
-    meta.name = 'robots';
-    meta.content = 'noindex, nofollow';
-    document.head.appendChild(meta);
-    return () => {
-      meta.remove();
-    };
-  }, []);
 
   if (!resolvedParams) return <MedicalLoader fullScreen />;
 

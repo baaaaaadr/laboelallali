@@ -1,6 +1,10 @@
 # *
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /*/admin
+Disallow: /test-rdv
+Disallow: /*/test-rdv
 
 # Host
 Host: https://www.laboelallali.com
