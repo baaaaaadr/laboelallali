@@ -1,9 +1,17 @@
 # Page: /test-rdv — Parcours patient unifié
 
-> **Page de VALIDATION.** Elle remplacera `/rendez-vous` **et** `/glabo`, qui seront alors
-> supprimées. Tant qu'elle est en test : non indexable (`noindex` + exclue de `next-sitemap.config.js`)
-> et accessible depuis le menu **uniquement à l'équipe** (`isStaff`, `Header.tsx`).
+> **Page de VALIDATION, variante A (huit blocs).** Elle remplacera `/rendez-vous` **et** `/glabo`,
+> qui seront alors supprimées. Tant qu'elle est en test : non indexable (`noindex` + exclue de
+> `next-sitemap.config.js`) et accessible depuis le menu **uniquement à l'équipe** (`isStaff`,
+> `Header.tsx`).
 > Renommer la route = modifier **une seule** constante : `JOURNEY_SEGMENT` dans `src/lib/journey/route.ts`.
+>
+> ⚠ **Une variante B existe : `/test-rdv2`** — mêmes questions, regroupées en **quatre** blocs
+> (demande du Dr Aziz du 09/09/2026 : « on a séparé en trop d'étapes »). Voir
+> `docs/pages/test-rdv2.md`. Les deux partagent TOUT sauf la disposition : état, résumés, panier,
+> brouillon, validation, Firestore, e-mail et WhatsApp vivent dans des hooks communs. **Ne jamais
+> réintroduire de logique d'envoi locale ici** — la page perdante sera supprimée, et avec elle tout
+> correctif qui n'aurait vécu que dans l'une des deux.
 
 ## Purpose
 
@@ -30,7 +38,7 @@ demande en texte libre.
 ## Arborescence des composants
 
 ```
-PatientJourneyPage.tsx        orchestrateur : hooks, envoi, liste des sections (~430 l.)
+PatientJourneyPage.tsx        orchestrateur : disposition en 8 blocs, rien d'autre (~400 l.)
  └ JourneyAuthGate.tsx        portail de connexion (~150 l.)
     └ GlaboBenefits.tsx       les 3 avantages GLABO, extraits de glabo/page.tsx
  └ SectionShell.tsx           étape dépliante (numéro, résumé, coche) + <ChoiceCard>
@@ -40,6 +48,7 @@ PatientJourneyPage.tsx        orchestrateur : hooks, envoi, liste des sections (
     JourneyCartSection.tsx    <CartView> réutilisé + explications + CTA catalogue
     AnalysisExplanations.tsx  UN SEUL dépliant, puis la liste à plat des utilités
     ImmediateAnswerCard.tsx   prix / jeûne / délai, ou « réponse du biologiste attendue »
+    PrescriptionUploadPanel.tsx  bandeau « ordonnance déjà transmise » + sélecteur de fichiers
     WantToKnowSection.tsx     4 cases à cocher
     LocationSection.tsx       3 lieux + adresse/accès conditionnels
     DateTimeSection.tsx       DatePicker + <select> de créneaux
@@ -54,7 +63,15 @@ PatientJourneyPage.tsx        orchestrateur : hooks, envoi, liste des sections (
     useResultsAccess.ts       3 états d'accès (appel DIFFÉRÉ)
     useJourneyDraft.ts        brouillon sessionStorage (aller-retour /login et /analyses)
     useJourneySections.ts     résumé replié + coche verte / pastille ambre par étape
+    useJourneyPersistence.ts  restauration du brouillon + départ vers le catalogue  ⟷ PARTAGÉ
+    useJourneySubmission.tsx  validation, Firestore, e-mail, WhatsApp               ⟷ PARTAGÉ
+    useJourneyGroups.ts       en-têtes des 4 blocs — utilisé par /test-rdv2 SEUL
 ```
+
+Les hooks marqués **⟷ PARTAGÉ** sont consommés à l'identique par `GroupedJourneyPage`
+(`/test-rdv2`). C'est ce qui garantit qu'une demande envoyée depuis l'une ou l'autre page produit
+exactement le même document et le même e-mail — `scripts/test-journey-ui.js` le vérifie octet par
+octet.
 
 ### Modules extraits pour être réutilisés (nouveaux, partagés)
 
@@ -64,7 +81,9 @@ PatientJourneyPage.tsx        orchestrateur : hooks, envoi, liste des sections (
 | `src/hooks/useLabSchedule.ts` | date + créneau câblés sur `labHours.ts` | Le montage était copié à l'identique dans `/rendez-vous` et `/glabo`, avec ses 3 pièges. `/rendez-vous` et `/glabo` ne l'utilisent PAS encore — à basculer lors de la reprise |
 | `src/components/features/auth/GoogleAuthButton.tsx` | bouton Google + repli | Le même montage était écrit à la main dans `login/page.tsx` et `GoogleSignInPrompt.tsx`. Ces deux-là ne l'utilisent PAS encore — migration volontairement remise, `/login` est le chemin critique |
 | `src/components/features/journey/GlaboBenefits.tsx` | les 3 avantages GLABO | Le portail et `/glabo` doivent afficher exactement les mêmes |
-| `src/components/ui/Disclosure.tsx` | bloc dépliant piloté (résumé, coche verte, chevron RTL) | Le motif était recopié à la main dans `HeroAnalysesDisclosure`, `AnalysesDetails` et `LabStatusWidget` ; ces trois-là ne l'utilisent PAS encore |
+| `src/components/ui/Disclosure.tsx` | bloc dépliant piloté (résumé, coche verte, puce d'obligation, chevron RTL) | Le motif était recopié à la main dans `HeroAnalysesDisclosure`, `AnalysesDetails` et `LabStatusWidget` ; ces trois-là ne l'utilisent PAS encore |
+| `src/lib/email/appointmentEmail.ts` | objet + HTML de l'e-mail du laboratoire | Le rendu vivait dans `route.ts`, entre la lecture de la requête et l'appel au transporteur : **impossible à exécuter sans serveur Next et sans envoyer un vrai e-mail**, pour le seul document que le personnel lise réellement. Extraction vérifiée **identique au bit près** sur les 18 cas de `scripts/journey-cases.ts`, anciennes pages comprises |
+| `src/lib/journey/groups.ts` | la carte « quelle section dans quel bloc » | Pure, sans React : la même liste sert l'affichage, le résumé replié et l'ouverture du bloc fautif |
 
 ## State Management
 
@@ -103,6 +122,35 @@ isHomeService    = samplingPlace !== 'laboratoire'
 intentDone       = hasPrescription !== null && (fichier || texte || panier non vide)
 ```
 
+## Répondre d'abord, réserver ensuite (`wantsAppointment`)
+
+Les **deux cas les plus fréquents** au laboratoire (09/09/2026) veulent une RÉPONSE — prix, jeûne,
+délai — pas forcément un créneau dans la foulée :
+
+- le patient a une ordonnance et veut le prix, les conditions préanalytiques et le délai ;
+- il n'a pas d'ordonnance et veut choisir ses analyses, ou être aidé.
+
+`validate()` exigeait pourtant **toujours** une date et un créneau : ces deux patients ne pouvaient
+pas envoyer leur demande sans réserver un rendez-vous dont ils ne voulaient pas encore. Le booléen
+`wantsAppointment` (`useJourneyForm.ts`) lève cette obligation.
+
+- **Défaut** : `true` pour le variant `home` (le lien GLABO présuppose déjà un déplacement),
+  `false` sinon — même principe que `samplingPlace`.
+- Les sections `place` et `when` restent **VISIBLES** (règle non destructive) mais cessent d'être
+  requises : leur statut passe à `none` et leur puce à « Facultatif ».
+- **Le choix est posé à côté de la réponse immédiate**, hors de tout bloc replié. Un premier essai
+  le cachait dans une section repliée marquée « Facultatif », là où personne ne le trouvait : la
+  porte de sortie du patient pressé doit être **vue**, pas devinée.
+
+### Ce que ça change en aval — trois endroits, tous corrigés
+
+| Sortie | Sans ce garde-fou |
+|---|---|
+| E-mail | « Date souhaitée : » suivi de rien, et l'objet finissait par un tiret suivi d'un blanc. Désormais « Créneau : Aucun pour l'instant… » et le tag `réponse seulement` |
+| E-mail, prélèvement à domicile | alerte rouge **« Adresse non renseignée — rappeler le patient »** alors que le patient n'a rien oublié : l'adresse n'est simplement pas encore demandée. Remplacée par une note grise |
+| WhatsApp | « Date souhaitée :  à  » — une ligne cassée sous les yeux du personnel. Remplacée par une phrase qui explique pourquoi |
+| Document Firestore | ⚠ `useLabSchedule` **sème** `selectedDate` sur le prochain jour ouvrable dès le montage : le document portait donc une date que le patient n'a jamais regardée. `buildSnapshot` conditionne désormais `desiredDate`/`desiredTime` à `wantsAppointment` (relevé au banc d'essai, 09/09/2026) |
+
 ## Deux mécaniques superposées : la RÉVÉLATION et le REPLIAGE
 
 Ce sont deux choses distinctes ; les confondre est le meilleur moyen de casser la page.
@@ -125,9 +173,14 @@ ouverte à la fois. Chaque en-tête replié affiche :
 | élément | exemple |
 |---|---|
 | numéro + titre | `4  Où souhaitez-vous être prélevé ?` |
-| résumé de la réponse | `À domicile — 12 rue X` |
+| **puce d'obligation** | « Obligatoire » (bordeaux) / « Facultatif » (gris) — **toujours visible**, replié comme déplié |
+| résumé de la réponse | `À domicile — 12 rue X` — **seulement replié** (déplié, le contenu se suffit) |
 | **coche verte** | l'étape est complète |
 | **pastille ambre** | l'étape est obligatoire et incomplète |
+
+La puce et le marqueur ne font pas doublon : le marqueur ne dit quelque chose qu'une fois l'étape
+abordée, la puce annonce l'obligation **avant**. `place` et `when` en changent quand
+`wantsAppointment` change.
 
 Ces résumés et marqueurs sont calculés dans **`hooks/useJourneySections.ts`**, à part de
 `useJourneyForm` — c'est de la présentation (état + panier + traductions), pas de l'état.
@@ -142,6 +195,11 @@ Ces résumés et marqueurs sont calculés dans **`hooks/useJourneySections.ts`**
   bouton derrière une flèche cacherait la seule chose que le patient est venu faire.
 - La pastille ambre n'apparaît **qu'une fois la vague 2 visible** — reprocher une information
   manquante avant que le patient ait pu répondre serait une réprimande, pas une aide.
+- **Seule exception au « le patient seul ouvre et ferme » : un refus de validation.** `validate()`
+  renvoie `{ message, section }` et l'orchestrateur ouvre la section fautive puis y fait défiler la
+  page. Sans cela, « Merci d'indiquer votre nom et votre téléphone » s'affichait au-dessus d'un
+  accordéon entièrement replié. ⚠ Le défilement passe par un **état** (`focusSection`) : la section
+  doit d'abord avoir été ouverte par React, sinon on défile vers un en-tête fermé.
 
 Le bloc dépliant lui-même est **`src/components/ui/Disclosure.tsx`**, extrait pour l'occasion : le
 motif était déjà recopié à la main dans `HeroAnalysesDisclosure`, `AnalysesDetails` et
@@ -226,7 +284,12 @@ Champs **ajoutés** : `source: 'journey'`, `journeyVersion`, `variant`, `uid`, `
 ⚠ Le panier est dénormalisé **volontairement** (5 champs par ligne) : les prix changent, et le
 personnel doit voir ce qui a été annoncé au patient ce jour-là.
 
-### E-mail (`src/app/api/send-appointment/route.ts`)
+### E-mail (`src/lib/email/appointmentEmail.ts`, appelé par `src/app/api/send-appointment/route.ts`)
+
+⚠ **La route ne construit plus l'e-mail.** `buildAppointmentEmail(data, labMail)` est une fonction
+PURE : ni réseau, ni variable d'environnement. La route se contente de choisir le transporteur
+(fonction Cloud `sendEmail` en principal, SMTP en repli, envoi simulé sans configuration). Ne pas
+réintroduire de balisage dans `route.ts` — c'est ce qui rendait l'e-mail intestable.
 
 Cinq blocs ajoutés, **chacun vide quand sa donnée manque** — vérifié : un envoi depuis une ancienne
 page produit 2 271 caractères de HTML, strictement sans aucun bloc nouveau ; le parcours en produit
@@ -294,6 +357,21 @@ n'envoyaient rien). Ordre d'exécution, qui corrige une incohérence entre elles
 
 Après un envoi réussi le panier est vidé avec une notification **« Panier vidé après l'envoi —
 Annuler »** (8 s), qui le restaure.
+
+## Vérification
+
+Deux bancs, à lancer à la main (aucun lanceur de tests dans le dépôt) :
+
+```
+node scripts/test-journey.js       # ce que le LABORATOIRE reçoit — e-mail, Firestore, WhatsApp
+node scripts/test-journey-ui.js    # ce que le PATIENT voit et fait, dans un vrai navigateur
+```
+
+Le second monte **les deux** mises en page et compare leurs charges utiles. Voir
+`scripts/testing/README.md` pour les six frontières doublées et la raison de chacune.
+
+⚠ Le titre de la section d'envoi et le bouton portent le **même libellé**
+(`submit.title` = `submit.send_request`). Un `getByText` attrape le `<h2>` et le clic ne fait rien.
 
 ## Notes for AI
 
@@ -400,7 +478,8 @@ Ils sont maintenant à `left: 24px`.
 
 ## Reste à faire avant la mise en production
 
-1. Faire valider le parcours par le propriétaire et Dr Aziz sur `/test-rdv`.
+1. **Faire trancher le Dr Aziz entre `/test-rdv` (8 blocs) et `/test-rdv2` (4 blocs).** Les deux
+   sont côte à côte en haut de `/admin`. La perdante et son dossier de route sont supprimés.
 2. Basculer `/rendez-vous` → `<PatientJourneyPage variant="lab" />` et `/glabo` →
    `variant="home"`, supprimer les deux anciens fichiers, mettre à jour `rendez-vous.md` et
    `glabo.md`, retirer le lien « Parcours (test) » du `Header`, retirer le `noindex` et l'exclusion
