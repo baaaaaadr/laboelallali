@@ -1,10 +1,6 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { format } from 'date-fns';
-import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import {
   FileQuestion,
@@ -19,17 +15,12 @@ import {
   Send,
 } from 'lucide-react';
 
-import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { validatePhone } from '@/utils/phone';
-import { LAB_CONTACT } from '@/constants/contact';
-import MultiFileUploader from '@/components/ui/MultiFileUploader';
-import type { SubmitState } from '@/components/ui/SubmitProgressModal';
-import type { CartItem } from '@/components/features/catalog/AnalysisCard';
 
 import JourneyAuthGate from './JourneyAuthGate';
 import SectionShell, { ChoiceCard } from './SectionShell';
 import PrescriptionSection from './sections/PrescriptionSection';
+import PrescriptionUploadPanel from './sections/PrescriptionUploadPanel';
 import FreeTextPanel from './sections/FreeTextPanel';
 import JourneyCartSection from './sections/JourneyCartSection';
 import ImmediateAnswerCard from './sections/ImmediateAnswerCard';
@@ -46,17 +37,11 @@ import { useJourneyForm } from './hooks/useJourneyForm';
 import { usePrescriptionUpload } from './hooks/usePrescriptionUpload';
 import { useJourneyDraft } from './hooks/useJourneyDraft';
 import { useJourneySections } from './hooks/useJourneySections';
+import { useJourneyPersistence } from './hooks/useJourneyPersistence';
+import { useJourneySubmission } from './hooks/useJourneySubmission';
 
-import { catalogPathFromJourney } from '@/lib/journey/route';
-import type { JourneyFormSnapshot, JourneyVariant } from '@/lib/journey/types';
-import {
-  buildEmailPayload,
-  buildFirestoreDoc,
-  cartLinesFrom,
-  cartTotalsFrom,
-  preparationFrom,
-} from '@/lib/journey/buildSubmission';
-import { buildWhatsAppMessage } from '@/lib/journey/buildWhatsAppMessage';
+import { JOURNEY_SEGMENT } from '@/lib/journey/route';
+import type { JourneyVariant } from '@/lib/journey/types';
 
 /**
  * Parcours patient unifié : de "avez-vous une ordonnance ?" jusqu'à l'activation
@@ -65,6 +50,15 @@ import { buildWhatsAppMessage } from '@/lib/journey/buildWhatsAppMessage';
  * Remplace à terme `/rendez-vous` et `/glabo`, qui sont aujourd'hui deux copies
  * divergentes du même formulaire de 700 lignes et n'ont aucun lien avec le
  * panier du catalogue. Voir `docs/pages/test-rdv.md`.
+ *
+ * ⚠ Cette page est la mise en page à HUIT blocs numérotés. Une seconde,
+ * `GroupedJourneyPage` (`/test-rdv2`), pose exactement les mêmes questions en
+ * QUATRE groupes ; le laboratoire arbitre entre les deux. Tout ce qui n'est pas
+ * de la disposition — état, résumés, brouillon, validation, envoi — vit dans
+ * des hooks PARTAGÉS (`useJourneyForm`, `useJourneySections`,
+ * `useJourneyPersistence`, `useJourneySubmission`). Ne jamais réintroduire ici
+ * une logique d'envoi locale : la page perdante disparaîtra, et avec elle tout
+ * correctif qui n'aurait vécu que dans l'une des deux.
  */
 export interface PatientJourneyPageProps {
   lang: string;
@@ -82,7 +76,6 @@ export default function PatientJourneyPage({ lang, variant }: PatientJourneyPage
 function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
   const { t } = useTranslation(['journey', 'appointment', 'catalog', 'common']);
   const { user } = useAuth();
-  const router = useRouter();
   const isArabic = lang === 'ar';
   const locale = isArabic ? 'ar-MA' : 'fr-MA';
   const currencyLabel = t('catalog:card.price_currency', 'DH');
@@ -93,12 +86,6 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
 
   /** URL d'ordonnances restaurées d'un brouillon (les `File` ne survivent pas). */
   const [restoredUrls, setRestoredUrls] = useState<string[]>([]);
-  const [submitState, setSubmitState] = useState<SubmitState>('idle');
-  const [isWhatsappLoading, setIsWhatsappLoading] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [addressError, setAddressError] = useState<string>('');
-  /** Panier vidé après envoi, gardé en mémoire pour le bouton "Annuler". */
-  const clearedCartRef = useRef<CartItem[] | null>(null);
 
   const form = useJourneyForm({
     variant,
@@ -111,269 +98,15 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
     },
   });
 
-  // -- brouillon : restauration au montage ------------------------------------
-  const { load: loadDraft, save: saveDraft, clear: clearDraft } = draft;
-  const { setHasPrescription, setTransmission, setWantToKnow } = form;
-  useEffect(() => {
-    const d = loadDraft();
-    if (!d) return;
-    setHasPrescription(d.hasPrescription);
-    setTransmission(d.transmission);
-    setWantToKnow(d.wantToKnow);
-    form.setFreeText(d.freeText);
-    form.setSamplingPlace(d.samplingPlace);
-    form.setAdresse(d.adresse);
-    form.setInstructionsAcces(d.instructionsAcces);
-    form.setReplyChannel(d.replyChannel);
-    // Absent des brouillons enregistrés avant ce lot : la valeur par défaut du
-    // hook (selon `variant`) reste alors en place, jamais écrasée par `undefined`.
-    if (typeof d.wantsAppointment === 'boolean') form.setWantsAppointment(d.wantsAppointment);
-    if (d.time) form.setTime(d.time);
-    if (d.dateISO) form.setDate(new Date(d.dateISO));
-    if (d.nom) form.setNom(d.nom);
-    if (d.telephone) form.setTelephone(d.telephone);
-    if (d.email) form.setEmail(d.email);
-    setRestoredUrls(d.uploadedUrls || []);
-    // Restauration unique au montage : `loadDraft` se garde lui-même.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const snapshotDraft = useCallback(
-    (uploadedUrls: string[]) => ({
-      variant,
-      hasPrescription: form.hasPrescription,
-      transmission: form.transmission,
-      freeText: form.freeText,
-      wantToKnow: form.wantToKnow,
-      samplingPlace: form.samplingPlace,
-      adresse: form.adresse,
-      instructionsAcces: form.instructionsAcces,
-      dateISO: form.selectedDate ? form.selectedDate.toISOString() : null,
-      time: form.selectedTime,
-      replyChannel: form.replyChannel,
-      wantsAppointment: form.wantsAppointment,
-      nom: form.nom,
-      telephone: form.telephone,
-      email: form.email,
-      uploadedUrls,
-    }),
-    [variant, form]
-  );
-
-  const openCatalog = useCallback(() => {
-    saveDraft(snapshotDraft(restoredUrls));
-    router.push(catalogPathFromJourney(lang));
-  }, [saveDraft, snapshotDraft, restoredUrls, router, lang]);
-
-  // -- validation --------------------------------------------------------------
-  const validate = useCallback((): string | null => {
-    setAddressError('');
-    form.setPhoneError('');
-    if (!form.intentDone) return t('submit.required_intent');
-    if (!form.nom.trim() || !form.telephone.trim()) return t('submit.required_identity');
-    if (!validatePhone(form.telephone)) {
-      form.setPhoneError(t('appointment:invalidPhone', 'Numéro invalide'));
-      return t('appointment:invalidPhone', 'Numéro invalide');
-    }
-    // Date, créneau et adresse ne sont exigés QUE si le patient a choisi de
-    // réserver maintenant (`intent.book_now_title`, à côté de la réponse
-    // immédiate). Sinon la demande part sans créneau — voir
-    // docs/pages/test-rdv.md §« Répondre d'abord, réserver ensuite ».
-    if (form.wantsAppointment) {
-      if (!form.selectedDate || !form.selectedTime) return t('submit.required_datetime');
-      if (form.isHomeService && !form.adresse.trim()) {
-        setAddressError(t('place.address_required'));
-        return t('submit.required_address');
-      }
-    }
-    if (upload.isUploading) return t('submit.wait_upload');
-    return null;
-  }, [form, t, upload.isUploading]);
-
-  const buildSnapshot = useCallback(
-    (ordonnanceUrls: string[]): JourneyFormSnapshot => ({
-      variant,
-      lang,
-      uid: user?.uid ?? '',
-      nom: form.nom.trim(),
-      telephone: form.telephone.trim(),
-      email: form.email.trim(),
-      hasPrescription: form.hasPrescription,
-      transmission: form.transmission,
-      freeText: form.freeText.trim(),
-      cartItems: cart.cartItems,
-      cartLines: cart.hasCart ? cartLinesFrom(cart.cartView) : [],
-      // ⚠ Les TOTAUX ne partent QUE si le devis est complet. Quand la
-      // composition d'un bilan n'a pas pu etre resolue, `computeCartView` la
-      // valorise a 0 : envoyer ces totaux ferait annoncer au laboratoire un
-      // prix sous-evalue, dans le corps de l'e-mail ET dans son objet. Les
-      // LIGNES partent quand meme (le personnel voit quoi chiffrer), le montant
-      // non. `answerComplete` pilotait l'affichage ; il pilote maintenant aussi
-      // l'envoi.
-      cartTotals: cart.hasCart && cart.answerComplete ? cartTotalsFrom(cart.cartView) : null,
-      preparation: cart.hasCart ? preparationFrom(cart.preparation) : null,
-      wantToKnow: form.wantToKnow,
-      samplingPlace: form.samplingPlace,
-      adresse: form.adresse.trim(),
-      instructionsAcces: form.instructionsAcces.trim(),
-      desiredDate: form.selectedDate ? format(form.selectedDate, 'dd/MM/yyyy') : '',
-      desiredTime: form.selectedTime,
-      replyChannel: form.replyChannel,
-      needsHumanAnswer: form.needsHumanAnswer,
-      ordonnanceUrls,
-      wantsAppointment: form.wantsAppointment,
-    }),
-    [variant, lang, user, form, cart]
-  );
-
-  /** Vide le panier avec une notification qui permet d'annuler. */
-  const clearCartWithUndo = useCallback(() => {
-    if (!cart.hasCart) return;
-    clearedCartRef.current = cart.cartItems;
-    cart.clear();
-    toast(
-      (toastRef) => (
-        <span className="flex items-center gap-3">
-          <span className="text-sm">{t('cart.cleared_toast')}</span>
-          <button
-            type="button"
-            onClick={() => {
-              if (clearedCartRef.current) cart.restore(clearedCartRef.current);
-              clearedCartRef.current = null;
-              toast.dismiss(toastRef.id);
-              toast.success(t('cart.cleared_restored'));
-            }}
-            className="text-sm font-semibold text-[var(--color-bordeaux-primary)] underline flex-shrink-0"
-          >
-            {t('cart.cleared_undo')}
-          </button>
-        </span>
-      ),
-      { duration: 8000 }
-    );
-  }, [cart, t]);
-
-  const finishSuccess = useCallback(() => {
-    clearDraft();
-    setRestoredUrls([]);
-    upload.reset();
-    form.resetAfterSubmit();
-    clearCartWithUndo();
-  }, [clearDraft, upload, form, clearCartWithUndo]);
-
-  /** Envoi de l'e-mail au laboratoire. Best-effort : ne fait jamais échouer la demande. */
-  const sendEmail = useCallback(async (snapshot: JourneyFormSnapshot, viaWhatsApp: boolean) => {
-    try {
-      await fetch('/api/send-appointment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildEmailPayload(snapshot, viaWhatsApp)),
-      });
-    } catch (err) {
-      console.warn('Notification e-mail au laboratoire échouée', err);
-    }
-  }, []);
-
-  // -- envoi classique ---------------------------------------------------------
-  const handleSubmit = useCallback(async () => {
-    const problem = validate();
-    if (problem) {
-      setSubmitError(problem);
-      toast.error(problem);
-      return;
-    }
-    setSubmitError(null);
-
-    try {
-      setSubmitState('uploading_image');
-      const uploaded = await upload.resolveUrls();
-      const urls = [...restoredUrls, ...uploaded];
-      const snapshot = buildSnapshot(urls);
-
-      setSubmitState('saving_database');
-      if (db) {
-        await addDoc(collection(db, 'appointmentRequests'), {
-          ...buildFirestoreDoc(snapshot, false),
-          submittedAt: serverTimestamp(),
-        });
-      }
-
-      setSubmitState('sending_email');
-      await sendEmail(snapshot, false);
-
-      setSubmitState('success');
-      toast.success(t('submit.success'));
-      window.setTimeout(() => {
-        setSubmitState('idle');
-        finishSuccess();
-      }, 1800);
-    } catch (err) {
-      console.error('Envoi de la demande échoué', err);
-      setSubmitState('idle');
-      setSubmitError(t('submit.error'));
-      toast.error(t('submit.error'));
-    }
-  }, [validate, upload, restoredUrls, buildSnapshot, sendEmail, t, finishSuccess]);
-
-  // -- envoi WhatsApp ----------------------------------------------------------
-  const handleWhatsApp = useCallback(async () => {
-    const problem = validate();
-    if (problem) {
-      setSubmitError(problem);
-      toast.error(problem);
-      return;
-    }
-    setSubmitError(null);
-
-    // ⚠ Sur ordinateur, la fenêtre DOIT être ouverte de façon SYNCHRONE, avant
-    // tout `await` : sinon le bloqueur de fenêtres surgissantes mange la
-    // redirection (le navigateur ne la relie plus au clic).
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-      window.innerWidth < 768;
-    let popup: Window | null = null;
-    if (!isMobile) {
-      popup = window.open('', '_blank');
-      if (!popup) {
-        const msg = t('submit.whatsapp_popup_blocked');
-        setSubmitError(msg);
-        toast.error(msg);
-        return;
-      }
-    }
-
-    setIsWhatsappLoading(true);
-    try {
-      const uploaded = await upload.resolveUrls();
-      const urls = [...restoredUrls, ...uploaded];
-      const snapshot = buildSnapshot(urls);
-
-      // ⚠ On écrit en base ET on envoie l'e-mail AVANT de naviguer : sur mobile,
-      // `location.href` détruit la page et peut tuer une requête en vol.
-      if (db) {
-        await addDoc(collection(db, 'appointmentRequests'), {
-          ...buildFirestoreDoc(snapshot, true),
-          submittedAt: serverTimestamp(),
-        });
-      }
-      await sendEmail(snapshot, true);
-
-      const link = `https://wa.me/${LAB_CONTACT.WHATSAPP_ID}?text=${encodeURIComponent(
-        buildWhatsAppMessage(snapshot)
-      )}`;
-      if (popup) popup.location.href = link;
-      else window.location.href = link;
-
-      finishSuccess();
-    } catch (err) {
-      console.error('Envoi WhatsApp échoué', err);
-      popup?.close();
-      setSubmitError(t('submit.error'));
-      toast.error(t('submit.error'));
-    } finally {
-      setIsWhatsappLoading(false);
-    }
-  }, [validate, upload, restoredUrls, buildSnapshot, sendEmail, t, finishSuccess]);
+  const { openCatalog } = useJourneyPersistence({
+    lang,
+    variant,
+    segment: JOURNEY_SEGMENT,
+    form,
+    draft,
+    restoredUrls,
+    setRestoredUrls,
+  });
 
   const { visible } = form;
 
@@ -391,7 +124,8 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
   // version repliait tout des que l'intention etait exprimee ; arriver AVEC un
   // panier (le parcours principal !) rendait l'intention vraie a la premiere
   // reponse, et l'etape 1 se refermait au nez du patient avant qu'il ait pu
-  // choisir un mode de transmission. Le patient seul ouvre et ferme.
+  // choisir un mode de transmission. Le patient seul ouvre et ferme — la SEULE
+  // exception est un refus de validation, qui ouvre la section fautive.
   const [openSection, setOpenSection] = useState<string | null>(null);
   const seeded = useRef(false);
   useEffect(() => {
@@ -404,6 +138,35 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
     (id: string) => setOpenSection((current) => (current === id ? null : id)),
     []
   );
+
+  /** Défile vers la section fautive UNE FOIS que React l'a ouverte. */
+  const [focusSection, setFocusSection] = useState<string | null>(null);
+  useEffect(() => {
+    if (!focusSection) return;
+    const node = document.getElementById(`journey-${focusSection}`);
+    setFocusSection(null);
+    if (!node) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    node.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }, [focusSection]);
+
+  const submission = useJourneySubmission({
+    lang,
+    variant,
+    uid: user?.uid ?? '',
+    form,
+    cart,
+    upload,
+    restoredUrls,
+    setRestoredUrls,
+    clearDraft: draft.clear,
+    onValidationProblem: useCallback((problem: { section: string | null }) => {
+      if (!problem.section) return;
+      setOpenSection(problem.section);
+      setFocusSection(problem.section);
+    }, []),
+    t,
+  });
 
   const sections = useJourneySections({
     form,
@@ -470,28 +233,10 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
 
           {visible.upload && (
             <div className="mt-6 pt-5 border-t border-[var(--border-default)]">
-              {restoredUrls.length > 0 && (
-                <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[var(--status-success)]/40 bg-[var(--status-success)]/5 px-3 py-2">
-                  <span className="text-sm text-[var(--text-primary)]">
-                    {t('cart.count', { count: restoredUrls.length })} — {t('prescription.already_sent')}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setRestoredUrls([])}
-                    className="text-sm font-medium text-[var(--color-bordeaux-primary)] underline flex-shrink-0"
-                  >
-                    {t('prescription.replace')}
-                  </button>
-                </div>
-              )}
-              <MultiFileUploader
-                files={upload.files}
-                filePreviews={upload.filePreviews}
-                setFiles={upload.setFiles}
-                setFilePreviews={upload.setFilePreviews}
-                error={upload.fileError}
-                setError={upload.setFileError}
-                fileUploadStates={upload.fileUploadStates}
+              <PrescriptionUploadPanel
+                upload={upload}
+                restoredUrls={restoredUrls}
+                onDiscardRestored={() => setRestoredUrls([])}
               />
             </div>
           )}
@@ -616,7 +361,7 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
             onAdresse={form.setAdresse}
             instructionsAcces={form.instructionsAcces}
             onInstructionsAcces={form.setInstructionsAcces}
-            addressError={addressError}
+            addressError={submission.addressError}
             addressRequired={form.wantsAppointment}
           />
         </SectionShell>
@@ -697,13 +442,13 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
           onToggle={() => undefined}
         >
           <SubmitSection
-            submitState={submitState}
-            isWhatsappLoading={isWhatsappLoading}
+            submitState={submission.submitState}
+            isWhatsappLoading={submission.isWhatsappLoading}
             isPreUploading={upload.isUploading}
             hasFiles={upload.files.length > 0}
-            submitError={submitError}
-            onSubmit={() => void handleSubmit()}
-            onWhatsApp={() => void handleWhatsApp()}
+            submitError={submission.submitError}
+            onSubmit={submission.handleSubmit}
+            onWhatsApp={submission.handleWhatsApp}
           />
         </SectionShell>
       </div>
