@@ -175,12 +175,27 @@
     "legal_note": "En envoyant cette demande, vous acceptez que le laboratoire vous recontacte au sujet de ces analyses."
   },
   "nav": {
-    "test_link": "Parcours (test)"
+    "test_link": "Parcours (test)",
+    "test_link_v2": "Parcours groupé (test)"
   },
   "section": {
     "done_label": "Étape complète",
     "incomplete_label": "Information manquante",
     "required_label": "Obligatoire",
     "optional_label": "Facultatif"
+  },
+  "group": {
+    "analyses_title": "Vos analyses",
+    "analyses_intro": "Ordonnance, description libre ou catalogue : au choix, et vous pouvez en combiner plusieurs.",
+    "contact_title": "Pour vous répondre",
+    "contact_intro": "Vos coordonnées, et le canal par lequel vous préférez notre réponse.",
+    "rendezvous_title": "Votre rendez-vous",
+    "rendezvous_intro": "Où et quand vous souhaitez être prélevé.",
+    "rendezvous_optional_note": "Vous avez choisi de recevoir d'abord notre réponse : ce bloc est facultatif. Vous pourrez réserver un créneau une fois le prix et les consignes connus.",
+    "rendezvous_skipped": "Aucun créneau demandé pour l'instant",
+    "plus_title": "Pour aller plus loin",
+    "plus_intro": "Entièrement facultatif : précisez ce qui vous intéresse et activez l'accès à vos résultats en ligne.",
+    "legend": "Seuls les blocs marqués « Obligatoire » sont nécessaires pour envoyer votre demande. Vous pouvez ignorer les autres.",
+    "legend_ready": "Tout ce qui est obligatoire est renseigné : vous pouvez envoyer votre demande."
   }
 }
