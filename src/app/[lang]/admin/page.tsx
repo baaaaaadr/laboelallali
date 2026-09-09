@@ -24,7 +24,7 @@ import AnalysesDetails from '@/components/features/results/AnalysesDetails';
 import TabsNavigation, { type TabItem } from '@/components/features/catalog/TabsNavigation';
 import AdminDashboard, { type DashboardStats } from '@/components/features/admin/AdminDashboard';
 import RelancesTab, { type DormantAccount } from '@/components/features/admin/RelancesTab';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList } from 'lucide-react';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
@@ -578,20 +578,42 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             dans src/components/layout/Header.tsx. Le tiroir mobile, lui, porte
             bien le lien (liste verticale, aucune contrainte de largeur).
             A SUPPRIMER quand le parcours deviendra /rendez-vous. */}
-        <Link
-          href={`/${lang}/test-rdv`}
-          className="mb-4 flex items-center gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--background-card)] px-4 py-3 hover:bg-[var(--background-secondary)] transition-colors"
-        >
-          <ClipboardList size={20} className="flex-shrink-0 text-[var(--color-bordeaux-primary)]" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-[var(--text-primary)]">
-              {t('admin.journey_test_title', 'Parcours patient unifié (test)')}
+        <div className="mb-4 grid gap-2 sm:grid-cols-2">
+          <Link
+            href={`/${lang}/test-rdv`}
+            className="flex items-center gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--background-card)] px-4 py-3 hover:bg-[var(--background-secondary)] transition-colors"
+          >
+            <ClipboardList size={20} className="flex-shrink-0 text-[var(--color-bordeaux-primary)]" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-[var(--text-primary)]">
+                {t('admin.journey_test_title', 'Parcours patient unifié (test)')}
+              </span>
+              <span className="block text-xs text-[var(--text-secondary)]">
+                {t('admin.journey_test_desc', 'Nouvelle page qui remplacera « RDV » et « à domicile ». À valider avant mise en ligne.')}
+              </span>
             </span>
-            <span className="block text-xs text-[var(--text-secondary)]">
-              {t('admin.journey_test_desc', 'Nouvelle page qui remplacera « RDV » et « à domicile ». À valider avant mise en ligne.')}
+          </Link>
+
+          {/* Variante B, a comparer avec la precedente : memes questions,
+              quatre blocs au lieu de huit. Demande du Dr Aziz du 09/09/2026
+              (« on a separe en trop d'etapes »). Une seule des deux survivra
+              et deviendra /rendez-vous ; l'autre sera supprimee, ce lien avec.
+              Voir docs/pages/test-rdv2.md. */}
+          <Link
+            href={`/${lang}/test-rdv2`}
+            className="flex items-center gap-3 rounded-lg border-2 border-[var(--color-fuchsia-accent)]/40 bg-[var(--background-card)] px-4 py-3 hover:bg-[var(--background-secondary)] transition-colors"
+          >
+            <LayoutList size={20} className="flex-shrink-0 text-[var(--color-fuchsia-accent)]" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-[var(--text-primary)]">
+                {t('admin.journey_test2_title', 'Parcours groupé — 4 blocs (test)')}
+              </span>
+              <span className="block text-xs text-[var(--text-secondary)]">
+                {t('admin.journey_test2_desc', 'Même parcours, regroupé en 4 blocs pour ne pas intimider. À comparer avec la version ci-contre.')}
+              </span>
             </span>
-          </span>
-        </Link>
+          </Link>
+        </div>
 
         {/* Tab bar — a normal in-flow element: it scrolls away with the page, so it
             takes zero fixed screen space. To switch tabs, scroll back to the top. */}

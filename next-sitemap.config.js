@@ -10,6 +10,7 @@ module.exports = {
     '/server-sitemap.xml',
     '/admin', '/admin/*', '/*/admin', '/*/admin/*',
     '/test-rdv', '/*/test-rdv',
+    '/test-rdv2', '/*/test-rdv2',
   ],
   robotsTxtOptions: {
     policies: [
@@ -18,7 +19,11 @@ module.exports = {
         allow: '/',
         // Ceinture et bretelles : ces pages portent deja une balise `robots`
         // noindex servie dans le HTML et sont absentes du sitemap.
-        disallow: ['/admin', '/*/admin', '/test-rdv', '/*/test-rdv'],
+        disallow: [
+          '/admin', '/*/admin',
+          '/test-rdv', '/*/test-rdv',
+          '/test-rdv2', '/*/test-rdv2',
+        ],
       },
     ],
     additionalSitemaps: [

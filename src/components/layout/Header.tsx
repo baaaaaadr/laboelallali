@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList, LayoutList } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -138,6 +138,7 @@ const Header = () => {
   // Libelle du lien de validation du parcours patient (namespace `journey`,
   // charge par le layout). Disparait quand le parcours deviendra /rendez-vous.
   const journeyTestLabel = t('journey:nav.test_link', 'Parcours (test)');
+  const journeyTestV2Label = t('journey:nav.test_link_v2', 'Parcours groupé (test)');
 
   // « Vous êtes ici » — un seul canal visuel dans toute l'appli : un fond PLEIN.
   // Le fuchsia, lui, ne signale que la mise en avant de Résultats (contour/badge/point).
@@ -598,6 +599,24 @@ const Header = () => {
                 <ClipboardList size={20} style={drawerIconStyle(isHere('/test-rdv'))} />
                 <span style={drawerTextStyle(isHere('/test-rdv'))}>
                   {journeyTestLabel}
+                </span>
+              </Link>
+            )}
+
+            {/* Variante B du parcours (4 blocs) - mobile, equipe uniquement.
+                Les deux entrees ne s'allument jamais ensemble : isActivePath
+                compare le chemin EXACT, ou un sous-chemin separe par « / ».
+                /fr/test-rdv2 n'est donc pas actif pour la cible /test-rdv. */}
+            {isStaff && (
+              <Link
+                href={`${currentLanguagePath}/test-rdv2`}
+                style={drawerLinkStyle(isHere('/test-rdv2'))}
+                aria-current={isHere('/test-rdv2') ? 'page' : undefined}
+                onClick={toggleMenu}
+              >
+                <LayoutList size={20} style={drawerIconStyle(isHere('/test-rdv2'))} />
+                <span style={drawerTextStyle(isHere('/test-rdv2'))}>
+                  {journeyTestV2Label}
                 </span>
               </Link>
             )}

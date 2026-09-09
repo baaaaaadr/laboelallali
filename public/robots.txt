@@ -5,6 +5,8 @@ Disallow: /admin
 Disallow: /*/admin
 Disallow: /test-rdv
 Disallow: /*/test-rdv
+Disallow: /test-rdv2
+Disallow: /*/test-rdv2
 
 # Host
 Host: https://www.laboelallali.com

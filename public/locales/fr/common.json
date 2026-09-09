@@ -521,7 +521,9 @@
     "rel_no_phone": "Pas de téléphone",
     "rel_hint": "Chaque relance est enregistrée (date uniquement) pour éviter de recontacter deux fois la même personne.",
     "journey_test_title": "Parcours patient unifié (test)",
-    "journey_test_desc": "Nouvelle page qui remplacera « RDV » et « à domicile ». À valider avant mise en ligne."
+    "journey_test_desc": "Nouvelle page qui remplacera « RDV » et « à domicile ». À valider avant mise en ligne.",
+    "journey_test2_title": "Parcours groupé — 4 blocs (test)",
+    "journey_test2_desc": "Même parcours, regroupé en 4 blocs pour ne pas intimider. À comparer avec la version ci-contre."
   },
   "theme": {
     "toggle": "Changer le thème",
