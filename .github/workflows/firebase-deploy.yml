@@ -1,11 +1,37 @@
 name: Deploy to Firebase Hosting
 
+# ⚠ PLUS DE DÉPLOIEMENT AUTOMATIQUE (décision du propriétaire, 09/09/2026).
+#
+# Ce workflow se déclenchait sur chaque `push` vers `main`. Le site avait donc
+# DEUX chemins de mise en ligne vers la même cible : celui-ci, et la commande
+# manuelle `npm run deploy:hosting` (la commande canonique, cf. CLAUDE.md).
+# Les deux se marchaient dessus.
+#
+# Symptôme : un déploiement sur deux échouait, toujours de la même façon —
+# `Unexpected non-whitespace character after JSON` dans
+# FirebaseExtended/action-hosting-deploy. Les runs en échec duraient ~3 min
+# contre 5 à 24 min pour les réussites : firebase-tools s'arrêtait en cours de
+# route et l'action n'avait plus de JSON à lire. Mesuré sur les 20 derniers
+# runs : 11 réussites, 9 échecs. Le 09/09 à 13h49 UTC, le run a tourné pendant
+# qu'un déploiement manuel était en vol.
+#
+# ⚠ Le vrai risque n'était pas les e-mails d'échec, mais les RÉUSSITES : le
+# build d'ici ne reçoit que les 7 secrets `NEXT_PUBLIC_FIREBASE_*`. Il lui
+# manque `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. Une réussite pouvait donc écraser un
+# bon déploiement par un moins bon.
+#
+# Le déclenchement manuel est CONSERVÉ : si le poste du propriétaire n'est pas
+# disponible, ce workflow reste un filet de secours (onglet Actions → ce
+# workflow → « Run workflow »).
 on:
-  push:
-    branches:
-      - main
-      - master
-  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+# Deux exécutions de ce workflow ne peuvent plus se chevaucher. Ne protège pas
+# d'une collision avec un déploiement lancé depuis un poste — d'où la règle
+# ci-dessus : un seul chemin à la fois.
+concurrency:
+  group: firebase-hosting-live
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
@@ -34,6 +60,7 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
           NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           EOF
 
       - name: Build Next.js app
