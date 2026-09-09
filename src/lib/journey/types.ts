@@ -65,6 +65,13 @@ export interface JourneyDraft {
   telephone: string;
   email: string;
   uploadedUrls: string[];
+  /**
+   * Optionnel : absent des brouillons enregistrés avant le lot « réponse
+   * d'abord » (11/09/2026). `PatientJourneyPage` ne l'applique que s'il est
+   * bien un booléen — sinon la valeur par défaut du hook (selon `variant`)
+   * reste en place.
+   */
+  wantsAppointment?: boolean;
 }
 
 /** Durée de vie du brouillon : 2 h. Au-delà, on repart d'un formulaire vierge. */
@@ -125,4 +132,11 @@ export interface JourneyFormSnapshot {
   replyChannel: ReplyChannel;
   needsHumanAnswer: boolean;
   ordonnanceUrls: string[];
+  /**
+   * `false` = le patient veut d'abord sa réponse (prix / jeûne / délai) sans
+   * s'engager sur un créneau. `desiredDate`/`desiredTime` sont alors des
+   * chaînes vides — jamais interprété comme une erreur en aval. Voir
+   * `docs/pages/test-rdv.md` §« Répondre d'abord, réserver ensuite ».
+   */
+  wantsAppointment: boolean;
 }

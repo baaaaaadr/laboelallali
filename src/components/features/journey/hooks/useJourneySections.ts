@@ -23,12 +23,20 @@ import type { JourneyForm } from './useJourneyForm';
  *   réprimande, pas une aide ;
  * - **rien** = étape facultative (souhaits) ou purement informative
  *   (réponse immédiate, accès aux résultats).
+ *
+ * ### `obligation` — le mot écrit d'avance
+ * En plus du marqueur ci-dessus (qui ne se voit qu'une fois l'étape ouverte au
+ * moins une fois), chaque étape porte un mot explicite dans son en-tête,
+ * TOUJOURS visible : « Obligatoire » ou « Facultatif ». `place`/`when` sont
+ * conditionnelles à `wantsAppointment` — voir `useJourneyForm.ts`.
  */
 export type SectionStatus = 'done' | 'incomplete' | 'none';
+export type SectionObligation = 'required' | 'optional';
 
 export interface JourneySectionInfo {
   status: SectionStatus;
   summary: string;
+  obligation?: SectionObligation;
 }
 
 export interface UseJourneySectionsArgs {
@@ -73,6 +81,7 @@ export function useJourneySections({
     intentDone,
     isHomeService,
     needsHumanAnswer,
+    wantsAppointment,
   } = form;
 
   return useMemo(() => {
@@ -129,13 +138,15 @@ export function useJourneySections({
     // 3 — Souhaits (facultatif)
     const wants = WANT_TO_KNOW_KEYS.filter((k) => wantToKnow[k]).map((k) => t(`want.${k}`));
 
-    // 4 — Lieu
+    // 4 — Lieu. `placeOk` reste « est-ce réellement rempli », inchangé ;
+    // c'est le STATUT plus bas qui devient 'none' quand ce n'est pas exigé —
+    // sinon une adresse vide se retrouverait cochée verte par hasard.
     const placeOk = !isHomeService || adresse.trim() !== '';
     const placeSummary = [t(`place.${samplingPlace}`), isHomeService ? adresse.trim() : '']
       .filter(Boolean)
       .join(' — ');
 
-    // 5 — Date et créneau
+    // 5 — Date et créneau. Même logique que ci-dessus.
     const dateOk = Boolean(selectedDate && selectedTime);
     const dateStr = selectedDate ? selectedDate.toLocaleDateString(locale) : '';
     const whenSummary = dateOk ? `${dateStr} · ${selectedTime}` : dateStr || dash;
@@ -148,6 +159,7 @@ export function useJourneySections({
       prescription: {
         status: required(intentDone),
         summary: prescriptionSummary,
+        obligation: 'required',
       },
       cart: {
         status: hasCart ? 'done' : 'none',
@@ -160,14 +172,21 @@ export function useJourneySections({
       want: {
         status: wants.length > 0 ? 'done' : 'none',
         summary: wants.length ? wants.join(', ') : t('want.summary_none'),
+        obligation: 'optional',
       },
+      // `wantsAppointment` (useJourneyForm.ts) décide si place/when sont
+      // EXIGÉES. La section reste visible dans les deux cas (règle non
+      // destructive) ; seul le statut change — 'none' n'inflige ni coche ni
+      // pastille à un champ que le patient n'a pas à remplir aujourd'hui.
       place: {
-        status: required(placeOk),
+        status: wantsAppointment ? required(placeOk) : 'none',
         summary: placeSummary || dash,
+        obligation: wantsAppointment ? 'required' : 'optional',
       },
       when: {
-        status: required(dateOk),
+        status: wantsAppointment ? required(dateOk) : 'none',
         summary: whenSummary,
+        obligation: wantsAppointment ? 'required' : 'optional',
       },
       channel: {
         status: 'done',
@@ -176,10 +195,12 @@ export function useJourneySections({
       identity: {
         status: required(identityOk),
         summary: identitySummary,
+        obligation: 'required',
       },
       access: {
         status: 'none',
         summary: accessLabel,
+        obligation: 'optional',
       },
       // Le nombre de pièces jointes n'apparaît pas dans un résumé mais fait
       // partie des dépendances : il change `intentDone`.
@@ -199,6 +220,7 @@ export function useJourneySections({
     intentDone,
     isHomeService,
     needsHumanAnswer,
+    wantsAppointment,
     hasCart,
     cartView,
     preparation,

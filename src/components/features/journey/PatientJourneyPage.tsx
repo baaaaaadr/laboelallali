@@ -28,7 +28,7 @@ import type { SubmitState } from '@/components/ui/SubmitProgressModal';
 import type { CartItem } from '@/components/features/catalog/AnalysisCard';
 
 import JourneyAuthGate from './JourneyAuthGate';
-import SectionShell from './SectionShell';
+import SectionShell, { ChoiceCard } from './SectionShell';
 import PrescriptionSection from './sections/PrescriptionSection';
 import FreeTextPanel from './sections/FreeTextPanel';
 import JourneyCartSection from './sections/JourneyCartSection';
@@ -125,6 +125,9 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
     form.setAdresse(d.adresse);
     form.setInstructionsAcces(d.instructionsAcces);
     form.setReplyChannel(d.replyChannel);
+    // Absent des brouillons enregistrés avant ce lot : la valeur par défaut du
+    // hook (selon `variant`) reste alors en place, jamais écrasée par `undefined`.
+    if (typeof d.wantsAppointment === 'boolean') form.setWantsAppointment(d.wantsAppointment);
     if (d.time) form.setTime(d.time);
     if (d.dateISO) form.setDate(new Date(d.dateISO));
     if (d.nom) form.setNom(d.nom);
@@ -148,6 +151,7 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
       dateISO: form.selectedDate ? form.selectedDate.toISOString() : null,
       time: form.selectedTime,
       replyChannel: form.replyChannel,
+      wantsAppointment: form.wantsAppointment,
       nom: form.nom,
       telephone: form.telephone,
       email: form.email,
@@ -171,10 +175,16 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
       form.setPhoneError(t('appointment:invalidPhone', 'Numéro invalide'));
       return t('appointment:invalidPhone', 'Numéro invalide');
     }
-    if (!form.selectedDate || !form.selectedTime) return t('submit.required_datetime');
-    if (form.isHomeService && !form.adresse.trim()) {
-      setAddressError(t('place.address_required'));
-      return t('submit.required_address');
+    // Date, créneau et adresse ne sont exigés QUE si le patient a choisi de
+    // réserver maintenant (`intent.book_now_title`, à côté de la réponse
+    // immédiate). Sinon la demande part sans créneau — voir
+    // docs/pages/test-rdv.md §« Répondre d'abord, réserver ensuite ».
+    if (form.wantsAppointment) {
+      if (!form.selectedDate || !form.selectedTime) return t('submit.required_datetime');
+      if (form.isHomeService && !form.adresse.trim()) {
+        setAddressError(t('place.address_required'));
+        return t('submit.required_address');
+      }
     }
     if (upload.isUploading) return t('submit.wait_upload');
     return null;
@@ -211,6 +221,7 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
       replyChannel: form.replyChannel,
       needsHumanAnswer: form.needsHumanAnswer,
       ordonnanceUrls,
+      wantsAppointment: form.wantsAppointment,
     }),
     [variant, lang, user, form, cart]
   );
@@ -409,15 +420,28 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
   });
 
   /** Props communes a chaque etape : evite de repeter 9 fois les memes 5 lignes. */
-  const shell = (id: string) => ({
-    open: openSection === id,
-    onToggle: () => toggle(id),
-    isRtl: isArabic,
-    status: sections[id]?.status ?? ('none' as const),
-    summary: sections[id]?.summary,
-    doneLabel: t('section.done_label'),
-    incompleteLabel: t('section.incomplete_label'),
-  });
+  const shell = (id: string) => {
+    const obligation = sections[id]?.obligation;
+    return {
+      open: openSection === id,
+      onToggle: () => toggle(id),
+      isRtl: isArabic,
+      status: sections[id]?.status ?? ('none' as const),
+      summary: sections[id]?.summary,
+      doneLabel: t('section.done_label'),
+      incompleteLabel: t('section.incomplete_label'),
+      // Le mot écrit d'avance (« Obligatoire »/« Facultatif ») : voir
+      // Disclosure.tsx. `place`/`when` en changent quand `wantsAppointment`
+      // change — calculé dans useJourneySections.ts.
+      obligationLabel:
+        obligation === 'required'
+          ? t('section.required_label')
+          : obligation === 'optional'
+            ? t('section.optional_label')
+            : undefined,
+      obligationTone: obligation,
+    };
+  };
 
   return (
     // `relative` : SubmitProgressModal est en `absolute inset-0`.
@@ -507,12 +531,17 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
           />
         </SectionShell>
 
+        {/* Ne se replie JAMAIS : c'est la chose que le patient est venu
+            chercher, elle ne doit pas coûter un clic. Voir docs/pages/test-rdv.md
+            §« Répondre d'abord, réserver ensuite ». */}
         <SectionShell
-          {...shell('answer')}
           id="journey-answer"
           title={t('answer.title')}
           icon={<Sparkles className="h-5 w-5 text-[var(--color-fuchsia-accent)]" />}
           visible={visible.answer}
+          collapsible={false}
+          open
+          onToggle={() => undefined}
         >
           <ImmediateAnswerCard
             isArabic={isArabic}
@@ -524,6 +553,40 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
             locale={locale}
             currencyLabel={currencyLabel}
           />
+
+          {/* La porte de sortie du patient pressé DOIT être vue, pas devinée
+              — c'est le défaut relevé lors de la conception : un précédent
+              essai la cachait dans une section repliée marquée « Facultatif »,
+              là où personne ne la trouvait. Posée ici, à côté de la réponse,
+              jamais avant que la vague 2 soit visible (visible.datetime ==
+              intentDone) : le lieu et la date n'existent pas encore avant ça. */}
+          {visible.datetime && (
+            <div className="mt-5 pt-5 border-t border-[var(--border-default)]">
+              <p className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
+                {t('intent.title')}
+              </p>
+              <div
+                role="radiogroup"
+                aria-label={t('intent.title')}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+              >
+                <ChoiceCard
+                  selected={!form.wantsAppointment}
+                  onSelect={() => form.setWantsAppointment(false)}
+                  title={t('intent.answer_first_title')}
+                  description={t('intent.answer_first_desc')}
+                  icon={<Sparkles className="h-5 w-5" />}
+                />
+                <ChoiceCard
+                  selected={form.wantsAppointment}
+                  onSelect={() => form.setWantsAppointment(true)}
+                  title={t('intent.book_now_title')}
+                  description={t('intent.book_now_desc')}
+                  icon={<CalendarDays className="h-5 w-5" />}
+                />
+              </div>
+            </div>
+          )}
         </SectionShell>
 
         <SectionShell
@@ -554,6 +617,7 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
             instructionsAcces={form.instructionsAcces}
             onInstructionsAcces={form.setInstructionsAcces}
             addressError={addressError}
+            addressRequired={form.wantsAppointment}
           />
         </SectionShell>
 
@@ -574,6 +638,7 @@ function JourneyBody({ lang, variant }: PatientJourneyPageProps) {
             onDateChange={form.setDate}
             onTimeChange={form.setTime}
             showHomeMorningNote={form.isHomeService}
+            required={form.wantsAppointment}
           />
         </SectionShell>
 

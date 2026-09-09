@@ -39,6 +39,9 @@ export interface SectionShellProps {
   status?: 'done' | 'incomplete' | 'none';
   doneLabel?: string;
   incompleteLabel?: string;
+  /** « Obligatoire » / « Facultatif », déjà traduit. Voir `Disclosure.tsx`. */
+  obligationLabel?: string;
+  obligationTone?: 'required' | 'optional';
   isRtl?: boolean;
   /**
    * `false` = la section reste TOUJOURS ouverte, sans en-tête cliquable.
@@ -63,6 +66,8 @@ export default function SectionShell({
   status = 'none',
   doneLabel,
   incompleteLabel,
+  obligationLabel,
+  obligationTone,
   isRtl = false,
   collapsible = true,
   autoScroll = false,
@@ -113,6 +118,8 @@ export default function SectionShell({
         status={status}
         doneLabel={doneLabel}
         incompleteLabel={incompleteLabel}
+        obligationLabel={obligationLabel}
+        obligationTone={obligationTone}
         headerClassName="px-4 py-4 sm:px-5"
         className={open ? 'pb-5' : ''}
         badge={

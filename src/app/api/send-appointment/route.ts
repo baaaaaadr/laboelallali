@@ -92,7 +92,16 @@ export async function POST(request: Request) {
       needsHumanAnswer,
       sentViaWhatsApp,
       locale,
+      wantsAppointment,
     } = data;
+
+    // `false` = le patient a envoyé sa demande sans réserver de créneau
+    // (bulle "Recevoir ma réponse d'abord", 11/09/2026) : `date_souhaitee`/
+    // `heure_souhaitee` sont alors des chaînes vides. `undefined` pour les
+    // deux anciennes pages, qui n'envoient pas ce champ — comportement
+    // strictement inchangé pour elles.
+    const isJourney = source === 'journey';
+    const noSlotRequested = isJourney && wantsAppointment === false;
 
     // `lieuPrelevement` used to be sent already translated INTO THE PATIENT'S
     // LANGUAGE, so an Arabic-speaking patient put المنزل in a French email. The client
@@ -105,9 +114,6 @@ export async function POST(request: Request) {
     const lieuLabel = LIEU_LABELS[String(lieuPrelevement ?? '').toLowerCase()]
       || String(lieuPrelevement ?? '').trim()
       || 'Non précisé';
-
-    /** Le parcours unifié envoie `source: 'journey'` ; les deux anciennes pages, rien. */
-    const isJourney = source === 'journey';
 
     // La langue du patient etait envoyee par le client et JETEE par la route.
     // Le personnel ne pouvait pas savoir qu'il fallait rappeler en arabe.
@@ -320,8 +326,12 @@ export async function POST(request: Request) {
           ${langueHtml}
 
           <h3 style="color: #FF4081; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 25px;">Détails du Rendez-vous</h3>
-          <p><strong>Date souhaitée :</strong> ${esc(date_souhaitee)}</p>
-          <p><strong>Heure souhaitée :</strong> ${esc(heure_souhaitee)}</p>
+          ${
+            noSlotRequested
+              ? `<p><strong>Créneau :</strong> Aucun pour l'instant — le patient souhaite d'abord votre réponse (prix / conditions préanalytiques / délai) avant de réserver.</p>`
+              : `<p><strong>Date souhaitée :</strong> ${esc(date_souhaitee)}</p>
+          <p><strong>Heure souhaitée :</strong> ${esc(heure_souhaitee)}</p>`
+          }
           ${
             isJourney
               // Le parcours donne deja le lieu exact dans son propre encadre :
@@ -343,7 +353,12 @@ export async function POST(request: Request) {
               ${
                 adresse && String(adresse).trim()
                   ? `<p style="margin: 0 0 6px 0;"><strong>Adresse :</strong> ${escMultiline(adresse)}</p>`
-                  : `<p style="margin: 0 0 6px 0; color: #B00020;"><strong>Adresse non renseignée — rappeler le patient.</strong></p>`
+                  : noSlotRequested
+                    // Pas d'alerte rouge ici : une adresse manquante est NORMALE
+                    // tant que le patient n'a pas réservé — l'alarmer comme une
+                    // erreur ferait rappeler un patient qui n'a rien oublié.
+                    ? `<p style="margin: 0 0 6px 0; color: #777;">Adresse non demandée pour l'instant — le patient n'a pas encore réservé de créneau.</p>`
+                    : `<p style="margin: 0 0 6px 0; color: #B00020;"><strong>Adresse non renseignée — rappeler le patient.</strong></p>`
               }
               ${
                 instructionsAcces && String(instructionsAcces).trim()
@@ -397,9 +412,13 @@ export async function POST(request: Request) {
     // `prenom` est vide pour le parcours (on ne devine plus le decoupage du nom) :
     // sans ce `trim` l'objet contiendrait un double espace avant le tiret.
     const patientLabel = `${nom} ${prenom}`.replace(/\s+/g, ' ').trim();
+    // Sans créneau demandé, `date_souhaitee` est une chaîne vide : l'objet
+    // porterait un tiret suivi de rien. `dateTag` dit clairement de quoi il
+    // s'agit plutôt que de laisser un blanc dans la liste des e-mails.
+    const dateTag = noSlotRequested ? 'réponse seulement' : date_souhaitee;
     const subject = isHomeService
-      ? `Nouveau RDV WEB — ${lieuTag} : ${patientLabel} - ${date_souhaitee}${devisSuffix}`
-      : `Nouveau Rendez-vous WEB : ${patientLabel} - ${date_souhaitee}${devisSuffix}`;
+      ? `Nouveau RDV WEB — ${lieuTag} : ${patientLabel} - ${dateTag}${devisSuffix}`
+      : `Nouveau Rendez-vous WEB : ${patientLabel} - ${dateTag}${devisSuffix}`;
 
     // ── PRIMARY: the central sendEmail Cloud Function (Secret Manager creds) ──
     const fnUrl = process.env.SEND_EMAIL_FN_URL;

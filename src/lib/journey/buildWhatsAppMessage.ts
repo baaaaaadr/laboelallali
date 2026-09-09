@@ -138,11 +138,23 @@ export function buildWhatsAppMessage(snapshot: JourneyFormSnapshot): string {
       push(`${ar ? 'الوصول' : 'Accès'} : ${snapshot.instructionsAcces}`);
     }
   }
-  push(
-    `${ar ? 'التاريخ المطلوب' : 'Date souhaitée'} : ${snapshot.desiredDate} ${
-      ar ? 'على الساعة' : 'à'
-    } ${snapshot.desiredTime}`
-  );
+  // `wantsAppointment` false = le patient veut d'abord sa réponse (prix /
+  // jeûne / délai) sans s'engager sur un créneau — `desiredDate`/`desiredTime`
+  // sont alors des chaînes vides. Les pousser quand même produirait
+  // « Date souhaitée :  à  », une ligne cassée sous les yeux du personnel.
+  if (snapshot.wantsAppointment) {
+    push(
+      `${ar ? 'التاريخ المطلوب' : 'Date souhaitée'} : ${snapshot.desiredDate} ${
+        ar ? 'على الساعة' : 'à'
+      } ${snapshot.desiredTime}`
+    );
+  } else {
+    push(
+      ar
+        ? 'لم أحدد بعد موعدًا — أنتظر جوابكم أولًا (الثمن، الصيام، الأجل).'
+        : "Je n'ai pas encore choisi de créneau — je souhaite d'abord votre réponse (prix, jeûne, délai)."
+    );
+  }
   push(
     `${ar ? 'أفضل أن يتم الاتصال بي عبر' : 'Je préfère être recontacté(e) par'} : ${
       ar ? CHANNEL_AR[snapshot.replyChannel] : CHANNEL_FR[snapshot.replyChannel]

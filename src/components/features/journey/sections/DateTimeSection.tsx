@@ -28,6 +28,13 @@ export interface DateTimeSectionProps {
   onTimeChange: (time: string) => void;
   /** Affiche la note "les prélèvements à domicile se font le matin". */
   showHomeMorningNote?: boolean;
+  /**
+   * `false` quand le patient n'a pas encore choisi de réserver un créneau
+   * (`wantsAppointment`, `useJourneyForm.ts`) : les champs restent utilisables
+   * mais cessent d'être exigés — astérisques et `required` HTML retirés, texte
+   * d'aide remplacé. Défaut `true`.
+   */
+  required?: boolean;
 }
 
 export default function DateTimeSection({
@@ -39,6 +46,7 @@ export default function DateTimeSection({
   onDateChange,
   onTimeChange,
   showHomeMorningNote = false,
+  required = true,
 }: DateTimeSectionProps) {
   const { t } = useTranslation(['journey', 'appointment']);
   const dateLocale = lang === 'ar' ? ar : fr;
@@ -53,7 +61,7 @@ export default function DateTimeSection({
           >
             <Calendar className="inline h-4 w-4 me-1.5 text-[var(--color-bordeaux-primary)]" aria-hidden="true" />
             {t('when.date_label')}
-            <span className="text-[var(--status-error)] ms-1">*</span>
+            {required && <span className="text-[var(--status-error)] ms-1">*</span>}
           </label>
           <DatePicker
             id="journey-date"
@@ -66,7 +74,7 @@ export default function DateTimeSection({
             placeholderText="JJ/MM/AAAA"
             className="block w-full rounded-lg border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)]"
             wrapperClassName="w-full"
-            required
+            required={required}
           />
         </div>
 
@@ -77,14 +85,14 @@ export default function DateTimeSection({
           >
             <Clock className="inline h-4 w-4 me-1.5 text-[var(--color-bordeaux-primary)]" aria-hidden="true" />
             {t('when.time_label')}
-            <span className="text-[var(--status-error)] ms-1">*</span>
+            {required && <span className="text-[var(--status-error)] ms-1">*</span>}
           </label>
           <select
             id="journey-time"
             value={selectedTime}
             onChange={(e) => onTimeChange(e.target.value)}
             className="block w-full rounded-lg border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] appearance-none"
-            required
+            required={required}
           >
             <option value="">{t('when.choose_time')}</option>
             {timeSlots.map((slot) => (
@@ -99,7 +107,9 @@ export default function DateTimeSection({
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-[var(--text-tertiary)]">{t('when.help')}</p>
+      <p className="mt-3 text-xs text-[var(--text-tertiary)]">
+        {required ? t('when.help') : t('when.optional_note')}
+      </p>
       {showHomeMorningNote && (
         <p className="mt-1 text-xs text-[var(--color-fuchsia-accent)]">
           {t('when.home_morning_note')}

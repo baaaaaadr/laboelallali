@@ -25,6 +25,22 @@ import {
  * la vague 2 apparaît D'UN COUP. Révéler les sections une par une reviendrait à
  * un assistant déguisé, ce que la maquette validée écarte explicitement.
  *
+ * ### `wantsAppointment` — répondre d'abord, réserver ensuite (11/09/2026)
+ * Les deux cas les plus fréquents (propriétaire, 09/09/2026) veulent une
+ * RÉPONSE — prix, jeûne, délai — pas forcément un créneau dans la foulée.
+ * `validate()` (`PatientJourneyPage.tsx`) exigeait pourtant TOUJOURS une date
+ * et un créneau : ces deux patients ne pouvaient pas envoyer leur demande sans
+ * réserver un rendez-vous dont ils ne voulaient pas encore. Ce booléen lève
+ * cette obligation ; `place`/`when` restent VISIBLES (règle non destructive
+ * ci-dessus) mais cessent d'être requis pour l'envoi. Le choix est présenté en
+ * clair, à côté de la réponse immédiate — jamais caché dans une section
+ * repliée, sous peine de reproduire le défaut relevé lors de la conception :
+ * la porte de sortie du patient pressé doit être VUE, pas devinée.
+ *
+ * Défaut selon `variant` : `true` pour `'home'` (le lien GLABO présuppose déjà
+ * un déplacement), `false` sinon — exactement le même principe que
+ * `samplingPlace` juste en dessous.
+ *
  * ### Règle non destructive
  * Masquer une section n'efface jamais sa saisie — le patient qui revient sur ses
  * pas retrouve tout. UNE exception : "j'ai une ordonnance" -> "je n'en ai pas"
@@ -120,6 +136,8 @@ export function useJourneyForm({
   const [adresse, setAdresse] = useState('');
   const [instructionsAcces, setInstructionsAcces] = useState('');
   const [replyChannel, setReplyChannel] = useState<ReplyChannel>('whatsapp');
+  /** Voir le commentaire de tête. `true` par défaut pour le variant GLABO. */
+  const [wantsAppointment, setWantsAppointment] = useState<boolean>(variant === 'home');
 
   // -- valeurs dérivées ------------------------------------------------------
   const needsHumanAnswer = transmission.upload || transmission.freetext;
@@ -181,6 +199,7 @@ export function useJourneyForm({
     setAdresse('');
     setInstructionsAcces('');
     setReplyChannel('whatsapp');
+    setWantsAppointment(variant === 'home');
     setTime('');
     setPhoneError('');
   }, [variant, setTime]);
@@ -216,6 +235,8 @@ export function useJourneyForm({
     setInstructionsAcces,
     replyChannel,
     setReplyChannel,
+    wantsAppointment,
+    setWantsAppointment,
 
     // date / créneau (via useLabSchedule)
     ...schedule,

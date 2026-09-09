@@ -110,7 +110,8 @@
     "access_label": "Indications d'accès",
     "access_placeholder": "Code d'immeuble, étage, bâtiment, point de repère…",
     "access_help": "Facultatif, mais cela évite un appel du préleveur.",
-    "fee_note": "Le déplacement est inclus dans les frais de prélèvement."
+    "fee_note": "Le déplacement est inclus dans les frais de prélèvement.",
+    "optional_note": "Facultatif pour l'instant : vous pouvez préciser l'adresse plus tard, au moment de réserver."
   },
   "when": {
     "title": "Quand souhaitez-vous être prélevé ?",
@@ -119,7 +120,15 @@
     "choose_time": "Choisir un créneau",
     "no_slots": "Aucun créneau disponible ce jour-là.",
     "help": "Nous confirmerons ce créneau avec vous.",
+    "optional_note": "Facultatif pour l'instant — indiquez une date si vous préférez déjà réserver un créneau.",
     "home_morning_note": "Les prélèvements à domicile se font généralement le matin."
+  },
+  "intent": {
+    "title": "Que souhaitez-vous faire ?",
+    "answer_first_title": "Recevoir ma réponse d'abord",
+    "answer_first_desc": "Prix, jeûne et délai. Vous réserverez un créneau plus tard si besoin.",
+    "book_now_title": "Réserver un créneau maintenant",
+    "book_now_desc": "Choisissez le lieu et l'heure de votre prélèvement."
   },
   "channel": {
     "title": "Comment souhaitez-vous notre réponse ?",
@@ -170,6 +179,8 @@
   },
   "section": {
     "done_label": "Étape complète",
-    "incomplete_label": "Information manquante"
+    "incomplete_label": "Information manquante",
+    "required_label": "Obligatoire",
+    "optional_label": "Facultatif"
   }
 }

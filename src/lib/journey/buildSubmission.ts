@@ -128,6 +128,11 @@ export function buildFirestoreDoc(
     replyChannel: snapshot.replyChannel,
     needsHumanAnswer: snapshot.needsHumanAnswer,
     sentViaWhatsApp: viaWhatsApp,
+    // `false` = le patient a envoyé sa demande sans réserver de créneau — voir
+    // `docs/pages/test-rdv.md` §« Répondre d'abord, réserver ensuite ».
+    // `desiredDate`/`desiredTime` sont alors des chaînes vides ; ce champ le
+    // dit explicitement plutôt que de laisser le personnel le déduire.
+    wantsAppointment: snapshot.wantsAppointment,
     cart:
       snapshot.cartTotals && snapshot.cartLines.length > 0
         ? { items: snapshot.cartLines, ...snapshot.cartTotals, estimated: true }
@@ -187,5 +192,9 @@ export function buildEmailPayload(
     needsHumanAnswer: snapshot.needsHumanAnswer,
     sentViaWhatsApp: viaWhatsApp,
     locale: snapshot.lang,
+    // Voir `buildFirestoreDoc` : dit explicitement à route.ts qu'aucun
+    // créneau n'a été demandé, plutôt que de le laisser deviner sur des
+    // `date_souhaitee`/`heure_souhaitee` vides.
+    wantsAppointment: snapshot.wantsAppointment,
   };
 }

@@ -31,6 +31,15 @@ export interface DisclosureProps {
   /** Pastille numérotée (étape du parcours). */
   badge?: React.ReactNode;
   /**
+   * Mot écrit d'avance, déjà traduit — « Obligatoire » / « Facultatif ». Vient
+   * s'ajouter à `status` : celui-ci ne se voit qu'une fois la section ouverte
+   * au moins une fois, celui-là est visible dès le premier écran, replié
+   * comme déplié. Omis = pas de puce.
+   */
+  obligationLabel?: string;
+  /** Pilote la couleur de la puce : `required` = ton insistant (bordeaux). */
+  obligationTone?: 'required' | 'optional';
+  /**
    * État de complétion de l'étape :
    *  - `done`       → coche verte, toujours visible (ouvert comme replié) ;
    *  - `incomplete` → pastille ambre : l'étape est OBLIGATOIRE et il y manque
@@ -59,6 +68,8 @@ export default function Disclosure({
   summary,
   icon,
   badge,
+  obligationLabel,
+  obligationTone,
   status = 'none',
   doneLabel,
   incompleteLabel,
@@ -83,7 +94,20 @@ export default function Disclosure({
         {icon && <span className="flex-shrink-0">{icon}</span>}
 
         <span className="min-w-0 flex-1">
-          <span className="block font-bold text-[var(--text-primary)]">{title}</span>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span className="font-bold text-[var(--text-primary)]">{title}</span>
+            {obligationLabel && (
+              <span
+                className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  obligationTone === 'required'
+                    ? 'bg-[var(--color-bordeaux-primary)]/10 text-[var(--color-bordeaux-primary)]'
+                    : 'bg-[var(--background-secondary)] text-[var(--text-tertiary)]'
+                }`}
+              >
+                {obligationLabel}
+              </span>
+            )}
+          </span>
           {!open && summary && (
             <span className="mt-0.5 block truncate text-sm text-[var(--text-secondary)]">
               {summary}

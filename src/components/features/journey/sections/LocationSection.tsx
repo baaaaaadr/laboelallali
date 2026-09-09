@@ -28,6 +28,14 @@ export interface LocationSectionProps {
   instructionsAcces: string;
   onInstructionsAcces: (value: string) => void;
   addressError?: string;
+  /**
+   * `false` quand le patient n'a pas encore choisi de réserver un créneau
+   * (`wantsAppointment`, `useJourneyForm.ts`) : l'adresse reste affichée mais
+   * cesse d'être exigée — l'astérisque et l'attribut `required` disparaissent,
+   * remplacés par une note discrète. Défaut `true` pour ne rien changer si un
+   * futur appelant omet la prop.
+   */
+  addressRequired?: boolean;
 }
 
 const ICONS: Record<SamplingPlace, React.ReactNode> = {
@@ -45,6 +53,7 @@ export default function LocationSection({
   instructionsAcces,
   onInstructionsAcces,
   addressError,
+  addressRequired = true,
 }: LocationSectionProps) {
   const { t } = useTranslation('journey');
 
@@ -65,6 +74,9 @@ export default function LocationSection({
 
       {showAddress && (
         <div className="space-y-4 pt-5 border-t border-[var(--border-default)]">
+          {!addressRequired && (
+            <p className="text-xs text-[var(--text-tertiary)]">{t('place.optional_note')}</p>
+          )}
           <div>
             <label
               htmlFor="journey-adresse"
@@ -72,12 +84,12 @@ export default function LocationSection({
             >
               <MapPin className="inline h-4 w-4 me-1.5 text-[var(--color-bordeaux-primary)]" aria-hidden="true" />
               {place === 'travail' ? t('place.address_label_work') : t('place.address_label_home')}
-              <span className="text-[var(--status-error)] ms-1">*</span>
+              {addressRequired && <span className="text-[var(--status-error)] ms-1">*</span>}
             </label>
             <input
               id="journey-adresse"
               type="text"
-              required
+              required={addressRequired}
               value={adresse}
               onChange={(e) => onAdresse(e.target.value)}
               autoComplete="street-address"
