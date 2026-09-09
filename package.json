@@ -9,6 +9,8 @@
     "postbuild": "next-sitemap",
     "start": "next start",
     "lint": "next lint",
+    "test:journey": "node scripts/test-journey.js",
+    "test:journey:ui": "node scripts/test-journey-ui.js",
     "deploy": "npm run clean:devcache && npm run build && firebase deploy",
     "deploy:hosting": "npm run clean:devcache && npm run build && firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",
