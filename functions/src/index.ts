@@ -49,6 +49,13 @@ export {
   adminLinkRequester,
   adminUnlinkRequester,
   adminListRequesterLinks,
+  // Patient-initiated requests for a relative's dossier. The patient may ASK
+  // online; only staff may grant, in person, and the proof they saw is recorded.
+  requestRelativeAccess,
+  myRelativeRequests,
+  adminListRelativeRequests,
+  adminFulfillRelativeRequest,
+  adminRejectRelativeRequest,
   // Adoption dashboard (admin+owner) + the staff-level relance tools.
   adminDashboardStats,
   adminListDormant,

@@ -29,6 +29,7 @@ import CheckupReminder from '@/components/features/results/CheckupReminder';
 import PdfViewerModal from '@/components/features/results/PdfViewerModal';
 import ResultsIndicators from '@/components/features/results/ResultsIndicators';
 import ShareAccessCard from '@/components/features/results/ShareAccessCard';
+import AddRelativeCard from '@/components/features/results/AddRelativeCard';
 import OutageOptIn, { useOutageStatus } from '@/components/features/results/OutageOptIn';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import VerdictPanel from '@/components/ui/VerdictPanel';
@@ -887,6 +888,10 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             désormais mes analyses") and inviting a relative from inside a
             relative's record makes no sense. */}
         {isSelf && <ShareAccessCard lang={lang} />}
+
+        {/* Ask the lab to attach a relative's dossier. Only on your OWN tab:
+            relatives are added to YOUR account, not to someone else's. */}
+        {isSelf && <AddRelativeCard lang={lang} />}
 
         {/* Privacy reassurance — kept at the very bottom, below all results */}
         <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] text-sm">

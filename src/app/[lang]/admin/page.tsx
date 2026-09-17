@@ -28,6 +28,11 @@ import LinkedRequestersCard, {
   type AuditAccount,
   type LinkRow,
 } from '@/components/features/admin/LinkedRequestersCard';
+import RelativeRequestsSection, {
+  type LinkProof,
+  type RelativeInputs,
+  type RelativeRequest,
+} from '@/components/features/admin/RelativeRequestsSection';
 import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
@@ -168,6 +173,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [linkBusy, setLinkBusy] = useState<string | null>(null);
   const [linkNotice, setLinkNotice] = useState<string | null>(null);
   const [linkAudit, setLinkAudit] = useState<AuditAccount[] | null>(null);
+
+  // Patient-initiated requests for a relative's dossier (Demandes tab).
+  const [relReqs, setRelReqs] = useState<RelativeRequest[]>([]);
+  const [relInputs, setRelInputs] = useState<Record<string, RelativeInputs>>({});
+  const [relBusy, setRelBusy] = useState<string | null>(null);
+  const [relError, setRelError] = useState<string | null>(null);
+  const [relMsg, setRelMsg] = useState<string | null>(null);
 
   const errMsg = useCallback(
     (err: unknown): string => {
@@ -426,6 +438,71 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     }
   };
 
+  // Patient-initiated relative requests -- the queue in the Demandes tab.
+  const loadRelReqs = useCallback(async () => {
+    try {
+      const res = await callFn<{ requests: RelativeRequest[] }>('adminListRelativeRequests', {});
+      setRelReqs(res.requests || []);
+    } catch (err: unknown) {
+      setRelError(errMsg(err));
+    }
+  }, [errMsg]);
+
+  useEffect(() => {
+    if (!loading && isStaff) void loadRelReqs();
+  }, [loading, isStaff, loadRelReqs]);
+
+  const EMPTY_REL_INPUT: RelativeInputs = { requester_id: '', type: 'patient', proof: '' };
+  const setRelInput = (id: string, patch: Partial<RelativeInputs>) =>
+    setRelInputs((prev) => ({
+      ...prev,
+      [id]: { ...(prev[id] ?? EMPTY_REL_INPUT), ...patch },
+    }));
+
+  const fulfillRelReq = async (req: RelativeRequest) => {
+    const v = relInputs[req.id];
+    if (!v?.requester_id.trim() || !v.proof) return;
+    setRelBusy(req.id);
+    setRelError(null);
+    setRelMsg(null);
+    try {
+      const res = await callFn<{ holderNotified: boolean }>('adminFulfillRelativeRequest', {
+        id: req.id,
+        requester_id: v.requester_id.trim(),
+        type: v.type,
+        // The patient wrote this name; reuse it as the label they will see in
+        // their own app rather than asking the staff to retype it.
+        label: req.relativeName,
+        proof: v.proof as LinkProof,
+      });
+      setRelMsg(
+        res.holderNotified
+          ? t('admin.link_added_notified', 'Rattache. Le titulaire du dossier a ete prevenu par e-mail.')
+          : t('admin.link_added_no_email', "Rattache. Le titulaire n'a pas de compte avec e-mail.")
+      );
+      await loadRelReqs();
+    } catch (err: unknown) {
+      setRelError(errMsg(err));
+    } finally {
+      setRelBusy(null);
+    }
+  };
+
+  const rejectRelReq = async (req: RelativeRequest) => {
+    setRelBusy(req.id);
+    setRelError(null);
+    setRelMsg(null);
+    try {
+      await callFn('adminRejectRelativeRequest', { id: req.id });
+      setRelMsg(t('admin.rel_req_rejected', 'Demande refusee.'));
+      await loadRelReqs();
+    } catch (err: unknown) {
+      setRelError(errMsg(err));
+    } finally {
+      setRelBusy(null);
+    }
+  };
+
   // ── Relatives' dossiers ("ayant droit") ─────────────────────────────────────
   // Attaching a dossier NEVER touches the holder's own account: two accounts may
   // point at the same requester_id. The callables enforce that; the UI says it.
@@ -633,7 +710,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       ? [{ id: 'dashboard', label: t('admin.tab_dashboard', 'Tableau de bord'), icon: LayoutDashboard }]
       : []),
     { id: 'patients', label: t('admin.tab_patients', 'Patients'), icon: User },
-    { id: 'requests', label: t('admin.tab_requests', 'Demandes'), icon: Inbox, count: accessReqs.length },
+    { id: 'requests', label: t('admin.tab_requests', 'Demandes'), icon: Inbox, count: accessReqs.length + relReqs.length },
     { id: 'relances', label: t('admin.tab_relances', 'Relances'), icon: MessageCircle, count: dormant?.length },
     { id: 'test', label: t('admin.tab_test', 'Tester'), icon: FlaskConical },
     ...(isManager ? [{ id: 'team', label: t('admin.tab_team', 'Équipe'), icon: Users }] : []),
@@ -845,6 +922,28 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Second queue in the same tab: patients asking for a RELATIVE's
+            dossier. Kept visually separate from the access requests above —
+            "activate my own results" and "let me read someone else's" are
+            different decisions, and the front desk must not blur them. */}
+        {activeTab === 'requests' && (
+          <div className="mt-6">
+            <RelativeRequestsSection
+              requests={relReqs}
+              inputs={relInputs}
+              onInput={setRelInput}
+              busyId={relBusy}
+              error={relError}
+              message={relMsg}
+              onFulfill={fulfillRelReq}
+              onReject={rejectRelReq}
+              onTest={testFromLink}
+              fmtDate={fmtDate}
+              fmtWhenTime={fmtWhenTime}
+            />
           </div>
         )}
 

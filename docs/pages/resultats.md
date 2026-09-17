@@ -38,6 +38,18 @@ An account can consult several lab dossiers: its own, plus relatives' the lab at
 
 **Revocation mid-session:** the lab removes a link while the tab is open → the callable answers `permission-denied` → the context marks that bucket definitively failed and purges its PDFs → the page drops back to the primary identity and shows `resultats.identity_revoked`. Never leave a tab that 403s, and never keep results already in memory for a revoked dossier.
 
+### 1.06 Asking for a relative's dossier — `AddRelativeCard`
+
+`src/components/features/results/AddRelativeCard.tsx`, rendered at the bottom of the page next to `ShareAccessCard` and **only when `isSelf`** (relatives are added to YOUR account, not to someone else's tab). Hidden for `medecin`/`correspondant`.
+
+Attaching stays staff-only. What this restores is the **asking** half: before it, the patient had to say it out loud at the counter — nothing recorded, no queue for the staff, and no way for the patient to know whether it had been seen.
+
+**The form never asks for the relative's dossier number.** The patient does not know it, and asking would invite typing numbers until one works. It asks for the relationship, the name, the **date of birth** (required — it is what separates homonyms when the staff searches) and an optional phone.
+
+The notice about having to come in person is shown **above** the submit button, not after: the patient should know a trip to the lab is coming before they send, not discover it afterwards.
+
+Pending requests are listed on the card (`myRelativeRequests`), so "is my request being handled?" has an answer in the app. A failed status read does not hide the button — the server de-duplicates identical requests anyway.
+
 ### 1.1 Results prefetch + progressive PDF loading — `src/contexts/ResultsContext.tsx`
 
 **Per-identity buckets (since the ayant-droit feature).** Results are stored in `buckets: Record<`${uid}::${requesterId}`, Bucket>`, and PDFs in a cache keyed `` `${requesterId}::${dossierId}` ``.

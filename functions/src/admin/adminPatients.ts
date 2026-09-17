@@ -46,13 +46,33 @@ async function getUidByEmail(email: string, subject: string): Promise<string> {
   }
 }
 
+/** On what basis the staff granted this access. See PROOFS below. */
+export type LinkProof = "present" | "procuration" | "autorite_parentale";
+
 interface LinkedRequesterDoc {
   requester_id: string;
   type: RequesterType;
   label: string;
   linkedAt: admin.firestore.Timestamp;
   linkedBy: string;
+  /**
+   * What the staff actually saw before opening the access. Absent on links
+   * created before this field existed.
+   *
+   * The real control — "does this person have the right to read that record?" —
+   * happens at the counter and cannot be moved into software. What software CAN
+   * do is record which proof was seen, and that is what protects the lab if the
+   * access is ever contested. Without it, a link only says who created it and
+   * when, which answers nothing.
+   */
+  proof?: LinkProof;
 }
+
+const PROOFS: readonly LinkProof[] = [
+  "present", // the record holder was physically there and agreed
+  "procuration", // written authorisation shown
+  "autorite_parentale", // parent or guardian of a minor
+];
 
 interface LinkDTO {
   requester_id: string;
@@ -683,11 +703,92 @@ async function notifyDossierHolder(requesterId: string): Promise<boolean> {
   }
 }
 
+/**
+ * Attach one dossier to one account, transactionally.
+ *
+ * Shared by `adminLinkRequester` (staff types it directly) and
+ * `adminFulfillRelativeRequest` (staff answers a patient's request), so the two
+ * paths can never drift apart on the rules that matter: no self-attach, the cap,
+ * and the upsert keyed on requester_id.
+ *
+ * A transaction with an explicit upsert, NOT arrayUnion: arrayUnion dedupes by
+ * deep equality, so re-attaching the same dossier with a corrected label would
+ * silently create a second row for the same person.
+ * @param {string} targetUid account receiving the access.
+ * @param {string} requesterId normalized dossier id.
+ * @param {RequesterType} type requester type.
+ * @param {string} label staff-typed name shown to the patient.
+ * @param {string} adminUid uid of the staff member.
+ * @param {LinkProof|undefined} proof what the staff saw.
+ * @return {Promise<void>} resolves once committed.
+ */
+async function attachRequester(
+  targetUid: string,
+  requesterId: string,
+  type: RequesterType,
+  label: string,
+  adminUid: string,
+  proof?: LinkProof
+): Promise<void> {
+  const ref = admin.firestore().doc(`users/${targetUid}`);
+  await admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) {
+      throw new HttpsError("not-found", "Ce compte n'existe pas.");
+    }
+    const data = snap.data() || {};
+
+    if (normalizeRequesterId(data.requester_id) === requesterId) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Ce dossier est déjà le dossier principal de ce compte."
+      );
+    }
+
+    const links = readLinks(data);
+    const at = links.findIndex(
+      (l) => normalizeRequesterId(l.requester_id) === requesterId
+    );
+    if (at < 0 && links.length >= MAX_LINKS) {
+      throw new HttpsError(
+        "failed-precondition",
+        `Maximum ${MAX_LINKS} dossiers rattachés par compte.`
+      );
+    }
+
+    const entry: LinkedRequesterDoc = {
+      requester_id: requesterId,
+      type,
+      label,
+      // ⚠ Timestamp.now(), NOT serverTimestamp(): Firestore REJECTS a sentinel
+      // inside an array element, at runtime, in production only.
+      linkedAt: admin.firestore.Timestamp.now(),
+      linkedBy: adminUid,
+      ...(proof ? {proof} : {}),
+    };
+    const next = [...links];
+    if (at >= 0) next[at] = entry; else next.push(entry);
+
+    tx.set(
+      ref,
+      {
+        linkedRequesters: next,
+        // Flattened ids: array-contains cannot query a sub-field of a map
+        // inside an array, and "who else can read this dossier?" is a question
+        // the lab is required to be able to answer.
+        linkedRequesterIds: next.map((l) => l.requester_id),
+      },
+      {merge: true}
+    );
+  });
+}
+
 interface LinkData {
   uid?: string;
   requester_id?: string;
   type?: string;
   label?: string;
+  proof?: string;
 }
 
 /**
@@ -725,58 +826,14 @@ export const adminLinkRequester = onCall(
       throw new HttpsError("invalid-argument", "Libellé trop long.");
     }
 
+    const proof = PROOFS.includes(request.data?.proof as LinkProof) ?
+      (request.data?.proof as LinkProof) :
+      undefined;
+
+    await attachRequester(
+      targetUid, requesterId, type as RequesterType, label, adminUid, proof
+    );
     const ref = admin.firestore().doc(`users/${targetUid}`);
-
-    // A transaction, not arrayUnion: arrayUnion dedupes by DEEP EQUALITY, so
-    // re-attaching the same dossier with a corrected label would silently create
-    // a second entry for the same person. Upsert keyed on requester_id instead.
-    await admin.firestore().runTransaction(async (tx) => {
-      const snap = await tx.get(ref);
-      if (!snap.exists) {
-        throw new HttpsError("not-found", "Ce compte n'existe pas.");
-      }
-      const data = snap.data() || {};
-
-      if (normalizeRequesterId(data.requester_id) === requesterId) {
-        throw new HttpsError(
-          "failed-precondition",
-          "Ce dossier est déjà le dossier principal de ce compte."
-        );
-      }
-
-      const links = readLinks(data);
-      const at = links.findIndex((l) => normalizeRequesterId(l.requester_id) === requesterId);
-      if (at < 0 && links.length >= MAX_LINKS) {
-        throw new HttpsError(
-          "failed-precondition",
-          `Maximum ${MAX_LINKS} dossiers rattachés par compte.`
-        );
-      }
-
-      const entry: LinkedRequesterDoc = {
-        requester_id: requesterId,
-        type: type as RequesterType,
-        label,
-        // ⚠ Timestamp.now(), NOT serverTimestamp(): Firestore REJECTS a sentinel
-        // inside an array element, at runtime, in production only.
-        linkedAt: admin.firestore.Timestamp.now(),
-        linkedBy: adminUid,
-      };
-      const next = [...links];
-      if (at >= 0) next[at] = entry; else next.push(entry);
-
-      tx.set(
-        ref,
-        {
-          linkedRequesters: next,
-          // Flattened ids: array-contains cannot query a sub-field of a map
-          // inside an array, and "who else can read this dossier?" is a question
-          // the lab is required to be able to answer.
-          linkedRequesterIds: next.map((l) => l.requester_id),
-        },
-        { merge: true }
-      );
-    });
 
     // uid only — never the label (a third party's name) nor the dossier holder.
     logger.info("adminLinkRequester", { uid: targetUid, by: adminUid });
@@ -885,6 +942,319 @@ export const adminListRequesterLinks = onCall(
     });
 
     return { accounts };
+  }
+);
+
+// -- Patient-initiated requests for a relative's dossier ---------------------
+// Until now the only way to ask was to say it out loud at the counter: nothing
+// was recorded, staff had no queue, and the patient could not tell whether their
+// request had been seen. "The staff decides" never required "the patient cannot
+// ask" -- this restores the asking half, and only that half.
+//
+// The patient NEVER supplies the relative's dossier number. They do not know it,
+// and asking for it would invite guessing at other people's numbers. They give a
+// name and a date of birth; the STAFF looks the dossier up.
+
+const RELATIONSHIPS = ["pere", "mere", "enfant", "conjoint", "autre"] as const;
+type Relationship = (typeof RELATIONSHIPS)[number];
+
+const RELATIONSHIP_FR: Record<Relationship, string> = {
+  pere: "Son pere",
+  mere: "Sa mere",
+  enfant: "Son enfant",
+  conjoint: "Son conjoint",
+  autre: "Autre proche",
+};
+
+/** Max simultaneous pending requests per account -- a soft anti-spam guard. */
+const MAX_PENDING_RELATIVE_REQUESTS = 5;
+
+interface RelativeRequestData {
+  relationship?: string;
+  relativeName?: string;
+  relativeDob?: string;
+  relativePhone?: string;
+}
+
+/**
+ * Patient: ask the lab to attach a relative's dossier to my account.
+ * Auth only -- any signed-in patient may ASK; only staff may grant.
+ */
+export const requestRelativeAccess = onCall(
+  {region: REGION, secrets: [SMTP_USER, SMTP_PASS]},
+  async (request: CallableRequest<RelativeRequestData>) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentification requise.");
+    }
+    const uid = request.auth.uid;
+
+    const relationship = (request.data?.relationship || "").trim();
+    const relativeName = (request.data?.relativeName || "").trim();
+    const relativeDob = (request.data?.relativeDob || "").trim();
+    const relativePhone = (request.data?.relativePhone || "").trim();
+
+    if (!RELATIONSHIPS.includes(relationship as Relationship)) {
+      throw new HttpsError("invalid-argument", "Lien de parente requis.");
+    }
+    if (relativeName.length < 3 || relativeName.length > 80) {
+      throw new HttpsError("invalid-argument", "Nom du proche requis.");
+    }
+    // The date of birth is what lets the front desk find the right dossier among
+    // homonyms -- it is required for that reason, not for form's sake.
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(relativeDob)) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Date de naissance du proche requise."
+      );
+    }
+
+    const db = admin.firestore();
+    const u = (await db.doc(`users/${uid}`).get()).data() || {};
+    if (!u.fullName || !u.phone) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Completez d'abord votre profil (nom et telephone)."
+      );
+    }
+
+    const pending = await db
+      .collection("relativeAccessRequests")
+      .where("uid", "==", uid)
+      .where("status", "==", "pending")
+      .limit(MAX_PENDING_RELATIVE_REQUESTS + 1)
+      .get();
+    if (pending.size >= MAX_PENDING_RELATIVE_REQUESTS) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Vous avez deja plusieurs demandes en attente. Contactez le laboratoire."
+      );
+    }
+    // Same relative asked for twice -> return the existing request instead of
+    // stacking duplicates in the staff queue.
+    const dup = pending.docs.find(
+      (d) =>
+        String(d.data().relativeName || "").toLowerCase() ===
+          relativeName.toLowerCase() &&
+        String(d.data().relativeDob || "") === relativeDob
+    );
+    if (dup) return {status: "pending", id: dup.id};
+
+    const email = u.email || request.auth.token?.email || null;
+    const doc = await db.collection("relativeAccessRequests").add({
+      uid,
+      fullName: String(u.fullName),
+      email,
+      phone: String(u.phone),
+      relationship,
+      relativeName,
+      relativeDob,
+      relativePhone,
+      status: "pending",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Staff alert -- best-effort, never blocks the patient's answer.
+    try {
+      const html = renderAlertEmail({
+        title: "Demande d'acces au dossier d'un proche",
+        lead:
+          "Un patient demande a consulter les resultats d'un proche depuis son " +
+          "propre compte.",
+        rows: [
+          ["Demandeur", String(u.fullName)],
+          ["Telephone du demandeur", String(u.phone)],
+          ["E-mail du demandeur", email ? String(email) : "-"],
+          ["Proche concerne", relativeName],
+          ["Lien de parente", RELATIONSHIP_FR[relationship as Relationship]],
+          ["Date de naissance du proche", relativeDob],
+          ["Telephone du proche", relativePhone || "-"],
+          ["Demande le", fmtCasablanca(Date.now())],
+          ["Espace admin", `${APP_URL.value()}/fr/admin`],
+        ],
+        todo:
+          "A faire : retrouver le dossier du proche a partir du nom et de la date " +
+          "de naissance, VERIFIER EN PERSONNE que le demandeur a le droit d'y " +
+          "acceder, puis rattacher depuis l'onglet Demandes. Le motif (titulaire " +
+          "present, procuration, autorite parentale) est enregistre.",
+        footer:
+          "Le patient n'a pas fourni de numero de dossier : il ne le connait pas, " +
+          "et le lui demander inviterait a essayer des numeros au hasard.",
+      });
+      await Promise.race([
+        sendMail({
+          to: alertRecipients(),
+          subject: `Demande d'acces au dossier d'un proche - ${u.fullName}`,
+          html,
+          replyTo: email ? String(email) : undefined,
+          fromName: "Labo El Allali - Demandes d'acces",
+        }),
+        new Promise<void>((resolve) => setTimeout(resolve, 10_000)),
+      ]);
+    } catch {
+      logger.error("requestRelativeAccess: staff alert email failed", {uid});
+    }
+
+    return {status: "pending", id: doc.id};
+  }
+);
+
+/** Patient: my own relative requests, to show their status. Auth only. */
+export const myRelativeRequests = onCall(
+  {region: REGION},
+  async (request: CallableRequest) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentification requise.");
+    }
+    const snap = await admin
+      .firestore()
+      .collection("relativeAccessRequests")
+      .where("uid", "==", request.auth.uid)
+      .limit(20)
+      .get();
+    const requests = snap.docs
+      .map((d) => {
+        const x = d.data();
+        return {
+          id: d.id,
+          relativeName: String(x.relativeName || ""),
+          relationship: String(x.relationship || ""),
+          status: String(x.status || "pending"),
+          createdAt: toMillis(x.createdAt),
+        };
+      })
+      // Sorted in memory: no orderBy, so no composite index to deploy.
+      .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    return {requests};
+  }
+);
+
+/** Staff: the pending queue of relative requests. */
+export const adminListRelativeRequests = onCall(
+  {region: REGION},
+  async (request: CallableRequest) => {
+    await requireLevel(request, LEVEL.staff);
+    const snap = await admin
+      .firestore()
+      .collection("relativeAccessRequests")
+      .where("status", "==", "pending")
+      .limit(200)
+      .get();
+    const requests = snap.docs
+      .map((d) => {
+        const x = d.data();
+        return {
+          id: d.id,
+          uid: String(x.uid || ""),
+          fullName: String(x.fullName || ""),
+          email: x.email == null ? null : String(x.email),
+          phone: String(x.phone || ""),
+          relationship: String(x.relationship || ""),
+          relativeName: String(x.relativeName || ""),
+          relativeDob: String(x.relativeDob || ""),
+          relativePhone: String(x.relativePhone || ""),
+          createdAt: toMillis(x.createdAt),
+        };
+      })
+      .sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+    return {requests};
+  }
+);
+
+interface FulfilRelativeData {
+  id?: string;
+  requester_id?: string;
+  type?: string;
+  label?: string;
+  proof?: string;
+}
+
+/**
+ * Staff: grant a relative request -- attach the dossier and close the request.
+ *
+ * `proof` is MANDATORY here, unlike the direct attach path: answering a written
+ * request is exactly the moment where "on what basis?" must be answered, and it
+ * is the only record the lab will have if the access is ever contested.
+ */
+export const adminFulfillRelativeRequest = onCall(
+  {region: REGION, secrets: [SMTP_USER, SMTP_PASS]},
+  async (request: CallableRequest<FulfilRelativeData>) => {
+    const {uid: adminUid} = await requireLevel(request, LEVEL.staff);
+    const id = (request.data?.id || "").trim();
+    const requesterId = normalizeRequesterId(request.data?.requester_id);
+    const type = (request.data?.type || "").trim();
+    const label = (request.data?.label || "").trim();
+    const proof = (request.data?.proof || "").trim();
+
+    if (!id) throw new HttpsError("invalid-argument", "Demande requise.");
+    if (!requesterId) {
+      throw new HttpsError("invalid-argument", "Identifiant du dossier requis.");
+    }
+    if (!VALID_TYPES.includes(type as RequesterType)) {
+      throw new HttpsError("invalid-argument", "Type invalide.");
+    }
+    if (!label) {
+      throw new HttpsError("invalid-argument", "Libelle requis.");
+    }
+    if (!PROOFS.includes(proof as LinkProof)) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Indiquez sur quelle base l'acces est accorde."
+      );
+    }
+
+    const reqRef = admin.firestore().doc(`relativeAccessRequests/${id}`);
+    const reqSnap = await reqRef.get();
+    if (!reqSnap.exists) {
+      throw new HttpsError("not-found", "Cette demande n'existe plus.");
+    }
+    const targetUid = String(reqSnap.data()?.uid || "");
+    if (!targetUid) {
+      throw new HttpsError("failed-precondition", "Demande incomplete.");
+    }
+
+    await attachRequester(
+      targetUid, requesterId, type as RequesterType, label, adminUid,
+      proof as LinkProof
+    );
+
+    await reqRef.set(
+      {
+        status: "fulfilled",
+        requester_id: requesterId,
+        proof,
+        fulfilledBy: adminUid,
+        fulfilledByEmail: request.auth?.token?.email || null,
+        fulfilledAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      {merge: true}
+    );
+
+    logger.info("adminFulfillRelativeRequest", {uid: targetUid, by: adminUid});
+    const holderNotified = await notifyDossierHolder(requesterId);
+    return {success: true, holderNotified};
+  }
+);
+
+/** Staff: refuse a relative request. */
+export const adminRejectRelativeRequest = onCall(
+  {region: REGION},
+  async (request: CallableRequest<{id?: string}>) => {
+    const {uid: adminUid} = await requireLevel(request, LEVEL.staff);
+    const id = (request.data?.id || "").trim();
+    if (!id) throw new HttpsError("invalid-argument", "Demande requise.");
+    await admin
+      .firestore()
+      .doc(`relativeAccessRequests/${id}`)
+      .set(
+        {
+          status: "rejected",
+          fulfilledBy: adminUid,
+          fulfilledByEmail: request.auth?.token?.email || null,
+          fulfilledAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        {merge: true}
+      );
+    return {success: true};
   }
 );
 

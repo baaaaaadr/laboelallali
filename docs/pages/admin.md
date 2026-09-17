@@ -118,6 +118,22 @@ The label is the **only nominative third-party datum in the system** — the lab
 
 i18n lives under `admin.link_*` (flat prefix, matching the local `dash_*` / `test_*` / `req_*` convention — **not** a nested `admin.links.*` object), fr **and** ar.
 
+## Relative requests — the second queue in the Demandes tab
+
+`RelativeRequestsSection` (`src/components/features/admin/RelativeRequestsSection.tsx`) renders **below** the access-request queue, in the same tab, visually separated. The tab badge counts both.
+
+**Why a second queue rather than the same one:** "activate my own results" and "let me read someone else's record" are different decisions with different checks. Merging them would let the front desk treat the second like the first.
+
+**The staff sees a name and a date of birth, not a dossier number.** The patient never supplies one — they do not know it, and asking would invite typing numbers until one works. The date of birth is what separates homonyms, which is why the patient form requires it.
+
+**`proof` is mandatory to grant** (`present` / `procuration` / `autorite_parentale`). It is stored on the request **and** on the `LinkedRequester` entry. The real control — "does this person have the right to read that record?" — happens at the counter and cannot be moved into software; what software can do is record which proof was seen. Without it a link only says who created it and when, which answers nothing if the access is ever contested. `adminLinkRequester` (the direct path) accepts `proof` optionally; `adminFulfillRelativeRequest` requires it.
+
+**The label shown to the patient is the name the patient typed**, reused verbatim — no retyping at the counter, and it reads the way they expect.
+
+Collection `relativeAccessRequests/{autoId}` (auto-id: one account may ask for several relatives, unlike `resultAccessRequests` which is keyed by uid). Fields: `uid, fullName, email, phone, relationship, relativeName, relativeDob, relativePhone, status('pending'|'fulfilled'|'rejected'), createdAt`, plus `requester_id, proof, fulfilledBy, fulfilledByEmail, fulfilledAt` on grant. **No Firestore rule was added**: the collection falls through to the default deny on purpose, and every access goes through a callable.
+
+Callables: `requestRelativeAccess` (auth only, caps at 5 pending, de-duplicates same name + DOB, emails the lab), `myRelativeRequests` (auth only, the patient's own statuses), `adminListRelativeRequests`, `adminFulfillRelativeRequest`, `adminRejectRelativeRequest` (all ≥staff). i18n under `admin.rel_req_*`.
+
 ## Notes for AI
 - **Not in public nav** — reachable only by URL (`/[lang]/admin`), gated as above.
 - Role changes take effect in a client only after the profile re-loads (full refresh / re-login), since `AuthContext` caches `userProfile` for the session.

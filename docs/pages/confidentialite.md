@@ -29,3 +29,10 @@ Ajoutée avec la fonctionnalité de rattachement (voir `docs/pages/admin.md` et 
 Sous la loi 09-08, cela se déclare. Le texte affirme quatre choses, dans cet ordre, et elles doivent le rester : c'est **le laboratoire** qui décide et saisit (jamais l'application, jamais le proche) ; ce qui est enregistré (numéro de dossier + libellé) ; que le titulaire est **prévenu par e-mail** et que **son propre compte est inchangé** ; comment faire retirer l'autorisation.
 
 ⚠ **Rester aligné avec `docs/integrations/cyberlab-results-api.md` §9-§10**, qui est la source de vérité du contrat du callable. Si le comportement serveur change (qui peut rattacher, ce qui est stocké, qui est notifié), les deux documents changent ensemble.
+
+### Mise à jour — la demande vient maintenant du patient (17/09/2026)
+
+Le patient peut désormais **demander** lui-même le rattachement d'un proche depuis `/resultats`. Cela ne change rien à qui **décide** : le laboratoire reste seul à accorder, et seulement après vérification en personne. Deux points à refléter si le texte de la page est retouché :
+
+- la demande enregistre le **nom et la date de naissance du proche**, fournis par le demandeur — une donnée personnelle de tiers de plus, en amont du libellé ;
+- le motif de l'octroi (**titulaire présent / autorisation écrite / autorité parentale**) est conservé. C'est une donnée de preuve, pas une donnée de santé, et c'est ce qui permet au laboratoire de répondre « sur quelle base ? » en cas de contestation.

@@ -644,3 +644,14 @@ Depuis septembre 2026, un compte peut consulter plusieurs dossiers : le sien, pl
 **Métadonnées d'usage.** Consulter le dossier d'un proche **n'horodate pas** le profil (`lastResultsAt` / `firstResultsAt` / `resultsViewCount` restent réservés au dossier propre) : le garde-fou de 6 h se fonde sur la valeur **lue** en début d'appel, donc deux appels rapprochés écriraient tous les deux et gonfleraient un compteur que le tableau de bord range en tranches de fréquence. À la place, un compteur **anonyme** `usageDaily/{YYYY-MM-DD}.proxyConsultations` est incrémenté. Jamais un résultat, jamais quel dossier, jamais qui.
 
 **Écritures Firestore associées** (toutes par l'Admin SDK, verrouillées côté client dans `firestore.rules`) : `users/{uid}.linkedRequesters[]` (`requester_id`, `type`, `label`, `linkedAt`, `linkedBy`) et `users/{uid}.linkedRequesterIds[]`. Le document du **titulaire du dossier n'est jamais touché** : deux comptes peuvent viser le même `requester_id`, et le titulaire ne perd rien.
+
+### 11.1 Qui peut demander, qui peut accorder
+
+Le rattachement d'un dossier de proche a **deux moitiés distinctes**, et elles ne se confondent pas :
+
+- **Demander** : n'importe quel patient connecté, depuis `/resultats` (`requestRelativeAccess`). Il fournit un lien de parenté, un nom et une date de naissance — **jamais un numéro de dossier**, qu'il ne connaît pas et dont la demande inviterait à essayer des numéros au hasard. Plafond de 5 demandes en attente par compte, dédoublonnage sur nom + date de naissance.
+- **Accorder** : le personnel seulement (`adminFulfillRelativeRequest`, ≥ staff), après vérification **en personne**, avec un motif obligatoire enregistré : `present`, `procuration` ou `autorite_parentale`. Ce motif est écrit sur la demande ET sur l'entrée `linkedRequesters`.
+
+Le contrôle réel — « cette personne a-t-elle le droit de lire ce dossier ? » — se fait au comptoir et ne peut pas être déplacé dans le logiciel. Ce que le logiciel apporte, c'est la trace de la preuve vue.
+
+Collection `relativeAccessRequests/{autoId}`, serveur uniquement (aucune règle Firestore ajoutée : elle tombe dans le refus par défaut, tous les accès passent par un callable).

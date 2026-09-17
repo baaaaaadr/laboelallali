@@ -1,0 +1,262 @@
+'use client';
+
+/**
+ * "Demandes de dossier d'un proche" — the staff queue for patients who asked, in
+ * the app, to consult a relative's results.
+ *
+ * Presentational only, like the other admin sub-components: every callable lives
+ * in `/admin/page.tsx`.
+ *
+ * Two things this screen does that the direct-attach card does not:
+ *  - it shows the relative's NAME and DATE OF BIRTH, because the patient never
+ *    supplies a dossier number — the staff looks the record up from these;
+ *  - it REQUIRES a proof before granting. "On what basis was this access
+ *    opened?" is the question the lab will be asked if an access is ever
+ *    contested, and a link that only records who created it answers nothing.
+ */
+
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { AlertCircle, Check, Loader2, UserPlus, X } from 'lucide-react';
+import type { RequesterType } from '@/types/cyberlab';
+
+export type LinkProof = 'present' | 'procuration' | 'autorite_parentale';
+
+export interface RelativeRequest {
+  id: string;
+  uid: string;
+  fullName: string;
+  email: string | null;
+  phone: string;
+  relationship: string;
+  relativeName: string;
+  relativeDob: string;
+  relativePhone: string;
+  createdAt: number | null;
+}
+
+export interface RelativeInputs {
+  requester_id: string;
+  type: RequesterType;
+  proof: LinkProof | '';
+}
+
+interface Props {
+  requests: RelativeRequest[];
+  inputs: Record<string, RelativeInputs>;
+  onInput: (id: string, patch: Partial<RelativeInputs>) => void;
+  busyId: string | null;
+  error: string | null;
+  message: string | null;
+  onFulfill: (req: RelativeRequest) => void;
+  onReject: (req: RelativeRequest) => void;
+  onTest: (requesterId: string, type: RequesterType) => void;
+  fmtDate: (iso: string) => string;
+  fmtWhenTime: (ms?: number | null) => string;
+}
+
+const PROOFS: LinkProof[] = ['present', 'procuration', 'autorite_parentale'];
+
+export default function RelativeRequestsSection({
+  requests,
+  inputs,
+  onInput,
+  busyId,
+  error,
+  message,
+  onFulfill,
+  onReject,
+  onTest,
+  fmtDate,
+  fmtWhenTime,
+}: Props) {
+  const { t } = useTranslation('common');
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+
+  const inputClass =
+    'w-full rounded-lg px-3 py-2.5 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm';
+
+  if (requests.length === 0) {
+    return (
+      <div className="card p-6">
+        <h3 className="font-semibold text-[var(--text-primary)] mb-1">
+          {t('admin.rel_req_title', "Demandes de dossier d'un proche")}
+        </h3>
+        <p className="text-sm text-[var(--text-secondary)]">
+          {t('admin.rel_req_none', 'Aucune demande en attente.')}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="font-semibold text-[var(--text-primary)]">
+          {t('admin.rel_req_title', "Demandes de dossier d'un proche")}
+        </h3>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">
+          {t(
+            'admin.rel_req_intro',
+            "Le patient ne connaît pas le numéro de dossier de son proche : retrouvez-le à partir du nom et de la date de naissance ci-dessous."
+          )}
+        </p>
+      </div>
+
+      {error && (
+        <div className="flex items-start gap-2 text-sm text-[var(--status-error)]">
+          <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+      {message && (
+        <div className="flex items-start gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+          <Check size={18} className="flex-shrink-0 mt-0.5" />
+          <span>{message}</span>
+        </div>
+      )}
+
+      {requests.map((req) => {
+        const v = inputs[req.id] ?? { requester_id: '', type: 'patient' as RequesterType, proof: '' };
+        const ready = v.requester_id.trim() !== '' && v.proof !== '';
+        return (
+          <div key={req.id} className="card p-6 space-y-4">
+            {/* Who is asking */}
+            <div className="pb-3 border-b border-[var(--border-default)]">
+              <p className="font-semibold text-[var(--text-primary)]">{req.fullName}</p>
+              <p className="text-sm text-[var(--text-secondary)]">
+                {req.email && <span className="break-all">{req.email}</span>}
+                {req.email && req.phone && ' · '}
+                {req.phone}
+              </p>
+              {req.createdAt && (
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {t('admin.req_created_at', 'Demandé le')} {fmtWhenTime(req.createdAt)}
+                </p>
+              )}
+            </div>
+
+            {/* Who they want to consult — the search key for the staff */}
+            <div className="rounded-lg p-3 bg-[var(--background-secondary)]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)] mb-1">
+                {t('admin.rel_req_who', 'Proche concerné')}
+              </p>
+              <p className="font-medium text-[var(--text-primary)]">{req.relativeName}</p>
+              <p className="text-sm text-[var(--text-secondary)]">
+                {t(`admin.rel_req_rel_${req.relationship}`, req.relationship)}
+                {req.relativeDob && ` · ${t('admin.dob_label', 'Date de naissance')} : ${fmtDate(req.relativeDob)}`}
+                {req.relativePhone && ` · ${req.relativePhone}`}
+              </p>
+            </div>
+
+            {/* Grant */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                  {t('admin.rel_req_id', 'Identifiant du dossier trouvé')}
+                </label>
+                <input
+                  type="text"
+                  value={v.requester_id}
+                  onChange={(e) => onInput(req.id, { requester_id: e.target.value })}
+                  placeholder={t('admin.link_id_placeholder', 'Ex. : 12345')}
+                  dir="ltr"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                  {t('admin.type_label', 'Type')}
+                </label>
+                <select
+                  value={v.type}
+                  onChange={(e) => onInput(req.id, { type: e.target.value as RequesterType })}
+                  className={inputClass}
+                >
+                  <option value="patient">{t('admin.type_patient', 'Patient')}</option>
+                  <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
+                  <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                {t('admin.rel_req_proof', "Sur quelle base accordez-vous l'accès ?")}
+              </label>
+              <select
+                value={v.proof}
+                onChange={(e) => onInput(req.id, { proof: e.target.value as LinkProof | '' })}
+                className={inputClass}
+              >
+                <option value="">{t('admin.rel_req_proof_choose', '— Choisir —')}</option>
+                {PROOFS.map((p) => (
+                  <option key={p} value={p}>
+                    {t(`admin.rel_req_proof_${p}`, p)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">
+                {t(
+                  'admin.rel_req_proof_hint',
+                  "Cette mention est conservée. C'est la seule trace dont disposera le laboratoire si cet accès est un jour contesté."
+                )}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => v.requester_id.trim() && onTest(v.requester_id.trim(), v.type)}
+                disabled={!v.requester_id.trim()}
+                className="min-h-[44px] px-4 rounded-lg border border-[var(--border-default)] text-[var(--text-primary)] disabled:opacity-50"
+              >
+                {t('admin.link_test_first', "Tester d'abord")}
+              </button>
+              <button
+                type="button"
+                onClick={() => onFulfill(req)}
+                disabled={!ready || busyId === req.id}
+                className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-60"
+              >
+                {busyId === req.id ? <Loader2 size={18} className="animate-spin" /> : <UserPlus size={18} />}
+                {t('admin.rel_req_grant', 'Rattacher')}
+              </button>
+
+              {confirmingId === req.id ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmingId(null);
+                      onReject(req);
+                    }}
+                    className="min-h-[44px] px-4 rounded-lg text-sm font-semibold text-[var(--color-white)] bg-[var(--status-error)]"
+                  >
+                    {t('admin.rel_req_reject_yes', 'Oui, refuser')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingId(null)}
+                    className="min-h-[44px] px-3 rounded-lg text-sm text-[var(--text-secondary)]"
+                  >
+                    {t('cancel', 'Annuler')}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingId(req.id)}
+                  className="flex items-center gap-2 min-h-[44px] px-4 rounded-lg text-[var(--status-error)]"
+                >
+                  <X size={18} />
+                  {t('admin.rel_req_reject', 'Refuser')}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
