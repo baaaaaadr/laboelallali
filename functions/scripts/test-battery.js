@@ -162,7 +162,6 @@ async function run() {
 
   // Keep A1 / A3 responses in memory for the D (shape) checks. Never printed.
   let a1json = null;
-  let a3json = null;
 
   // ── A — Happy paths (must be ACCEPTED) ──────────────────────────────────────
   async function happy(type, id, max = 50) {
@@ -196,7 +195,6 @@ async function run() {
   }
   {
     const r = await happy("correspondant", "TESTA", 50);
-    a3json = r.json;
     const list = r.json && r.json.results;
     const ok = r.status === 200 && Array.isArray(list) && list.length > 0;
     const nomFilled = ok && list.every((x) => typeof x.patient_nom === "string" && x.patient_nom.length > 0);
