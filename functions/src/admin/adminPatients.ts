@@ -46,6 +46,53 @@ async function getUidByEmail(email: string, subject: string): Promise<string> {
   }
 }
 
+interface LinkedRequesterDoc {
+  requester_id: string;
+  type: RequesterType;
+  label: string;
+  linkedAt: admin.firestore.Timestamp;
+  linkedBy: string;
+}
+
+interface LinkDTO {
+  requester_id: string;
+  type: string;
+  label: string;
+  linkedAt: number | null;
+}
+
+/**
+ * Shape a stored link for the client (Timestamp → epoch millis).
+ * @param {LinkedRequesterDoc} l stored link.
+ * @return {LinkDTO} client-facing shape.
+ */
+function toLinkDTO(l: LinkedRequesterDoc): LinkDTO {
+  return {
+    requester_id: l.requester_id,
+    type: l.type,
+    label: l.label,
+    linkedAt: l.linkedAt && typeof l.linkedAt.toMillis === "function" ?
+      l.linkedAt.toMillis() :
+      null,
+  };
+}
+
+/**
+ * Read the links array off a profile, skipping anything malformed.
+ * @param {FirebaseFirestore.DocumentData|undefined} data profile data.
+ * @return {LinkedRequesterDoc[]} well-formed links.
+ */
+function readLinks(
+  data: FirebaseFirestore.DocumentData | undefined
+): LinkedRequesterDoc[] {
+  const raw = data?.linkedRequesters;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (x): x is LinkedRequesterDoc =>
+      !!x && typeof x === "object" && typeof x.requester_id === "string"
+  );
+}
+
 // ── Encode requester_id / type (staff and up) ────────────────────────────────
 interface LookupData {
   email?: string;
@@ -75,6 +122,12 @@ export const adminLookupPatient = onCall(
       requester_id: d.requester_id || "",
       type: d.type || "",
       role: d.role || "",
+      // Free: the document is already read. Lets the caller show that this
+      // account also consults relatives' dossiers.
+      linkedCount: Array.isArray(d.linkedRequesterIds) ?
+        d.linkedRequesterIds.length :
+        0,
+      links: readLinks(d).map(toLinkDTO),
     };
   }
 );
@@ -153,6 +206,13 @@ interface PatientMatch {
   createdAt: string;
   dateOfBirth: string;
   exact: boolean; // exact email or requester_id hit — ranked first
+  /** How many relatives' dossiers are attached to this account (0 for most). */
+  linkedCount: number;
+  /**
+   * The attached dossiers themselves. Free — the document is already read — and
+   * it saves the admin screen a round trip when staff picks a patient.
+   */
+  links: LinkDTO[];
 }
 
 export const adminSearchPatients = onCall(
@@ -179,14 +239,23 @@ export const adminSearchPatients = onCall(
       const rid = String(d.requester_id || "");
       const phone = String(d.phone || "").replace(/\D/g, "");
       const dob = String(d.dateOfBirth || "");
+      // Attached relatives' dossiers. Searching one of these MUST find the
+      // helper's account, otherwise staff cannot audit a link they just created.
+      const linkedIds: string[] = Array.isArray(d.linkedRequesterIds) ?
+        d.linkedRequesterIds.map((x: unknown) => String(x)) :
+        [];
+      const links = readLinks(d).map(toLinkDTO);
 
       const emailExact = email !== "" && stripAccents(email) === nq;
-      const ridExact = rid !== "" && rid === q;
+      const ridExact =
+        (rid !== "" && rid === q) || linkedIds.includes(q);
       const hit =
         stripAccents(fullName).includes(nq) ||
         (email !== "" && stripAccents(email).includes(nq)) ||
         ridExact ||
         (digits.length >= 1 && rid !== "" && rid.includes(digits)) ||
+        (digits.length >= 1 &&
+          linkedIds.some((id) => id.includes(digits))) ||
         (digits.length >= 4 && phone !== "" && phone.includes(digits)) ||
         (dob !== "" && dob.includes(q));
       if (!hit) return;
@@ -203,6 +272,8 @@ export const adminSearchPatients = onCall(
         createdAt: String(d.createdAt || ""),
         dateOfBirth: dob,
         exact: emailExact || ridExact,
+        linkedCount: linkedIds.length,
+        links,
       });
     });
 
@@ -234,6 +305,10 @@ export const adminSearchPatients = onCall(
           requester_id: String(d.requester_id || ""),
           type: String(d.type || ""),
           role: String(d.role || ""),
+          linkedCount: Array.isArray(d.linkedRequesterIds) ?
+            d.linkedRequesterIds.length :
+            0,
+          links: readLinks(d).map(toLinkDTO),
           createdAt: String(d.createdAt || ""),
           dateOfBirth: String(d.dateOfBirth || ""),
           exact: true,
@@ -533,6 +608,286 @@ export const adminRejectAccessRequest = onCall(
   }
 );
 
+// ── Attached relatives ("ayant droit") ───────────────────────────────────────
+// A child consulting their parents' results. The attachment is on the LAB
+// IDENTITY (`requester_id`), never on the account: two accounts may point at the
+// same dossier, so attaching a parent's dossier to their child's account takes
+// NOTHING away from the parent — their own account keeps working identically.
+// That is the property the owner asked for, and it is why none of the callables
+// below ever write to the dossier holder's document.
+//
+// Staff-only by design: medical confidentiality means a human verifies the
+// relationship face to face. There is no self-service path.
+
+/** Hard cap per account. Mirrors MAX_LINKED_REQUESTERS in cyberlab/identities. */
+const MAX_LINKS = 10;
+/** The label is the only third-party name in the system — keep it short. */
+const MAX_LABEL_LEN = 60;
+
+/**
+ * Notify the dossier holder that their results became visible to a relative.
+ *
+ * Only possible when the holder has an app account carrying an email — plenty of
+ * lab patients do not, and the staff screen must see that no message went out
+ * rather than assume one did. Best-effort: never blocks the attachment.
+ * @param {string} requesterId the lab dossier that was attached.
+ * @return {Promise<boolean>} true when an email was actually sent.
+ */
+async function notifyDossierHolder(requesterId: string): Promise<boolean> {
+  try {
+    // Equality on a single field — Firestore indexes this automatically.
+    const snap = await admin
+      .firestore()
+      .collection("users")
+      .where("requester_id", "==", requesterId)
+      .limit(1)
+      .get();
+    if (snap.empty) return false;
+
+    const holder = snap.docs[0].data() || {};
+    const email = holder.email ? String(holder.email) : "";
+    if (!email) return false;
+
+    const html = renderAlertEmail({
+      title: "Vos résultats sont désormais consultables par un proche",
+      lead:
+        "À votre demande au laboratoire, un de vos proches peut désormais " +
+        "consulter vos résultats d'analyses depuis son propre compte.",
+      rows: [
+        ["Date", fmtCasablanca(Date.now())],
+        ["Votre dossier", requesterId],
+      ],
+      todo:
+        "Si vous n'êtes pas à l'origine de cette demande, ou si vous souhaitez " +
+        "y mettre fin, contactez le laboratoire : l'accès sera retiré " +
+        "immédiatement. Votre propre compte n'a pas changé.",
+      footer:
+        "Le nom de votre proche n'est pas rappelé dans cet e-mail, " +
+        "par précaution.",
+    });
+
+    await Promise.race([
+      sendMail({
+        to: [email],
+        subject: "[Labo El Allali] Un proche peut consulter vos résultats",
+        html,
+        fromName: "Laboratoire El Allali",
+      }),
+      new Promise<void>((resolve) => setTimeout(resolve, 10_000)),
+    ]);
+    return true;
+  } catch {
+    // Never log the holder's email. The attachment already succeeded.
+    logger.error("notifyDossierHolder: email failed");
+    return false;
+  }
+}
+
+interface LinkData {
+  uid?: string;
+  requester_id?: string;
+  type?: string;
+  label?: string;
+}
+
+/**
+ * Attach a relative's dossier to an account (staff and up).
+ *
+ * Targets by `uid`, not email: the Patients tab already holds it (from
+ * adminSearchPatients), adminFulfillAccessRequest does the same, and an email is
+ * a weaker key — it can change.
+ */
+export const adminLinkRequester = onCall(
+  // SMTP bound for the dossier-holder notification below.
+  { region: REGION, secrets: [SMTP_USER, SMTP_PASS] },
+  async (request: CallableRequest<LinkData>) => {
+    const { uid: adminUid } = await requireLevel(request, LEVEL.staff);
+
+    const targetUid = (request.data?.uid || "").trim();
+    const requesterId = normalizeRequesterId(request.data?.requester_id);
+    const type = (request.data?.type || "").trim();
+    const label = (request.data?.label || "").trim();
+
+    if (!targetUid) throw new HttpsError("invalid-argument", "Compte requis.");
+    if (!requesterId) {
+      throw new HttpsError("invalid-argument", "Identifiant du dossier requis.");
+    }
+    if (!VALID_TYPES.includes(type as RequesterType)) {
+      throw new HttpsError("invalid-argument", "Type invalide.");
+    }
+    if (!label) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Indiquez de qui il s'agit (ex. « Maman — Fatima »)."
+      );
+    }
+    if (label.length > MAX_LABEL_LEN) {
+      throw new HttpsError("invalid-argument", "Libellé trop long.");
+    }
+
+    const ref = admin.firestore().doc(`users/${targetUid}`);
+
+    // A transaction, not arrayUnion: arrayUnion dedupes by DEEP EQUALITY, so
+    // re-attaching the same dossier with a corrected label would silently create
+    // a second entry for the same person. Upsert keyed on requester_id instead.
+    await admin.firestore().runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) {
+        throw new HttpsError("not-found", "Ce compte n'existe pas.");
+      }
+      const data = snap.data() || {};
+
+      if (normalizeRequesterId(data.requester_id) === requesterId) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Ce dossier est déjà le dossier principal de ce compte."
+        );
+      }
+
+      const links = readLinks(data);
+      const at = links.findIndex((l) => normalizeRequesterId(l.requester_id) === requesterId);
+      if (at < 0 && links.length >= MAX_LINKS) {
+        throw new HttpsError(
+          "failed-precondition",
+          `Maximum ${MAX_LINKS} dossiers rattachés par compte.`
+        );
+      }
+
+      const entry: LinkedRequesterDoc = {
+        requester_id: requesterId,
+        type: type as RequesterType,
+        label,
+        // ⚠ Timestamp.now(), NOT serverTimestamp(): Firestore REJECTS a sentinel
+        // inside an array element, at runtime, in production only.
+        linkedAt: admin.firestore.Timestamp.now(),
+        linkedBy: adminUid,
+      };
+      const next = [...links];
+      if (at >= 0) next[at] = entry; else next.push(entry);
+
+      tx.set(
+        ref,
+        {
+          linkedRequesters: next,
+          // Flattened ids: array-contains cannot query a sub-field of a map
+          // inside an array, and "who else can read this dossier?" is a question
+          // the lab is required to be able to answer.
+          linkedRequesterIds: next.map((l) => l.requester_id),
+        },
+        { merge: true }
+      );
+    });
+
+    // uid only — never the label (a third party's name) nor the dossier holder.
+    logger.info("adminLinkRequester", { uid: targetUid, by: adminUid });
+
+    const holderNotified = await notifyDossierHolder(requesterId);
+    const after = readLinks((await ref.get()).data());
+    return { success: true, links: after.map(toLinkDTO), holderNotified };
+  }
+);
+
+/** Detach a relative's dossier from an account (staff and up). */
+export const adminUnlinkRequester = onCall(
+  { region: REGION },
+  async (request: CallableRequest<{ uid?: string; requester_id?: string }>) => {
+    const { uid: adminUid } = await requireLevel(request, LEVEL.staff);
+    const targetUid = (request.data?.uid || "").trim();
+    const requesterId = normalizeRequesterId(request.data?.requester_id);
+    if (!targetUid) throw new HttpsError("invalid-argument", "Compte requis.");
+    if (!requesterId) {
+      throw new HttpsError("invalid-argument", "Identifiant du dossier requis.");
+    }
+
+    const ref = admin.firestore().doc(`users/${targetUid}`);
+    await admin.firestore().runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) throw new HttpsError("not-found", "Ce compte n'existe pas.");
+      const next = readLinks(snap.data()).filter(
+        (l) => normalizeRequesterId(l.requester_id) !== requesterId
+      );
+      tx.set(
+        ref,
+        {
+          linkedRequesters: next,
+          linkedRequesterIds: next.map((l) => l.requester_id),
+        },
+        { merge: true }
+      );
+    });
+
+    logger.info("adminUnlinkRequester", { uid: targetUid, by: adminUid });
+    const after = readLinks((await ref.get()).data());
+    return { success: true, links: after.map(toLinkDTO) };
+  }
+);
+
+/**
+ * Which accounts can read a given dossier — the audit answer.
+ *
+ * Confusing a helper with the dossier holder is the worst mistake possible at the
+ * counter, so `isSelf` distinguishes "this is their own dossier" from
+ * "this was attached to them".
+ */
+export const adminListRequesterLinks = onCall(
+  { region: REGION },
+  async (request: CallableRequest<{ requester_id?: string }>) => {
+    await requireLevel(request, LEVEL.staff);
+    const requesterId = normalizeRequesterId(request.data?.requester_id);
+    if (!requesterId) {
+      throw new HttpsError("invalid-argument", "Identifiant du dossier requis.");
+    }
+
+    const db = admin.firestore();
+    const [ownerSnap, linkedSnap] = await Promise.all([
+      db.collection("users").where("requester_id", "==", requesterId).limit(10).get(),
+      db
+        .collection("users")
+        .where("linkedRequesterIds", "array-contains", requesterId)
+        .limit(25)
+        .get(),
+    ]);
+
+    const accounts: Array<{
+      uid: string;
+      fullName: string;
+      email: string | null;
+      isSelf: boolean;
+      label: string;
+      linkedAt: number | null;
+    }> = [];
+
+    ownerSnap.forEach((doc) => {
+      const d = doc.data() || {};
+      accounts.push({
+        uid: doc.id,
+        fullName: String(d.fullName || ""),
+        email: d.email == null ? null : String(d.email),
+        isSelf: true,
+        label: "",
+        linkedAt: null,
+      });
+    });
+
+    linkedSnap.forEach((doc) => {
+      const d = doc.data() || {};
+      const link = readLinks(d).find(
+        (l) => normalizeRequesterId(l.requester_id) === requesterId
+      );
+      accounts.push({
+        uid: doc.id,
+        fullName: String(d.fullName || ""),
+        email: d.email == null ? null : String(d.email),
+        isSelf: false,
+        label: link?.label || "",
+        linkedAt: link ? toLinkDTO(link).linkedAt : null,
+      });
+    });
+
+    return { accounts };
+  }
+);
+
 // ── Dashboard ────────────────────────────────────────────────────────────────
 // One call powering the "Tableau de bord" tab: adoption of the online-results
 // service. Same bounded scan as adminSearchPatients (Admin SDK, SCAN_LIMIT).
@@ -639,7 +994,14 @@ async function scanAccounts(includeTeam: boolean): Promise<{
       if (!includeTeam) return;
     }
 
-    const hasAccess = String(d.requester_id || "").trim() !== "";
+    // An account with no dossier of its own but relatives attached IS an
+    // activated account — otherwise it never appears in adoption or relances,
+    // and the denominator drifts as the ayant-droit feature gets used.
+    const linkedCount = Array.isArray(d.linkedRequesterIds) ?
+      d.linkedRequesterIds.length :
+      0;
+    const hasAccess =
+      String(d.requester_id || "").trim() !== "" || linkedCount > 0;
     const type = String(d.type || "");
     if (hasAccess && type in byType) byType[type] += 1;
 

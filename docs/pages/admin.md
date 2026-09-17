@@ -2,7 +2,7 @@
 
 ## Purpose
 Staff space, organized into **five tabs** (Tableau de bord · Patients · Demandes · Tester · Équipe) so it stays usable on mobile as it grows. Five jobs:
-1. **Search patients & attach a CyberLab identity** — the **Patients** tab. A multi-field search (email, name/prénom, phone, date of birth, `requester_id`) finds the patient; picking a result shows their account creation date + date of birth and prefills the attach form, which merges `requester_id` + `type` onto their account (browser equivalent of `functions/scripts/seed-requester.js`). Replaces the old exact-email-only lookup.
+1. **Search patients, attach a CyberLab identity, and attach relatives' dossiers** — the **Patients** tab. A multi-field search (email, name/prénom, phone, date of birth, `requester_id`) finds the patient; picking a result shows their account creation date + date of birth and prefills the attach form, which merges `requester_id` + `type` onto their account (browser equivalent of `functions/scripts/seed-requester.js`). Replaces the old exact-email-only lookup.
 2. **Fulfill patient access requests** — the **Demandes** tab lists patients with a `pending` request; staff verifies identity (face-to-face) and attaches `requester_id` + `type` to activate access. A request lands here **two ways**: the patient tapped "Demander l'accès" on `/resultats`, OR it was **auto-created at signup** (`autoRequestResultsAccess()`, see `docs/pages/login.md`). Dr Aziz uses this queue as the **new-registrant outreach list** — the front desk phones each new signup to offer/explain the online-results service — so it is intentionally NOT limited to explicit requests.
 3. **Manage the team** (roles) — the **Équipe** tab (managers only): owners add/remove admins; owners and admins add/remove staff (stagiaires).
 4. **Test a requester_id** (onboarding probe) — the **Tester** tab lets staff run a live CyberLab call for an arbitrary `requester_id` + `type` and preview what the patient would see (dossier list + analyses), BEFORE asking the patient to log in on their own device. Each dossier has a **"Voir le PDF"** that fetches that single PDF exactly like the patient's "Voir" — so staff also catch a failing/empty PDF (the on-demand PDF is where onboarding actually breaks). Patient names are scrubbed server-side. Independent of the email lookup (the patient may not have an account yet).
@@ -56,6 +56,16 @@ All region `europe-southwest1`, all guarded by `requireLevel`:
 - `adminLookupPatient(email)` (≥staff) → patient profile/identity, or `{ found:false }`. Kept for compat; the UI now uses `adminSearchPatients`.
 - `adminSearchPatients(query)` (≥staff) → `{ results: SearchResult[], truncated }`. Scans `users` (`.limit(SCAN_LIMIT=5000)`, Admin SDK bypasses rules) and matches the normalized query (lowercase + strip diacritics) as a substring of `fullName`/`email`, equality/inclusion on `requester_id`, phone digits (query ≥ 4 digits), or `dateOfBirth`. Exact email/`requester_id` ranked first; capped at `MAX_RESULTS=25` (`truncated` flags overflow). Email fallback via `getUserByEmail` for a profile-less account. Returns `createdAt`/`dateOfBirth` for display. In-memory match (Firestore has no substring search) — see scale caveat in Notes. Never logs PII.
 - `adminSetRequester(email, requester_id, type)` (≥staff) → merges `{requester_id, type}` onto `users/{uid}` (Admin SDK, bypasses rules). Validates `type ∈ {patient,medecin,correspondant}`.
+- **`adminLinkRequester(uid, requester_id, type, label)`** (≥staff) → attaches a RELATIVE's dossier to an account ("ayant droit"). Returns `{success, links, holderNotified}`.
+  - Targets by **`uid`**, not email (the Patients tab already holds it; email is a weaker key).
+  - Uses a **transaction with an upsert keyed on `requester_id`** — NOT `arrayUnion`, which dedupes by deep equality and would create a duplicate row when a label is corrected.
+  - Writes **both** `linkedRequesters` (the rows) and `linkedRequesterIds` (flat ids). The flat array exists because `array-contains` cannot query a sub-field of a map inside an array, and "which accounts can read this dossier?" is a question the lab must be able to answer.
+  - **`linkedAt` uses `Timestamp.now()`, never `serverTimestamp()`** — Firestore rejects a sentinel inside an array element, at runtime, in production only.
+  - Refuses: an id equal to the account's own `requester_id`, a missing/over-60-char label, more than `MAX_LINKS` (10) rows.
+  - **Never writes to the dossier holder's document.** Two accounts may point at the same `requester_id`; the holder loses nothing.
+  - Emails the **dossier holder** (looked up via `users where requester_id == id`) that a relative can now read their results — best-effort, and only possible when the holder has an account carrying an email. `holderNotified` tells the screen whether anything was actually sent.
+- **`adminUnlinkRequester(uid, requester_id)`** (≥staff) → removes one row, same transaction shape. Returns the fresh `links`.
+- **`adminListRequesterLinks(requester_id)`** (≥staff) → `{accounts}` — who can read this dossier, each flagged `isSelf` (holder) or not (attached). Confusing a helper with the holder is the worst mistake possible at the counter.
 - `adminSetStaff(email, grant)` (≥admin) → set `role: 'staff'` / remove. Refuses if target is admin/owner.
 - `adminSetAdmin(email, grant)` (owner only) → set `role: 'admin'` / remove. Refuses if target is owner.
 - `adminListStaff()` (≥admin) → `{ members: [{uid,email,fullName,role}], callerLevel }`, sorted owner→admin→staff.
@@ -91,6 +101,22 @@ CyberLab onboarding probe (`functions/src/cyberlab/adminTestResults.ts`, secrets
 
 ## Bootstrapping owners
 An owner must exist before the UI can manage roles. First owners set out-of-band with `functions/scripts/make-admin.js <email> owner` (Admin SDK, needs `GOOGLE_APPLICATION_CREDENTIALS`). `role` lives on `users/{uid}` and survives profile edits because all `users/{uid}` writes use `{ merge: true }`.
+
+## Relatives' dossiers ("ayant droit") — the Patients tab, second card
+
+`LinkedRequestersCard` (`src/components/features/admin/LinkedRequestersCard.tsx`) renders **its own card**, a sibling of the selected-patient card, not a section inside its `<form>`. Deliberate: "activate this patient's access" and "let this account read someone else's results" are different acts, and the front desk must not blur them. `{selected && (...)}` therefore wraps a fragment.
+
+**Presentational only**, like `RelancesTab` and `AdminDashboard`: state and callables live in `/admin/page.tsx` (`linkRows`, `linkError`, `linkBusy`, `linkNotice`, `linkAudit`; handlers `addLink`, `removeLink`, `testFromLink`).
+
+**No read callable exists, on purpose.** `adminSearchPatients` already returns `links` and `linkedCount` on every result (the user document was read anyway), and add/remove return the fresh list. `selectPatient` just does `setLinkRows(p.links ?? [])`.
+
+**The two details that carry the value:**
+- **"Tester d'abord"** prefills the Tester tab and runs `runTest`. A wrong id here shows patient X's results to patient Y, and **nothing in the patient's own screen would reveal it** — the patient has no way to know the dossier is not their relative's. Staff must confirm the id returns the right dossiers *before* attaching.
+- **The reassurance line** ("Cela n'enlève rien au titulaire"). Staff and patients both assume attaching a dossier *moves* it. Saying otherwise on screen prevents a refusal born of a misunderstanding.
+
+The label is the **only nominative third-party datum in the system** — the lab server deliberately returns no `patient_nom` for `type: "patient"`, so there is no other way to know whose dossier it is. It is never logged, server-side or client-side.
+
+i18n lives under `admin.link_*` (flat prefix, matching the local `dash_*` / `test_*` / `req_*` convention — **not** a nested `admin.links.*` object), fr **and** ar.
 
 ## Notes for AI
 - **Not in public nav** — reachable only by URL (`/[lang]/admin`), gated as above.

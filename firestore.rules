@@ -33,13 +33,17 @@ service cloud.firestore {
     }
 
     // Authenticated users read/write ONLY their own profile — and may NEVER set or
-    // change the privileged fields role / requester_id / type / lastResultsAt. Those
-    // are managed exclusively server-side via the Admin SDK (which bypasses these
-    // rules): adminSetRequester, adminSetStaff, adminSetAdmin,
-    // adminFulfillAccessRequest, and fetchResults for the usage stamp.
+    // change the privileged fields role / requester_id / type / lastResultsAt /
+    // linkedRequesters. Those are managed exclusively server-side via the Admin
+    // SDK (which bypasses these rules): adminSetRequester, adminSetStaff,
+    // adminSetAdmin, adminFulfillAccessRequest, adminLinkRequester /
+    // adminUnlinkRequester, and fetchResults for the usage stamp.
     // This blocks self-promotion to staff/owner, self-pointing requester_id at
     // another patient's id (which fetchResults/adminTestResults would otherwise
-    // trust), and forging one's own activity date (dashboard stats integrity).
+    // trust), forging one's own activity date (dashboard stats integrity), and —
+    // the newest and most serious — self-granting access to ANOTHER PATIENT'S
+    // dossier by writing linkedRequesters. Attaching a relative is a decision the
+    // lab staff makes in person; it can never originate from the client.
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
 
@@ -49,7 +53,8 @@ service cloud.firestore {
         && !request.resource.data.keys()
               .hasAny(['role', 'requester_id', 'type', 'lastResultsAt',
                        'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
-                       'lastRelanceAt', 'relanceCount']);
+                       'lastRelanceAt', 'relanceCount',
+                       'linkedRequesters', 'linkedRequesterIds']);
 
       // Update: allowed only if it does not CHANGE any privileged field. diff()
       // compares values, so a {merge:true} write that echoes an unchanged role /
@@ -60,7 +65,8 @@ service cloud.firestore {
               .affectedKeys()
               .hasAny(['role', 'requester_id', 'type', 'lastResultsAt',
                        'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
-                       'lastRelanceAt', 'relanceCount']);
+                       'lastRelanceAt', 'relanceCount',
+                       'linkedRequesters', 'linkedRequesterIds']);
     }
 
     // Anonymous global usage counters (usageDaily/{YYYY-MM-DD}) are written ONLY

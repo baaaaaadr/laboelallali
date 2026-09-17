@@ -18,7 +18,9 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
-import { useResults } from '@/contexts/ResultsContext';
+import { useResultsFor } from '@/contexts/ResultsContext';
+import IdentitySelector from '@/components/common/IdentitySelector';
+import { findIdentity, resolveIdentities } from '@/lib/results/identities';
 import { getClientFunctions } from '@/config/firebase';
 import type { CyberlabResult } from '@/types/cyberlab';
 import AnalysesDetails from '@/components/features/results/AnalysesDetails';
@@ -50,6 +52,7 @@ import {
   Copy,
   Check,
   MessageCircle,
+  Users,
 } from 'lucide-react';
 
 
@@ -106,10 +109,24 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const { t } = useTranslation('common');
   const router = useRouter();
   const { user, userProfile, loading: authLoading } = useAuth();
+  // Which person's results are on screen. LOCAL and never persisted: a selection
+  // kept in the provider would leak to the home page, and on a shared family
+  // phone remembering "I was looking at Dad's results" is a risk, not a comfort.
+  // null = the primary identity, which is what every fresh visit starts on.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Every dossier this account may consult, primary first.
+  const identities = useMemo(
+    () => resolveIdentities(userProfile, t('resultats.identity_me', 'Moi')),
+    [userProfile, t]
+  );
+  const selectedIdentity = findIdentity(identities, selectedId) ?? identities[0] ?? null;
+  const isSelf = selectedIdentity?.isSelf ?? true;
+
   // Results come from the shared context (prefetched in the background at login).
   // List loads first (fast); each PDF is fetched on demand (newest one auto-loads).
   const { results, status, errorCode, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh } =
-    useResults();
+    useResultsFor(selectedId);
 
   // On a real error (not the rate-limit case), check the monitor's health doc:
   // if it confirms an outage we enrich the message ("le labo est déjà alerté")
@@ -198,10 +215,45 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   }, [t, refresh]);
 
   // If the background prefetch hasn't run/finished, make sure we load once the page
-  // is open and the user is known (idempotent — the context de-dupes).
+  // is open and the user is known (idempotent — the context de-dupes). Re-runs on
+  // a person switch, which is what lazily loads a relative's dossier the first
+  // time it is opened.
   useEffect(() => {
     if (!authLoading && user) ensureLoaded();
   }, [authLoading, user, ensureLoaded]);
+
+  // Switching person must leave nothing of the previous one on screen. The
+  // dossier list itself is keyed (see the `key` on the results block), but these
+  // four live on the PAGE, outside that subtree, so they have to be cleared here.
+  // A PDF modal left open across a switch would be the worst of them: another
+  // person's medical document under the new person's name.
+  useEffect(() => {
+    setViewerId(null);
+    setYearOverrides({});
+    setCopiedKey(null);
+    setErrorMsg(null);
+  }, [selectedId]);
+
+  // The lab revoked a link while this tab was open. Drop back to the primary
+  // identity rather than leaving a tab that will 403 forever — and say so, or the
+  // switch looks like a bug.
+  useEffect(() => {
+    if (status === 'error' && errorCode === 'permission-denied' && selectedId !== null) {
+      setSelectedId(null);
+      setErrorMsg(
+        t(
+          'resultats.identity_revoked',
+          "Vous n'avez plus accès à ce dossier. Contactez le laboratoire si besoin."
+        )
+      );
+    }
+  }, [status, errorCode, selectedId, t]);
+
+  // A selection pointing at a dossier that is no longer authorized (profile
+  // refreshed in the background) must not linger.
+  useEffect(() => {
+    if (selectedId && !findIdentity(identities, selectedId)) setSelectedId(null);
+  }, [identities, selectedId]);
 
   const closeViewer = useCallback(() => setViewerId(null), []);
 
@@ -304,10 +356,13 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
     );
   }, []);
 
-  // The profile may not carry requester_id client-side yet (staff attached it after
-  // this session's profile load) → fall back to a message without the number.
+  // The SELECTED identity's id, not the account holder's: on a relative's tab the
+  // message must name the dossier that is actually failing, or the lab is sent to
+  // look at the wrong patient. Falls back to a message without a number when the
+  // profile does not carry an id client-side yet (staff attached it after this
+  // session's profile load).
   const unknownIdMessage = useMemo(() => {
-    const id = (userProfile?.requester_id || '').trim();
+    const id = (selectedIdentity?.requester_id || '').trim();
     return id
       ? t('resultats.unknown_id_message', {
           id,
@@ -318,7 +373,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           defaultValue:
             "Bonjour, je n'arrive pas à consulter mes résultats sur l'application du laboratoire : mon identifiant patient n'est pas reconnu. Pouvez-vous vérifier l'activation de mon accès aux résultats en ligne ? Merci.",
         });
-  }, [userProfile?.requester_id, t]);
+  }, [selectedIdentity?.requester_id, t]);
 
   const pdfUnavailableMessage = (r: CyberlabResult) =>
     t('resultats.pdf_unavailable_message', {
@@ -564,10 +619,19 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           <div>
             <h1 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] flex items-center gap-2">
               <FileText size={26} />
-              {t('resultats.title', 'Mes Résultats')}
+              {isSelf
+                ? t('resultats.title', 'Mes Résultats')
+                : t('resultats.title_other', 'Résultats de {{label}}', {
+                    label: selectedIdentity?.label ?? '',
+                  })}
             </h1>
             <p className="text-[var(--text-secondary)] mt-1">
-              {t('resultats.subtitle', "Consultez et téléchargez vos résultats d'analyses.")}
+              {isSelf
+                ? t('resultats.subtitle', "Consultez et téléchargez vos résultats d'analyses.")
+                : t(
+                    'resultats.subtitle_other',
+                    "Vous consultez le dossier d'un proche. Ces résultats ne sont pas les vôtres."
+                  )}
             </p>
           </div>
           <div className="flex flex-col items-start sm:items-end gap-1.5">
@@ -588,11 +652,39 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           </div>
         </div>
 
+        {/* Person selector. Placed here ON PURPOSE: this is the only spot ABOVE
+            every status branch below. If a relative's dossier comes back empty or
+            in error, the patient must still be able to switch back to their own —
+            a selector living inside the `ready` branch would vanish exactly when
+            it is needed most. */}
+        <IdentitySelector
+          identities={identities}
+          value={selectedIdentity?.requester_id ?? ''}
+          onChange={setSelectedId}
+          isRtl={isArabic}
+        />
+
+        {/* Viewing someone else's medical record deserves more than a title
+            change — a coloured band removes a whole class of "I thought these
+            were mine" incidents. */}
+        {!isSelf && selectedIdentity && (
+          <div className="flex items-start gap-2 rounded-lg p-3 bg-[var(--background-tertiary)] border border-[var(--border-default)]">
+            <Users size={18} className="flex-shrink-0 mt-0.5 text-[var(--color-fuchsia-accent)]" />
+            <p className="text-sm text-[var(--text-secondary)]">
+              {t('resultats.viewing_other', 'Vous consultez le dossier de {{label}}.', {
+                label: selectedIdentity.label,
+              })}
+            </p>
+          </div>
+        )}
+
         {/* At-a-glance indicators (count / last bilan / follow-up since) — ready only */}
         {status === 'ready' && <ResultsIndicators results={results} lang={lang} />}
 
-        {/* Checkup reminder — always shown for linked patients once results are ready */}
-        <CheckupReminder lang={lang} />
+        {/* Checkup reminder — only on YOUR OWN dossier. Its copy is first-person
+            ("Votre dernier bilan…") and it already hides itself for medecin /
+            correspondant accounts for exactly this reason. */}
+        {isSelf && <CheckupReminder lang={lang} />}
 
         {/* Loading (idle = prefetch not resolved yet → also show the loader) */}
         {(status === 'loading' || status === 'idle') && (
@@ -762,7 +854,10 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
               @keyframes resBar { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
             `}</style>
             {/* Count → indicators bar (top); freshness → under the Actualiser button. */}
-            <div className="space-y-3">
+            {/* key = the selected person: remounts the whole list on a switch, so
+                no card animation, no stale expansion state and no half-rendered
+                row survives from the previous dossier. */}
+            <div className="space-y-3" key={selectedIdentity?.requester_id ?? 'self'}>
               {grouped.years.map((year) => {
                 const key = String(year);
                 const list = grouped.byYear.get(year)!;
@@ -788,7 +883,10 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
         )}
 
         {/* Refer a relative to the online-results service (self-gated to patients) */}
-        <ShareAccessCard lang={lang} />
+        {/* Only on your OWN dossier: its copy is first-person ("je consulte
+            désormais mes analyses") and inviting a relative from inside a
+            relative's record makes no sense. */}
+        {isSelf && <ShareAccessCard lang={lang} />}
 
         {/* Privacy reassurance — kept at the very bottom, below all results */}
         <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] text-sm">

@@ -24,6 +24,10 @@ import AnalysesDetails from '@/components/features/results/AnalysesDetails';
 import TabsNavigation, { type TabItem } from '@/components/features/catalog/TabsNavigation';
 import AdminDashboard, { type DashboardStats } from '@/components/features/admin/AdminDashboard';
 import RelancesTab, { type DormantAccount } from '@/components/features/admin/RelancesTab';
+import LinkedRequestersCard, {
+  type AuditAccount,
+  type LinkRow,
+} from '@/components/features/admin/LinkedRequestersCard';
 import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
@@ -73,6 +77,9 @@ interface SearchResult {
   role?: string;
   createdAt?: string;
   dateOfBirth?: string;
+  /** Relatives' dossiers attached to this account — returned by the search. */
+  links?: LinkRow[];
+  linkedCount?: number;
 }
 interface SetResult { success: boolean; uid: string; fullName: string; requester_id: string; type: string; }
 interface Member { uid: string; email: string; fullName: string; role: string; }
@@ -153,6 +160,14 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [testResp, setTestResp] = useState<AdminTestResponse | null>(null);
   // Per-dossier PDF probe state (reproduces the patient "Voir", incl. the empty-PDF case).
   const [pdfProbe, setPdfProbe] = useState<Record<string, 'loading' | 'ok' | 'empty' | 'error'>>({});
+
+  // Relatives' dossiers attached to the selected account ("ayant droit").
+  // `linkRows === null` means "not loaded yet", which is why it is not [].
+  const [linkRows, setLinkRows] = useState<LinkRow[] | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkBusy, setLinkBusy] = useState<string | null>(null);
+  const [linkNotice, setLinkNotice] = useState<string | null>(null);
+  const [linkAudit, setLinkAudit] = useState<AuditAccount[] | null>(null);
 
   const errMsg = useCallback(
     (err: unknown): string => {
@@ -411,6 +426,79 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     }
   };
 
+  // ── Relatives' dossiers ("ayant droit") ─────────────────────────────────────
+  // Attaching a dossier NEVER touches the holder's own account: two accounts may
+  // point at the same requester_id. The callables enforce that; the UI says it.
+  const addLink = async (requesterId: string, linkType: RequesterType, label: string) => {
+    if (!selected?.uid) return;
+    setLinkBusy('add');
+    setLinkError(null);
+    setLinkNotice(null);
+    setLinkAudit(null);
+    try {
+      const res = await callFn<{ links: LinkRow[]; holderNotified: boolean }>(
+        'adminLinkRequester',
+        { uid: selected.uid, requester_id: requesterId, type: linkType, label }
+      );
+      setLinkRows(res.links || []);
+      setLinkNotice(
+        res.holderNotified
+          ? t('admin.link_added_notified', 'Rattaché. Le titulaire du dossier a été prévenu par e-mail.')
+          : t(
+              'admin.link_added_no_email',
+              "Rattaché. Le titulaire n'a pas de compte avec e-mail : aucun message n'a pu être envoyé."
+            )
+      );
+      // Show who can now read this dossier — the confidentiality answer the lab
+      // will be asked for.
+      try {
+        const a = await callFn<{ accounts: AuditAccount[] }>('adminListRequesterLinks', {
+          requester_id: requesterId,
+        });
+        setLinkAudit(a.accounts || []);
+      } catch {
+        /* the audit view is a bonus; the attachment already succeeded */
+      }
+    } catch (err: unknown) {
+      setLinkError(errMsg(err));
+    } finally {
+      setLinkBusy(null);
+    }
+  };
+
+  const removeLink = async (requesterId: string, label: string) => {
+    if (!selected?.uid) return;
+    // Revoking access to a medical record — always confirm.
+    const ok = window.confirm(
+      t('admin.link_remove_confirm', 'Retirer « {{label}} » de ce compte ?', { label })
+    );
+    if (!ok) return;
+    setLinkBusy(requesterId);
+    setLinkError(null);
+    setLinkNotice(null);
+    setLinkAudit(null);
+    try {
+      const res = await callFn<{ links: LinkRow[] }>('adminUnlinkRequester', {
+        uid: selected.uid,
+        requester_id: requesterId,
+      });
+      setLinkRows(res.links || []);
+      setLinkNotice(t('admin.link_removed', 'Rattachement retiré.'));
+    } catch (err: unknown) {
+      setLinkError(errMsg(err));
+    } finally {
+      setLinkBusy(null);
+    }
+  };
+
+  /** Jump to the Tester tab with the id prefilled, and run the probe. */
+  const testFromLink = (requesterId: string, linkType: RequesterType) => {
+    setTestId(requesterId);
+    setTestType(linkType);
+    setActiveTab('test');
+    void runTest(requesterId, linkType);
+  };
+
   // ── Encode handlers ─────────────────────────────────────────────────────────
   // Prefill the attach form from a chosen search result.
   const selectPatient = (p: SearchResult) => {
@@ -419,6 +507,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     setError(null);
     setRequesterId(p.requester_id || '');
     setType(TYPES.includes(p.type as RequesterType) ? (p.type as RequesterType) : 'patient');
+    setLinkNotice(null);
+    setLinkAudit(null);
+    setLinkError(null);
+    // No round trip: adminSearchPatients already returned the attached dossiers
+    // (the user document was read anyway). Add/remove return the fresh list too,
+    // so this screen never needs a dedicated read callable.
+    setLinkRows(p.links ?? []);
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -850,6 +945,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             )}
 
             {selected && (
+              <>
               <div className="card p-6 space-y-5">
                 <div className="flex items-start gap-3 pb-4 border-b border-[var(--border-default)]">
                   <div className="h-11 w-11 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] flex items-center justify-center flex-shrink-0">
@@ -912,6 +1008,24 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                   </button>
                 </form>
               </div>
+
+              {/* Relatives' dossiers — deliberately its OWN card, not a section
+                  inside the form above: the main dossier and the attached ones
+                  are different acts, and mixing them in one <form> invites the
+                  front desk to confuse "activate this patient's access" with
+                  "let this account read someone else's results". */}
+              <LinkedRequestersCard
+                links={linkRows}
+                error={linkError}
+                busy={linkBusy}
+                notice={linkNotice}
+                audit={linkAudit}
+                onAdd={addLink}
+                onRemove={removeLink}
+                onTest={testFromLink}
+                fmtDate={fmtWhen}
+              />
+              </>
             )}
           </>
         )}

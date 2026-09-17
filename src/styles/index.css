@@ -436,6 +436,43 @@ html, body {
   outline-offset: 2px;
 }
 
+/* ── Barcode surface (patient code, PatientCodeCard / ScanFullscreen) ───────
+   A counter scanner reads reflected contrast. It needs true black bars on a
+   true white quiet zone, in BOTH themes — a barcode is not a brand asset, so
+   this is a deliberate, documented exception to "colours come from variables".
+
+   Three traps compose here, which is why this needs !important rather than a
+   Tailwind class or an inline style:
+     1. `.card` is NOT white. It is #FFF0F5 in light and #241418 in dark, and it
+        is redeclared in this file (line ~1084) AFTER cards.css is imported, so
+        the later one wins. Never put a barcode on a .card.
+     2. An !important stylesheet declaration beats a plain inline style — the
+        same trap documented on .hero-panel__cta above. Hence the duplicated
+        `.dark` selector instead of a style={{}}.
+     3. This file sets a GLOBAL 1s transition on background-color for `*`. Left
+        alone, flipping the theme mid-scan fades the surface through grey for a
+        full second, and grey decodes as nothing. transition:none kills it.
+
+   --color-white is the only token that is never remapped in dark mode.
+   forced-color-adjust stops Windows high-contrast mode from repainting the SVG
+   fills, which would invert the bars. */
+.barcode-surface,
+.dark .barcode-surface {
+  background-color: var(--color-white) !important;
+  color: #000 !important;
+  transition: none !important;
+  color-scheme: light;
+}
+
+.barcode-surface svg {
+  forced-color-adjust: none;
+}
+
+.barcode-surface svg rect,
+.dark .barcode-surface svg rect {
+  fill: #000 !important;
+}
+
 /* ── The two guest doors ────────────────────────────────────────────────────
    `guest` used to be one message with a button and a wrapped text link. It is
    now a headline plus two tap targets, one per audience (see HeroGuestDoors).

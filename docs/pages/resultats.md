@@ -22,7 +22,32 @@ Authenticated patient results viewer. It fetches the patient's lab results from 
 - **PDF viewer state:** `pdfPages` / `pdfPage` (page nav), `zoom` (1 = fit-to-width; opens at **1.6** = 160%), `containerWidth` (measured, for width-based rendering). See §4b.
 - **Year sections state:** `yearOverrides` (`Record<string, boolean>`) — remembers ONLY the sections the user explicitly toggled; every untouched section follows the default rule (most-recent year open). See §4d.
 
+### 1.05 Multiple identities — "pour qui consultez-vous ?"
+
+An account can consult several lab dossiers: its own, plus relatives' the lab attached to it (`users/{uid}.linkedRequesters` — see `docs/pages/admin.md`). `src/lib/results/identities.ts` turns the profile into an ordered list, **primary first**; `IdentitySelector` (`src/components/common/IdentitySelector.tsx`, shared with `/profile`) renders it as `TabsNavigation` up to 3 people, a `<select>` beyond.
+
+**The selection is page state (`selectedId`), never persisted and never in the provider.** Two reasons, both load-bearing:
+- a selection held in `ResultsProvider` (mounted in the ROOT layout) would follow the patient to the **home page**, where the copy is first-person — "VOTRE dernier bilan" about someone's mother, on the most visible element of the site;
+- on a shared family phone (the documented normal case here), remembering "I was looking at Dad's results" across sessions is a risk, not a convenience. Every fresh visit starts on the primary identity, for free, because it is local state.
+
+**The selector sits ABOVE every `status` branch** (right under the header). If a relative's dossier comes back `empty`, `unknown_id` or `error`, the patient must still be able to switch back to their own — a selector inside the `ready` branch would disappear exactly when it is needed.
+
+**When `!isSelf`:** the `<h1>` becomes "Résultats de {label}", a coloured band repeats it, and `CheckupReminder` + `ShareAccessCard` are hidden at the call site (both are first-person; `CheckupReminder` already hides itself for `medecin`/`correspondant` for precisely this reason). `unknownIdMessage` interpolates the **selected** id — interpolating the account holder's would send the lab to look at the wrong patient.
+
+**Four page-level states are cleared on every switch** (`viewerId`, `yearOverrides`, `copiedKey`, `errorMsg`) because they live outside the keyed subtree. The open PDF modal is the one that matters: left alone it would show one person's medical document under another's name. The dossier list itself carries `key={selectedIdentity?.requester_id}`.
+
+**Revocation mid-session:** the lab removes a link while the tab is open → the callable answers `permission-denied` → the context marks that bucket definitively failed and purges its PDFs → the page drops back to the primary identity and shows `resultats.identity_revoked`. Never leave a tab that 403s, and never keep results already in memory for a revoked dossier.
+
 ### 1.1 Results prefetch + progressive PDF loading — `src/contexts/ResultsContext.tsx`
+
+**Per-identity buckets (since the ayant-droit feature).** Results are stored in `buckets: Record<`${uid}::${requesterId}`, Bucket>`, and PDFs in a cache keyed `` `${requesterId}::${dossierId}` ``.
+
+- **The uid is in the key, not only in the guards** — belt and braces. Even if the session check slipped, a late response from account A lands in a bucket nobody reads.
+- **The PDF key is composite** because dossier numbering belongs to the lab and we do not get to assume it is globally unique. The failure mode would be patient A's PDF under patient B's card. ⚠ The `delete pdfPromisesRef.current[...]` in the `finally` **must** use the same composite key, or an in-flight promise for one identity is deleted by another's completion and a duplicate call goes out — invisible in testing.
+- **Guards became sets:** `loadedRef`/`loadingRef` are `Set<BucketKey>` (two identities may legitimately load at once), `bgRetryRef` is per bucket, and **only the primary identity retries in the background** — three tabs each retrying three doomed calls at cold start would triple the load on a server fragile enough to justify a monitoring subsystem. `currentUidRef` stays **uid-only**: it tracks who owns the *session*, which is the whole point of the stale-response guard.
+- **Two hooks, one cache:** `useResults()` (signature unchanged) is bound to the **primary** identity, so `HeroPersonalPanel`, `HeroLastBilan`, `CheckupReminder` and `ShareAccessCard` needed no changes and can never render a relative's data under first-person copy. `useResultsFor(requesterId)` is used by `/resultats` alone.
+- **Call arguments:** the primary identity sends **no** `requester_id` (the server resolves it from the profile, so a stale cached profile cannot break it); any other identity **must** send it, or the server answers with the primary dossier and the wrong PDF is rendered.
+- **Only the primary is prefetched.** A relative's dossier loads lazily on first selection (~0.2 s of loader) rather than tripling the calls on every app launch for a tab most patients never open.
 - `ResultsProvider` is mounted in `src/app/[lang]/layout.tsx` **inside `AuthProvider`** (it needs `useAuth`). Exposes `{ results, status, errorCode, lastUpdated, pdfState, loadPdf, newestDossierId, ensureLoaded, refresh }` via `useResults()`.
 - **Phase 1 — list (`load`):** calls `fetchResults({ include_pdf: 'none' })` → list metadata only (fast, ~0.2 s, `pdf_base64` empty). Sets `results` + `status` (`ready`/`empty`). Error mapping: **`not-found` → `unknown_id`**, `failed-precondition` → `need_access`, else `error` (+ `errorCode`).
 - **`not-found` is NOT "no results".** The backend maps the lab's HTTP 404 `requester_not_found` to `not-found`; a valid id with no dossier comes back as **200 + empty list** (→ `empty`). They used to share the `empty` screen, so a patient whose CyberLab account was never created read "Aucun résultat disponible" and concluded the app was broken. `unknown_id` is treated like a success for control flow (sets `loadedForUidRef`, resets `bgRetryRef`, stamps `lastUpdated`) — it is a **definitive** answer, so it must never enter the auto-retry branch, or every cold start would fire 3 doomed calls at the lab.

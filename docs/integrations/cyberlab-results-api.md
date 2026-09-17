@@ -631,3 +631,16 @@ La prochaine étape est la validation par Si Brahim de la structure de l'API. Un
 
 *Hassan EL ALLALI — Labo El Allali PWA*
 
+## 11. Identités multiples — accès au dossier d'un proche
+
+Depuis septembre 2026, un compte peut consulter plusieurs dossiers : le sien, plus ceux de proches que **le personnel du laboratoire** lui a rattachés. Le transport HMAC ne change pas d'un iota : c'est toujours un `requester_id` par appel.
+
+**Le contrat côté callable :**
+- `fetchResults` accepte un paramètre optionnel `requester_id`. C'est un **sélecteur, jamais une valeur** : il est comparé à la liste construite depuis `users/{uid}` (`requester_id` propre + `linkedRequesters[]`) par `functions/src/cyberlab/identities.ts`, et n'est jamais transmis tel quel au serveur du laboratoire. La propriété anti-usurpation de la version mono-identité est donc conservée intégralement.
+- Sans paramètre → l'identité **principale** : le dossier propre s'il existe, sinon le premier proche rattaché. Ce repli est ce qui permet à un compte « aidant seul » (quelqu'un qui n'a jamais fait d'analyse mais gère celles d'un parent) d'atteindre des résultats au lieu d'un écran d'activation.
+- Un identifiant non autorisé → `HttpsError("permission-denied")`, **distinct** de `failed-precondition`. Le client doit pouvoir séparer « ce compte n'a jamais eu d'accès » (carte d'activation) de « ce rattachement a été retiré » (retour à l'identité principale). Un identifiant inconnu et un identifiant appartenant à autrui renvoient exactement la même réponse : l'API n'est pas un oracle d'énumération.
+- Les journaux ne portent que la raison — **jamais l'identifiant demandé**, qui est le numéro de dossier d'un autre patient.
+
+**Métadonnées d'usage.** Consulter le dossier d'un proche **n'horodate pas** le profil (`lastResultsAt` / `firstResultsAt` / `resultsViewCount` restent réservés au dossier propre) : le garde-fou de 6 h se fonde sur la valeur **lue** en début d'appel, donc deux appels rapprochés écriraient tous les deux et gonfleraient un compteur que le tableau de bord range en tranches de fréquence. À la place, un compteur **anonyme** `usageDaily/{YYYY-MM-DD}.proxyConsultations` est incrémenté. Jamais un résultat, jamais quel dossier, jamais qui.
+
+**Écritures Firestore associées** (toutes par l'Admin SDK, verrouillées côté client dans `firestore.rules`) : `users/{uid}.linkedRequesters[]` (`requester_id`, `type`, `label`, `linkedAt`, `linkedBy`) et `users/{uid}.linkedRequesterIds[]`. Le document du **titulaire du dossier n'est jamais touché** : deux comptes peuvent viser le même `requester_id`, et le titulaire ne perd rien.

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail, Activity, BellRing } from 'lucide-react';
+import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail, Activity, BellRing, Users } from 'lucide-react';
 
 export default function ConfidentialitePage() {
   const { t } = useTranslation('common');
@@ -19,6 +19,11 @@ export default function ConfidentialitePage() {
     // Declares the single usage datum the app stores (date of last results view),
     // which powers the lab's adoption dashboard. See docs/pages/admin.md.
     { icon: Activity, title: 'confidentialite.usage_title', text: 'confidentialite.usage_text' },
+    // Declares the ayant-droit feature: a relative reading someone's results is
+    // BOTH a new personal-data processing (the nominative label typed by staff)
+    // AND a new disclosure of medical data to a third party. Under loi 09-08 that
+    // is declarable, and it must be stated here, not only in the admin screen.
+    { icon: Users, title: 'confidentialite.relatives_title', text: 'confidentialite.relatives_text' },
   ];
   const rights = [
     'confidentialite.rights_access',

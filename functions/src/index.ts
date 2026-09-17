@@ -44,6 +44,11 @@ export {
   adminListAccessRequests,
   adminFulfillAccessRequest,
   adminRejectAccessRequest,
+  // Relatives' dossiers attached to an account ("ayant droit"). Staff-only:
+  // attaching a dossier is an act of medical confidentiality, verified in person.
+  adminLinkRequester,
+  adminUnlinkRequester,
+  adminListRequesterLinks,
   // Adoption dashboard (admin+owner) + the staff-level relance tools.
   adminDashboardStats,
   adminListDormant,

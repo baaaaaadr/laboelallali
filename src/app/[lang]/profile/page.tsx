@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import MedicalLoader from '@/components/ui/MedicalLoader';
+import PatientCodeCard from '@/components/features/profile/PatientCodeCard';
 import { User, Calendar, Mail, LogOut, CheckCircle, Phone } from 'lucide-react';
 
 export default function ProfilePage({ params }: { params: Promise<{ lang: string }> }) {
@@ -65,9 +66,15 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
       }, { merge: true });
       await refreshProfile();
       setIsEditing(false);
-    } catch (err: any) {
-      console.error("Error saving profile:", err);
-      setError(err.message || "Failed to save profile");
+    } catch (err: unknown) {
+      // `err.message` used to be shown as-is. Firebase phrases those in English
+      // and in technical terms ("Missing or insufficient permissions"), which is
+      // both untranslated and meaningless to a patient — so it goes to the
+      // console and the screen gets a sentence in the patient's language.
+      console.error('Error saving profile:', err);
+      setError(
+        t('profile.save_error', "Votre profil n'a pas pu être enregistré. Réessayez.")
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -208,6 +215,12 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
           </div>
         </div>
 
+        {/* Patient code — big digits + Code 128 for the front-desk scanner.
+            Sits right under the identity: it IS identity, and it is the thing a
+            patient opens this page to find. Renders its own "not activated yet"
+            state, so no guard is needed here. */}
+        <PatientCodeCard lang={lang} />
+
         {/* Profile Details */}
         <div className="card p-8">
           <div className="flex justify-between items-center mb-6 border-b border-[var(--border-default)] pb-4">
@@ -294,7 +307,12 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
                       className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-[var(--border-default)] bg-[var(--background-secondary)] text-[var(--text-secondary)] placeholder-[var(--text-tertiary)] focus:outline-none sm:text-sm transition-colors cursor-not-allowed opacity-75"
                     />
                   </div>
-                  <span className="text-xs text-[var(--text-tertiary)]">L'adresse email d'authentification ne peut pas être modifiée.</span>
+                  <span className="text-xs text-[var(--text-tertiary)]">
+                    {t(
+                      'profile.email_immutable',
+                      "L'adresse email d'authentification ne peut pas être modifiée."
+                    )}
+                  </span>
                 </div>
               </div>
 

@@ -1,5 +1,36 @@
 // Shared CyberLab results types (mirrors functions/src/cyberlab/client.ts).
 // For type "patient", patient_nom / patient_prenom come back empty (data minimisation).
+
+export type RequesterType = 'patient' | 'medecin' | 'correspondant';
+
+/**
+ * A lab dossier attached to an account that does NOT own it — the "ayant droit"
+ * case: a son consulting the results of his two parents.
+ *
+ * Stored in `users/{uid}.linkedRequesters`, written ONLY by the staff callables
+ * (`adminLinkRequester` / `adminUnlinkRequester`) and locked against client
+ * writes in `firestore.rules`. Attaching a parent's dossier to their child's
+ * account never touches the parent's own document: two accounts can point at the
+ * same `requester_id`, and the holder keeps their access untouched.
+ *
+ * `label` exists because the lab server deliberately returns no `patient_nom`
+ * for `type: "patient"` — there is no other way to know whose dossier this is,
+ * so the front desk types it in ("Maman — Fatima").
+ */
+export interface LinkedRequester {
+  requester_id: string;
+  type: RequesterType;
+  label: string;
+  /**
+   * Firestore Timestamp. Never read client-side — the admin screen gets
+   * milliseconds from the callable instead. Kept here so the shape of the stored
+   * document is documented in one place.
+   */
+  linkedAt?: unknown;
+  /** uid of the staff member who attached it. Never their email. */
+  linkedBy?: string;
+}
+
 export interface CyberlabResult {
   dossier_id: string;
   patient_nom: string;

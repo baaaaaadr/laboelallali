@@ -237,7 +237,12 @@
     "share_access_title": "Faites-en profiter un proche",
     "share_access_desc": "Un proche aussi pourrait consulter ses analyses en ligne. Partagez-lui le lien en un clic.",
     "share_access_cta": "Partager",
-    "share_access_message": "Bonjour, je consulte désormais mes analyses médicales en ligne, directement sur mon téléphone, avec le Laboratoire El Allali — simple et sécurisé. Voici le lien si tu veux en profiter :"
+    "share_access_message": "Bonjour, je consulte désormais mes analyses médicales en ligne, directement sur mon téléphone, avec le Laboratoire El Allali — simple et sécurisé. Voici le lien si tu veux en profiter :",
+    "identity_me": "Moi",
+    "title_other": "Résultats de {{label}}",
+    "subtitle_other": "Vous consultez le dossier d'un proche. Ces résultats ne sont pas les vôtres.",
+    "viewing_other": "Vous consultez le dossier de {{label}}.",
+    "identity_revoked": "Vous n'avez plus accès à ce dossier. Contactez le laboratoire si besoin."
   },
   "continue_with_google": "Continuer avec Google",
   "or_use_email": "Ou utiliser une adresse e-mail",
@@ -269,7 +274,11 @@
     "guest_door_first_a": "Faites votre première analyse et recevez vos résultats ici",
     "access_desc": "Activez l'accès à vos résultats : le laboratoire vérifie votre identité, puis tout est en ligne.",
     "access_cta": "Activer mon accès",
-    "checkup_generic_title": "Pensez à votre prochain bilan"
+    "checkup_generic_title": "Pensez à votre prochain bilan",
+    "relative_last_bilan": "Dernier bilan de {{label}}",
+    "relative_title": "Dossier de {{label}}",
+    "relative_desc": "Vous pouvez consulter ses résultats depuis votre compte.",
+    "relative_cta": "Voir les résultats"
   },
   "hero_shortcuts": {
     "bilan": "Faire mon bilan",
@@ -328,7 +337,9 @@
     "outage_waitlist_title": "Alerte de rétablissement (liste d'attente)",
     "outage_waitlist_text": "En cas de panne du serveur de résultats, et uniquement si vous demandez à être prévenu(e) en cliquant sur « Me prévenir », votre adresse email est conservée temporairement le temps de la panne. Elle sert uniquement à vous envoyer un email dès le rétablissement, puis elle est supprimée automatiquement juste après cet envoi. Aucune donnée médicale n'est concernée.",
     "contact_title": "Nous contacter",
-    "contact_text": "Pour toute question ou pour exercer vos droits, contactez le laboratoire à laboelallali@gmail.com ou par téléphone."
+    "contact_text": "Pour toute question ou pour exercer vos droits, contactez le laboratoire à laboelallali@gmail.com ou par téléphone.",
+    "relatives_title": "Consultation des résultats d'un proche",
+    "relatives_text": "À votre demande, le laboratoire peut autoriser un proche que vous désignez (un enfant, un parent) à consulter vos résultats depuis son propre compte. Cette autorisation est décidée et enregistrée par le personnel du laboratoire, jamais par l'application et jamais par le proche lui-même : aucun rattachement ne peut naître d'une demande en ligne. Le laboratoire enregistre alors, sur le compte du proche, le numéro de votre dossier et un libellé permettant de vous identifier (par exemple « Maman — Fatima »), saisi par le personnel. Vous êtes prévenu par e-mail dès qu'un tel accès est ouvert, si votre compte comporte une adresse. Votre propre compte n'est pas modifié et continue de fonctionner à l'identique. Vous pouvez demander le retrait de cette autorisation à tout moment, en contactant le laboratoire : l'accès est retiré immédiatement."
   },
   "admin": {
     "nav": "Admin",
@@ -523,7 +534,28 @@
     "journey_test_title": "Parcours patient unifié (test)",
     "journey_test_desc": "Nouvelle page qui remplacera « RDV » et « à domicile ». À valider avant mise en ligne.",
     "journey_test2_title": "Parcours groupé — 4 blocs (test)",
-    "journey_test2_desc": "Même parcours, regroupé en 4 blocs pour ne pas intimider. À comparer avec la version ci-contre."
+    "journey_test2_desc": "Même parcours, regroupé en 4 blocs pour ne pas intimider. À comparer avec la version ci-contre.",
+    "link_title": "Dossiers d'un proche rattachés à ce compte",
+    "link_explain": "Cela n'enlève rien au titulaire du dossier : son propre compte continue de fonctionner à l'identique.",
+    "link_loading": "Chargement…",
+    "link_none": "Aucun dossier rattaché à ce compte.",
+    "link_test": "Tester",
+    "link_remove": "Retirer",
+    "link_remove_confirm": "Retirer « {{label}} » de ce compte ?",
+    "link_removed": "Rattachement retiré.",
+    "link_audit_title": "Ce dossier est consultable par :",
+    "link_audit_holder": "titulaire du dossier",
+    "link_audit_linked": "rattaché ({{label}})",
+    "link_id_label": "Identifiant du dossier à rattacher",
+    "link_label_label": "De qui s'agit-il ?",
+    "link_label_placeholder": "Ex. : Maman — Fatima",
+    "link_label_hint": "Ce libellé est ce que le patient verra dans l'application. Le serveur du laboratoire ne transmet pas le nom.",
+    "link_add": "Rattacher",
+    "link_adding": "Rattachement…",
+    "link_added_notified": "Rattaché. Le titulaire du dossier a été prévenu par e-mail.",
+    "link_added_no_email": "Rattaché. Le titulaire n'a pas de compte avec e-mail : aucun message n'a pu être envoyé.",
+    "link_test_first": "Tester d'abord",
+    "link_test_warning": "Vérifiez toujours l'identifiant avant de rattacher : une erreur donnerait à ce compte accès au dossier d'un autre patient, sans que personne ne s'en aperçoive."
   },
   "theme": {
     "toggle": "Changer le thème",
@@ -593,5 +625,25 @@
     "section_bilans": "Bilans",
     "section_analyses": "Analyses",
     "section_medecins": "Médecins"
+  },
+  "identity": {
+    "selector_label": "Pour qui consultez-vous ?"
+  },
+  "profile": {
+    "code": {
+      "title": "Mon code patient",
+      "desc": "Présentez ce code à l'accueil pour ouvrir votre dossier sans rien épeler.",
+      "me": "Moi",
+      "whose": "Quel code afficher ?",
+      "pending": "Votre code apparaîtra ici dès que le laboratoire aura activé votre accès aux résultats.",
+      "present": "Présenter à l'accueil",
+      "aria": "Code patient {{code}}",
+      "scan_title": "Code patient à scanner",
+      "scan_hint": "Présentez cet écran au lecteur de l'accueil.",
+      "scan_keep_awake": "Gardez votre écran allumé pendant le scan.",
+      "scan_close": "Fermer"
+    },
+    "email_immutable": "L'adresse email d'authentification ne peut pas être modifiée.",
+    "save_error": "Votre profil n'a pas pu être enregistré. Réessayez."
   }
 }

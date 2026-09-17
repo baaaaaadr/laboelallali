@@ -55,6 +55,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useResults } from '@/contexts/ResultsContext';
 import { monthsSince } from '@/lib/results/stats';
 import { checkupTitle } from '@/lib/results/checkupCopy';
+import { primaryIdentity } from '@/lib/results/identities';
 import type { CyberlabResult } from '@/types/cyberlab';
 import HeroGuestDoors from './HeroGuestDoors';
 import HeroLastBilan from './HeroLastBilan';
@@ -120,6 +121,14 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
     return results.find((r) => r.dossier_id === newestDossierId) ?? null;
   }, [demo, status, results, newestDossierId]);
 
+  // The dossier this panel is about. Usually the account holder's own; for an
+  // account that has none (someone who never had a test but manages a parent's
+  // results), it is the first relative attached to it — which is exactly why the
+  // copy below must be able to name a person instead of saying "yours".
+  const primary = useMemo(() => primaryIdentity(userProfile, ''), [userProfile]);
+  // Non-null only when the panel is about SOMEONE ELSE's dossier.
+  const proxyLabel = primary && !primary.isSelf ? primary.label : null;
+
   const monthsTitle = useMemo(
     () => (newest ? checkupTitle(monthsSince(newest.date_dossier)) : null),
     [newest]
@@ -135,22 +144,26 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
     }
     if (!user) return 'guest';
     if (userProfile?.type === 'medecin' || userProfile?.type === 'correspondant') return 'none';
-    if (!userProfile?.requester_id) return 'noaccess'; // invariants 1 and 2
+    // `primary`, not `requester_id`: an account whose only access is a relative's
+    // dossier DOES have access. Gating on requester_id alone would strand that
+    // person on "activate your access" forever, for a dossier that will never
+    // exist — and reserve the wrong slot height for them too (see the hint below).
+    if (!primary) return 'noaccess'; // invariants 1 and 2
     return monthsTitle ? 'reminder' : 'generic';
-  }, [forced, loading, hint, user, userProfile, monthsTitle]);
+  }, [forced, loading, hint, user, userProfile, primary, monthsTitle]);
 
   // Refresh the hint once the truth is known. Written here rather than in
   // AuthContext so nothing else has to care; a hint left over from a signed-out
   // session is corrected on the next visit to the home page.
   useEffect(() => {
     if (loading || forced) return;
-    const next: Hint = !user ? 'guest' : userProfile?.requester_id ? 'linked' : 'noaccess';
+    const next: Hint = !user ? 'guest' : primary ? 'linked' : 'noaccess';
     try {
       window.localStorage.setItem(HINT_KEY, next);
     } catch {
       // nothing to do — the panel still works, it just re-guesses next time
     }
-  }, [loading, forced, user, userProfile]);
+  }, [loading, forced, user, primary]);
 
   const showsPanel = state !== null && state !== 'none';
   // Second slot tier for the linked population only. The enriched reminder is
@@ -206,6 +219,26 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
           linkHref: '',
         };
       case 'reminder':
+        // When the dossier belongs to a relative, the whole first-person framing
+        // is false — "VOTRE dernier bilan remonte à 4 mois" about someone's
+        // mother, on the most visible element of the site. Naming the person and
+        // pointing at the results is both true and more useful. Deliberately NOT
+        // reworded through the checkup keys: those carry 12 plural forms (2 fr,
+        // 6 ar, ×2 units) and duplicating them for a rare case would be a
+        // maintenance trap.
+        if (proxyLabel) {
+          return {
+            Icon: CalendarClock,
+            title: t('hero_panel.relative_last_bilan', 'Dernier bilan de {{label}}', {
+              label: proxyLabel,
+            }),
+            desc: t('hero_panel.relative_desc', 'Vous pouvez consulter ses résultats depuis votre compte.'),
+            cta: t('hero_panel.relative_cta', 'Voir les résultats'),
+            href: `/${lang}/resultats`,
+            link: null,
+            linkHref: '',
+          };
+        }
         return {
           Icon: CalendarClock,
           title: monthsTitle?.count !== undefined
@@ -218,6 +251,17 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
           linkHref: '',
         };
       default:
+        if (proxyLabel) {
+          return {
+            Icon: CalendarClock,
+            title: t('hero_panel.relative_title', 'Dossier de {{label}}', { label: proxyLabel }),
+            desc: t('hero_panel.relative_desc', 'Vous pouvez consulter ses résultats depuis votre compte.'),
+            cta: t('hero_panel.relative_cta', 'Voir les résultats'),
+            href: `/${lang}/resultats`,
+            link: null,
+            linkHref: '',
+          };
+        }
         return {
           Icon: CalendarClock,
           title: t('hero_panel.checkup_generic_title', 'Pensez à votre prochain bilan'),

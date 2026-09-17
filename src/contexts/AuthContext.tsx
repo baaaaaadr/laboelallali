@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, getClientAuth } from '@/config/firebase';
+import type { LinkedRequester, RequesterType } from '@/types/cyberlab';
 
 export interface UserProfile {
   uid: string;
@@ -14,7 +15,14 @@ export interface UserProfile {
   phone?: string;
   // Set by the admin space (adminSetRequester) — the CyberLab identity.
   requester_id?: string;
-  type?: 'patient' | 'medecin' | 'correspondant';
+  type?: RequesterType;
+  // Relatives' dossiers the lab attached to this account (ayant droit). Written
+  // only by adminLinkRequester/adminUnlinkRequester, locked in firestore.rules.
+  // Read through src/lib/results/identities.ts, never field by field.
+  linkedRequesters?: LinkedRequester[];
+  // The same ids, flattened — lets the lab answer "who else reads this dossier?"
+  // with an indexed query instead of a full scan.
+  linkedRequesterIds?: string[];
   // 'admin' grants access to the /admin staff space.
   role?: string;
   // CNDP consent captured at registration.
