@@ -621,7 +621,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
               <FileText size={26} />
               {isSelf
                 ? t('resultats.title', 'Mes Résultats')
-                : t('resultats.title_other', 'Résultats de {{label}}', {
+                : t('resultats.title_other', 'Résultats — {{label}}', {
                     label: selectedIdentity?.label ?? '',
                   })}
             </h1>
@@ -671,7 +671,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
           <div className="flex items-start gap-2 rounded-lg p-3 bg-[var(--background-tertiary)] border border-[var(--border-default)]">
             <Users size={18} className="flex-shrink-0 mt-0.5 text-[var(--color-fuchsia-accent)]" />
             <p className="text-sm text-[var(--text-secondary)]">
-              {t('resultats.viewing_other', 'Vous consultez le dossier de {{label}}.', {
+              {t('resultats.viewing_other', 'Dossier consulté : {{label}}', {
                 label: selectedIdentity.label,
               })}
             </p>

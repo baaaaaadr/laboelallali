@@ -229,7 +229,7 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
         if (proxyLabel) {
           return {
             Icon: CalendarClock,
-            title: t('hero_panel.relative_last_bilan', 'Dernier bilan de {{label}}', {
+            title: t('hero_panel.relative_last_bilan', 'Dernier bilan — {{label}}', {
               label: proxyLabel,
             }),
             desc: t('hero_panel.relative_desc', 'Vous pouvez consulter ses résultats depuis votre compte.'),
@@ -254,7 +254,7 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
         if (proxyLabel) {
           return {
             Icon: CalendarClock,
-            title: t('hero_panel.relative_title', 'Dossier de {{label}}', { label: proxyLabel }),
+            title: t('hero_panel.relative_title', 'Dossier — {{label}}', { label: proxyLabel }),
             desc: t('hero_panel.relative_desc', 'Vous pouvez consulter ses résultats depuis votre compte.'),
             cta: t('hero_panel.relative_cta', 'Voir les résultats'),
             href: `/${lang}/resultats`,

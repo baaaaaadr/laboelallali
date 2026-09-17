@@ -49,7 +49,7 @@ interface Props {
   /** Who else can read the dossier that was just attached. null = not asked. */
   audit: AuditAccount[] | null;
   onAdd: (requesterId: string, type: RequesterType, label: string) => void;
-  onRemove: (requesterId: string, label: string) => void;
+  onRemove: (requesterId: string) => void;
   onTest: (requesterId: string, type: RequesterType) => void;
   fmtDate: (ms: number) => string;
 }
@@ -69,6 +69,16 @@ export default function LinkedRequestersCard({
   const [newId, setNewId] = useState('');
   const [newType, setNewType] = useState<RequesterType>('patient');
   const [newLabel, setNewLabel] = useState('');
+  // Which row is asking "are you sure?". An IN-PAGE confirmation, not
+  // window.confirm(). The native dialog was tried and replaced: it is painted by
+  // the browser chrome, outside the page, so nothing but a human at that exact
+  // screen can see or dismiss it. Observed on 17/09/2026 — a browser agent
+  // running the test hung on it, seeing an unresponsive page, until a person
+  // clicked. Same class of problem for screen readers driven remotely and for
+  // installed PWAs, where native dialogs render inconsistently. A confirmation
+  // that only sometimes exists is worse than none on an action that revokes
+  // access to a medical record.
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,34 +143,66 @@ export default function LinkedRequestersCard({
             >
               <div className="min-w-0">
                 <p className="font-medium text-[var(--text-primary)] truncate">{l.label}</p>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  <span dir="ltr">{l.requester_id}</span>
-                  {' · '}
-                  {l.type}
-                  {l.linkedAt ? ` · ${fmtDate(l.linkedAt)}` : ''}
-                </p>
+                {confirmingId === l.requester_id ? (
+                  <p className="text-sm text-[var(--status-error)]">
+                    {t('admin.link_remove_confirm', 'Retirer « {{label}} » de ce compte ?', {
+                      label: l.label,
+                    })}
+                  </p>
+                ) : (
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    <span dir="ltr">{l.requester_id}</span>
+                    {' · '}
+                    {l.type}
+                    {l.linkedAt ? ` · ${fmtDate(l.linkedAt)}` : ''}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={() => onTest(l.requester_id, l.type as RequesterType)}
-                  className="text-sm underline text-[var(--text-secondary)] min-h-[44px] px-2"
-                >
-                  {t('admin.link_test', 'Tester')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onRemove(l.requester_id, l.label)}
-                  disabled={busy === l.requester_id}
-                  aria-label={t('admin.link_remove', 'Retirer')}
-                  className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-[var(--status-error)] disabled:opacity-50"
-                >
-                  {busy === l.requester_id ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <Trash2 size={18} />
-                  )}
-                </button>
+                {confirmingId === l.requester_id ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmingId(null);
+                        onRemove(l.requester_id);
+                      }}
+                      disabled={busy === l.requester_id}
+                      className="min-h-[44px] px-3 rounded-lg text-sm font-semibold text-[var(--color-white)] bg-[var(--status-error)] disabled:opacity-50"
+                    >
+                      {busy === l.requester_id ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        t('admin.link_remove_yes', 'Oui, retirer')
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingId(null)}
+                      className="min-h-[44px] px-3 rounded-lg text-sm text-[var(--text-secondary)]"
+                    >
+                      {t('cancel', 'Annuler')}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onTest(l.requester_id, l.type as RequesterType)}
+                      className="text-sm underline text-[var(--text-secondary)] min-h-[44px] px-2"
+                    >
+                      {t('admin.link_test', 'Tester')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingId(l.requester_id)}
+                      aria-label={t('admin.link_remove', 'Retirer')}
+                      className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-[var(--status-error)]"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </>
+                )}
               </div>
             </li>
           ))}
@@ -198,7 +240,11 @@ export default function LinkedRequestersCard({
             required
             value={newId}
             onChange={(e) => setNewId(e.target.value)}
-            placeholder="7587"
+            // NEVER a real id here. The previous placeholder was "7587", which is
+            // an actual patient's dossier — greyed-out text that looks prefilled,
+            // in the one form where a wrong number grants access to someone
+            // else's medical record.
+            placeholder={t('admin.link_id_placeholder', 'Ex. : 12345')}
             dir="ltr"
             className={inputClass}
           />

@@ -239,9 +239,9 @@
     "share_access_cta": "Partager",
     "share_access_message": "Bonjour, je consulte désormais mes analyses médicales en ligne, directement sur mon téléphone, avec le Laboratoire El Allali — simple et sécurisé. Voici le lien si tu veux en profiter :",
     "identity_me": "Moi",
-    "title_other": "Résultats de {{label}}",
+    "title_other": "Résultats — {{label}}",
     "subtitle_other": "Vous consultez le dossier d'un proche. Ces résultats ne sont pas les vôtres.",
-    "viewing_other": "Vous consultez le dossier de {{label}}.",
+    "viewing_other": "Dossier consulté : {{label}}",
     "identity_revoked": "Vous n'avez plus accès à ce dossier. Contactez le laboratoire si besoin."
   },
   "continue_with_google": "Continuer avec Google",
@@ -275,8 +275,8 @@
     "access_desc": "Activez l'accès à vos résultats : le laboratoire vérifie votre identité, puis tout est en ligne.",
     "access_cta": "Activer mon accès",
     "checkup_generic_title": "Pensez à votre prochain bilan",
-    "relative_last_bilan": "Dernier bilan de {{label}}",
-    "relative_title": "Dossier de {{label}}",
+    "relative_last_bilan": "Dernier bilan — {{label}}",
+    "relative_title": "Dossier — {{label}}",
     "relative_desc": "Vous pouvez consulter ses résultats depuis votre compte.",
     "relative_cta": "Voir les résultats"
   },
@@ -555,7 +555,12 @@
     "link_added_notified": "Rattaché. Le titulaire du dossier a été prévenu par e-mail.",
     "link_added_no_email": "Rattaché. Le titulaire n'a pas de compte avec e-mail : aucun message n'a pu être envoyé.",
     "link_test_first": "Tester d'abord",
-    "link_test_warning": "Vérifiez toujours l'identifiant avant de rattacher : une erreur donnerait à ce compte accès au dossier d'un autre patient, sans que personne ne s'en aperçoive."
+    "link_test_warning": "Vérifiez toujours l'identifiant avant de rattacher : une erreur donnerait à ce compte accès au dossier d'un autre patient, sans que personne ne s'en aperçoive.",
+    "link_id_placeholder": "Ex. : 12345",
+    "requester_id_placeholder": "Ex. : 12345",
+    "selected_account": "Compte sélectionné",
+    "link_remove_yes": "Oui, retirer",
+    "requester_id_replace_warning": "Ce compte a déjà l'identifiant {{current}}. Enregistrer le remplacera."
   },
   "theme": {
     "toggle": "Changer le thème",

@@ -466,13 +466,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     }
   };
 
-  const removeLink = async (requesterId: string, label: string) => {
+  // The confirmation lives IN the card (LinkedRequestersCard), not in a native
+  // window.confirm() — that dialog is painted outside the page, so only a human
+  // at that screen can see it (it hung a browser agent during the 17/09 test).
+  // By the time this runs, the operator has already confirmed, in the page.
+  const removeLink = async (requesterId: string) => {
     if (!selected?.uid) return;
-    // Revoking access to a medical record — always confirm.
-    const ok = window.confirm(
-      t('admin.link_remove_confirm', 'Retirer « {{label}} » de ce compte ?', { label })
-    );
-    if (!ok) return;
     setLinkBusy(requesterId);
     setLinkError(null);
     setLinkNotice(null);
@@ -947,6 +946,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             {selected && (
               <>
               <div className="card p-6 space-y-5">
+                {/* Named on purpose: the search result above and this card show
+                    the same name, email and phone, which reads as a duplicate
+                    account at a glance. */}
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
+                  {t('admin.selected_account', 'Compte sélectionné')}
+                </p>
                 <div className="flex items-start gap-3 pb-4 border-b border-[var(--border-default)]">
                   <div className="h-11 w-11 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] flex items-center justify-center flex-shrink-0">
                     <User size={22} />
@@ -979,7 +984,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                       required
                       value={requesterId}
                       onChange={(e) => setRequesterId(e.target.value)}
-                      placeholder="7587"
+                      placeholder={t('admin.requester_id_placeholder', 'Ex. : 12345')}
                       className="w-full rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
                     />
                   </div>
@@ -997,6 +1002,22 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                       <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
                     </select>
                   </div>
+                  {/* The most prominent button on the page is also the one that
+                      can silently overwrite a patient's dossier id. Say so, but
+                      only when it would actually replace something. */}
+                  {selected.requester_id &&
+                    requesterId.replace(/\s+/g, '') !== selected.requester_id.replace(/\s+/g, '') && (
+                    <div className="flex items-start gap-2 text-sm text-[var(--status-error)]">
+                      <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+                      <span>
+                        {t(
+                          'admin.requester_id_replace_warning',
+                          "Ce compte a déjà l'identifiant {{current}}. Enregistrer le remplacera.",
+                          { current: selected.requester_id }
+                        )}
+                      </span>
+                    </div>
+                  )}
                   {saved && (
                     <div className="flex items-center gap-2 text-sm text-[var(--color-bordeaux-primary)]">
                       <CheckCircle size={18} />
