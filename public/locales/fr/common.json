@@ -601,7 +601,7 @@
     "rel_req_reject_yes": "Oui, refuser",
     "rel_req_rejected": "Demande refusée.",
     "rel_req_tested_name": "Le laboratoire renvoie : {{name}}",
-    "rel_req_tested_noname": "Le laboratoire ne renvoie aucun nom pour cet identifiant.",
+    "rel_req_tested_noname": "Aucun nom renvoyé pour cet identifiant.",
     "rel_req_tested_count": "{{n}} dossier(s) trouvé(s).",
     "rel_req_tested_empty": "Aucun dossier pour cet identifiant — vérifiez le numéro.",
     "rel_req_tested_mismatch": "Ce nom ne ressemble pas à « {{asked}} ». Vérifiez avant de rattacher.",
@@ -609,7 +609,13 @@
     "rel_req_need_id": "Renseignez l'identifiant du dossier.",
     "rel_req_need_test": "Testez l'identifiant avant de rattacher : c'est le seul moyen de vérifier que le dossier est bien celui de cette personne.",
     "rel_req_need_proof": "Indiquez sur quelle base vous accordez l'accès.",
-    "rel_req_reject_confirm": "Refuser la demande de {{name}} ?"
+    "rel_req_reject_confirm": "Refuser la demande de {{name}} ?",
+    "rel_req_name_asked": "Nom demandé par le patient",
+    "rel_req_name_lab": "Nom renvoyé par le laboratoire",
+    "rel_req_name_match": "Les deux noms correspondent.",
+    "rel_req_name_differ": "Ces deux noms ne sont pas identiques. Il peut s'agir d'un homonyme.",
+    "rel_req_confirm_same": "Je confirme qu'il s'agit bien de la même personne.",
+    "rel_req_need_confirm": "Les deux noms diffèrent : confirmez qu'il s'agit de la même personne."
   },
   "theme": {
     "toggle": "Changer le thème",

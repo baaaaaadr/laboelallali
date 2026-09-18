@@ -39,6 +39,8 @@ export interface RelativeInputs {
   requester_id: string;
   type: RequesterType;
   proof: LinkProof | '';
+  /** Staff ticked "this really is the same person" despite differing names. */
+  confirmed?: boolean;
 }
 
 /** What a staff probe returned for one requester_id. */
@@ -66,6 +68,36 @@ interface Props {
 
 const PROOFS: LinkProof[] = ['present', 'procuration', 'autorite_parentale'];
 
+/** lowercase, no accents, single spaces. */
+const norm = (x: string): string =>
+  x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+
+/**
+ * Do the name the patient typed and the name the lab returned designate the
+ * same person?
+ *
+ * Compares the SET of words, ignoring order, case and accents — the lab writes
+ * "EL ALLALI mohamed aziz", a patient may write "Mohamed Aziz El Allali", and
+ * those are the same person.
+ *
+ * ⚠ It used to compare only the FIRST word, which inside a family is the family
+ * name and is therefore identical for everyone: "EL ALLALI mohamed aziz" vs
+ * "El Allali Hassan" compared equal, so the warning never fired in the one
+ * situation it existed for. Any difference now counts as a difference, and the
+ * staff has to tick a box. A false alarm costs one click; a missed homonym
+ * opens a stranger's medical record.
+ */
+function namesAgree(asked: string, returned: string): boolean {
+  if (!returned.trim()) return false;
+  const words = (x: string) => new Set(norm(x).split(' ').filter(Boolean));
+  const a = words(asked);
+  const b = words(returned);
+  if (a.size === 0 || b.size === 0) return false;
+  if (a.size !== b.size) return false;
+  for (const w of a) if (!b.has(w)) return false;
+  return true;
+}
+
 export default function RelativeRequestsSection({
   requests,
   inputs,
@@ -86,19 +118,12 @@ export default function RelativeRequestsSection({
   const inputClass =
     'w-full rounded-lg px-3 py-2.5 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm';
 
-  if (requests.length === 0) {
-    return (
-      <div className="card p-6">
-        <h3 className="font-semibold text-[var(--text-primary)] mb-1">
-          {t('admin.rel_req_title', "Demandes de dossier d'un proche")}
-        </h3>
-        <p className="text-sm text-[var(--text-secondary)]">
-          {t('admin.rel_req_none', 'Aucune demande en attente.')}
-        </p>
-      </div>
-    );
-  }
-
+  // ⚠ There used to be an early return for the empty list, ABOVE the message
+  // block below. Granting or refusing the LAST request empties the list, so the
+  // component took that branch and the confirmation message — correctly
+  // computed — was never rendered. The operator saw the card vanish in silence
+  // after handing someone access to a third party's medical record. The empty
+  // state is now part of the normal render, after the message.
   return (
     <div className="space-y-4">
       <div>
@@ -120,9 +145,20 @@ export default function RelativeRequestsSection({
         </div>
       )}
       {message && (
-        <div className="flex items-start gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+        <div
+          role="status"
+          className="flex items-start gap-2 rounded-lg p-3 bg-[var(--background-tertiary)] text-[var(--color-bordeaux-primary)]"
+        >
           <Check size={18} className="flex-shrink-0 mt-0.5" />
-          <span>{message}</span>
+          <span className="font-medium">{message}</span>
+        </div>
+      )}
+
+      {requests.length === 0 && (
+        <div className="card p-6">
+          <p className="text-sm text-[var(--text-secondary)]">
+            {t('admin.rel_req_none', 'Aucune demande en attente.')}
+          </p>
         </div>
       )}
 
@@ -133,17 +169,13 @@ export default function RelativeRequestsSection({
         // Three conditions, and the probe is the one that matters: the patient
         // supplied only a name and a date of birth, so the ONLY way to know the
         // id belongs to the right person is to look at the name the lab returns.
-        const ready = id !== '' && v.proof !== '' && probe !== undefined;
-        // Rough name comparison, accents and case ignored. Deliberately a HINT,
-        // not a gate: "EL ALLALI mohamed aziz" vs "El Allali Mohammed Aziz" is
-        // the same person, and software should not pretend to arbitrate that.
-        const norm = (x: string) =>
-          x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
-        const nameLooksDifferent =
-          probe?.name !== undefined &&
-          probe.name !== '' &&
-          !norm(probe.name).includes(norm(req.relativeName).split(' ')[0] ?? '') &&
-          !norm(req.relativeName).includes(norm(probe.name).split(' ')[0] ?? '');
+        const agree = probe ? namesAgree(req.relativeName, probe.name) : false;
+        // The tick is required whenever the two names are not the same set of
+        // words. The probe alone is no longer enough: it proved the operator
+        // clicked "Tester", not that they READ the answer -- and reading it is
+        // the entire point when the patient only supplied a name.
+        const ready =
+          id !== '' && v.proof !== '' && probe !== undefined && (agree || v.confirmed === true);
         return (
           <div key={req.id} className="card p-6 space-y-4">
             {/* Who is asking */}
@@ -235,19 +267,38 @@ export default function RelativeRequestsSection({
             {probe && (
               <div
                 className={`rounded-lg p-3 text-sm ${
-                  nameLooksDifferent
-                    ? 'bg-[var(--status-error)]/10 text-[var(--status-error)]'
-                    : 'bg-[var(--background-tertiary)] text-[var(--text-secondary)]'
+                  agree
+                    ? 'bg-[var(--background-tertiary)] text-[var(--text-secondary)]'
+                    : 'bg-[var(--status-error)]/10'
                 }`}
               >
-                <p className="font-medium">
-                  {probe.name
-                    ? t('admin.rel_req_tested_name', 'Le laboratoire renvoie : {{name}}', {
-                      name: probe.name,
-                    })
-                    : t('admin.rel_req_tested_noname', 'Le laboratoire ne renvoie aucun nom pour cet identifiant.')}
-                </p>
-                <p className="mt-1">
+                {/* The two names SIDE BY SIDE, same size, same weight. They used
+                    to sit 250px apart in different typography, which is how
+                    "EL ALLALI mohamed aziz" and "El Allali Hassan" read as the
+                    same thing to someone in a hurry. */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-[var(--text-tertiary)]">
+                      {t('admin.rel_req_name_asked', 'Nom demandé par le patient')}
+                    </p>
+                    <p className="font-semibold text-[var(--text-primary)]">{req.relativeName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-[var(--text-tertiary)]">
+                      {t('admin.rel_req_name_lab', 'Nom renvoyé par le laboratoire')}
+                    </p>
+                    <p
+                      className={`font-semibold ${
+                        agree ? 'text-[var(--text-primary)]' : 'text-[var(--status-error)]'
+                      }`}
+                    >
+                      {probe.name ||
+                        t('admin.rel_req_tested_noname', 'Aucun nom renvoyé pour cet identifiant.')}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-2 text-[var(--text-secondary)]">
                   {probe.status === 'ok'
                     // `n`, not `count`: i18next treats `count` as a plural
                     // selector and would demand the six Arabic CLDR forms.
@@ -256,14 +307,35 @@ export default function RelativeRequestsSection({
                     })
                     : t('admin.rel_req_tested_empty', 'Aucun dossier pour cet identifiant — vérifiez le numéro.')}
                 </p>
-                {nameLooksDifferent && (
-                  <p className="mt-1 font-semibold">
-                    {t(
-                      'admin.rel_req_tested_mismatch',
-                      'Ce nom ne ressemble pas à « {{asked}} ». Vérifiez avant de rattacher.',
-                      { asked: req.relativeName }
-                    )}
+
+                {agree ? (
+                  <p className="mt-2 flex items-center gap-2 text-[var(--color-bordeaux-primary)]">
+                    <Check size={16} />
+                    {t('admin.rel_req_name_match', 'Les deux noms correspondent.')}
                   </p>
+                ) : (
+                  <div className="mt-3 pt-3 border-t border-[var(--status-error)]/30">
+                    <p className="font-semibold text-[var(--status-error)]">
+                      {t(
+                        'admin.rel_req_name_differ',
+                        "Ces deux noms ne sont pas identiques. Il peut s'agir d'un homonyme."
+                      )}
+                    </p>
+                    <label className="mt-2 flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={v.confirmed === true}
+                        onChange={(e) => onInput(req.id, { confirmed: e.target.checked })}
+                        className="mt-1 h-4 w-4 flex-shrink-0"
+                      />
+                      <span className="text-[var(--text-primary)]">
+                        {t(
+                          'admin.rel_req_confirm_same',
+                          "Je confirme qu'il s'agit bien de la même personne."
+                        )}
+                      </span>
+                    </label>
+                  </div>
                 )}
               </div>
             )}
@@ -300,7 +372,9 @@ export default function RelativeRequestsSection({
                   ? t('admin.rel_req_need_id', "Renseignez l'identifiant du dossier.")
                   : !probe
                     ? t('admin.rel_req_need_test', "Testez l'identifiant avant de rattacher : c'est le seul moyen de vérifier que le dossier est bien celui de cette personne.")
-                    : t('admin.rel_req_need_proof', "Indiquez sur quelle base vous accordez l'accès.")}
+                    : !agree && v.confirmed !== true
+                      ? t('admin.rel_req_need_confirm', "Les deux noms diffèrent : confirmez qu'il s'agit de la même personne.")
+                      : t('admin.rel_req_need_proof', "Indiquez sur quelle base vous accordez l'accès.")}
               </p>
             )}
 

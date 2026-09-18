@@ -480,12 +480,18 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     if (!loading && isStaff) void loadRelReqs();
   }, [loading, isStaff, loadRelReqs]);
 
-  const EMPTY_REL_INPUT: RelativeInputs = { requester_id: '', type: 'patient', proof: '' };
+  const EMPTY_REL_INPUT: RelativeInputs = {
+    requester_id: '', type: 'patient', proof: '', confirmed: false,
+  };
   const setRelInput = (id: string, patch: Partial<RelativeInputs>) =>
-    setRelInputs((prev) => ({
-      ...prev,
-      [id]: { ...(prev[id] ?? EMPTY_REL_INPUT), ...patch },
-    }));
+    setRelInputs((prev) => {
+      const base = prev[id] ?? EMPTY_REL_INPUT;
+      // Changing the dossier number drops the "same person" tick: it was given
+      // for the previous number, and carrying it over would silently unlock a
+      // dossier nobody confirmed.
+      const reset = patch.requester_id !== undefined && patch.requester_id !== base.requester_id;
+      return { ...prev, [id]: { ...base, ...(reset ? { confirmed: false } : {}), ...patch } };
+    });
 
   const fulfillRelReq = async (req: RelativeRequest) => {
     const v = relInputs[req.id];

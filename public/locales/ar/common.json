@@ -698,7 +698,7 @@
     "rel_req_reject_yes": "نعم، ارفض",
     "rel_req_rejected": "تم رفض الطلب.",
     "rel_req_tested_name": "المختبر يرجع الاسم: {{name}}",
-    "rel_req_tested_noname": "المختبر لا يرجع أي اسم لهذا المعرّف.",
+    "rel_req_tested_noname": "لا يوجد أي اسم لهذا المعرّف.",
     "rel_req_tested_count": "{{n}} ملف (ملفات) تم العثور عليها.",
     "rel_req_tested_empty": "لا يوجد أي ملف لهذا المعرّف — تحقّقوا من الرقم.",
     "rel_req_tested_mismatch": "هذا الاسم لا يشبه « {{asked}} ». تحقّقوا قبل الربط.",
@@ -706,7 +706,13 @@
     "rel_req_need_id": "أدخلوا معرّف الملف.",
     "rel_req_need_test": "اختبروا المعرّف قبل الربط: هذه هي الوسيلة الوحيدة للتأكّد من أنّ الملف يخصّ هذا الشخص فعلاً.",
     "rel_req_need_proof": "حدّدوا على أي أساس تمنحون هذا الاطّلاع.",
-    "rel_req_reject_confirm": "رفض طلب {{name}}؟"
+    "rel_req_reject_confirm": "رفض طلب {{name}}؟",
+    "rel_req_name_asked": "الاسم الذي طلبه المريض",
+    "rel_req_name_lab": "الاسم الذي يرجعه المختبر",
+    "rel_req_name_match": "الاسمان متطابقان.",
+    "rel_req_name_differ": "هذان الاسمان غير متطابقين. قد يتعلق الأمر بتشابه في الأسماء.",
+    "rel_req_confirm_same": "أؤكّد أنّ الأمر يتعلق بالشخص نفسه.",
+    "rel_req_need_confirm": "الاسمان مختلفان: أكّدوا أنّ الأمر يتعلق بالشخص نفسه."
   },
   "theme": {
     "toggle": "تغيير المظهر",
