@@ -1,0 +1,742 @@
+<title>Référentiel de marque El Allali</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Tajawal:wght@400;700&display=swap">
+
+<style>
+/* ───────────────────────────────────────────────────────────── jetons */
+:root{
+  --bordeaux:#800020; --fuchsia:#FF4081;
+  --ground:#FDF8F9; --surface:#FFFFFF; --surface-2:#F7EEF1;
+  --ink:#2C1A1E; --ink-soft:#6E5158;
+  --hairline:#E9D9DE; --hairline-strong:#D9C2C9;
+  --accent:var(--bordeaux); --link:#8E0B2C;
+  --warn-bg:#FDF0EE; --warn-line:#C0392B; --ok-line:#2E7D52;
+  --shadow:0 1px 2px rgba(60,20,30,.05), 0 10px 28px -14px rgba(60,20,30,.22);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bordeaux:#FF79A8; --fuchsia:#FF9CC0;
+    --ground:#1A0F12; --surface:#231519; --surface-2:#2C1A20;
+    --ink:#F3E6EA; --ink-soft:#C0A3AC;
+    --hairline:#3B2429; --hairline-strong:#4E3138;
+    --accent:var(--bordeaux); --link:#FF9CC0;
+    --warn-bg:#3A1E1C; --warn-line:#E88B7D; --ok-line:#6FCF97;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bordeaux:#FF79A8; --fuchsia:#FF9CC0;
+  --ground:#1A0F12; --surface:#231519; --surface-2:#2C1A20;
+  --ink:#F3E6EA; --ink-soft:#C0A3AC;
+  --hairline:#3B2429; --hairline-strong:#4E3138;
+  --accent:var(--bordeaux); --link:#FF9CC0;
+  --warn-bg:#3A1E1C; --warn-line:#E88B7D; --ok-line:#6FCF97;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.62; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:"Public Sans","Inter",sans-serif;text-wrap:balance;margin:0}
+code,.mono,.num{font-family:"IBM Plex Mono",ui-monospace,monospace}
+a{color:var(--link);text-decoration-thickness:1px;text-underline-offset:2px}
+a:focus-visible,summary:focus-visible,button:focus-visible{outline:2px solid var(--fuchsia);outline-offset:3px;border-radius:4px}
+.wrap{max-width:960px;margin:0 auto;padding:0 22px}
+
+/* ───────────────────────────────────────────────────────── barre haute */
+.topbar{
+  position:sticky;top:0;z-index:20;background:var(--surface);
+  border-bottom:1px solid var(--hairline);
+}
+.topbar .wrap{display:flex;align-items:center;gap:12px;padding-top:9px;padding-bottom:9px}
+.topbar svg{width:26px;height:26px;flex:0 0 auto}
+.topbar .t{font-family:"Public Sans",sans-serif;font-weight:700;font-size:.86rem;letter-spacing:-.01em}
+.topbar a.back{margin-left:auto;font-size:.8rem;text-decoration:none;color:var(--ink-soft);white-space:nowrap}
+.topbar a.back:hover{color:var(--accent)}
+
+/* ───────────────────────────────────────────────────────────── en-tête */
+.masthead{background:var(--surface);border-bottom:1px solid var(--hairline)}
+.masthead .wrap{display:flex;align-items:center;gap:22px;padding-top:38px;padding-bottom:38px;flex-wrap:wrap}
+.mark{width:78px;height:78px;flex:0 0 auto}
+.masthead h1{font-size:clamp(1.55rem,3.6vw,2.25rem);font-weight:800;letter-spacing:-.022em;line-height:1.12}
+.masthead .sub{color:var(--ink-soft);font-size:.95rem;margin-top:5px}
+.stamp{margin-left:auto;text-align:right;font-size:.76rem;color:var(--ink-soft);font-family:"IBM Plex Mono",monospace;line-height:1.75;white-space:nowrap}
+.stamp b{color:var(--accent);font-weight:500}
+
+main{padding-bottom:90px}
+.eyebrow{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);font-weight:700}
+
+/* ───────────────────────────────────────────────────────────── résumé */
+.tldr{background:var(--surface);border:1px solid var(--hairline);border-radius:14px;padding:26px 28px;margin-top:34px;box-shadow:var(--shadow)}
+.tldr ol{margin:16px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;counter-reset:t}
+.tldr li{counter-increment:t;position:relative;padding-left:38px;font-size:.96rem;line-height:1.6}
+.tldr li::before{content:counter(t,decimal-leading-zero);position:absolute;left:0;top:.28em;font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--accent)}
+
+/* ──────────────────────────────────────────────────────────── la carte */
+.mapsec{margin-top:44px}
+.mapsec h2{font-size:1.4rem;font-weight:800;letter-spacing:-.015em;margin-top:8px}
+.mapsec .hint{color:var(--ink-soft);font-size:.94rem;margin:8px 0 0}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:12px;margin-top:22px}
+.map a{
+  display:block;text-decoration:none;color:inherit;background:var(--surface);
+  border:1px solid var(--hairline);border-radius:12px;padding:15px 16px;
+  transition:border-color .12s ease, transform .12s ease;
+}
+.map a:hover{border-color:var(--accent);transform:translateY(-2px)}
+.map .n{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--accent)}
+.map .ti{font-family:"Public Sans",sans-serif;font-weight:700;font-size:.96rem;margin-top:5px;line-height:1.25}
+.map .de{font-size:.8rem;color:var(--ink-soft);margin-top:6px;line-height:1.45}
+.map a.annex{background:var(--surface-2)}
+.map .who{display:inline-block;margin-top:9px;padding:1px 8px;border-radius:999px;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;border:1px solid var(--hairline-strong);color:var(--ink-soft)}
+.map .who.pr{border-color:var(--accent);color:var(--accent)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:.82rem;color:var(--ink-soft)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:999px;border:1.5px solid var(--hairline-strong);display:inline-block}
+.legend i.pr{border-color:var(--accent)}
+
+.controls{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap}
+.controls button{
+  font:inherit;font-size:.82rem;font-family:"Public Sans",sans-serif;font-weight:600;
+  background:var(--surface);color:var(--ink);border:1px solid var(--hairline-strong);
+  border-radius:999px;padding:7px 16px;cursor:pointer;
+}
+.controls button:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ─────────────────────────────────────────────────────────── chapitres */
+.chapters{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+details.ch{background:var(--surface);border:1px solid var(--hairline);border-radius:12px;overflow:hidden;scroll-margin-top:60px}
+details.ch[open]{border-color:var(--hairline-strong);box-shadow:var(--shadow)}
+details.ch > summary{
+  cursor:pointer;list-style:none;padding:17px 22px;display:grid;
+  grid-template-columns:34px 1fr 20px;gap:12px;align-items:baseline;
+}
+details.ch > summary::-webkit-details-marker{display:none}
+summary .sn{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--accent)}
+summary .st{font-family:"Public Sans",sans-serif;font-weight:700;font-size:1.12rem;letter-spacing:-.012em}
+summary .sd{display:block;font-family:"Inter",sans-serif;font-weight:400;font-size:.85rem;color:var(--ink-soft);margin-top:3px;line-height:1.45}
+summary .chev{justify-self:end;align-self:center;width:11px;height:11px;border-right:2px solid var(--ink-soft);border-bottom:2px solid var(--ink-soft);transform:rotate(45deg);transition:transform .15s ease}
+details.ch[open] > summary .chev{transform:rotate(-135deg)}
+.body{padding:2px 22px 26px;max-width:70ch}
+.body > :first-child{margin-top:0}
+
+p{margin:14px 0}
+h3{font-family:"Public Sans",sans-serif;font-size:1.02rem;font-weight:700;margin:30px 0 8px}
+ul,ol.list{margin:14px 0;padding-left:22px}
+li{margin:6px 0}
+
+.note{border-left:3px solid var(--hairline-strong);padding:2px 0 2px 18px;margin:22px 0;color:var(--ink-soft);font-size:.93rem}
+.warn{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:10px;padding:15px 19px;margin:22px 0;font-size:.93rem}
+.warn b{color:var(--warn-line)}
+
+.tablewrap{overflow-x:auto;margin:20px 0;border:1px solid var(--hairline);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.89rem;min-width:440px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--hairline);vertical-align:top}
+thead th{font-family:"Public Sans",sans-serif;font-size:.69rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+tbody tr:last-child td{border-bottom:0}
+td.num,.num{font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.71rem;font-family:"IBM Plex Mono",monospace;border:1px solid var(--hairline-strong);color:var(--ink-soft);white-space:nowrap}
+.pill.no{border-color:var(--warn-line);color:var(--warn-line)}
+.pill.yes{border-color:var(--ok-line);color:var(--ok-line)}
+
+figure{margin:26px 0;padding:0}
+figure svg{display:block;width:100%;height:auto;background:var(--surface-2);border:1px solid var(--hairline);border-radius:10px}
+figcaption{font-size:.83rem;color:var(--ink-soft);margin-top:10px;line-height:1.55}
+
+.variants{display:grid;grid-template-columns:repeat(auto-fill,minmax(142px,1fr));gap:12px;margin:22px 0}
+.variant{border:1px solid var(--hairline);border-radius:10px;padding:13px;text-align:center;background:var(--surface)}
+.variant .box{height:76px;display:grid;place-items:center;border-radius:7px;margin-bottom:9px}
+.variant svg{width:52px;height:52px;display:block}
+.variant .nm{font-size:.77rem;font-weight:600;line-height:1.3}
+.variant .nm a{color:inherit;text-decoration:none}
+.variant .nm a:hover{color:var(--accent);text-decoration:underline}
+.variant .us{font-size:.71rem;color:var(--ink-soft);margin-top:3px;line-height:1.4}
+
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px;margin:22px 0}
+.sw{border:1px solid var(--hairline);border-radius:10px;overflow:hidden}
+.sw .chip{height:60px}
+.sw .meta{padding:10px 12px;background:var(--surface)}
+.sw .nm{font-size:.81rem;font-weight:600}
+.sw .hx{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--ink-soft);margin-top:2px}
+
+.spec{border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;margin:20px 0;background:var(--surface)}
+.spec .row{padding:11px 0;border-bottom:1px solid var(--hairline)}
+.spec .row:last-child{border-bottom:0}
+.spec .lbl{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:5px}
+.spec .s1{font-family:"Public Sans",sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-.02em}
+.spec .s2{font-family:"Public Sans",sans-serif;font-weight:700;font-size:1.05rem}
+.spec .s3{font-size:.98rem}
+.spec .s4{font-size:.81rem;color:var(--ink-soft)}
+.spec .s5{font-family:"Tajawal",sans-serif;font-size:1.28rem;font-weight:700;direction:rtl}
+
+.dont{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;margin:22px 0}
+.dont .card{border:1px solid var(--warn-line);border-radius:10px;padding:12px;text-align:center;background:var(--surface)}
+.dont .card svg{width:100%;height:70px;display:block;margin-bottom:8px}
+.dont .card p{margin:0;font-size:.75rem;line-height:1.4;color:var(--ink-soft)}
+
+footer.end{border-top:1px solid var(--hairline);background:var(--surface);padding:28px 0 44px}
+footer.end .wrap{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between}
+footer.end p{margin:0;font-size:.83rem;color:var(--ink-soft)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{.topbar,.controls,.map{display:none}details.ch{break-inside:avoid}details.ch>summary{list-style:none}}
+</style>
+
+<!-- ════════════ le logo officiel, en vectoriel, partagé par toute la page ═ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="brandgrad" x1="69.6" y1="69.6" x2="1010.4" y2="1010.3" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#FF4081"/><stop offset="1" stop-color="#800020"/>
+  </linearGradient>
+  <!-- Meme degrade, mais relatif a la forme : pour tout ce qui n'est pas dessine
+       dans l'espace 1080 du logo (schemas, filets, aplats de demonstration). -->
+  <linearGradient id="grad2" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#FF4081"/><stop offset="1" stop-color="#800020"/>
+  </linearGradient>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <polygon points="0,1 10,5 0,9" fill="currentColor"/></marker>
+  <g id="sq"><path d="M 843.79 1081.074 L 238.106 1081.074 C 107.669 1081.074 0.947 974.353 0.947 843.916 L 0.947 238.106 C 0.947 107.669 107.669 0.948 238.106 0.948 L 843.79 0.948 C 974.227 0.948 1080.948 107.669 1080.948 238.106 L 1080.948 843.916 C 1080.948 974.353 974.227 1081.074 843.79 1081.074"/></g>
+  <g id="lsolid"><path d="M 331.716 193.21 C 310.978 193.21 294.01 210.178 294.01 230.916 L 294.01 776.948 L 294.01 850.842 C 294.01 867.001 304.374 880.853 318.781 886.09 C 322.82 887.577 327.178 888.389 331.716 888.389 L 403.337 888.389 C 404.046 888.389 404.75 888.366 405.45 888.326 L 749.916 888.326 C 770.532 888.326 787.4 871.458 787.4 850.842 L 787.4 776.948 C 787.4 756.331 770.532 739.463 749.916 739.463 L 441.042 739.463 L 441.042 230.916 C 441.042 210.178 424.075 193.21 403.337 193.21 Z"/></g>
+</defs></svg>
+
+<div class="topbar">
+  <div class="wrap">
+    <svg viewBox="0 0 1080 1080" aria-hidden="true"><use href="#sq" fill="url(#brandgrad)"/><use href="#lsolid" fill="#FFFFFF"/></svg>
+    <span class="t">Référentiel de marque</span>
+    <a class="back" href="#carte">↑ Revenir à la carte</a>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <svg class="mark" viewBox="0 0 1080 1080" role="img" aria-label="Logo du Laboratoire El Allali">
+      <use href="#sq" fill="url(#brandgrad)"/><use href="#lsolid" fill="#FFFFFF"/>
+    </svg>
+    <div>
+      <h1>Référentiel de marque</h1>
+      <div class="sub">Laboratoire El Allali de biologie médicale — Agadir</div>
+    </div>
+    <div class="stamp">Version <b>1.1</b><br>18 septembre 2026</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ═══════════════════════════════════════════════════════════ résumé -->
+  <section class="tldr" aria-labelledby="tl">
+    <div class="eyebrow" id="tl">À retenir</div>
+    <ol>
+      <li><b>Un seul logo, huit déclinaisons.</b> L'ancien logo au microscope et la version rouge ne s'utilisent plus, nulle part.</li>
+      <li><b>Deux couleurs :</b> bordeaux <code>#800020</code>, fuchsia <code>#FF4081</code>. Les valeurs CMJN de ce document sont indicatives — la cible d'impression se valide sur épreuve, jamais sur écran.</li>
+      <li><b>Ce document se remet à tout prestataire</b> avant qu'il ne produise quoi que ce soit : imprimeur, poseur d'enseigne, graphiste.</li>
+      <li><b>Afficher ses tarifs est obligatoire</b> dans le privé médical. Ce qui est interdit, c'est de promouvoir, comparer, promettre ou démarcher.</li>
+      <li><b>Le kit logo est complet</b> : huit déclinaisons, chacune en vectoriel et en image, prêtes à être transmises. <a href="https://drive.google.com/drive/folders/17QBj1sT4rCLIqha_S0a-C9_kJSxIHvyy">Les télécharger</a>.</li>
+      <li><b>Les mesures de chaque support</b> vivent dans le classeur <i>Référentiel des supports</i>, qui se met à jour. Ce document-ci fixe les règles.</li>
+    </ol>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════ la carte -->
+  <section class="mapsec" id="carte">
+    <div class="eyebrow">La carte</div>
+    <h2>Où voulez-vous aller ?</h2>
+    <p class="hint">Douze sections indépendantes. Cliquez pour ouvrir celle dont vous avez besoin — les autres restent fermées.</p>
+    <p class="hint" style="margin-top:6px">Ce référentiel s'adresse à deux lecteurs : le <b>laboratoire</b>, qui y trouve les règles et ce qu'il peut refuser, et l'<b>imprimeur</b>, qui y trouve les spécifications. Les sections sont étiquetées.</p>
+    <div class="legend"><span><i></i> pour le laboratoire</span><span><i class="pr"></i> technique, pour l'imprimeur</span><span>sans étiquette : pour les deux</span></div>
+
+    <div class="map">
+      <a href="#c1"><div class="n">01</div><div class="ti">Le logo</div><div class="de">Les huit déclinaisons, la zone de protection, la taille minimale</div></a>
+      <a href="#c2"><div class="n">02</div><div class="ti">Les couleurs</div><div class="de">Bordeaux, fuchsia, et pourquoi l'écran ment sur l'impression</div></a>
+      <a href="#c3"><div class="n">03</div><div class="ti">Le dégradé</div><div class="de">Sens, angle, et ce que donnera l'épreuve</div></a>
+      <a href="#c4"><div class="n">04</div><div class="ti">Les typographies</div><div class="de">Trois familles, trois rôles, les tailles minimales</div></a>
+      <a href="#c5"><div class="n">05</div><div class="ti">Le bilinguisme</div><div class="de">Comment le français et l'arabe se répondent</div></a>
+      <a href="#c6"><div class="n">06</div><div class="ti">La mise en page</div><div class="de">Bandeau, marges, filet : ce qui fait la famille</div><div class="who pr">Imprimeur</div></a>
+      <a href="#c7"><div class="n">07</div><div class="ti">Les supports</div><div class="de">Le tableau des formats, et le piège de l'enveloppe</div></a>
+      <a href="#c8"><div class="n">08</div><div class="ti">Impression</div><div class="de">Offset ou numérique, fonds perdus, contrôles</div><div class="who pr">Imprimeur</div></a>
+      <a href="#c9"><div class="n">09</div><div class="ti">Le numérique</div><div class="de">Icônes, mode sombre, cohérence écran et papier</div><div class="who">Laboratoire</div></a>
+      <a href="#c10"><div class="n">10</div><div class="ti">Ce qu'on ne fait pas</div><div class="de">Les six interdits. Se lit en trente secondes</div></a>
+      <a href="#aa" class="annex"><div class="n">A</div><div class="ti">Cadre réglementaire</div><div class="de">Ce qu'un laboratoire a le droit d'écrire, au Maroc</div><div class="who">Laboratoire</div></a>
+      <a href="#ab" class="annex"><div class="n">B</div><div class="ti">Les fichiers</div><div class="de">Où vit quoi, et ce qu'on remet à qui</div></a>
+    </div>
+
+    <div class="controls">
+      <button type="button" id="open-all">Tout déplier</button>
+      <button type="button" id="close-all">Tout replier</button>
+    </div>
+  </section>
+
+  <div class="chapters">
+
+    <!-- ══════════════════════════════════════════════════════════ 01 -->
+    <details class="ch" id="c1">
+      <summary><span class="sn">01</span><span><span class="st">Le logo</span><span class="sd">Un « L » blanc dans un carré aux angles adoucis. C'est la seule marque du laboratoire.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <p>Le logo provient d'un fichier Adobe Illustrator de 2025, entièrement vectoriel. C'est lui qui fait foi : toutes les déclinaisons de ce référentiel en sont extraites, et non redessinées. Aucune reconstitution « à l'œil » n'est acceptable.</p>
+
+        <h3>Zone de protection et taille minimale</h3>
+        <p>Rien ne doit venir s'inscrire autour du logo — ni texte, ni filet, ni autre logo. Cette réserve vaut <b>un dixième du côté</b> du carré, mesurée depuis chacun de ses bords.</p>
+
+        <figure>
+          <svg viewBox="0 0 700 300" role="img" aria-label="La zone de protection vaut un dixieme du cote du carre ; la taille minimale est de 12 millimetres a l impression et 32 pixels a l ecran">
+            <rect x="76" y="46" width="208" height="208" rx="10" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 4" opacity=".45"/>
+            <svg x="102" y="72" width="156" height="156" viewBox="0 0 1080 1080"><use href="#sq" fill="url(#brandgrad)"/><use href="#lsolid" fill="#FFFFFF"/></svg>
+            <line x1="76" y1="36" x2="102" y2="36" stroke="currentColor" stroke-width="1"/>
+            <line x1="76" y1="31" x2="76" y2="41" stroke="currentColor" stroke-width="1"/>
+            <line x1="102" y1="31" x2="102" y2="41" stroke="currentColor" stroke-width="1"/>
+            <text x="89" y="25" font-size="12" text-anchor="middle" fill="currentColor" font-family="IBM Plex Mono, monospace">x/10</text>
+            <line x1="102" y1="264" x2="258" y2="264" stroke="currentColor" stroke-width="1"/>
+            <line x1="102" y1="259" x2="102" y2="269" stroke="currentColor" stroke-width="1"/>
+            <line x1="258" y1="259" x2="258" y2="269" stroke="currentColor" stroke-width="1"/>
+            <text x="180" y="284" font-size="12" text-anchor="middle" fill="currentColor" font-family="IBM Plex Mono, monospace">x</text>
+            <line x1="330" y1="58" x2="330" y2="252" stroke="currentColor" stroke-width="1" opacity=".22"/>
+            <text x="372" y="84" font-size="13" font-weight="600" fill="currentColor" font-family="Public Sans, sans-serif">Taille minimale</text>
+            <svg x="372" y="100" width="44" height="44" viewBox="0 0 1080 1080"><use href="#sq" fill="url(#brandgrad)"/><use href="#lsolid" fill="#FFFFFF"/></svg>
+            <text x="428" y="118" font-size="12" fill="currentColor" font-family="IBM Plex Mono, monospace">12 mm &#8212; impression</text>
+            <text x="428" y="138" font-size="12" fill="currentColor" font-family="IBM Plex Mono, monospace">32 px &#8212; &#233;cran</text>
+            <text x="372" y="180" font-size="12" fill="currentColor" opacity=".75">En dessous, le &#171;&#160;L&#160;&#187; se referme.</text>
+            <text x="372" y="214" font-size="12" fill="currentColor" opacity=".75">Le rayon des angles vaut 22&#160;% du c&#244;t&#233; :</text>
+            <text x="372" y="232" font-size="12" fill="currentColor" opacity=".75">ne jamais le redessiner &#224; la main.</text>
+          </svg>
+          <figcaption>La r&#233;serve autour du logo, et les deux seuils en dessous desquels il cesse d&#8217;&#234;tre lisible.</figcaption>
+        </figure>
+
+        <h3>Les huit déclinaisons</h3>
+        <p>Chaque version répond à une situation précise. Il n'y a pas de choix esthétique à faire : le support et le mode d'impression déterminent la version.</p>
+
+        <div class="variants">
+          <div class="variant"><div class="box" style="background:var(--surface-2)"><svg viewBox="0 0 1080 1080" role="img" aria-label="Icône en dégradé"><use href="#sq" fill="url(#brandgrad)"/><use href="#lsolid" fill="#FFFFFF"/></svg></div><div class="nm"><a href="https://drive.google.com/file/d/19dMUEvGWmfN4g276AB3TCop9ao0rHYxu/view">Icône dégradé</a></div><div class="us">Version par défaut, fond clair</div></div>
+          <div class="variant"><div class="box" style="background:var(--surface-2)"><svg viewBox="0 0 1080 1080" role="img" aria-label="Carré blanc et L en dégradé"><use href="#sq" fill="#FFFFFF"/><use href="#lsolid" fill="url(#brandgrad)"/></svg></div><div class="nm"><a href="https://drive.google.com/file/d/1MU7GjhgZPJED6GExfuws1jnhNTuquvf_/view">Icône claire</a></div><div class="us">Sur un fond coloré clair</div></div>
+          <div class="variant"><div class="box" style="background:var(--surface-2)"><svg viewBox="0 0 1080 1080" role="img" aria-label="Icône en aplat bordeaux"><use href="#sq" fill="#800020"/><use href="#lsolid" fill="#FFFFFF"/></svg></div><div class="nm"><a href="https://drive.google.com/file/d/11W-8WZZaQbMYq6wyYdvZ_V9FonvLOYKb/view">Icône 1 couleur</a></div><div class="us">Offset 1 couleur, tampon, kraft</div></div>
+          <div class="variant"><div class="box" style="background:#3A2226"><svg viewBox="0 0 1080 1080" role="img" aria-label="L blanc en défonce"><use href="#lsolid" fill="#FFFFFF"/></svg></div><div class="nm"><a href="https://drive.google.com/file/d/1B7YwdKNbt1v5LCuhNIMmYodhYbml34mq/view">Logo tout blanc</a></div><div class="us">Sur fond foncé ou photo</div></div>
+          <div class="variant"><div class="box" style="background:var(--surface-2)"><svg viewBox="0 0 1080 1080" role="img" aria-label="Carré à bord franc"><rect width="1080" height="1080" fill="url(#brandgrad)"/><use href="#lsolid" fill="#FFFFFF"/></svg></div><div class="nm"><a href="https://drive.google.com/file/d/1lVpyVJ6i3vq6Y_7waYS2vkwiNJ4TnP24/view">Bord franc</a></div><div class="us">Icônes iOS et Android</div></div>
+          <div class="variant"><div class="box" style="background:var(--surface-2)"><svg viewBox="240 150 600 780" role="img" aria-label="Le L seul en dégradé"><use href="#lsolid" fill="url(#brandgrad)"/></svg></div><div class="nm"><a href="https://drive.google.com/file/d/1byMVLvtD7xjb-3VboJBPkceyJ3J0g585/view">Le L seul, dégradé</a></div><div class="us">Filigrane</div></div>
+          <div class="variant"><div class="box" style="background:var(--surface-2)"><svg viewBox="240 150 600 780" role="img" aria-label="Le L seul en bordeaux"><use href="#lsolid" fill="#800020"/></svg></div><div class="nm"><a href="https://drive.google.com/file/d/1YS4ePB-Dp0RMHIwbCU9ivZ7Dg4tW2yBm/view">Le L seul, bordeaux</a></div><div class="us">Vinyle découpé, gravure</div></div>
+          <div class="variant"><div class="box" style="background:#3A2226"><svg viewBox="240 150 600 780" role="img" aria-label="Le L seul en blanc"><use href="#lsolid" fill="#FFFFFF"/></svg></div><div class="nm"><a href="https://drive.google.com/file/d/1TgIIDPPfqx-UYFgZ1OxL91TdivFoeIuw/view">Le L seul, blanc</a></div><div class="us">Sur fond foncé</div></div>
+        </div>
+
+        <h3>Les fichiers disponibles</h3>
+        <p>Chaque déclinaison existe dans quatre formats. Prenez celui qui convient à votre outil : il n'y a rien à convertir, rien à redessiner.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Format</th><th>Pour qui</th><th>Pourquoi</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">.svg</td><td>Web, bureautique</td><td>Vectoriel. Le meilleur choix partout où il est accepté.</td></tr>
+            <tr><td class="mono">.pdf</td><td>Imprimeurs</td><td>Vectoriel aussi, et c'est le format que demandent la plupart des ateliers.</td></tr>
+            <tr><td class="mono">.png 512</td><td>Écran</td><td>Fond transparent. Taille courante pour un site, un document, une signature de courriel.</td></tr>
+            <tr><td class="mono">.png 2048</td><td>Grand format</td><td>Présentations, affichage, dépannage si le vectoriel n'est pas accepté.</td></tr>
+          </tbody>
+        </table></div>
+        <div class="note">Les huit déclinaisons × quatre formats sont dans le dossier <a href="https://drive.google.com/drive/folders/17QBj1sT4rCLIqha_S0a-C9_kJSxIHvyy">Logos — kit complet</a>. Tout se régénère depuis le fichier Illustrator d'origine si le logo évolue : aucune version n'est dessinée à la main.</div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════════════ 02 -->
+    <details class="ch" id="c2">
+      <summary><span class="sn">02</span><span><span class="st">Les couleurs</span><span class="sd">Deux couleurs de marque, deux neutres — et la distinction qui évite les mauvaises surprises.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <div class="swatches">
+          <div class="sw"><div class="chip" style="background:#800020"></div><div class="meta"><div class="nm">Bordeaux</div><div class="hx">#800020</div></div></div>
+          <div class="sw"><div class="chip" style="background:#FF4081"></div><div class="meta"><div class="nm">Fuchsia</div><div class="hx">#FF4081</div></div></div>
+          <div class="sw"><div class="chip" style="background:#3A2226"></div><div class="meta"><div class="nm">Encre</div><div class="hx">#3A2226</div></div></div>
+          <div class="sw"><div class="chip" style="background:#7A5A62"></div><div class="meta"><div class="nm">Gris</div><div class="hx">#7A5A62</div></div></div>
+        </div>
+
+        <p>Le bordeaux porte l'identité : titres, aplats, impression en une seule couleur. Le fuchsia n'est qu'un accent — il ponctue, il ne domine jamais. L'encre sert au texte courant, le gris aux mentions secondaires.</p>
+
+        <h3>Écran et impression ne sont pas le même monde</h3>
+        <p>Un écran émet de la lumière, une presse dépose de l'encre sur du papier. Certaines couleurs vives existent à l'écran sans avoir d'équivalent en quadrichromie. C'est le cas de notre fuchsia.</p>
+
+        <figure>
+          <svg viewBox="0 0 700 210" role="img" aria-label="Le fuchsia écran vire au corail si l'on transmet à l'imprimeur la conversion arithmétique ; la cible corrigée retrouve un rose juste">
+            <rect x="24" y="46" width="146" height="88" rx="8" fill="#FF4081"/>
+            <text x="97" y="34" font-size="12" text-anchor="middle" fill="currentColor" font-family="Public Sans, sans-serif" font-weight="600">Écran</text>
+            <text x="97" y="154" font-size="11.5" text-anchor="middle" fill="currentColor" font-family="IBM Plex Mono, monospace">#FF4081</text>
+            <line x1="186" y1="90" x2="234" y2="90" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"/>
+            <text x="210" y="78" font-size="11" text-anchor="middle" fill="currentColor" opacity=".7">converti</text>
+            <rect x="250" y="46" width="146" height="88" rx="8" fill="#F4795F"/>
+            <text x="323" y="34" font-size="12" text-anchor="middle" fill="#C0392B" font-family="Public Sans, sans-serif" font-weight="600">Ce qui sort</text>
+            <text x="323" y="154" font-size="11.5" text-anchor="middle" fill="currentColor" font-family="IBM Plex Mono, monospace">0 / 75 / 49 / 0</text>
+            <text x="323" y="172" font-size="11.5" text-anchor="middle" fill="#C0392B" font-family="Public Sans, sans-serif" font-weight="600">corail</text>
+            <line x1="412" y1="90" x2="460" y2="90" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"/>
+            <text x="436" y="78" font-size="11" text-anchor="middle" fill="currentColor" opacity=".7">corrigé</text>
+            <rect x="476" y="46" width="146" height="88" rx="8" fill="#E8386B"/>
+            <text x="549" y="34" font-size="12" text-anchor="middle" fill="currentColor" font-family="Public Sans, sans-serif" font-weight="600">Cible juste</text>
+            <text x="549" y="154" font-size="11" text-anchor="middle" fill="currentColor" font-family="IBM Plex Mono, monospace">0 / 85-95 / 30-35 / 0</text>
+            <text x="549" y="172" font-size="11.5" text-anchor="middle" fill="currentColor" opacity=".75">à valider sur épreuve</text>
+          </svg>
+          <figcaption>La conversion arithmétique met trop de jaune et pas assez de magenta : imprimée telle quelle, elle donne un corail. L'écart se voit à l'œil nu.</figcaption>
+        </figure>
+
+        <div class="warn"><b>Les deux valeurs à transmettre :</b> bordeaux <span class="mono">25 / 100 / 75 / 40</span>, fuchsia <span class="mono">0 / 90 / 32 / 0</span>. Elles sont à faire valider par une épreuve avant le premier tirage — chaque papier réagit un peu différemment. Si l'imprimeur propose ses propres valeurs après épreuve, les siennes gagnent : c'est lui qui connaît sa presse.</div>
+
+        <div class="tablewrap"><table>
+          <thead><tr><th>Couleur</th><th>Écran</th><th>À donner à l'imprimeur</th><th>Remarque</th></tr></thead>
+          <tbody>
+            <tr><td>Bordeaux</td><td class="mono">#800020</td><td class="mono">25 / 100 / 75 / 40</td><td>Valeur à imprimer. Couleur difficile : faire une épreuve avant le tirage.</td></tr>
+            <tr><td>Fuchsia</td><td class="mono">#FF4081</td><td class="mono">0 / 90 / 32 / 0</td><td>Valeur à imprimer. Ne jamais utiliser 0 / 75 / 49 / 0 : cela donne du corail.</td></tr>
+            <tr><td>Encre</td><td class="mono">#3A2226</td><td>—</td><td>En 1 couleur, remplacée par le bordeaux.</td></tr>
+            <tr><td>Gris</td><td class="mono">#7A5A62</td><td>—</td><td>Mentions secondaires uniquement.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Le bordeaux plus clair</h3>
+        <p>On a parfois besoin d'un bordeaux atténué — pour un sous-titre, un fond léger. À l'écran, on le fabrique en baissant l'opacité ; à l'impression, l'imprimeur le fabrique autrement, et le résultat sort toujours <b>un peu plus foncé</b> que ce que montre l'écran.</p>
+        <p>Deux conséquences pratiques :</p>
+        <ul>
+          <li>Ne pas donner de code couleur pour un bordeaux atténué. Dire simplement à l'imprimeur : « du bordeaux à 70 % », et il s'en occupe.</li>
+          <li><b>Jamais de bordeaux atténué sur du petit texte.</b> En dessous de 8 points, il devient sale et difficile à lire. Le petit texte reste en bordeaux plein, ou en gris.</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════════════ 03 -->
+    <details class="ch" id="c3">
+      <summary><span class="sn">03</span><span><span class="st">Le dégradé</span><span class="sd">Du fuchsia au bordeaux, en diagonale. C'est la signature visuelle du laboratoire.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <figure>
+          <svg viewBox="0 0 700 230" role="img" aria-label="Le dégradé va du fuchsia en haut à gauche au bordeaux en bas à droite, sur une diagonale à 135 degrés">
+            <rect x="34" y="28" width="172" height="172" rx="38" fill="url(#grad2)"/>
+            <line x1="34" y1="28" x2="206" y2="200" stroke="#FFFFFF" stroke-width="1.4" stroke-dasharray="5 4" opacity=".85"/>
+            <circle cx="34" cy="28" r="5" fill="#FFFFFF"/><circle cx="206" cy="200" r="5" fill="#FFFFFF"/>
+            <text x="242" y="54" font-size="13" font-weight="600" fill="currentColor" font-family="Public Sans, sans-serif">Sens et points d'arrêt</text>
+            <text x="242" y="80" font-size="12.5" fill="currentColor" font-family="IBM Plex Mono, monospace">0 %   →  #FF4081</text>
+            <text x="242" y="102" font-size="12.5" fill="currentColor" font-family="IBM Plex Mono, monospace">100 % →  #800020</text>
+            <text x="242" y="124" font-size="12.5" fill="currentColor" font-family="IBM Plex Mono, monospace">angle :  135°</text>
+            <text x="242" y="158" font-size="12" fill="currentColor" opacity=".75">Le fuchsia est toujours en haut à gauche,</text>
+            <text x="242" y="176" font-size="12" fill="currentColor" opacity=".75">le bordeaux en bas à droite. Jamais</text>
+            <text x="242" y="194" font-size="12" fill="currentColor" opacity=".75">l'inverse, jamais à la verticale.</text>
+          </svg>
+          <figcaption>Le dégradé se lit toujours dans le même sens : c'est ce qui le rend reconnaissable d'un support à l'autre.</figcaption>
+        </figure>
+
+        <p>Le dégradé s'emploie sur les aplats du logo, sur les filets de séparation et sur les bandeaux de tête. Il ne s'emploie <b>jamais</b> derrière du texte courant, ni sur de grandes surfaces en impression.</p>
+
+        <div class="warn"><b>Ce que vous verrez sur l'épreuve.</b> Le fuchsia étant hors gamme, il ne se contente pas de pâlir : il s'assombrit et tourne vers le rouge-orangé. Une épreuve plus sombre et plus rouge que l'écran est le résultat <b>normal</b>. Ne pas la refuser, et surtout ne pas demander à l'imprimeur de « forcer » l'encre pour compenser — cela dégrade le reste.</div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════════════ 04 -->
+    <details class="ch" id="c4">
+      <summary><span class="sn">04</span><span><span class="st">Les typographies</span><span class="sd">Trois familles, trois rôles. Aucune autre police n'entre dans un support du laboratoire.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <div class="spec">
+          <div class="row"><div class="lbl">Public Sans — titres</div><div class="s1">Laboratoire EL ALLALI</div></div>
+          <div class="row"><div class="lbl">Public Sans — sous-titres</div><div class="s2">Dr. Mohamed Aziz EL ALLALI</div></div>
+          <div class="row"><div class="lbl">Inter — texte courant</div><div class="s3">Pharmacien Biologiste lauréat de l'université ULB — Bruxelles</div></div>
+          <div class="row"><div class="lbl">Inter — mentions</div><div class="s4">61 Bis, rue de Marrakech, Quartier Industriel — Agadir</div></div>
+          <div class="row"><div class="lbl">Tajawal — arabe</div><div class="s5">مختبر العلالي للتحليلات الطبية</div></div>
+        </div>
+
+        <div class="tablewrap"><table>
+          <thead><tr><th>Famille</th><th>Rôle</th><th>Graisses</th><th>Taille minimale</th></tr></thead>
+          <tbody>
+            <tr><td>Public Sans</td><td>Titres, nom du laboratoire</td><td>700 · 800</td><td class="num">9 pt</td></tr>
+            <tr><td>Inter</td><td>Texte courant, mentions</td><td>400 · 600</td><td class="num">6 pt</td></tr>
+            <tr><td>Tajawal</td><td>Tout l'arabe</td><td>400 · 700</td><td class="num">7 pt</td></tr>
+          </tbody>
+        </table></div>
+
+        <p>L'arabe se compose systématiquement <b>un point plus grand</b> que le français à côté duquel il figure : les caractères arabes ont une hauteur d'œil plus faible et paraissent sinon plus petits.</p>
+
+        <div class="note">Piège technique à signaler à tout prestataire : Tajawal ne couvre que l'alphabet arabe. Si l'on ne déclare pas ses variantes latines, les espaces et la ponctuation des lignes arabes basculent silencieusement sur une police système — le défaut ne se voit qu'à l'impression.</div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════════════ 05 -->
+    <details class="ch" id="c5">
+      <summary><span class="sn">05</span><span><span class="st">Le bilinguisme</span><span class="sd">Français et arabe se répondent en miroir, de part et d'autre du logo.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <figure>
+          <svg viewBox="0 0 700 210" role="img" aria-label="Le français occupe la colonne de gauche alignée à gauche, le logo est au centre, l'arabe occupe la colonne de droite alignée à droite">
+            <rect x="20" y="22" width="660" height="164" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".28"/>
+            <rect x="48" y="48" width="192" height="9" rx="4" fill="currentColor" opacity=".7"/>
+            <rect x="48" y="68" width="136" height="7" rx="3" fill="currentColor" opacity=".34"/>
+            <rect x="48" y="98" width="172" height="6" rx="3" fill="currentColor" opacity=".2"/>
+            <rect x="48" y="112" width="172" height="6" rx="3" fill="currentColor" opacity=".2"/>
+            <rect x="48" y="126" width="128" height="6" rx="3" fill="currentColor" opacity=".2"/>
+            <text x="48" y="160" font-size="11" fill="currentColor" opacity=".65" font-family="Public Sans, sans-serif">Français — aligné à gauche</text>
+            <svg x="318" y="48" width="64" height="64" viewBox="0 0 1080 1080"><use href="#sq" fill="url(#brandgrad)"/><use href="#lsolid" fill="#FFFFFF"/></svg>
+            <line x1="350" y1="122" x2="350" y2="162" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>
+            <text x="350" y="176" font-size="11" text-anchor="middle" fill="currentColor" opacity=".65" font-family="Public Sans, sans-serif">axe</text>
+            <rect x="460" y="48" width="192" height="9" rx="4" fill="currentColor" opacity=".7"/>
+            <rect x="516" y="68" width="136" height="7" rx="3" fill="currentColor" opacity=".34"/>
+            <rect x="480" y="98" width="172" height="6" rx="3" fill="currentColor" opacity=".2"/>
+            <rect x="480" y="112" width="172" height="6" rx="3" fill="currentColor" opacity=".2"/>
+            <rect x="524" y="126" width="128" height="6" rx="3" fill="currentColor" opacity=".2"/>
+            <text x="652" y="160" font-size="11" text-anchor="end" fill="currentColor" opacity=".65" font-family="Public Sans, sans-serif">العربية — aligné à droite</text>
+          </svg>
+          <figcaption>Les deux colonnes ont la même largeur et la même hiérarchie. Aucune des deux langues n'est traitée comme secondaire.</figcaption>
+        </figure>
+
+        <ul>
+          <li>Le <b>français à gauche</b>, aligné à gauche. L'<b>arabe à droite</b>, aligné à droite, sens de lecture inversé.</li>
+          <li>Les deux blocs ont la <b>même largeur</b> et la même structure : même nombre de lignes, mêmes niveaux de titre.</li>
+          <li>Le logo se place <b>entre les deux</b>, sur l'axe médian.</li>
+          <li>Les puces arabes se retournent : le point passe à droite du texte.</li>
+        </ul>
+
+        <div class="warn"><b>Jamais de traduction approximative.</b> Un texte arabe se fait relire par un locuteur natif avant impression. Une faute d'accord ou une lettre mal liée ne se rattrape pas sur un tirage de mille exemplaires — et elle est immédiatement visible pour la moitié des patients.</div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════════════ 06 -->
+    <details class="ch" id="c6">
+      <summary><span class="sn">06</span><span><span class="st">La mise en page</span><span class="sd">Trois règles suffisent à ce qu'un nouveau support ressemble aux précédents.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <figure>
+          <svg viewBox="0 0 700 330" role="img" aria-label="Une page A4 montrant le bandeau de tete en haut, la marge interieure et le filet degrade qui separe les blocs">
+            <rect x="430" y="20" width="212" height="300" fill="#FFFFFF" stroke="currentColor" stroke-width="1.2"/>
+            <rect x="430" y="20" width="212" height="13" fill="url(#grad2)"/>
+            <rect x="446" y="46" width="180" height="268" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity=".4"/>
+            <rect x="460" y="58" width="96" height="9" rx="3" fill="currentColor" opacity=".62"/>
+            <rect x="460" y="73" width="66" height="6" rx="3" fill="currentColor" opacity=".28"/>
+            <rect x="556" y="58" width="56" height="9" rx="3" fill="currentColor" opacity=".62"/>
+            <rect x="576" y="73" width="36" height="6" rx="3" fill="currentColor" opacity=".28"/>
+            <rect x="460" y="94" width="152" height="1.6" fill="url(#grad2)"/>
+            <rect x="460" y="118" width="130" height="6" rx="3" fill="currentColor" opacity=".2"/>
+            <rect x="460" y="132" width="146" height="6" rx="3" fill="currentColor" opacity=".2"/>
+            <rect x="460" y="146" width="104" height="6" rx="3" fill="currentColor" opacity=".2"/>
+            <rect x="460" y="272" width="152" height="1.6" fill="url(#grad2)"/>
+            <rect x="484" y="284" width="104" height="5" rx="2" fill="currentColor" opacity=".2"/>
+            <rect x="500" y="295" width="72" height="5" rx="2" fill="currentColor" opacity=".2"/>
+            <line x1="300" y1="27" x2="424" y2="27" stroke="currentColor" stroke-width="1" opacity=".55"/>
+            <circle cx="426" cy="27" r="2.6" fill="currentColor"/>
+            <text x="292" y="24" font-size="12.5" text-anchor="end" font-weight="600" fill="currentColor" font-family="Public Sans, sans-serif">Bandeau de t&#234;te</text>
+            <text x="292" y="41" font-size="11.5" text-anchor="end" fill="currentColor" opacity=".7">Il ouvre le support et l&#8217;identifie</text>
+            <text x="292" y="57" font-size="11.5" text-anchor="end" fill="currentColor" opacity=".7">au premier coup d&#8217;&#339;il.</text>
+            <line x1="300" y1="150" x2="440" y2="150" stroke="currentColor" stroke-width="1" opacity=".55"/>
+            <circle cx="443" cy="150" r="2.6" fill="currentColor"/>
+            <text x="292" y="147" font-size="12.5" text-anchor="end" font-weight="600" fill="currentColor" font-family="Public Sans, sans-serif">Marge int&#233;rieure</text>
+            <text x="292" y="164" font-size="11.5" text-anchor="end" fill="currentColor" opacity=".7">12 &#224; 15 mm. Elle ne se r&#233;duit jamais</text>
+            <text x="292" y="180" font-size="11.5" text-anchor="end" fill="currentColor" opacity=".7">pour faire tenir un texte : c&#8217;est le</text>
+            <text x="292" y="196" font-size="11.5" text-anchor="end" fill="currentColor" opacity=".7">texte qui se raccourcit.</text>
+            <line x1="300" y1="272" x2="456" y2="272" stroke="currentColor" stroke-width="1" opacity=".55"/>
+            <circle cx="459" cy="272" r="2.6" fill="currentColor"/>
+            <text x="292" y="269" font-size="12.5" text-anchor="end" font-weight="600" fill="currentColor" font-family="Public Sans, sans-serif">Filet d&#233;grad&#233;</text>
+            <text x="292" y="286" font-size="11.5" text-anchor="end" fill="currentColor" opacity=".7">Il s&#233;pare les blocs, &#224; la place d&#8217;un</text>
+            <text x="292" y="302" font-size="11.5" text-anchor="end" fill="currentColor" opacity=".7">trait noir. Seul ornement de la charte.</text>
+          </svg>
+          <figcaption>Le papier &#224; en-t&#234;te A4, avec les trois &#233;l&#233;ments qui font qu&#8217;un support se reconna&#238;t imm&#233;diatement.</figcaption>
+        </figure>
+
+        <ol class="list">
+          <li><b>Le bandeau de tête</b> — un filet ou un aplat en dégradé ouvre le support et l'identifie au premier coup d'œil.</li>
+          <li><b>Une marge intérieure constante</b> — 12 à 15 mm selon le format. Elle ne se réduit jamais pour faire tenir un texte : c'est le texte qui se raccourcit.</li>
+          <li><b>Un filet dégradé</b> sépare les blocs plutôt qu'un trait noir. C'est le seul ornement de la charte.</li>
+        </ol>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════════════ 07 -->
+    <details class="ch" id="c7">
+      <summary><span class="sn">07</span><span><span class="st">Les supports</span><span class="sd">Les mesures vivent dans un classeur à part, qui se met à jour. Ici, la logique.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <div class="tablewrap"><table>
+          <thead><tr><th>Support</th><th>Format fini</th><th>Impression</th><th>Version du logo</th></tr></thead>
+          <tbody>
+            <tr><td><a href="https://drive.google.com/file/d/1q1vcb5CtH3szwfKGqgvcZZ7Cp2HnC1h4/view">Papier à en-tête A4</a></td><td class="mono">210 × 297</td><td><span class="pill">Quadri</span></td><td>Icône dégradé</td></tr>
+            <tr><td>Papier à en-tête A5 — factures</td><td class="mono">148 × 210</td><td><span class="pill">Quadri ou 1 c.</span></td><td>Icône dégradé</td></tr>
+            <tr><td><a href="https://drive.google.com/file/d/1ERw437C9B0Ybz5K3gUOoTHszf3SZTNkO/view">Enveloppe à fenêtre C5</a></td><td class="mono">229 × 162</td><td><span class="pill">1 couleur</span></td><td>Icône bordeaux</td></tr>
+            <tr><td><a href="https://drive.google.com/drive/folders/1PXsdFdp_4EyY-1tpzjta5HLCqB9ZK7WD">Affiches d'accueil</a></td><td class="mono">A4 / A3</td><td><span class="pill">Quadri</span></td><td>Icône dégradé</td></tr>
+            <tr><td><a href="https://drive.google.com/file/d/1cMi_twap4v0REU2ZvHfj5gJ-A8RMfX1a/view">Bloc-notes carré</a></td><td class="mono">90 × 90</td><td><span class="pill">1 couleur</span></td><td>Icône bordeaux</td></tr>
+            <tr><td>Tapis de souris</td><td class="mono">230 × 190</td><td><span class="pill">Quadri</span></td><td>Icône dégradé</td></tr>
+            <tr><td>Sac, boîte kraft, tampon</td><td class="mono">variable</td><td><span class="pill">1 couleur</span></td><td>Icône bordeaux</td></tr>
+            <tr><td>Signalétique intérieure</td><td class="mono">lettres 60 mm</td><td><span class="pill">Vinyle</span></td><td>Le L seul</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>L&#8217;enveloppe : &#224; quoi sert la fen&#234;tre</h3>
+        <p>La fen&#234;tre laisse voir le nom du patient inscrit sur la feuille de r&#233;sultats pli&#233;e &#224; l&#8217;int&#233;rieur : le personnel retrouve la bonne enveloppe sans l&#8217;ouvrir.</p>
+        <p>Cons&#233;quence pour la maquette : la fen&#234;tre et la bande qui l&#8217;entoure restent libres de tout &#233;l&#233;ment imprim&#233;. Le reste de la surface est disponible.</p>
+        <figure>
+          <svg viewBox="0 0 700 372" role="img" aria-label="Enveloppe C5 avec la feuille A4 pliee en deux a l interieur ; le nom du patient apparait dans la fenetre">
+            <rect x="130" y="24" width="440" height="311" rx="3" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="148" y="37" width="403" height="285" fill="#FFFFFF" stroke="currentColor" stroke-width="1" opacity=".8"/>
+            <text x="349" y="52" font-size="10.5" text-anchor="middle" fill="currentColor" opacity=".5">feuille A4 pli&#233;e en deux &#8212; 210 &#215; 148,5 mm</text>
+            <rect x="163" y="62" width="60" height="22" rx="3" fill="currentColor" opacity=".26"/>
+            <rect x="236" y="64" width="150" height="7" rx="3" fill="currentColor" opacity=".36"/>
+            <rect x="236" y="76" width="104" height="5" rx="2" fill="currentColor" opacity=".18"/>
+            <rect x="163" y="104" width="120" height="5" rx="2" fill="currentColor" opacity=".16"/>
+            <rect x="163" y="114" width="140" height="5" rx="2" fill="currentColor" opacity=".16"/>
+            <rect x="163" y="148" width="158" height="5" rx="2" fill="currentColor" opacity=".13"/>
+            <rect x="163" y="160" width="140" height="5" rx="2" fill="currentColor" opacity=".13"/>
+            <rect x="163" y="172" width="152" height="5" rx="2" fill="currentColor" opacity=".13"/>
+            <rect x="163" y="184" width="130" height="5" rx="2" fill="currentColor" opacity=".13"/>
+            <rect x="163" y="240" width="330" height="5" rx="2" fill="currentColor" opacity=".13"/>
+            <rect x="163" y="252" width="300" height="5" rx="2" fill="currentColor" opacity=".13"/>
+            <rect x="163" y="264" width="318" height="5" rx="2" fill="currentColor" opacity=".13"/>
+            <rect x="339" y="133" width="192" height="86" rx="5" fill="#2E75B6" opacity=".13" stroke="#2E75B6" stroke-width="1.4"/>
+            <rect x="358" y="156" width="126" height="9" rx="2" fill="#1F4E79" opacity=".82"/>
+            <rect x="358" y="172" width="84" height="6" rx="2" fill="#2E75B6" opacity=".5"/>
+            <text x="435" y="126" font-size="11" text-anchor="middle" fill="#2E75B6" font-family="Public Sans, sans-serif" font-weight="700">FEN&#202;TRE 45 &#215; 100 mm</text>
+            <text x="435" y="205" font-size="10.5" text-anchor="middle" fill="#2E75B6">le nom du patient, lu sur la feuille</text>
+            <line x1="130" y1="352" x2="570" y2="352" stroke="currentColor" stroke-width="1" opacity=".5"/>
+            <line x1="130" y1="347" x2="130" y2="357" stroke="currentColor" stroke-width="1" opacity=".5"/>
+            <line x1="570" y1="347" x2="570" y2="357" stroke="currentColor" stroke-width="1" opacity=".5"/>
+            <text x="350" y="367" font-size="11" text-anchor="middle" fill="currentColor" opacity=".65" font-family="IBM Plex Mono, monospace">229 mm</text>
+            <line x1="112" y1="24" x2="112" y2="335" stroke="currentColor" stroke-width="1" opacity=".5"/>
+            <line x1="107" y1="24" x2="117" y2="24" stroke="currentColor" stroke-width="1" opacity=".5"/>
+            <line x1="107" y1="335" x2="117" y2="335" stroke="currentColor" stroke-width="1" opacity=".5"/>
+            <text x="100" y="184" font-size="11" text-anchor="end" fill="currentColor" opacity=".65" font-family="IBM Plex Mono, monospace">162 mm</text>
+          </svg>
+          <figcaption>La feuille A4 pli&#233;e en deux se loge dans l&#8217;enveloppe C5, et le nom du patient vient se placer face &#224; la fen&#234;tre.</figcaption>
+        </figure>
+
+        
+
+        <div class="note">La feuille de r&#233;sultats est produite par le logiciel du laboratoire et suit sa propre mise à jour, menée avec l’intégrateur. Son en-t&#234;te est d&#233;j&#224; refait à la charte ; le corps du document reste compos&#233; dans les polices propos&#233;es par le logiciel, o&#249; les n&#244;tres ne figurent pas. <b>La charte s’applique donc à l’en-t&#234;te, pas au corps du compte rendu.</b></div>
+
+        <div class="note">Les mesures exactes, la matière, le mode d'impression et les fichiers de chaque support sont dans le classeur <b>Référentiel des supports</b>. Les cellules sur fond jaune y attendent la validation du laboratoire.</div>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════════════ 08 -->
+    <details class="ch" id="c8">
+      <summary><span class="sn">08</span><span><span class="st">Impression et prépresse</span><span class="sd">Ce qu'il faut demander à un imprimeur, et ce qu'il ne faut pas croire.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <h3>Offset ou numérique</h3>
+        <p>En <b>offset</b>, chaque couleur ajoute une plaque et un calage. Ce surcoût est <b>fixe</b> : décisif sur les petites séries, dilué sur les gros tirages où le papier devient le poste dominant.</p>
+        <p>En <b>numérique</b>, il n'y a ni plaque ni calage : imprimer en une seule couleur ne coûte pas moins cher qu'en quadri, les deux sont facturés au tarif couleur. En revanche une page couleur coûte couramment deux à cinq fois une page noir.</p>
+
+        <div class="warn"><b>Demander systématiquement les deux prix.</b> Certains ateliers groupent les commandes sur presse quadri et n'accordent aucune remise pour un fichier en une couleur — demander « 1 couleur » ne fait pas toujours baisser le devis. À l'inverse, sur les petites presses une ou deux couleurs encore fréquentes au Maroc, la quadri impose deux à quatre passages et l'écart reste marqué même en volume.</div>
+
+        <h3>Fonds perdus et zone tranquille</h3>
+        <p>Le fichier déborde légèrement du format fini — c'est le <b>fond perdu</b> — parce que la coupe n'est jamais précise au dixième de millimètre. Sans lui, un liseré blanc apparaît sur le bord. Symétriquement, aucun texte ni logo ne doit s'approcher à moins de 3 à 5 mm de la coupe, sous peine d'être rogné.</p>
+        <p>3 mm est l'usage dominant — pas une norme. Compter 5 mm en grand format et sur les dos carrés collés. Certains imprimeurs en ligne n'exigent que 1 à 2 mm. <b>Demander son gabarit à l'imprimeur</b> avant de préparer le fichier.</p>
+
+        <h3>Ce que la prépresse va signaler</h3>
+        <p>Nos fichiers PDF contiennent des polices dites « Type 3 », que les outils de contrôle signalent. Une police Type 3 est toujours embarquée, mais son contenu n'est pas garanti vectoriel : chaque caractère peut contenir des tracés comme des images.</p>
+        <p><b>Vérification faite sur ces fichiers : tous les caractères sont des tracés, aucune image.</b> Ce n'est donc pas un défaut, et ce n'est pas une non-conformité. Si un imprimeur bloque malgré tout, la parade est de vectoriser les textes.</p>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════════════ 09 -->
+    <details class="ch" id="c9">
+      <summary><span class="sn">09</span><span><span class="st">Le numérique</span><span class="sd">Le site, l'application et le papier doivent montrer le même laboratoire.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <p>Les icônes de l'application sont régénérées directement depuis le fichier vectoriel du logo : elles portent donc les couleurs officielles par construction, sans reprise manuelle possible.</p>
+
+        <h3>La règle des icônes Android</h3>
+        <p>Android découpe les icônes selon une forme variable — cercle, goutte, carré adouci. Seul un <b>disque central de 80 % du côté</b> est garanti visible.</p>
+
+        <figure>
+          <svg viewBox="0 0 700 240" role="img" aria-label="La zone sûre d'une icône Android est un disque de 80 pour cent du côté : la contrainte porte sur la diagonale du contenu, pas sur sa hauteur">
+            <rect x="40" y="26" width="184" height="184" rx="10" fill="url(#grad2)"/>
+            <circle cx="132" cy="118" r="74" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-dasharray="5 4"/>
+            <svg x="94" y="64" width="76" height="108" viewBox="240 150 600 780"><use href="#lsolid" fill="#FFFFFF"/></svg>
+            <line x1="94" y1="64" x2="170" y2="172" stroke="#FFFFFF" stroke-width="1.2" opacity=".9"/>
+            <text x="132" y="228" font-size="11.5" text-anchor="middle" fill="currentColor" font-family="Public Sans, sans-serif">disque sûr : 80 % du côté</text>
+            <text x="266" y="54" font-size="13" font-weight="600" fill="currentColor" font-family="Public Sans, sans-serif">La contrainte porte sur la diagonale</text>
+            <text x="266" y="84" font-size="12.5" fill="currentColor" font-family="IBM Plex Mono, monospace">largeur² + hauteur² ≤ (0,8 × côté)²</text>
+            <text x="266" y="118" font-size="12" fill="currentColor" opacity=".78">Pour un bloc carré, le plafond est donc</text>
+            <text x="266" y="136" font-size="12" fill="currentColor" opacity=".78">56,6 % — et non 80 %.</text>
+            <text x="266" y="168" font-size="12" fill="currentColor" opacity=".78">Notre « L » mesure 493 × 695. À 58 % de</text>
+            <text x="266" y="186" font-size="12" fill="currentColor" opacity=".78">hauteur il fait 41 % de large, soit une</text>
+            <text x="266" y="204" font-size="12" fill="currentColor" opacity=".78">diagonale de 71 % : dans le disque.</text>
+          </svg>
+          <figcaption>Le seuil de 58 % vaut pour ce logo précis, parce qu'il est nettement plus haut que large. Ce n'est pas une règle générale.</figcaption>
+        </figure>
+
+        <ul>
+          <li><b>Icônes iOS</b> — fournir un carré opaque à bord franc. Le système applique lui-même son arrondi ; en fournir un déjà arrondi produit un double arrondi.</li>
+          <li><b>Mode sombre</b> — le bordeaux devient rose <span class="mono">#FF79A8</span>, le fond <span class="mono">#1A0F12</span>. Jamais de noir pur.</li>
+          <li><b>Le logo en SVG</b> est servi directement par le site : il reste net sur tous les écrans.</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- ══════════════════════════════════════════════════════════ 10 -->
+    <details class="ch" id="c10">
+      <summary><span class="sn">10</span><span><span class="st">Ce qu'on ne fait pas</span><span class="sd">Le chapitre le plus court, et le plus utile. Il se lit en trente secondes.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <div class="dont">
+          <div class="card"><svg viewBox="0 0 120 90" role="img" aria-label="Interdit : l'ancien logo au microscope"><rect x="34" y="12" width="52" height="52" rx="10" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/><circle cx="60" cy="38" r="11" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/><line x1="26" y1="6" x2="94" y2="70" stroke="#C0392B" stroke-width="3"/></svg><p>L'ancien logo au microscope</p></div>
+          <div class="card"><svg viewBox="0 0 120 90" role="img" aria-label="Interdit : l'ancienne version rouge"><rect x="34" y="12" width="52" height="52" rx="10" fill="#E3242B"/><line x1="26" y1="6" x2="94" y2="70" stroke="#C0392B" stroke-width="3"/></svg><p>La version rouge</p></div>
+          <div class="card"><svg viewBox="0 0 120 90" role="img" aria-label="Interdit : déformer le logo"><rect x="20" y="18" width="80" height="40" rx="8" fill="url(#grad2)"/><line x1="26" y1="6" x2="94" y2="70" stroke="#C0392B" stroke-width="3"/></svg><p>Étirer ou déformer</p></div>
+          <div class="card"><svg viewBox="0 0 120 90" role="img" aria-label="Interdit : recolorer le logo"><rect x="34" y="12" width="52" height="52" rx="10" fill="#2E75B6"/><line x1="26" y1="6" x2="94" y2="70" stroke="#C0392B" stroke-width="3"/></svg><p>Recolorer</p></div>
+          <div class="card"><svg viewBox="0 0 120 90" role="img" aria-label="Interdit : le dégradé sur fond foncé"><rect x="14" y="8" width="92" height="60" rx="6" fill="#2C1A1E"/><rect x="42" y="18" width="36" height="36" rx="7" fill="url(#grad2)"/><line x1="26" y1="6" x2="94" y2="70" stroke="#C0392B" stroke-width="3"/></svg><p>Le dégradé sur fond foncé</p></div>
+          <div class="card"><svg viewBox="0 0 120 90" role="img" aria-label="Interdit : les logos Google Play et App Store"><rect x="16" y="26" width="40" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".5"/><rect x="64" y="26" width="40" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".5"/><line x1="26" y1="6" x2="94" y2="70" stroke="#C0392B" stroke-width="3"/></svg><p>Les logos Play et App Store</p></div>
+        </div>
+
+        <p>Ces six interdits ne sont pas théoriques : chacun correspond à un support qui circulait encore au laboratoire quand ce référentiel a été écrit. Le bloc-notes portait la version rouge et renvoyait vers des applications qui n'existent plus ; les enveloppes portaient le microscope ; l'affiche d'avis venait d'un prestataire extérieur, hors charte. <b>Le bloc-notes a été refait depuis</b> : <a href="https://drive.google.com/file/d/1cMi_twap4v0REU2ZvHfj5gJ-A8RMfX1a/view">la version à la charte</a> est dans le dossier imprimeur, et le renvoi vers les applications disparues a cédé la place à un QR code vers le site.</p>
+
+        <div class="warn"><b>La règle qui résume les six.</b> Aucun support ne se produit sans que le prestataire ait reçu ce document et les fichiers vectoriels. Un support livré non conforme se refuse — ce référentiel est votre pièce justificative.</div>
+      </div>
+    </details>
+
+    <!-- ═════════════════════════════════════════════════════ annexe A -->
+    <details class="ch" id="aa">
+      <summary><span class="sn">A</span><span><span class="st">Cadre réglementaire</span><span class="sd">Ce qu'un laboratoire d'analyses peut écrire sur ses supports, au Maroc.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <p>Il n'existe pas de droit général de communiquer : ce qui est permis l'est par <b>liste fermée</b>. Le laboratoire étant dirigé par un pharmacien biologiste, c'est le code de déontologie des pharmaciens qui s'applique.</p>
+
+        <div class="tablewrap"><table>
+          <thead><tr><th></th><th>Ce que cela recouvre</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill yes">Autorisé</span></td><td>Nom et prénoms, adresses, téléphones, jours et heures d'ouverture, énoncé des activités exercées, titres universitaires et hospitaliers, distinctions officiellement reconnues. Donc aussi : la liste des analyses, les consignes de préparation, l'information de santé éducative.</td></tr>
+            <tr><td><span class="pill yes">Obligatoire</span></td><td><b>Afficher les tarifs.</b> Dans le secteur médical privé c'est une obligation, sous peine d'amende. Les tarifs de biologie sont de toute façon fixés par la nomenclature : aucune latitude n'est possible.</td></tr>
+            <tr><td><span class="pill no">Interdit</span></td><td>Toute publicité : promotions, remises, packs, offres, superlatifs, comparaisons, promesses de délai commerciales, publications sponsorisées, référencement payant, démarchage.</td></tr>
+            <tr><td><span class="pill no">Interdit</span></td><td>Les témoignages de patients. Un avis nominatif ou identifiable est une donnée de santé : sa publication exige un consentement explicite et une autorisation CNDP.</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="warn"><b>La ligne rouge n'est pas de parler de prix.</b> C'est de promouvoir, comparer, promettre ou démarcher. Le catalogue d'analyses et le devis de l'application sont donc parfaitement licites : ils informent, ils ne vendent pas.</div>
+
+        <div class="note">Réserve à conserver : ce régime tient à la qualité de pharmacien biologiste du directeur. Si la direction technique passait un jour à un médecin biologiste, le code de déontologie médicale s'appliquerait — nettement plus strict. Seule exception commune : la diffusion scientifique auprès du corps médical, pharmaceutique, dentaire ou vétérinaire reste autorisée.</div>
+      </div>
+    </details>
+
+    <!-- ═════════════════════════════════════════════════════ annexe B -->
+    <details class="ch" id="ab">
+      <summary><span class="sn">B</span><span><span class="st">Les fichiers</span><span class="sd">Où vit quoi, et ce qu'on remet à qui.</span></span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="body">
+        <div class="tablewrap"><table>
+          <thead><tr><th>Ressource</th><th>Contient</th><th>À qui</th></tr></thead>
+          <tbody>
+            <tr><td><b><a href="https://drive.google.com/drive/folders/17QBj1sT4rCLIqha_S0a-C9_kJSxIHvyy">Logos — kit complet</a></b><br><span class="mono" style="font-size:.75rem">sous-dossier</span></td><td>Les 8 déclinaisons en SVG, PDF et PNG</td><td>Tout prestataire</td></tr>
+            <tr><td><b>Ce référentiel</b></td><td>Les règles. Versionné et daté.</td><td>Tout prestataire, avant production</td></tr>
+            <tr><td><b><a href="https://docs.google.com/spreadsheets/d/1uW08Vyjuxeij9dMladq05Lq9jsws6_rBPLNA2QcjUmY/edit">Référentiel des supports</a></b><br><span class="mono" style="font-size:.75rem">classeur</span></td><td>Les mesures de chaque support, les liens vers les fichiers, les commandes</td><td>Le laboratoire et l'imprimeur</td></tr>
+            <tr><td><b><a href="https://drive.google.com/drive/folders/1PXsdFdp_4EyY-1tpzjta5HLCqB9ZK7WD">Fichiers imprimeur</a></b><br><span class="mono" style="font-size:.75rem">dossier Drive</span></td><td>Les PDF prêts à imprimer, les aperçus, les logos vectoriels</td><td>L'imprimeur</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Comment ce document se met à jour</h3>
+        <p>Toute modification d'une règle, d'un format ou d'une couleur passe par ici, et le numéro de version change. Un référentiel qui n'est pas daté cesse rapidement de faire autorité — c'est exactement ainsi que les deux générations de logo se sont mises à circuler en parallèle.</p>
+      </div>
+    </details>
+
+  </div>
+</main>
+
+<footer class="end">
+  <div class="wrap">
+    <p>Référentiel de marque — Laboratoire El Allali de biologie médicale, Agadir</p>
+    <p class="mono">Version 1.1 — 18 septembre 2026</p>
+  </div>
+</footer>
+
+<script>
+// Ouvrir la section visée par un lien de la carte, puis y amener la vue.
+function ouvrir(id){
+  var el = document.getElementById(id);
+  if (!el || el.tagName.toLowerCase() !== 'details') return false;
+  el.open = true;
+  requestAnimationFrame(function(){ el.scrollIntoView({behavior:'smooth', block:'start'}); });
+  return true;
+}
+document.querySelectorAll('.map a').forEach(function(a){
+  a.addEventListener('click', function(e){
+    var id = a.getAttribute('href').slice(1);
+    if (ouvrir(id)) { e.preventDefault(); history.replaceState(null,'','#'+id); }
+  });
+});
+window.addEventListener('hashchange', function(){ ouvrir(location.hash.slice(1)); });
+if (location.hash) ouvrir(location.hash.slice(1));
+
+document.getElementById('open-all').addEventListener('click', function(){
+  document.querySelectorAll('details.ch').forEach(function(d){ d.open = true; });
+});
+document.getElementById('close-all').addEventListener('click', function(){
+  document.querySelectorAll('details.ch').forEach(function(d){ d.open = false; });
+});
+</script>

@@ -1,0 +1,21 @@
+RÉSUMÉ FINANCIER (HORS TAXE)	VALEUR									
+Total Commandé HT	=SUMIF(ONGLET_ROADMAP!$J:$J;"*go*";ONGLET_ROADMAP!$H:$H)									
+Jours validés HT	=SUMIF(ONGLET_ROADMAP!$J:$J;"*go*";ONGLET_ROADMAP!$G:$G)									
+-	-									
+Total Encaissé (HT)	=SUM(K29:K38)									
+-	-									
+RESTE À PAYER (HT)	=B21-B24									
+										
+DATE	HISTORIQUE DES NOTES HT	MONTANT HT					DATE	HISTORIQUE DES RÈGLEMENTS HT	REF	ENCAISSÉ HT
+										
+										
+										
+										
+										
+										
+										
+										
+										
+										
+										
+	TOTAL NOTES HT	=SUM(C29:C38)						TOTAL ENCAISSÉ HT		=SUM(K29:K38)

@@ -19,6 +19,9 @@ const DIR = path.join(ROOT, "imprimerie");
 const OUT = path.join(ROOT, "output", "imprimerie");
 
 // Dimensions du canevas en mm, fond perdu inclus.
+// N.B. 3 mm de fond perdu est l'usage dominant, pas une norme : ni ISO ni
+// PDF/X ne prescrivent de valeur. Compter 5 mm en grand format. Toujours
+// doubler d'une zone tranquille (pas de texte a moins de 3-5 mm de la coupe).
 //
 // `variantes` (optionnel) permet de tirer plusieurs sorties d'un meme HTML :
 // la `query` est passee dans l'URL, le fichier lit `location.search` et se
@@ -27,6 +30,16 @@ const FORMATS = {
   "papier-entete.html": { w: 216, h: 303, fini: "A4 210 × 297 mm", fp: 3 },
   // Planche technique : pas de fond perdu, elle s'imprime telle quelle a 100 %.
   "plan-fenetre-enveloppe.html": { w: 297, h: 210, fini: "A4 paysage 297 × 210 mm", fp: 0 },
+  // Bloc-notes carre. Pas de fond perdu : il est encolle en tete, les
+  // premiers millimetres passent sous la colle et sous le carton de dos.
+  // Le ton 1 couleur est celui a tirer — un bloc part en grande quantite.
+  "bloc-notes.html": {
+    w: 90, h: 90, fini: "90 × 90 mm", fp: 0,
+    variantes: [
+      { suffixe: "-mono", query: "?ton=mono", note: "offset 1 couleur, bordeaux — À TIRER" },
+      { suffixe: "", query: "", note: "quadri, dégradé" },
+    ],
+  },
   "enveloppe-c5.html": {
     w: 229, h: 162, fini: "C5 229 × 162 mm", fp: 0,
     variantes: [

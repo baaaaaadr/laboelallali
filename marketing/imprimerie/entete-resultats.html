@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>En-tête de la feuille de résultats — Laboratoire El Allali</title>
+<style>
+  /* ------------------------------------------------------------------
+     En-tete de la feuille de resultats, a parametrer dans le logiciel du
+     laboratoire a la place de l'image actuelle.
+
+     CANEVAS : 1194 x 226 px — exactement les dimensions du JPEG en place
+     aujourd'hui, pour que le remplacement soit un simple echange de
+     fichier, sans retoucher la mise en page du logiciel.
+
+     COMPOSITION, conforme au referentiel : le francais a gauche, le logo
+     au centre, l'arabe a droite. Les deux colonnes partagent la MEME
+     grille de 5 lignes, donc chaque ligne francaise est exactement en
+     face de sa traduction.
+
+     PAS DE COORDONNEES ICI : elles figurent deja au pied de page, repete
+     sur les 5 pages. Les mettre aux deux endroits etait un doublon.
+
+     ── GEOMETRIE RELEVEE DANS LES PDF DU LOGICIEL (11/09/2026) ──────────
+     Mesuree sur les 5 comptes rendus du dossier d'echantillons, apres
+     dechiffrement (les PDF sont chiffres RC4 128 bits, mot de passe vide).
+     Valeurs identiques dans les cinq :
+
+       image posee a  1,7 mm du bord haut, 184,9 x 35,0 mm (donc 164 dpi) ;
+       bord bas de l'image ................. 36,7 mm ;
+       1re ligne ecrite par le logiciel .... base 40,0 mm, haut des
+                                             capitales ~37,3 mm.
+
+     Il ne reste donc que 0,6 mm entre le bas de l'image et le texte du
+     logiciel : c'est la cause du chevauchement signale par le laboratoire.
+     La correction est ici, pas dans le logiciel — on remonte tout le bloc
+     vers le filet de tete et on degage le quart bas du canevas.
+
+       top du bloc ...... 18 px -> 8 px   (le bloc se colle au filet)
+       filet de separation . bas du canevas -> y = 172 px
+
+     Resultat : derniere encre de texte a 24,9 mm, filet a 28,3 mm, soit
+     9 mm de blanc avant la premiere ligne du logiciel au lieu de 0,6 mm.
+     Le canevas reste 1194 x 226 px : le remplacement demeure un simple
+     echange de fichier.
+
+     POURQUOI PAS UN JPEG : c'est du texte et des aplats. Le JPEG y est a
+     la fois lourd (56,9 Ko aujourd'hui) et flou sur les contours.
+
+     Variante ?ton=mono : logo en aplat bordeaux plutot qu'en degrade.
+     ------------------------------------------------------------------ */
+  @font-face { font-family:"Inter";       src:url("../assets/fonts/inter-latin.woff2") format("woff2"); font-weight:100 900; font-display:block; }
+  @font-face { font-family:"Public Sans"; src:url("../assets/fonts/publicsans-700-latin.woff2") format("woff2"); font-weight:700; font-display:block; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-700-arabic.woff2") format("woff2"); font-weight:700; font-display:block;
+               unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-400-arabic.woff2") format("woff2"); font-weight:400; font-display:block;
+               unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-700-latin.woff2") format("woff2"); font-weight:700; font-display:block;
+               unicode-range:U+0000-024F,U+2000-206F; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-400-latin.woff2") format("woff2"); font-weight:400; font-display:block;
+               unicode-range:U+0000-024F,U+2000-206F; }
+
+  :root{ --bordeaux:#800020; --fuchsia:#FF4081; --encre:#3A2226; --gris:#6E5158; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1194px;height:226px}
+  body{
+    font-family:"Inter","Segoe UI",sans-serif; background:#FFFFFF; color:var(--encre);
+    position:relative; overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+
+  /* Une seule grille pour les deux langues : 5 lignes, 3 colonnes.
+     Chaque ligne francaise est ainsi exactement en face de son arabe. */
+  .entete{
+    position:absolute; top:8px; left:26px; right:26px; bottom:14px;
+    display:grid;
+    grid-template-columns: 1fr 190px 1fr;
+    grid-template-rows: 42px 26px 30px 24px 24px;
+    align-items:center; column-gap:16px;
+  }
+  .fr{grid-column:1;text-align:left}
+  .ar{grid-column:3;text-align:right;direction:rtl;font-family:"Tajawal",sans-serif}
+
+  .r1{grid-row:1} .r2{grid-row:2} .r3{grid-row:3} .r4{grid-row:4} .r5{grid-row:5}
+
+  .nom{font-family:"Public Sans",sans-serif;font-weight:700;font-size:35px;line-height:1;
+       color:var(--bordeaux);letter-spacing:-.7px}
+  .nom .leger{font-weight:400;color:var(--encre)}
+  .ar.nom{font-family:"Tajawal",sans-serif;font-size:37px;letter-spacing:0}
+
+  .metier{font-size:19px;line-height:1}
+  .ar.metier{font-family:"Tajawal",sans-serif;font-size:20px}
+
+  .dr{font-weight:600;font-size:20px;line-height:1;color:var(--bordeaux)}
+  .ar.dr{font-family:"Tajawal",sans-serif;font-size:21px}
+
+  .titre{font-size:15px;line-height:1;color:var(--gris)}
+  .ar.titre{font-family:"Tajawal",sans-serif;font-size:16px}
+
+  /* Colonne centrale : le logo, et la devise en dessous */
+  .centre{
+    grid-column:2; grid-row:1 / -1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px;
+  }
+  .centre img{width:98px;height:98px;display:block}
+  .devise{text-align:center;line-height:1.32}
+  .devise .a{font-family:"Tajawal",sans-serif;font-weight:700;font-size:15px;color:var(--bordeaux);direction:rtl}
+  .devise .f{font-size:12px;color:var(--gris)}
+
+  /* Filet de tete : c'est lui qui ouvre le document et l'identifie
+     (chap. 06 du referentiel). Un cheveu neutre ferme le bloc d'en-tete.
+
+     Ce cheveu n'est PAS au bas du canevas : il se pose sous le bloc de
+     texte, a 172 px. Les 53 px restants sont volontairement blancs — c'est
+     la reserve dans laquelle le logiciel vient ecrire le prescripteur et
+     le patient. Ne pas la remplir. */
+  .filet-tete{position:absolute;left:0;right:0;top:0;height:5px;
+              background:linear-gradient(135deg,var(--fuchsia) 0%,var(--bordeaux) 100%)}
+  body.mono .filet-tete{background:var(--bordeaux)}
+  .filet-bas{position:absolute;left:0;right:0;top:172px;height:1px;background:#E9D9DE}
+</style>
+</head>
+<body>
+  <div class="entete">
+    <div class="fr nom r1"><span class="leger">Laboratoire</span> EL ALLALI</div>
+    <div class="ar nom r1">مختبر العلالي</div>
+
+    <div class="fr metier r2">de biologie médicale</div>
+    <div class="ar metier r2">للتحليلات الطبية</div>
+
+    <div class="fr dr r3">Dr. Mohamed Aziz EL ALLALI</div>
+    <div class="ar dr r3">الدكتور محمد عزيز العلالي</div>
+
+    <div class="fr titre r4">Pharmacien Biologiste — ULB, Bruxelles</div>
+    <div class="ar titre r4">صيدلاني إحيائي — جامعة بروكسيل</div>
+
+    <div class="fr titre r5">Diplôme Universitaire « Qualité » — Bordeaux</div>
+    <div class="ar titre r5">شهادة جامعية "تسيير الجودة" — بوردو</div>
+
+    <div class="centre">
+      <img id="logo" src="../assets/logos/logo-icone-degrade.svg" alt="Laboratoire El Allali">
+      <div class="devise">
+        <div class="a">الجودة صراع المستقبل</div>
+        <div class="f">La qualité est le combat d'Avenir</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filet-tete"></div>
+  <div class="filet-bas"></div>
+
+<script>
+  if (new URLSearchParams(location.search).get('ton') === 'mono') {
+    document.body.classList.add('mono');
+    document.getElementById('logo').src = '../assets/logos/logo-icone-bordeaux.svg';
+  }
+</script>
+</body>
+</html>
