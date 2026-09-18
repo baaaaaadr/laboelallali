@@ -32,12 +32,17 @@ const FORMATS = {
   "plan-fenetre-enveloppe.html": { w: 297, h: 210, fini: "A4 paysage 297 × 210 mm", fp: 0 },
   // Bloc-notes carre. Pas de fond perdu : il est encolle en tete, les
   // premiers millimetres passent sous la colle et sous le carton de dos.
-  // Le ton 1 couleur est celui a tirer — un bloc part en grande quantite.
+  //
+  // La QUADRI est la version a tirer. La plaque et le calage d'une couleur
+  // supplementaire sont un cout FIXE : ils pesent sur une petite serie et se
+  // diluent sur un gros tirage. Un bloc partant par milliers, la quantite est
+  // precisement ce qui rend la quadri abordable — et non l'inverse, comme
+  // l'affirmait une premiere version de ce commentaire.
   "bloc-notes.html": {
     w: 90, h: 90, fini: "90 × 90 mm", fp: 0,
     variantes: [
-      { suffixe: "-mono", query: "?ton=mono", note: "offset 1 couleur, bordeaux — À TIRER" },
-      { suffixe: "", query: "", note: "quadri, dégradé" },
+      { suffixe: "", query: "", note: "quadri, dégradé — À TIRER" },
+      { suffixe: "-mono", query: "?ton=mono", note: "offset 1 couleur, bordeaux — repli" },
     ],
   },
   "enveloppe-c5.html": {

@@ -28,10 +28,27 @@
      1 couleur elle se serait bouchee. Sur 76 mm elle tient a 5 points.
 
      Deux tons, choisis par l'URL — meme convention que l'enveloppe :
-       (defaut)     degrade fuchsia -> bordeaux, impression quadri
-       ?ton=mono    aplat bordeaux seul, offset 1 couleur (RECOMMANDE ici :
-                    un bloc se tire en grande quantite, et la plaque unique
-                    divise le cout)
+       (defaut)     degrade fuchsia -> bordeaux, quadri. C'EST LA VERSION
+                    A TIRER : c'est le defaut de la charte, et le bloc part
+                    en grande quantite.
+       ?ton=mono    aplat bordeaux seul, offset 1 couleur. Repli, si
+                    l'atelier ne tire pas les blocs en quadri ou le facture
+                    nettement plus cher.
+
+     POURQUOI LE DEFAUT EST LA QUADRI. En offset, chaque couleur ajoute une
+     plaque et un calage : c'est un cout FIXE. Il est decisif sur une petite
+     serie et il se dilue sur un gros tirage, ou le papier devient le poste
+     dominant (chap. 08 du referentiel). Un bloc-notes se tirant par
+     milliers, la quadri y coute proportionnellement peu.
+
+     Une premiere version de ce fichier recommandait l'inverse, en affirmant
+     que la grande quantite justifiait la plaque unique. C'etait le
+     raisonnement retourne : la quantite est precisement ce qui rend la
+     quadri abordable.
+
+     Reste a demander les DEUX prix. Beaucoup d'ateliers tirent les blocs sur
+     une presse 1 ou 2 couleurs ; passer en quadri peut vouloir dire changer
+     de machine. Si l'ecart est faible, prendre la quadri.
      ------------------------------------------------------------------ */
   @font-face { font-family:"Inter";       src:url("../assets/fonts/inter-latin.woff2") format("woff2"); font-weight:100 900; font-display:block; }
   @font-face { font-family:"Public Sans"; src:url("../assets/fonts/publicsans-700-latin.woff2") format("woff2"); font-weight:700; font-display:block; }
@@ -101,7 +118,7 @@
   /* ---- la bande centrale reste vide : c'est la zone d'ecriture ---- */
 
   /* ------------------------------------------------------------ message */
-  .message{position:absolute; left:8mm; right:8mm; top:47mm; text-align:center}
+  .message{position:absolute; left:8mm; right:8mm; top:43.5mm; text-align:center}
   .message .ar{font-family:"Tajawal",sans-serif; font-weight:700; font-size:8pt;
                line-height:1.5; color:var(--bordeaux); direction:rtl}
   .message .fr{font-family:"Public Sans",sans-serif; font-weight:700; font-size:7.2pt;
@@ -118,6 +135,8 @@
   .coord .site{font-family:"Public Sans",sans-serif; font-weight:700; font-size:6.2pt;
                color:var(--bordeaux); line-height:1.15; margin-bottom:0.6mm}
   .coord b{color:var(--encre); font-weight:700}
+  .coord .site .et{font-family:"Inter",sans-serif; font-weight:400; font-size:5pt;
+                   color:var(--gris)}
 </style>
 </head>
 <body>
@@ -142,8 +161,8 @@
   <!-- zone d'écriture : volontairement vide -->
 
   <div class="message">
-    <div class="ar">لتلقّي نتائجكم عبر الواتساب أو البريد الإلكتروني،<br>يُرجى الطلب من الاستقبال.</div>
-    <div class="fr">Pour recevoir vos résultats par WhatsApp ou email,<br>demander à la réception.</div>
+    <div class="ar">لتلقّي نتائجكم عبر التطبيق أو الواتساب<br>أو البريد الإلكتروني، يُرجى الطلب من الاستقبال.</div>
+    <div class="fr">Pour recevoir vos résultats sur l’application,<br>par WhatsApp ou par email,<br>demander à la réception.</div>
   </div>
 
   <div class="filet2"></div>
@@ -151,12 +170,11 @@
   <footer>
     <img class="qr" src="../assets/qr/qr-site.svg" alt="">
     <div class="coord">
-      <div class="site">www.laboelallali.com</div>
+      <div class="site"><span class="et">L’application :</span> www.laboelallali.com</div>
       61 Bis, rue de Marrakech, 80020 — Agadir<br>
       Fixe <b>05 28 84 33 84</b> &nbsp;·&nbsp; WhatsApp <b>06 54 07 95 92</b><br>
       laboelallali@gmail.com<br>
-      Lun – Ven <b>7h30 – 18h30</b> &nbsp;·&nbsp; Sam <b>7h30 – 13h00</b><br>
-      Garde (dimanche) <b>08h00 – 18h30</b> &nbsp;·&nbsp; 06 70 64 76 53
+      Lun – Ven <b>7h30 – 18h30</b> &nbsp;·&nbsp; Sam <b>7h30 – 13h00</b> &nbsp;·&nbsp; Dimanche <b>fermé</b>
     </div>
   </footer>
 
