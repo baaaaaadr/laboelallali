@@ -26,6 +26,7 @@ import AdminDashboard, { type DashboardStats } from '@/components/features/admin
 import RelancesTab, { type DormantAccount } from '@/components/features/admin/RelancesTab';
 import LinkedRequestersCard, {
   type AuditAccount,
+  type LinkDraft,
   type LinkRow,
 } from '@/components/features/admin/LinkedRequestersCard';
 import RelativeRequestsSection, {
@@ -33,7 +34,7 @@ import RelativeRequestsSection, {
   type RelativeInputs,
   type RelativeRequest,
 } from '@/components/features/admin/RelativeRequestsSection';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList } from 'lucide-react';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, ArrowLeft, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
@@ -175,6 +176,15 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [linkBusy, setLinkBusy] = useState<string | null>(null);
   const [linkNotice, setLinkNotice] = useState<string | null>(null);
   const [linkAudit, setLinkAudit] = useState<AuditAccount[] | null>(null);
+  // The attach form's fields. In the PAGE, so they survive the round trip
+  // through the Tester tab — that tab switch unmounts the Patients block.
+  const [linkDraft, setLinkDraft] = useState<LinkDraft>({
+    requester_id: '', type: 'patient', label: '',
+  });
+  // Which tab sent us to the Tester tab, so we can offer a way back. Nothing
+  // brought the operator back before: the tab bar is not sticky, so after the
+  // test results they had to scroll to the top to find it again.
+  const [testOrigin, setTestOrigin] = useState<AdminTab | null>(null);
 
   // Patient-initiated requests for a relative's dossier (Demandes tab).
   const [relReqs, setRelReqs] = useState<RelativeRequest[]>([]);
@@ -552,6 +562,9 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         { uid: selected.uid, requester_id: requesterId, type: linkType, label }
       );
       setLinkRows(res.links || []);
+      // Cleared only now: a rejected attach must leave the operator's input in
+      // place so they can correct it rather than retype everything.
+      setLinkDraft({ requester_id: '', type: 'patient', label: '' });
       setLinkNotice(
         res.holderNotified
           ? t('admin.link_added_notified', 'Rattaché. Le titulaire du dossier a été prévenu par e-mail.')
@@ -605,8 +618,20 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const testFromLink = (requesterId: string, linkType: RequesterType) => {
     setTestId(requesterId);
     setTestType(linkType);
+    setTestOrigin(activeTab);
     setActiveTab('test');
+    // Changing tab does not move the scroll position, so without this the
+    // operator can land in the middle of the Tester tab with no idea where the
+    // page went.
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
     void runTest(requesterId, linkType);
+  };
+
+  /** Back to the tab that sent us here, scrolled to the top. */
+  const backFromTest = () => {
+    setActiveTab(testOrigin ?? 'patients');
+    setTestOrigin(null);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // ── Encode handlers ─────────────────────────────────────────────────────────
@@ -1170,6 +1195,8 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                   front desk to confuse "activate this patient's access" with
                   "let this account read someone else's results". */}
               <LinkedRequestersCard
+                draft={linkDraft}
+                onDraft={(patch) => setLinkDraft((prev) => ({ ...prev, ...patch }))}
                 links={linkRows}
                 error={linkError}
                 busy={linkBusy}
@@ -1188,6 +1215,18 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         {/* ── Tester tab: results-ID onboarding probe ─────────────────────── */}
         {activeTab === 'test' && (
         <div className="card p-6 space-y-4">
+          {testOrigin && (
+            <button
+              type="button"
+              onClick={backFromTest}
+              className="flex items-center gap-2 min-h-[44px] -mt-2 text-sm font-medium text-[var(--color-bordeaux-primary)]"
+            >
+              <ArrowLeft size={18} />
+              {testOrigin === 'requests'
+                ? t('admin.test_back_requests', 'Revenir à la demande')
+                : t('admin.test_back_patients', 'Revenir au rattachement')}
+            </button>
+          )}
           <div>
             <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
               <FlaskConical size={20} className="text-[var(--color-bordeaux-primary)]" />

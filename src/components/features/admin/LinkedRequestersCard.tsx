@@ -39,6 +39,13 @@ export interface AuditAccount {
   linkedAt: number | null;
 }
 
+/** The attach form's three fields. Held by the PAGE, not by this component. */
+export interface LinkDraft {
+  requester_id: string;
+  type: RequesterType;
+  label: string;
+}
+
 interface Props {
   /** null while loading. */
   links: LinkRow[] | null;
@@ -48,6 +55,17 @@ interface Props {
   notice: string | null;
   /** Who else can read the dossier that was just attached. null = not asked. */
   audit: AuditAccount[] | null;
+  /**
+   * What is currently typed in the attach form.
+   *
+   * ⚠ It lives in the page on purpose. These three fields used to be local
+   * `useState` here — and the Patients tab is rendered as
+   * `{activeTab === 'patients' && …}`, so clicking "Tester d'abord" unmounted
+   * this component and destroyed everything the operator had typed. Dr Aziz hit
+   * exactly that on the first real use: he came back to an empty form.
+   */
+  draft: LinkDraft;
+  onDraft: (patch: Partial<LinkDraft>) => void;
   onAdd: (requesterId: string, type: RequesterType, label: string) => void;
   onRemove: (requesterId: string) => void;
   onTest: (requesterId: string, type: RequesterType) => void;
@@ -60,15 +78,17 @@ export default function LinkedRequestersCard({
   busy,
   notice,
   audit,
+  draft,
+  onDraft,
   onAdd,
   onRemove,
   onTest,
   fmtDate,
 }: Props) {
   const { t } = useTranslation('common');
-  const [newId, setNewId] = useState('');
-  const [newType, setNewType] = useState<RequesterType>('patient');
-  const [newLabel, setNewLabel] = useState('');
+  const newId = draft.requester_id;
+  const newType = draft.type;
+  const newLabel = draft.label;
   // Which row is asking "are you sure?". An IN-PAGE confirmation, not
   // window.confirm(). The native dialog was tried and replaced: it is painted by
   // the browser chrome, outside the page, so nothing but a human at that exact
@@ -83,9 +103,9 @@ export default function LinkedRequestersCard({
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newId.trim() || !newLabel.trim()) return;
+    // The page clears the draft once the attach succeeds — clearing it here
+    // would wipe the operator's input even when the callable rejects it.
     onAdd(newId.trim(), newType, newLabel.trim());
-    setNewId('');
-    setNewLabel('');
   };
 
   const inputClass =
@@ -239,7 +259,7 @@ export default function LinkedRequestersCard({
             type="text"
             required
             value={newId}
-            onChange={(e) => setNewId(e.target.value)}
+            onChange={(e) => onDraft({ requester_id: e.target.value })}
             // NEVER a real id here. The previous placeholder was "7587", which is
             // an actual patient's dossier — greyed-out text that looks prefilled,
             // in the one form where a wrong number grants access to someone
@@ -258,7 +278,7 @@ export default function LinkedRequestersCard({
             required
             maxLength={60}
             value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
+            onChange={(e) => onDraft({ label: e.target.value })}
             placeholder={t('admin.link_label_placeholder', 'Ex. : Maman — Fatima')}
             className={inputClass}
           />
@@ -275,7 +295,7 @@ export default function LinkedRequestersCard({
           </label>
           <select
             value={newType}
-            onChange={(e) => setNewType(e.target.value as RequesterType)}
+            onChange={(e) => onDraft({ type: e.target.value as RequesterType })}
             className={inputClass}
           >
             <option value="patient">{t('admin.type_patient', 'Patient')}</option>

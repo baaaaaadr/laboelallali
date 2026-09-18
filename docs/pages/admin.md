@@ -106,6 +106,10 @@ An owner must exist before the UI can manage roles. First owners set out-of-band
 
 `LinkedRequestersCard` (`src/components/features/admin/LinkedRequestersCard.tsx`) renders **its own card**, a sibling of the selected-patient card, not a section inside its `<form>`. Deliberate: "activate this patient's access" and "let this account read someone else's results" are different acts, and the front desk must not blur them. `{selected && (...)}` therefore wraps a fragment.
 
+⚠ **The attach form's three fields live in the PAGE (`linkDraft`), not in the card.** The Patients tab renders as `{activeTab === 'patients' && …}`, so clicking "Tester d'abord" unmounts the card and destroys anything local to it. They were local at first and Dr Aziz hit it on the first real use: he came back from the test to an empty form. `relInputs` (the requests queue) was already page-level for the same reason. The draft is cleared **only on a successful attach** — a rejected one must leave the input in place to be corrected.
+
+**Leaving for the Tester tab records where you came from** (`testOrigin`) and the Tester tab shows a "Revenir au rattachement" / "Revenir à la demande" button. Nothing brought the operator back before, and the tab bar is deliberately **not sticky** (see Layout), so after the results they had to scroll all the way up to find it. `testFromLink` and `backFromTest` also scroll to the top: changing tab does not move the scroll position, so the operator could land mid-page.
+
 **Presentational only**, like `RelancesTab` and `AdminDashboard`: state and callables live in `/admin/page.tsx` (`linkRows`, `linkError`, `linkBusy`, `linkNotice`, `linkAudit`; handlers `addLink`, `removeLink`, `testFromLink`).
 
 **No read callable exists, on purpose.** `adminSearchPatients` already returns `links` and `linkedCount` on every result (the user document was read anyway), and add/remove return the fresh list. `selectPatient` just does `setLinkRows(p.links ?? [])`.

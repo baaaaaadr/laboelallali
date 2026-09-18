@@ -615,7 +615,9 @@
     "rel_req_name_match": "Les deux noms correspondent.",
     "rel_req_name_differ": "Ces deux noms ne sont pas identiques. Il peut s'agir d'un homonyme.",
     "rel_req_confirm_same": "Je confirme qu'il s'agit bien de la même personne.",
-    "rel_req_need_confirm": "Les deux noms diffèrent : confirmez qu'il s'agit de la même personne."
+    "rel_req_need_confirm": "Les deux noms diffèrent : confirmez qu'il s'agit de la même personne.",
+    "test_back_patients": "Revenir au rattachement",
+    "test_back_requests": "Revenir à la demande"
   },
   "theme": {
     "toggle": "Changer le thème",
