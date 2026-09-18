@@ -694,9 +694,19 @@
     "rel_req_proof_autorite_parentale": "السلطة الأبوية (طفل قاصر)",
     "rel_req_proof_hint": "يُحتفظ بهذا البيان. وهو الأثر الوحيد الذي سيتوفّر عليه المختبر إذا نوزع في هذا الاطّلاع يومًا ما.",
     "rel_req_grant": "ربط",
-    "rel_req_reject": "رفض",
+    "rel_req_reject": "رفض هذا الطلب",
     "rel_req_reject_yes": "نعم، ارفض",
-    "rel_req_rejected": "تم رفض الطلب."
+    "rel_req_rejected": "تم رفض الطلب.",
+    "rel_req_tested_name": "المختبر يرجع الاسم: {{name}}",
+    "rel_req_tested_noname": "المختبر لا يرجع أي اسم لهذا المعرّف.",
+    "rel_req_tested_count": "{{n}} ملف (ملفات) تم العثور عليها.",
+    "rel_req_tested_empty": "لا يوجد أي ملف لهذا المعرّف — تحقّقوا من الرقم.",
+    "rel_req_tested_mismatch": "هذا الاسم لا يشبه « {{asked}} ». تحقّقوا قبل الربط.",
+    "rel_req_test_again": "إعادة الاختبار",
+    "rel_req_need_id": "أدخلوا معرّف الملف.",
+    "rel_req_need_test": "اختبروا المعرّف قبل الربط: هذه هي الوسيلة الوحيدة للتأكّد من أنّ الملف يخصّ هذا الشخص فعلاً.",
+    "rel_req_need_proof": "حدّدوا على أي أساس تمنحون هذا الاطّلاع.",
+    "rel_req_reject_confirm": "رفض طلب {{name}}؟"
   },
   "theme": {
     "toggle": "تغيير المظهر",

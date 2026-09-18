@@ -41,6 +41,13 @@ export interface RelativeInputs {
   proof: LinkProof | '';
 }
 
+/** What a staff probe returned for one requester_id. */
+export interface TestedId {
+  status: 'ok' | 'empty' | 'error';
+  name: string;
+  count: number;
+}
+
 interface Props {
   requests: RelativeRequest[];
   inputs: Record<string, RelativeInputs>;
@@ -51,6 +58,8 @@ interface Props {
   onFulfill: (req: RelativeRequest) => void;
   onReject: (req: RelativeRequest) => void;
   onTest: (requesterId: string, type: RequesterType) => void;
+  /** requester_ids probed in this session, keyed by id. */
+  tested: Record<string, TestedId>;
   fmtDate: (iso: string) => string;
   fmtWhenTime: (ms?: number | null) => string;
 }
@@ -67,6 +76,7 @@ export default function RelativeRequestsSection({
   onFulfill,
   onReject,
   onTest,
+  tested,
   fmtDate,
   fmtWhenTime,
 }: Props) {
@@ -118,7 +128,22 @@ export default function RelativeRequestsSection({
 
       {requests.map((req) => {
         const v = inputs[req.id] ?? { requester_id: '', type: 'patient' as RequesterType, proof: '' };
-        const ready = v.requester_id.trim() !== '' && v.proof !== '';
+        const id = v.requester_id.trim();
+        const probe = id ? tested[id] : undefined;
+        // Three conditions, and the probe is the one that matters: the patient
+        // supplied only a name and a date of birth, so the ONLY way to know the
+        // id belongs to the right person is to look at the name the lab returns.
+        const ready = id !== '' && v.proof !== '' && probe !== undefined;
+        // Rough name comparison, accents and case ignored. Deliberately a HINT,
+        // not a gate: "EL ALLALI mohamed aziz" vs "El Allali Mohammed Aziz" is
+        // the same person, and software should not pretend to arbitrate that.
+        const norm = (x: string) =>
+          x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+        const nameLooksDifferent =
+          probe?.name !== undefined &&
+          probe.name !== '' &&
+          !norm(probe.name).includes(norm(req.relativeName).split(' ')[0] ?? '') &&
+          !norm(req.relativeName).includes(norm(probe.name).split(' ')[0] ?? '');
         return (
           <div key={req.id} className="card p-6 space-y-4">
             {/* Who is asking */}
@@ -204,14 +229,58 @@ export default function RelativeRequestsSection({
               </p>
             </div>
 
+            {/* What the lab server answered for this id. This is the homonym
+                check: the patient never gave a dossier number, so the returned
+                name is the only evidence the id belongs to the right person. */}
+            {probe && (
+              <div
+                className={`rounded-lg p-3 text-sm ${
+                  nameLooksDifferent
+                    ? 'bg-[var(--status-error)]/10 text-[var(--status-error)]'
+                    : 'bg-[var(--background-tertiary)] text-[var(--text-secondary)]'
+                }`}
+              >
+                <p className="font-medium">
+                  {probe.name
+                    ? t('admin.rel_req_tested_name', 'Le laboratoire renvoie : {{name}}', {
+                      name: probe.name,
+                    })
+                    : t('admin.rel_req_tested_noname', 'Le laboratoire ne renvoie aucun nom pour cet identifiant.')}
+                </p>
+                <p className="mt-1">
+                  {probe.status === 'ok'
+                    // `n`, not `count`: i18next treats `count` as a plural
+                    // selector and would demand the six Arabic CLDR forms.
+                    ? t('admin.rel_req_tested_count', '{{n}} dossier(s) trouvé(s).', {
+                      n: probe.count,
+                    })
+                    : t('admin.rel_req_tested_empty', 'Aucun dossier pour cet identifiant — vérifiez le numéro.')}
+                </p>
+                {nameLooksDifferent && (
+                  <p className="mt-1 font-semibold">
+                    {t(
+                      'admin.rel_req_tested_mismatch',
+                      'Ce nom ne ressemble pas à « {{asked}} ». Vérifiez avant de rattacher.',
+                      { asked: req.relativeName }
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Grant row. "Refuser" is NOT here: two buttons side by side, one
+                confirming in the same spot, is how a legitimate request gets
+                refused by a double click. */}
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => v.requester_id.trim() && onTest(v.requester_id.trim(), v.type)}
-                disabled={!v.requester_id.trim()}
+                onClick={() => id && onTest(id, v.type)}
+                disabled={!id}
                 className="min-h-[44px] px-4 rounded-lg border border-[var(--border-default)] text-[var(--text-primary)] disabled:opacity-50"
               >
-                {t('admin.link_test_first', "Tester d'abord")}
+                {probe
+                  ? t('admin.rel_req_test_again', 'Retester')
+                  : t('admin.link_test_first', "Tester d'abord")}
               </button>
               <button
                 type="button"
@@ -222,9 +291,28 @@ export default function RelativeRequestsSection({
                 {busyId === req.id ? <Loader2 size={18} className="animate-spin" /> : <UserPlus size={18} />}
                 {t('admin.rel_req_grant', 'Rattacher')}
               </button>
+            </div>
 
+            {/* Say WHY the button is locked, rather than leaving a grey button. */}
+            {!ready && (
+              <p className="text-xs text-[var(--text-secondary)]">
+                {!id
+                  ? t('admin.rel_req_need_id', "Renseignez l'identifiant du dossier.")
+                  : !probe
+                    ? t('admin.rel_req_need_test', "Testez l'identifiant avant de rattacher : c'est le seul moyen de vérifier que le dossier est bien celui de cette personne.")
+                    : t('admin.rel_req_need_proof', "Indiquez sur quelle base vous accordez l'accès.")}
+              </p>
+            )}
+
+            {/* Refusal, on its own row, below a separator and visually quiet. */}
+            <div className="pt-3 border-t border-[var(--border-default)]">
               {confirmingId === req.id ? (
-                <>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-[var(--text-secondary)]">
+                    {t('admin.rel_req_reject_confirm', 'Refuser la demande de {{name}} ?', {
+                      name: req.fullName,
+                    })}
+                  </span>
                   <button
                     type="button"
                     onClick={() => {
@@ -242,15 +330,15 @@ export default function RelativeRequestsSection({
                   >
                     {t('cancel', 'Annuler')}
                   </button>
-                </>
+                </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => setConfirmingId(req.id)}
-                  className="flex items-center gap-2 min-h-[44px] px-4 rounded-lg text-[var(--status-error)]"
+                  className="flex items-center gap-2 min-h-[44px] text-sm underline text-[var(--text-secondary)]"
                 >
-                  <X size={18} />
-                  {t('admin.rel_req_reject', 'Refuser')}
+                  <X size={16} />
+                  {t('admin.rel_req_reject', 'Refuser cette demande')}
                 </button>
               )}
             </div>

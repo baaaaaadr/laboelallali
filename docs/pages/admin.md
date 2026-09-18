@@ -128,6 +128,14 @@ i18n lives under `admin.link_*` (flat prefix, matching the local `dash_*` / `tes
 
 **`proof` is mandatory to grant** (`present` / `procuration` / `autorite_parentale`). It is stored on the request **and** on the `LinkedRequester` entry. The real control — "does this person have the right to read that record?" — happens at the counter and cannot be moved into software; what software can do is record which proof was seen. Without it a link only says who created it and when, which answers nothing if the access is ever contested. `adminLinkRequester` (the direct path) accepts `proof` optionally; `adminFulfillRelativeRequest` requires it.
 
+**Granting is gated on an actual probe.** `Rattacher` stays locked until the typed `requester_id` has been run through the Tester tab in this session (`testedIds` on the page). The patient supplied only a name and a date of birth, so **the name the lab returns is the only evidence the id belongs to the right person** — attaching without it opens a homonym's record to the wrong person, and nothing downstream would reveal it. The probe result is shown under the form, next to the requested name, with a red panel when the two look unrelated. That comparison is a **hint, not a gate**: "EL ALLALI mohamed aziz" and "El Allali Mohammed Aziz" are the same person, and software should not arbitrate that. A failed probe does not count — the id stays locked.
+
+**The locked button says why** (`rel_req_need_id` / `need_test` / `need_proof`). A grey button with no explanation is how staff conclude the screen is broken.
+
+**`Refuser` sits on its own row, below a separator, as a quiet underlined link** — not beside `Rattacher`. Two buttons side by side, the second confirming in the same spot, is how a legitimate request gets refused by a double click.
+
+**The dashboard tile counts both queues** (`pendingRequests = access + relative`, broken down by `pendingAccessRequests` / `pendingRelativeRequests`). It counted only the access queue at first, so the tab badge said 1 while the dashboard said 0 — a manager reading the dashboard would have concluded there was nothing to do.
+
 **The label shown to the patient is the name the patient typed**, reused verbatim — no retyping at the counter, and it reads the way they expect.
 
 Collection `relativeAccessRequests/{autoId}` (auto-id: one account may ask for several relatives, unlike `resultAccessRequests` which is keyed by uid). Fields: `uid, fullName, email, phone, relationship, relativeName, relativeDob, relativePhone, status('pending'|'fulfilled'|'rejected'), createdAt`, plus `requester_id, proof, fulfilledBy, fulfilledByEmail, fulfilledAt` on grant. **No Firestore rule was added**: the collection falls through to the default deny on purpose, and every access goes through a callable.

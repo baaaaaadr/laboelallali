@@ -597,9 +597,19 @@
     "rel_req_proof_autorite_parentale": "Autorité parentale (enfant mineur)",
     "rel_req_proof_hint": "Cette mention est conservée. C'est la seule trace dont disposera le laboratoire si cet accès est un jour contesté.",
     "rel_req_grant": "Rattacher",
-    "rel_req_reject": "Refuser",
+    "rel_req_reject": "Refuser cette demande",
     "rel_req_reject_yes": "Oui, refuser",
-    "rel_req_rejected": "Demande refusée."
+    "rel_req_rejected": "Demande refusée.",
+    "rel_req_tested_name": "Le laboratoire renvoie : {{name}}",
+    "rel_req_tested_noname": "Le laboratoire ne renvoie aucun nom pour cet identifiant.",
+    "rel_req_tested_count": "{{n}} dossier(s) trouvé(s).",
+    "rel_req_tested_empty": "Aucun dossier pour cet identifiant — vérifiez le numéro.",
+    "rel_req_tested_mismatch": "Ce nom ne ressemble pas à « {{asked}} ». Vérifiez avant de rattacher.",
+    "rel_req_test_again": "Retester",
+    "rel_req_need_id": "Renseignez l'identifiant du dossier.",
+    "rel_req_need_test": "Testez l'identifiant avant de rattacher : c'est le seul moyen de vérifier que le dossier est bien celui de cette personne.",
+    "rel_req_need_proof": "Indiquez sur quelle base vous accordez l'accès.",
+    "rel_req_reject_confirm": "Refuser la demande de {{name}} ?"
   },
   "theme": {
     "toggle": "Changer le thème",

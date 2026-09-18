@@ -90,6 +90,8 @@ interface SetResult { success: boolean; uid: string; fullName: string; requester
 interface Member { uid: string; email: string; fullName: string; role: string; }
 interface ListResult { members: Member[]; callerLevel: number; }
 interface AccessRequest { uid: string; fullName: string; email: string; phone: string; createdAt: number | null; }
+/** Outcome of a staff probe on one requester_id, kept for the grant gate. */
+interface TestedId { status: 'ok' | 'empty' | 'error'; name: string; count: number; }
 
 async function callFn<T>(name: string, data: object): Promise<T> {
   const functions = await getClientFunctions();
@@ -180,6 +182,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [relBusy, setRelBusy] = useState<string | null>(null);
   const [relError, setRelError] = useState<string | null>(null);
   const [relMsg, setRelMsg] = useState<string | null>(null);
+  // Which requester_ids have actually been probed in this session, and what came
+  // back. A patient asking for a relative gives only a name and a date of birth;
+  // attaching without looking at the name the LAB returns is how a homonym's
+  // record gets opened to the wrong person, silently. So the grant button stays
+  // locked until the id has been tested, and the returned name is shown next to
+  // the requested one for the staff to compare.
+  const [testedIds, setTestedIds] = useState<Record<string, TestedId>>({});
 
   const errMsg = useCallback(
     (err: unknown): string => {
@@ -210,15 +219,34 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       try {
         const res = await callFn<AdminTestResponse>('adminTestResults', { requester_id: requesterId, type });
         setTestResp(res);
-        setTestStatus(res.results.length > 0 ? 'ok' : 'empty');
+        const st = res.results.length > 0 ? 'ok' : 'empty';
+        setTestStatus(st);
+        setTestedIds((prev) => ({
+          ...prev,
+          [requesterId]: {
+            status: st,
+            name: res.patient_name || '',
+            count: res.results.length,
+          },
+        }));
       } catch (err: unknown) {
         // Backend maps "unknown id / no results" to not-found → treat as the empty state.
         const code = ((err as { code?: string })?.code || '').replace('functions/', '');
         if (code === 'not-found') {
           setTestStatus('empty');
+          setTestedIds((prev) => ({
+            ...prev,
+            [requesterId]: { status: 'empty', name: '', count: 0 },
+          }));
         } else {
           setTestStatus('error');
           setTestError(errMsg(err));
+          // A failed probe is NOT a probe: the id stays locked for granting.
+          setTestedIds((prev) => {
+            const next = { ...prev };
+            delete next[requesterId];
+            return next;
+          });
         }
       } finally {
         setTestBusy(false);
@@ -941,6 +969,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
               onFulfill={fulfillRelReq}
               onReject={rejectRelReq}
               onTest={testFromLink}
+              tested={testedIds}
               fmtDate={fmtDate}
               fmtWhenTime={fmtWhenTime}
             />

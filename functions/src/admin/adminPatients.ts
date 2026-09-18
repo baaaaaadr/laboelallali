@@ -1634,6 +1634,19 @@ async function buildDashboard(includeTeam: boolean) {
     // colleague who appears nowhere else on the screen.
     const scopeUids = new Set(accounts.map((a) => a.uid));
 
+    // Requests for a RELATIVE's dossier live in their own collection and are a
+    // second queue in the same admin tab. The tab badge counts both, so this
+    // tile must too — otherwise a manager reading the dashboard sees "0 en
+    // attente" while the front desk has a queue waiting, which is exactly what
+    // a dashboard is supposed to prevent.
+    const relPendingSnap = await admin
+      .firestore()
+      .collection("relativeAccessRequests")
+      .where("status", "==", "pending")
+      .limit(200)
+      .get();
+    const relativePending = relPendingSnap.size;
+
     const requests = { fulfilled: 0, rejected: 0, pending: 0 };
     let oldestPendingMs: number | null = null;
     let oldestPendingName = "";
@@ -1771,7 +1784,11 @@ async function buildDashboard(includeTeam: boolean) {
         accounts: accounts.length,
         withAccess: withAccess.length,
         withoutAccess: accounts.length - withAccess.length,
-        pendingRequests: requests.pending,
+        // Both queues. `pendingAccessRequests` / `pendingRelativeRequests` break
+        // it down for a caller that wants the detail.
+        pendingRequests: requests.pending + relativePending,
+        pendingAccessRequests: requests.pending,
+        pendingRelativeRequests: relativePending,
         byType,
       },
       usage: {
