@@ -72,17 +72,26 @@ export default function RelancesTab({
         </p>
       </div>
 
+      {/* Une grille, pas une pile : chaque ligne tient sur une largeur de
+            lecture, et la liste en montre trois fois plus sur un grand ecran.
+            Les separateurs `divide-y` ne fonctionnant pas en grille, chaque
+            entree porte sa propre bordure — c'est aussi ce que fait la file
+            des demandes, les deux listes se ressemblent donc. Une colonne en
+            dessous de 768 px : l'affichage mobile ne bouge pas. */}
       {list.length === 0 ? (
         <p className="text-sm text-[var(--text-secondary)]">
           {t('admin.rel_empty', 'Aucun compte à relancer pour le moment. 👌')}
         </p>
       ) : (
-        <ul className="divide-y divide-[var(--border-default)]">
+        <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {list.map((a) => {
             const link = waLink(a.phone || '', a.fullName);
             const busy = busyUid === a.uid;
             return (
-              <li key={a.uid} className="flex items-center justify-between gap-3 py-3">
+              <li
+                key={a.uid}
+                className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-default)] p-3"
+              >
                 <div className="min-w-0">
                   <p className="font-medium text-[var(--text-primary)] truncate">{a.fullName || a.email}</p>
                   <p className="text-sm text-[var(--status-warning)]">

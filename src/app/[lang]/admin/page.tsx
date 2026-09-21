@@ -42,6 +42,45 @@ const LEVEL: Record<string, number> = { owner: 3, admin: 2, staff: 1 };
 
 // `dashboard` and `team` need level >= 2; everything else is staff-level.
 type AdminTab = 'dashboard' | 'patients' | 'requests' | 'relances' | 'test' | 'team';
+/**
+ * Largeur utile du contenu, par onglet.
+ *
+ * Le cadre de la page est large (`CADRE`) et le contenu s'y cale A GAUCHE, sur
+ * le meme bord que le titre — ce n'est donc pas une colonne centree qui
+ * retrecit, mais une zone de travail qui s'arrete la ou elle cesse d'etre
+ * utile.
+ *
+ * Les onglets qui presentent des DONNEES prennent toute la largeur : tableau
+ * de bord, relances, demandes. C'est la que la place gagnee se voit — le
+ * tableau de bord passe de 5329 a 3344 px de hauteur a 1536 px de large.
+ *
+ * Les onglets qui sont des FORMULAIRES gardent une mesure courte. Etirer un
+ * champ de saisie sur 1500 px n'aide personne, et au-dela d'environ 75
+ * caracteres une ligne de texte devient penible a suivre : l'oeil perd le
+ * debut de la ligne suivante.
+ *
+ * Ces classes sont des PLAFONDS : en dessous de 1024 px elles ne jouent pas,
+ * l'affichage mobile est inchange.
+ *
+ * Les deux constantes contiennent des chaines LITTERALES a dessein. Tailwind
+ * v4 lit le texte source pour decider des classes a produire ; une classe
+ * calculee (`max-w-${n}`) ne serait jamais emise.
+ */
+const CONTENT_WIDTH: Record<AdminTab, string> = {
+  dashboard: '',
+  relances: '',
+  requests: '',
+  patients: 'max-w-4xl',
+  test: 'max-w-4xl',
+  team: 'max-w-4xl',
+};
+
+/**
+ * Plafond du cadre. 1536 px = le point de rupture `2xl` de Tailwind, donc la
+ * largeur pour laquelle les grilles de cette page sont pensees. Ecrit en
+ * valeur explicite plutot qu'avec `max-w-screen-2xl`, retire de Tailwind v4.
+ */
+const CADRE = 'max-w-[1536px]';
 
 /**
  * Callable errors whose `message` is just the status code — the SDK does this for
@@ -790,7 +829,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
 
   return (
     <div className="min-h-[80vh] py-12 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
-      <div className="max-w-2xl mx-auto">
+      <div className={`${CADRE} mx-auto`}>
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] flex items-center gap-2">
             <UserCog size={26} />
@@ -856,7 +895,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
           />
         </div>
 
-        <div className="space-y-8 pt-8">
+        <div className={`space-y-8 pt-8 ${CONTENT_WIDTH[activeTab]}`}>
         {/* ── Tableau de bord — steering figures, admin + owner ONLY ───────── */}
         {activeTab === 'dashboard' && isManager && (
           dashError ? (
@@ -917,7 +956,11 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 <CheckCircle size={16} /> <span>{arMsg}</span>
               </div>
             )}
-            <div className="space-y-4">
+            {/* Une demande = une carte autonome (identite + saisie + boutons),
+                donc une grille plutot qu'une pile : sur grand ecran la file se
+                lit d'un coup d'oeil au lieu de se derouler. Une seule colonne en
+                dessous de 1280 px — la carte contient un formulaire. */}
+            <div className="grid gap-4 xl:grid-cols-2">
               {accessReqs.length === 0 && (
                 <p className="text-sm text-[var(--text-secondary)]">
                   {t('admin.req_empty', "Aucune demande d'accès en attente.")}

@@ -23,6 +23,24 @@ It does NOT create patient accounts (patients sign up themselves). It never pers
 ## Layout — four tabs
 `activeTab` (`dashboard|patients|requests|relances|test|team`, default `dashboard`) selects one section; only that section renders. **Access split:** `dashboard` and `team` are added to `tabs` only when `isManager` (level ≥ 2) — a guard effect bounces a stagiaire off the default `dashboard` onto `patients`. Everything else, **including `relances`**, is staff-level: chasing patients is the front desk's job, so the relance list deliberately lives outside the managers-only dashboard (own tab, own callable `adminListDormant`). The tab bar uses the shared `TabsNavigation` (`src/components/features/catalog/TabsNavigation.tsx`, `TabItem {id,label,icon,count?}`, RTL-aware, horizontal-scroll on overflow) in a plain in-flow wrapper (`border-b`) — **not sticky** (deliberate): it scrolls away with the page so it consumes zero fixed screen space; to change tab, scroll back to the top. The `team` tab is only added to `tabs` when `isManager`; the `requests` tab shows a live count badge.
 
+### Width policy (septembre 2026) — `CADRE` + `CONTENT_WIDTH`
+The space used to sit in `max-w-2xl` (672 px), so a 1500 px screen showed a narrow ribbon. The frame is now `CADRE = max-w-[1536px]` (the Tailwind `2xl` breakpoint, written as an explicit value because `max-w-screen-2xl` was dropped in Tailwind v4), and **each tab declares its own useful width** in the `CONTENT_WIDTH` map:
+- **Data tabs take the full frame** — `dashboard`, `relances`, `requests`. This is where the room pays: the dashboard is **37 % shorter** at 1536 px (5329 -> 3344 px of scroll, measured with the preview bench below).
+- **Form tabs keep a short measure** (`max-w-4xl`) — `patients`, `test`, `team`. A 1500 px-wide text input helps nobody, and past ~75 characters a line of prose becomes hard to track.
+
+Content is **left-aligned inside the frame**, on the same edge as the title — a narrow tab reads as a column that stops, not as a centred block that shrank. These classes are **ceilings**: below 1024 px nothing changes, mobile is untouched (verified: 0 px of horizontal overflow at 390 / 360 / 320 px).
+
+**Both constants hold literal class strings on purpose.** Tailwind v4 scans source text; a computed class name would never be emitted.
+
+### Grid structure of the dashboard
+Each narrative section of `AdminDashboard.tsx` is a grid rather than a stack. Reading order is preserved — a CSS grid flows left to right then top to bottom, exactly like the stack it replaces:
+- sections 4 and 5 (evolution, ou ca bloque) -> `grid xl:grid-cols-2`
+- sections 6 and 7 (qui utilise, reactivite) -> `grid md:grid-cols-2 xl:grid-cols-3`. The lone `ChartCard` that used to sit above an inner 2-column grid was **merged into it**; do not re-nest a `md:grid-cols-2` inside one of these, it yields four cramped columns
+- section 8 (relances) -> `grid sm:grid-cols-2 lg:grid-cols-3`
+- section 9 (listes repliees) -> `grid xl:grid-cols-2 items-start`
+
+All rows carry `items-start`: a short chart gains nothing from being padded out to its tallest neighbour. `RelancesTab` and the pending-requests queue are grids of bordered cards — `divide-y` does not work in a grid, hence the per-card border, which also makes the two lists look alike.
+
 ## Role model (single `role` field on `users/{uid}`)
 Hierarchy, higher does everything lower can:
 - **`owner`** (level 3): manage admins + everything below. (Bootstrapped: hassanelallali@gmail.com, azizelallali@gmail.com.)
@@ -164,6 +182,7 @@ Callables: `requestRelativeAccess` (auth only, caps at 5 pending, de-duplicates 
   - `HBars` scales bar widths against the largest row, which is right for counts but wrong for a series that is **already a percentage** — the biggest value was always drawn full-width, contradicting the figure printed beside it. The age chart passes `scaleMax={100}`. Emptiness is still judged on the data, never on the fixed scale.
   - `dormantOf()` returns the **full** list; callers that render slice it themselves. It used to truncate at `DORMANT_LIST` (40), and the dashboard republished that length as a factual count — past 40 dormants it would have understated the backlog and contradicted the "Santé de la base" chart on the same screen.
   - The `resultAccessRequests` scan filters on `scopeUids` (the uids from `scanAccounts`, so it follows `includeTeam`). Request documents are keyed by the requester's uid; without the filter the team's own test requests inflated "Devenir des demandes", dragged the activation delay down, and could surface a colleague's name in the pending-request banner while the on-screen note claimed team accounts were excluded.
+- **Looking at this page without an account:** `node scripts/preview-admin-dashboard.js`. /admin is behind auth **and** a role, so no headless browser can open it — yet layout is exactly what a type-check cannot see. The bench bundles the real `AdminDashboard` with esbuild, stubs only `react-i18next`, compiles the real stylesheet, and shoots four widths into the OS temp dir. It prints the two things that can be judged mechanically: horizontal overflow (must stay 0 on mobile) and the column count of the first chart grid (2 from 1280 px, 1 below). **It is not a test — nothing is asserted.** Its data is a hand-written fixture: a new field on `DashboardStats` renders as `undefined` there until the fixture is updated. Gotcha if you move it: the generated entry point lives outside the project, so esbuild needs `nodePaths: [<projet>/node_modules]` to resolve `react` — `absWorkingDir` does not do it.
 - **Dashboard UI lives in components,** not in the page: `src/components/features/admin/AdminDashboard.tsx` (the 15 blocks, in the narrative order validated on the mockup) and `charts.tsx` (`AreaChart`/`VBars`/`HBars`/`StackedBar` — hand-built SVG/CSS, **no charting library in this project**, colours from the design-system tokens so both themes work). `RelancesTab.tsx` holds the front-desk list. `page.tsx` keeps state, callables and tab routing only.
 - **Ramp-up caveat:** nothing was measured before the feature shipped, so every pre-existing account reads as "jamais consulté" until its owner next opens the app. The dashboard shows a `admin.dash_since` caption (module constant `USAGE_SINCE`) so the first weeks aren't misread — update that constant if the go-live date changes.
 - **Adding a tool** = add a `TabItem` to `tabs` + wrap a section in `{activeTab === 'x' && …}`; `TabsNavigation` handles overflow, no layout change.

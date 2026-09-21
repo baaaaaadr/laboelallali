@@ -227,7 +227,8 @@ export default function AdminDashboard({
         t('admin.dash_sec_time_desc', "Est-ce que le service prend, et à quelle vitesse ?")
       )}
 
-      <ChartCard
+      <div className="grid xl:grid-cols-2 gap-4 items-start">
+        <ChartCard
         title={t('admin.dash_growth_title', 'Croissance des comptes')}
         subtitle={t('admin.dash_growth_sub', 'Nombre total de patients inscrits, mois après mois')}
         hint={t('admin.dash_growth_hint', "Voir si l'adoption accélère ou stagne, et mesurer l'effet de vos actions (affiche à l'accueil, bouche-à-oreille, formation des stagiaires).")}
@@ -250,6 +251,7 @@ export default function AdminDashboard({
           emptyLabel={collecting}
         />
       </ChartCard>
+      </div>
 
       {/* 5 — Where it breaks */}
       {sectionTitle(
@@ -257,7 +259,8 @@ export default function AdminDashboard({
         t('admin.dash_sec_block_desc', "Pourquoi tout le monde n'utilise-t-il pas le service ?")
       )}
 
-      <ChartCard
+      <div className="grid xl:grid-cols-2 gap-4 items-start">
+        <ChartCard
         title={t('admin.dash_funnel_title', 'Le parcours patient, étape par étape')}
         subtitle={t('admin.dash_funnel_sub', "De l'inscription à l'utilisation réelle")}
         hint={t('admin.dash_funnel_hint', "Montre exactement où on perd les patients. Beaucoup d'inscrits mais peu d'accès activés → c'est l'accueil qu'il faut outiller. Beaucoup d'accès mais peu de consultations → ce sont les patients qu'il faut accompagner.")}
@@ -290,6 +293,7 @@ export default function AdminDashboard({
           emptyLabel={collecting}
         />
       </ChartCard>
+      </div>
 
       {/* 6 — Who uses it */}
       {sectionTitle(
@@ -297,7 +301,8 @@ export default function AdminDashboard({
         t('admin.dash_sec_who_desc', "Pour cibler l'accompagnement là où il manque vraiment.")
       )}
 
-      <ChartCard
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+        <ChartCard
         title={t('admin.dash_age_title', "Utilisation selon l'âge")}
         subtitle={t('admin.dash_age_sub', 'Part des patients qui consultent, par tranche d’âge')}
         hint={t('admin.dash_age_hint', "Répond à la vraie question : est-ce que nos patients âgés y arrivent ? Si les plus de 60 ans décrochent, ce n'est pas l'application qu'il faut changer mais l'accompagnement au comptoir.")}
@@ -315,7 +320,6 @@ export default function AdminDashboard({
         />
       </ChartCard>
 
-      <div className="grid md:grid-cols-2 gap-4">
         <ChartCard
           title={t('admin.dash_freq_title', "Fréquence d'utilisation")}
           subtitle={t('admin.dash_freq_sub', 'Combien de fois chaque patient a consulté')}
@@ -356,7 +360,8 @@ export default function AdminDashboard({
         t('admin.dash_sec_team_desc', "Le service ne vaut que par la rapidité avec laquelle l'accueil active les accès.")
       )}
 
-      <ChartCard
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+        <ChartCard
         title={t('admin.dash_activation_title', "Délai d'activation des accès")}
         subtitle={t('admin.dash_activation_sub', 'Temps moyen entre la demande du patient et son activation')}
         hint={t('admin.dash_activation_hint', "L'indicateur de qualité de service de l'accueil. Un patient qui attend cinq jours son accès, c'est une promesse non tenue — ici la dérive se voit tout de suite, et le progrès aussi.")}
@@ -381,7 +386,6 @@ export default function AdminDashboard({
         )}
       </ChartCard>
 
-      <div className="grid md:grid-cols-2 gap-4">
         <ChartCard
           title={t('admin.dash_req_title', 'Devenir des demandes')}
           subtitle={t('admin.dash_req_sub', "Ce que deviennent les demandes d'accès reçues")}
@@ -417,7 +421,7 @@ export default function AdminDashboard({
         t('admin.dash_sec_relance_desc', "Relancer, c'est bien. Savoir si ça fonctionne, c'est mieux.")
       )}
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
         <ChartCard
           title={t('admin.dash_relance_title', 'Efficacité des relances')}
           subtitle={t('admin.dash_relance_sub', { days: dash.relance.windowDays, defaultValue: 'Sur les {{days}} derniers jours' })}
@@ -461,6 +465,9 @@ export default function AdminDashboard({
       </div>
 
       {/* 9 — Detail lists (collapsed) */}
+      {/* Deux listes repliees : cote a cote des 1280 px, sinon l'une sous
+          l'autre. Repliees par defaut, elles ne coutent qu'un en-tete. */}
+      <div className="grid xl:grid-cols-2 gap-4 items-start">
       <div className="card p-6 space-y-4">
         {secHeader('active', t('admin.dash_active_title', 'Derniers comptes actifs'), dash.latestActive.length, Activity)}
         {openSec.active && (dash.latestActive.length === 0 ? (
@@ -494,6 +501,7 @@ export default function AdminDashboard({
             ))}
           </ul>
         )}
+      </div>
       </div>
 
       <p className="text-xs text-[var(--text-tertiary)] flex items-center gap-1.5 px-1">
