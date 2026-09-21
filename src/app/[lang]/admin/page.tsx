@@ -1031,8 +1031,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             dossier. Kept visually separate from the access requests above —
             "activate my own results" and "let me read someone else's" are
             different decisions, and the front desk must not blur them. */}
+        {/* Le rattachement d'un proche est une VERIFICATION D'IDENTITE :
+            tester le dossier, comparer les noms, cocher. Elle se traite une
+            demande a la fois. D'ou une mesure de lecture ici, alors que la
+            file d'attente au-dessus, elle, s'etale en deux colonnes : deux
+            listes voisines, deux usages differents. */}
         {activeTab === 'requests' && (
-          <div className="mt-6">
+          <div className="mt-6 max-w-4xl">
             <RelativeRequestsSection
               requests={relReqs}
               inputs={relInputs}
