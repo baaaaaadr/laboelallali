@@ -12,6 +12,7 @@
     "test:journey": "node scripts/test-journey.js",
     "test:journey:ui": "node scripts/test-journey-ui.js",
     "test:pwa": "node scripts/test-pwa.js",
+    "test:pwa:offline": "node scripts/test-pwa-offline.js",
     "deploy": "npm run clean:devcache && npm run build && firebase deploy",
     "deploy:hosting": "npm run clean:devcache && npm run build && firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",

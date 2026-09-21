@@ -1,5 +1,5 @@
 // Service Worker for LaboElAllali PWA
-const CACHE_NAME = 'laboelallali-v5';
+const CACHE_NAME = 'laboelallali-v6';
 const OFFLINE_PAGE = '/offline.html';
 
 // Install event - pre-cache the offline fallback, then take over immediately.
@@ -12,20 +12,45 @@ const OFFLINE_PAGE = '/offline.html';
 // 21/09/2026). Le patient sans réseau ne voyait que la page d'erreur du
 // navigateur.
 //
-// ⚠ `cache.add` ÉCHOUE sur une réponse redirigée (`Cache.put` refuse un
-// `response.redirected`). La page doit donc exister en fichier statique à la
-// racine, servie directement par Firebase Hosting — voir `public/offline.html`
-// et l'exclusion correspondante dans `src/middleware.ts`.
+// ⚠ PAS de `cache.add()`, et ce n'est pas un détail. Firebase Hosting sert
+// l'application avec des « URL propres » : `/offline.html` répond 301 vers
+// `/offline` (vérifié en production le 21/09/2026). `cache.add` range alors
+// bien la page — mais la réponse rangée porte le drapeau `redirected`, et une
+// réponse marquée ainsi NE PEUT PAS répondre à une navigation : Chrome la
+// refuse (« a redirected response was used for a request whose redirect mode
+// is not follow »). Mesuré : réseau coupé, le patient obtenait « 404 This page
+// could not be found » au lieu de la page de repli.
+//
+// On récupère donc la réponse nous-mêmes et on la RECONSTRUIT avant de la
+// ranger : une `Response` neuve ne porte plus ce drapeau. La clé reste
+// `/offline.html`, celle que cherche le repli de navigation plus bas.
+//
+// ⚠ Ne pas coder `/offline` en dur à la place : ce chemin n'existe que
+// derrière Firebase Hosting. En développement (`next dev`), seul
+// `/offline.html` répond.
 //
 // ⚠ Un échec de pré-cache ne doit JAMAIS empêcher l'installation du worker :
 // sans le `.catch`, une coupure réseau au mauvais moment laisserait la PWA
 // sans service worker du tout.
+async function precacheOfflinePage() {
+  const response = await fetch(OFFLINE_PAGE, { cache: 'reload', redirect: 'follow' });
+  if (!response.ok) throw new Error('offline page HTTP ' + response.status);
+  const body = await response.blob();
+  const cache = await caches.open(CACHE_NAME);
+  await cache.put(
+    OFFLINE_PAGE,
+    new Response(body, {
+      status: 200,
+      statusText: 'OK',
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    })
+  );
+}
+
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...');
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.add(new Request(OFFLINE_PAGE, { cache: 'reload' })))
+    precacheOfflinePage()
       .catch((error) => {
         console.warn('Service Worker: offline page not pre-cached', error);
       })

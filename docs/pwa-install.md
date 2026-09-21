@@ -137,12 +137,35 @@ if (isStandalone || (isIOS && !isSafari)) { /* « installée » */ }
 `navigator.standalone` (le seul que connaisse iOS). L'ancien code n'en regardait
 qu'un, et pas le même selon les fichiers.
 
-## Page hors connexion
+## Page hors connexion — TROIS défauts empilés
 
-`public/offline.html` **n'existait pas**. `sw.js` y renvoyait depuis toujours ;
-l'adresse répondait 307 puis 404 en production (vérifié le 21/09/2026). De plus
-le service worker ne pré-cachait rien, donc la page n'aurait pas été servie même
-si elle avait existé. Les deux sont corrigés (`CACHE_NAME` passé à `v5`).
+Le mode hors connexion n'a jamais fonctionné depuis le lancement. Trois causes
+distinctes, dont la dernière n'a été trouvée qu'en coupant vraiment le réseau :
+
+1. **`public/offline.html` n'existait pas.** `sw.js` y renvoyait depuis
+   toujours ; l'adresse répondait 307 puis 404 en production.
+2. **Le service worker ne pré-cachait rien.** Le commentaire annonçait « cache
+   the application shell », mais `waitUntil(self.skipWaiting())` ne fait
+   qu'activer le worker.
+3. **⚠ La réponse mise en cache était marquée « redirigée ».** Firebase Hosting
+   sert l'application en URL propres : `/offline.html` répond **301 vers
+   `/offline`**. `cache.add()` range bien la page — mais la réponse porte alors
+   le drapeau `redirected`, et **une réponse marquée ainsi ne peut pas répondre
+   à une navigation** : Chrome la refuse (« a redirected response was used for a
+   request whose redirect mode is not follow »). Mesuré : réseau coupé, le
+   patient obtenait *404 This page could not be found* alors que la page était
+   pourtant dans le cache.
+
+   Le worker récupère donc la réponse lui-même et la **reconstruit** avant de la
+   ranger. ⚠ Ne pas coder `/offline` en dur à la place : ce chemin n'existe que
+   derrière Firebase Hosting ; en `next dev`, seul `/offline.html` répond.
+
+`CACHE_NAME` est à `v6`. **Le bumper à chaque changement du worker**, sinon le
+navigateur garde l'ancien et son cache incomplet.
+
+> La cause n° 3 est la raison d'être de `npm run test:pwa:offline`, qui vise la
+> PRODUCTION : rien de tout cela n'apparaît en local, où `/offline.html` répond
+> directement.
 
 ⚠ La page est **entièrement autonome** (aucune police, feuille de style, script
 ou image externes) et **bilingue en dur** : elle s'affiche hors de React et hors
@@ -172,8 +195,8 @@ reste **une** (plus le script de capture précoce, qui écrit la même globale).
 ## Vérification
 
 ```
-npm run test:pwa            # 85 vérifications
-npm run test:pwa -- --head  # avec fenêtre visible
+npm run test:pwa            # 85 vérifications, sans serveur
+npm run test:pwa:offline    # le mode hors connexion, sur la PRODUCTION
 ```
 
 Deux parties : la détection de plateforme sur de **vraies** chaînes d'agent
