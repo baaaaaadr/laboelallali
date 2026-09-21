@@ -12,9 +12,15 @@
      c'est le cas le plus courant et le moins cher.
 
      FENETRE (cotes relevees sur la photo, +/- 3 mm, cf.
-     plan-fenetre-enveloppe.html) : 100 x 45 mm, a 20 mm du bord droit et
-     57 mm du bord superieur. Elle est donc a X 109..209, Y 57..102.
-     Rien n'est imprime dans cette zone, ni dans les 4 mm qui l'entourent.
+     plan-fenetre-enveloppe.html) : 45 x 100 mm (hauteur x largeur, comme
+     l'ecrivent les fabricants), a 20 mm du bord droit et 57 mm du bord
+     superieur. Elle est donc a X 109..209, Y 57..102. Position courante du
+     marche (variantes 20/60 et 20/62, tolerance de fabrication +/- 2 mm).
+
+     La fenetre laisse voir le nom du patient inscrit sur la feuille de
+     resultats pliee en deux a l interieur. Elle et la bande qui l entoure
+     restent donc libres de tout element imprime ; le reste de la surface
+     est disponible.
 
      Deux tons, choisis par l'URL :
        (defaut)     degrade fuchsia -> bordeaux, pour une impression quadri
@@ -98,7 +104,7 @@
   /* ------------------------------------- bloc « en ligne », a gauche de la fenetre
      Largeur limitee a 91 mm : la fenetre commence a X 109, on garde 18 mm d'air. */
   .enligne {
-    position:absolute; left:14mm; top:66mm; width:91mm;
+    position:absolute; left:14mm; top:57mm; width:91mm;
     display:flex; align-items:center; gap:5mm;
   }
   .enligne img { width:26mm; height:26mm; flex:0 0 auto; }
@@ -109,7 +115,7 @@
   .enligne .site { font-weight:700; font-size:8.2pt; color:var(--bordeaux); margin-top:1.8mm; }
 
   /* ---------------------------------------------------------------- pied */
-  footer { position:absolute; bottom:16mm; left:14mm; right:14mm; text-align:center; }
+  footer { position:absolute; bottom:14mm; left:14mm; right:14mm; text-align:center; }
   footer .filet2 { height:0.35mm; background:var(--filet); margin-bottom:2.4mm; opacity:0.85; }
   .horaires { font-size:7pt; line-height:1.5; }
   .horaires strong { color:var(--bordeaux); font-weight:700; }
@@ -130,7 +136,7 @@
 </style>
 </head>
 <body>
-  <div class="fenetre"><span>FENÊTRE 100 × 45 mm<br>(le nom apparaît ici)</span></div>
+  <div class="fenetre"><span>FENÊTRE 45 × 100 mm<br>(le nom apparaît ici)</span></div>
 
   <header>
     <div class="marque">

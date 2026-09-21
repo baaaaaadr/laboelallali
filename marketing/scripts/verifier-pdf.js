@@ -6,12 +6,21 @@
  * Verifie, pour chaque PDF de marketing/output/imprimerie/ :
  *   - dimensions de la page (MediaBox) en mm ;
  *   - que TOUTES les polices sont soit embarquees (/FontFile*), soit des
- *     polices Type3 dont les glyphes sont des traces vectoriels — dans les
- *     deux cas rien ne sera substitue chez l'imprimeur ;
+ *     polices Type3 dont les glyphes sont verifies comme des traces — dans
+ *     les deux cas rien ne sera substitue chez l'imprimeur.
+ *     ATTENTION : une police Type3 n'est PAS vectorielle par definition.
+ *     Chaque glyphe est un flux d'operateurs PDF qui peut contenir des
+ *     traces comme des images bitmap (cas frequent avec les PDF issus de
+ *     LaTeX/dvips ou de conversions Ghostscript, d'ou le crenelage a
+ *     l'impression). C'est justement pourquoi ce script inspecte le contenu
+ *     de chaque glyphe au lieu de se fier au type de police ;
  *   - la resolution effective des images bitmap (les QR codes).
  *
- * Chromium convertit les polices VARIABLES (Inter) en Type3 : c'est du
- * vectoriel, mais certains outils de prepresse le signalent. C'est attendu.
+ * Chromium convertit les polices VARIABLES (Inter) en Type3. Les outils de
+ * prepresse (Preflight d'Acrobat, PitStop, pdfToolbox) les signalent : la
+ * Type3 ne gere pas le hinting, se rend mal en petit corps et pose probleme
+ * sur d'anciens RIP. Ce n'est pas une non-conformite PDF/X, mais une alerte
+ * a lever si l'imprimeur bloque — en vectorisant les textes.
  */
 const fs = require('fs');
 const path = require('path');

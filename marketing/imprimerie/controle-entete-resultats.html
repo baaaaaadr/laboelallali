@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Contrôle — en-tête de la feuille de résultats en situation</title>
+<style>
+  /* ------------------------------------------------------------------
+     PLANCHE DE CONTROLE, pas un fichier a livrer.
+
+     Elle montre le haut de la feuille de resultats a l'echelle 1:1 :
+     l'image d'en-tete posee exactement ou le logiciel la pose, et
+     par-dessus, en gris, les lignes que le logiciel ecrit lui-meme, a
+     leurs hauteurs mesurees.
+
+     Toutes les valeurs viennent des cinq comptes rendus du dossier
+     d'echantillons, lus apres dechiffrement le 11/09/2026. Elles sont
+     identiques dans les cinq.
+
+     Les noms affiches sont des noms fictifs : aucune donnee de patient
+     ne figure sur cette planche.
+     ------------------------------------------------------------------ */
+  @font-face { font-family:"Inter"; src:url("../assets/fonts/inter-latin.woff2") format("woff2"); font-weight:100 900; font-display:block; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:210mm;height:74mm}
+  body{font-family:"Inter","Segoe UI",sans-serif;background:#fff;position:relative;overflow:hidden}
+
+  /* L'image, a sa place exacte */
+  .entete{position:absolute;left:11.7mm;top:1.69mm;width:184.9mm;height:35mm;display:block}
+
+  /* Les lignes du logiciel. `top` = base de la ligne mesuree, la police
+     est posee dessus par translateY(-100%) pour que la base tombe juste. */
+  .ligne{position:absolute;color:#3A2226;white-space:nowrap;transform:translateY(-100%);
+         font-family:"Courier New",monospace}
+  .l1{left:1.69mm;top:40.0mm;font-size:11pt}
+  .l2{left:1.69mm;top:43.5mm;font-size:8pt}
+  .l3{left:86.5mm;top:45.0mm;font-size:12pt;font-weight:700}
+  .l4{left:86.5mm;top:49.4mm;font-size:11pt}
+  .l5{left:1.69mm;top:53.9mm;font-size:11pt}
+  .l6{left:135mm;top:49.4mm;font-size:11pt}
+
+  /* Reperes de mesure, en bleu pour qu'on ne les confonde pas avec le
+     document. Ils ne sont pas sur la vraie feuille. */
+  .rep{position:absolute;left:0;right:0;height:0;border-top:.25mm dashed #2E75B6}
+  .rep span{position:absolute;right:2mm;top:-4.6mm;font-size:7pt;color:#1F4E79;
+            background:#fff;padding:0 1mm;font-family:"Inter",sans-serif}
+  .r-bas{top:36.69mm}
+  .r-txt{top:37.3mm;border-top-color:#C00000}
+  .r-txt span{color:#C00000;top:.6mm}
+
+  .cote{position:absolute;left:52mm;top:28.3mm;height:9mm;width:0;border-left:.3mm solid #2E75B6}
+  .cote::before,.cote::after{content:"";position:absolute;left:-1.5mm;width:3mm;border-top:.3mm solid #2E75B6}
+  .cote::before{top:0}.cote::after{top:9mm}
+  .cote b{position:absolute;left:2mm;top:3mm;font-size:7.5pt;color:#1F4E79;
+          font-family:"Inter",sans-serif;white-space:nowrap}
+
+  .legende{position:absolute;left:1.69mm;top:62mm;font-size:7.5pt;color:#6E5158;line-height:1.5}
+  .legende b{color:#800020}
+</style>
+</head>
+<body>
+  <img class="entete" src="../output/entete/entete-1194.png" alt="">
+
+  <!-- lignes ecrites par le logiciel, noms fictifs -->
+  <div class="ligne l1">Prescripteur :&nbsp; Dr.</div>
+  <div class="ligne l2">&nbsp;</div>
+  <div class="ligne l3">Patient: Mme EXEMPLE Fatima</div>
+  <div class="ligne l4">Né(e):01/01/1950</div>
+  <div class="ligne l6">N°Dossier: 110926 004</div>
+  <div class="ligne l5">Prélèvement effectué le : 11/09/2026 à 08h30</div>
+
+  <div class="rep r-bas"><span>36,7 mm — bord bas de l'image</span></div>
+  <div class="rep r-txt"><span>37,3 mm — haut des capitales de la 1<sup>re</sup> ligne du logiciel</span></div>
+
+  <div class="cote"><b>9 mm de blanc</b></div>
+
+  <div class="legende">
+    <b>Planche de contrôle — échelle 1:1.</b> L'image d'en-tête est posée ici exactement où le logiciel la pose :
+    à 1,7 mm du bord haut, sur 184,9 × 35,0 mm. Les lignes noires sont celles que le logiciel écrit lui-même,
+    aux hauteurs relevées dans cinq comptes rendus (identiques dans les cinq). Les noms sont fictifs.<br>
+    Les repères pointillés et la cote bleue n'existent que sur cette planche.
+  </div>
+</body>
+</html>
