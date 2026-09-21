@@ -56,12 +56,25 @@ const MASKABLE = [
  * reduit pour tenir dans la zone sure.
  *
  * Android rogne les icones maskable selon une forme variable (cercle, goutte,
- * squircle...). Seul un disque central de 80 % du cote est garanti visible.
- * Le L mesure 493x695, soit une diagonale de 852 : pour qu'il tienne dans ce
- * disque il faut une hauteur <= 0,652 x cote. On prend 58 % pour garder de
- * l'air. Les deux fichiers -maskable livres precedemment etaient des copies
- * octet pour octet des icones normales : leurs angles arrondis se faisaient
- * donc rogner une seconde fois par le systeme.
+ * squircle...). Seul un disque central de 80 % du cote est garanti visible
+ * (specification W3C, icones purpose="maskable").
+ *
+ * La contrainte porte sur la DIAGONALE du bloc, pas sur sa seule hauteur :
+ *     largeur^2 + hauteur^2 <= (0,8 x cote)^2
+ * Pour un bloc carre le plafond est donc 56,6 % — et non 80 %.
+ *
+ * Ici le L mesure 493 x 695. A 58 % de hauteur il fait 41,1 % de large, soit
+ * une diagonale de 71,1 % : largement dans le disque sur. Ce 58 % vaut donc
+ * POUR CE LOGO, ce n'est pas une regle generale — pour toute autre forme,
+ * calculer hauteur <= racine((0,8 x cote)^2 - largeur^2).
+ *
+ * Nuance : ces 80 % valent pour l'icone maskable du manifeste web. Une icone
+ * adaptative Android native (fichier 108 dp) n'a qu'un disque sur d'environ
+ * 61 %.
+ *
+ * Les deux fichiers -maskable livres precedemment etaient des copies octet
+ * pour octet des icones normales : leurs angles arrondis se faisaient donc
+ * rogner une seconde fois par le systeme.
  */
 async function maskable(size) {
   const svgL = fs.readFileSync(L_BLANC, 'utf8');
