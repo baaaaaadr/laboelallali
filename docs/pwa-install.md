@@ -195,9 +195,36 @@ reste **une** (plus le script de capture précoce, qui écrit la même globale).
 ## Vérification
 
 ```
-npm run test:pwa            # 85 vérifications, sans serveur
-npm run test:pwa:offline    # le mode hors connexion, sur la PRODUCTION
+npm run test:pwa                  # 85 vérifications, sans serveur
+npm run test:pwa:offline          # hors connexion — l'artefact en cache, sur la PRODUCTION
+npm run test:pwa:offline:local    # hors connexion — VRAIE coupure (serveur local tué)
 ```
+
+### ⚠ Pourquoi DEUX bancs hors connexion
+
+Parce qu'aucun seul ne suffit, et parce qu'une première version croyait tester
+ce qu'elle ne testait pas.
+
+- **`test:pwa:offline`** vise la PRODUCTION : c'est le seul endroit où le piège
+  de la redirection existe. Il inspecte l'ARTEFACT en cache — présent, 200, les
+  deux langues, et surtout **pas marqué `redirected`**.
+- **`test:pwa:offline:local`** démarre `next start`, laisse le worker
+  s'installer, **tue le serveur**, puis navigue. Il vérifie d'abord que le
+  serveur est bien tombé, sans quoi il ne testerait rien.
+
+> **Mesuré le 21/09/2026 : on ne peut pas couper le réseau d'un service worker
+> depuis Playwright.** Ni `context.setOffline(true)`, ni
+> `Network.emulateNetworkConditions` par CDP sur la page n'atteignent ses
+> requêtes — il les émet depuis SON contexte. La première version du banc
+> rapportait le 404 du serveur comme s'il venait du cache : elle aurait validé
+> une fonctionnalité cassée. Tuer un vrai serveur est la seule coupure
+> possible. **Ne pas réintroduire l'illusion.**
+
+Deux autres erreurs de ce banc, corrigées avant toute conclusion : il tronquait
+le contenu caché à 4 000 caractères (le texte arabe, situé après le bloc
+`<style>`, « disparaissait »), et il naviguait vers une page déjà visitée, donc
+servie par le cache et jamais par le repli. Les deux accusaient l'application à
+tort.
 
 Deux parties : la détection de plateforme sur de **vraies** chaînes d'agent
 (`scripts/pwa-cases.ts`), puis les **trois boutons montés ensemble** dans un vrai

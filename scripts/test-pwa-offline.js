@@ -1,38 +1,51 @@
 #!/usr/bin/env node
 /**
- * Vérifie le mode HORS CONNEXION sur un site RÉELLEMENT SERVI.
+ * Vérifie le mode HORS CONNEXION sur un site réellement servi.
  *
- *     node scripts/test-pwa-offline.js                        # production
- *     node scripts/test-pwa-offline.js http://localhost:3000  # après npm start
+ *     npm run test:pwa:offline          # PRODUCTION — l'artefact en cache
+ *     npm run test:pwa:offline:local    # SERVEUR LOCAL réellement tué
  *
- * ### Pourquoi ce banc est séparé de `scripts/test-pwa.js`
- * Il lui faut un vrai serveur, parce que le défaut qu'il surveille n'existe
- * QUE derrière Firebase Hosting : celui-ci sert l'application en « URL
- * propres », si bien que `/offline.html` répond **301 vers `/offline`**.
+ * ### Deux modes, parce qu'aucun seul ne suffit
  *
- * `cache.add('/offline.html')` range alors bien la page — le piège est
- * ailleurs, et il est sournois : la réponse rangée porte le drapeau
- * `redirected`, et une réponse marquée ainsi ne peut pas répondre à une
- * navigation. Chrome la refuse. Mesuré sur la production le 21/09/2026 :
- * réseau coupé, le patient obtenait « 404 This page could not be found » alors
- * que la page de repli était pourtant bien dans le cache. C'est pourquoi ce
- * banc ne se contente pas de vérifier la présence en cache — il coupe
- * réellement le réseau.
+ * **Mode production** — le seul qui reproduise le piège des URL propres de
+ * Firebase Hosting : `/offline.html` y répond 301 vers `/offline`, et la
+ * réponse mise en cache porte alors le drapeau `redirected`. Une réponse
+ * marquée ainsi ne peut pas répondre à une navigation ; Chrome la refuse
+ * (« a redirected response was used for a request whose redirect mode is not
+ * follow »). Ce mode inspecte donc l'ARTEFACT en cache : présent, statut 200,
+ * les deux langues, et surtout PAS marqué redirigé.
  *
- * Rien de tout cela n'apparaît en local, où `/offline.html` répond directement.
- * C'est pourquoi ce banc vise la PRODUCTION par défaut.
+ * ⚠ Il ne peut PAS couper le réseau, et il ne prétend pas le faire. Mesuré le
+ * 21/09/2026 : ni `context.setOffline(true)`, ni
+ * `Network.emulateNetworkConditions` par CDP sur la page n'atteignent les
+ * requêtes du service worker — celui-ci les émet depuis SON contexte, pas
+ * celui de la page. Une première version de ce banc croyait tester hors
+ * connexion alors que le worker atteignait tranquillement le réseau : elle
+ * rapportait le 404 du serveur comme s'il venait du cache, et aurait validé
+ * une fonctionnalité cassée. **Ne pas réintroduire cette illusion.**
  *
- * ### Ce qu'il fait réellement
- * Il enregistre le service worker, attend son activation, vérifie que la page
- * de repli est bien DANS le cache, puis **coupe vraiment le réseau** et
- * navigue. C'est la seule preuve qui vaille : le reste n'est que de la lecture
- * de code.
+ * **Mode `--local`** — la vraie coupure. Le banc démarre lui-même `next start`,
+ * laisse le service worker s'installer, puis **tue le serveur** et navigue vers
+ * une adresse jamais visitée. Le `fetch` du worker échoue pour de bon, et le
+ * repli est réellement exercé. Il vérifie d'abord que le serveur est bien
+ * tombé — sans quoi la suite ne testerait rien.
  *
- * Lecture seule : aucune écriture, aucun compte, aucune donnée patient.
+ * Seule limite de ce mode : en local `/offline.html` répond directement, sans
+ * redirection. D'où les deux modes, complémentaires.
+ *
+ * Prérequis du mode local : un `npm run build` préalable (`next start` sert
+ * `.next/`). Lecture seule : aucune écriture, aucun compte, aucune donnée
+ * patient.
  */
 const { chromium } = require('playwright');
+const { spawn } = require('child_process');
+const net = require('net');
 
-const BASE = (process.argv.find((a) => a.startsWith('http')) || 'https://www.laboelallali.com').replace(/\/$/, '');
+const LOCAL = process.argv.includes('--local');
+const LOCAL_PORT = 3123;
+const BASE = LOCAL
+  ? `http://127.0.0.1:${LOCAL_PORT}`
+  : (process.argv.find((a) => a.startsWith('http')) || 'https://www.laboelallali.com').replace(/\/$/, '');
 const HEADED = process.argv.includes('--head');
 
 let passed = 0;
@@ -49,8 +62,68 @@ function ok(label, condition, detail = '') {
   return false;
 }
 
+/** Attend qu'un port accepte les connexions. */
+function waitForPort(port, timeoutMs = 120000) {
+  const deadline = Date.now() + timeoutMs;
+  return new Promise((resolve, reject) => {
+    const tryOnce = () => {
+      const socket = net.connect(port, '127.0.0.1');
+      socket.once('connect', () => {
+        socket.destroy();
+        resolve();
+      });
+      socket.once('error', () => {
+        socket.destroy();
+        if (Date.now() > deadline) reject(new Error(`port ${port} injoignable`));
+        else setTimeout(tryOnce, 400);
+      });
+    };
+    tryOnce();
+  });
+}
+
+/**
+ * ⚠ `next start` crée des processus ENFANTS. Tuer le seul processus parent
+ * laisse le port écouté, et la « coupure » n'a jamais lieu — le banc validerait
+ * alors du vide. Sous Windows, `taskkill /T` est le seul moyen fiable
+ * d'emporter l'arbre entier.
+ */
+function killTree(child) {
+  return new Promise((resolve) => {
+    if (process.platform === 'win32') {
+      spawn('taskkill', ['/pid', String(child.pid), '/f', '/t'], { stdio: 'ignore' }).on('exit', () =>
+        setTimeout(resolve, 1500)
+      );
+    } else {
+      try {
+        process.kill(-child.pid, 'SIGKILL');
+      } catch {
+        child.kill('SIGKILL');
+      }
+      setTimeout(resolve, 1500);
+    }
+  });
+}
+
 (async () => {
-  console.log(`\n══ Mode hors connexion — ${BASE} ═══════════════════════════════\n`);
+  console.log(
+    `\n══ Mode hors connexion — ${LOCAL ? 'SERVEUR LOCAL (vraie coupure)' : 'PRODUCTION (artefact en cache)'} ══\n`
+  );
+
+  let server = null;
+  if (LOCAL) {
+    console.log(`  … démarrage de next start sur le port ${LOCAL_PORT}`);
+    // ⚠ On lance le binaire Next PAR NODE, jamais via `npx`. Sous Windows,
+    // `spawn` sur un fichier `.cmd` échoue en `EINVAL` depuis Node 20 — le
+    // même piège que pour esbuild dans `scripts/test-journey.js`.
+    server = spawn(
+      process.execPath,
+      [require.resolve('next/dist/bin/next'), 'start', '-p', String(LOCAL_PORT)],
+      { cwd: process.cwd(), stdio: 'ignore', detached: process.platform !== 'win32' }
+    );
+    await waitForPort(LOCAL_PORT);
+    console.log('  … serveur prêt');
+  }
 
   const browser = await chromium.launch({ headless: !HEADED });
   const context = await browser.newContext({
@@ -63,23 +136,23 @@ function ok(label, condition, detail = '') {
   try {
     await page.goto(`${BASE}/fr`, { waitUntil: 'load', timeout: 60000 });
 
-    // -- 1. Le service worker s'installe et prend la main --------------------
+    // ── 1. Le service worker s'installe et prend la main ───────────────────
     const swReady = await page.evaluate(async () => {
       if (!('serviceWorker' in navigator)) return 'unsupported';
       const reg = await navigator.serviceWorker.ready.catch(() => null);
       return reg ? 'ready' : 'none';
     });
     ok('le service worker est enregistré et actif', swReady === 'ready', `obtenu : ${swReady}`);
-
-    // Laisse le temps à `install` de terminer son pré-cache.
     await page.waitForTimeout(2500);
+    ok(
+      'il contrôle bien la page',
+      await page.evaluate(() => Boolean(navigator.serviceWorker.controller))
+    );
 
-    // -- 2. La page de repli est DANS le cache -------------------------------
+    // ── 2. La page de repli est DANS le cache, et UTILISABLE ───────────────
     const cached = await page.evaluate(async () => {
-      const names = await caches.keys();
-      for (const name of names) {
-        const cache = await caches.open(name);
-        const hit = await cache.match('/offline.html');
+      for (const name of await caches.keys()) {
+        const hit = await (await caches.open(name)).match('/offline.html');
         if (hit) {
           return {
             name,
@@ -93,70 +166,86 @@ function ok(label, condition, detail = '') {
           };
         }
       }
-      return { names };
+      return { names: await caches.keys() };
     });
 
     ok(
       'la page de repli est pré-cachée',
       Boolean(cached.status),
-      cached.status ? '' : `caches présents : ${JSON.stringify(cached.names)} — c'est le défaut de la redirection`
+      cached.status ? '' : `caches présents : ${JSON.stringify(cached.names)}`
     );
     if (cached.status) {
-      ok('sous le cache attendu', /laboelallali-v\d+/.test(cached.name), cached.name);
+      ok('sous le cache du worker', /laboelallali-v\d+/.test(cached.name), cached.name);
       ok('avec un statut 200', cached.status === 200, String(cached.status));
       ok('contenant le texte français', (cached.text || '').includes('hors connexion'));
       ok('et le texte arabe', (cached.text || '').includes('غير متصل'));
+      ok('portant le numéro du laboratoire', (cached.text || '').includes('0528843384'));
+      // LE point qui bloquait : une réponse marquée « redirigée » ne peut pas
+      // répondre à une navigation, même présente dans le cache.
+      ok(
+        'PAS marquée « redirigée » — sinon inutilisable pour une navigation',
+        cached.redirected === false,
+        `redirected=${cached.redirected}, url=${cached.url}`
+      );
     }
 
-    if (cached.status) {
-      // Une réponse gardée « redirigée » ne peut pas être renvoyée à une
-      // navigation : Chrome refuse avec « a redirected response was used for a
-      // request whose redirect mode is not follow ». C'est ce que produit
-      // `cache.add('/offline.html')` derrière les URL propres de Firebase.
-      ok('la réponse cachée n’est pas marquée « redirigée »', cached.redirected === false,
-        `redirected=${cached.redirected}, url=${cached.url}`);
-    }
+    // ── 3. La vraie coupure, seulement en mode --local ─────────────────────
+    if (LOCAL) {
+      console.log('  … arrêt du serveur');
+      await killTree(server);
+      server = null;
 
-    // -- 3. LA VRAIE PREUVE : couper le réseau et naviguer -------------------
-    // ⚠ Vers une adresse JAMAIS visitée. Le service worker sert les navigations
-    // en « réseau d'abord, puis cache » : une page déjà vue s'affiche hors
-    // connexion depuis le cache — ce qui est le bon comportement, mais ne teste
-    // pas du tout le repli. Seule une adresse inconnue l'atteint.
-    await context.setOffline(true);
-    let offlineBody = '';
-    let offlineUrl = '';
-    try {
-      await page.goto(`${BASE}/fr/page-jamais-visitee-${Date.now()}`, {
-        waitUntil: 'load',
-        timeout: 30000,
-      });
-      offlineBody = await page.evaluate(() => document.body.innerText || '');
-      offlineUrl = page.url();
-    } catch (err) {
-      offlineBody = `ÉCHEC DE NAVIGATION : ${String(err).slice(0, 300)}`;
-    }
+      const stillUp = await page
+        .evaluate(async (base) => {
+          try {
+            await fetch(`${base}/sonde-${Date.now()}`, { cache: 'no-store' });
+            return true;
+          } catch {
+            return false;
+          }
+        }, BASE)
+        .catch(() => false);
+      ok(
+        'le serveur est réellement tombé',
+        stillUp === false,
+        'sinon la suite ne teste RIEN — c’est le piège de la première version'
+      );
 
-    ok(
-      'réseau coupé : une page utile s’affiche quand même',
-      offlineBody.includes('hors connexion') || offlineBody.includes('غير متصل'),
-      offlineBody.slice(0, 300).replace(/\s+/g, ' ')
-    );
-    ok(
-      'le numéro du laboratoire y figure',
-      offlineBody.includes('05 28 84 33 84') || offlineBody.includes('0528843384'),
-      offlineBody.slice(0, 200).replace(/\s+/g, ' ')
-    );
-    // L'adresse ne doit PAS avoir changé : le repli est servi SOUS l'URL
-    // demandée. Une redirection visible signalerait que le service worker a
-    // laissé passer la requête au lieu d'y répondre.
-    ok(
-      'le repli est servi sous l’adresse demandée',
-      offlineUrl.includes('/fr/page-jamais-visitee-'),
-      offlineUrl
-    );
-    await context.setOffline(false);
+      // ⚠ Vers une adresse JAMAIS visitée. Le worker sert les navigations en
+      // « réseau d'abord, puis cache » : une page déjà vue s'affiche hors
+      // connexion depuis le cache — bon comportement, mais qui ne teste pas le
+      // repli. Seule une adresse inconnue l'atteint.
+      let body = '';
+      try {
+        await page.goto(`${BASE}/fr/page-jamais-visitee-${Date.now()}`, {
+          waitUntil: 'load',
+          timeout: 30000,
+        });
+        body = await page.evaluate(() => document.body.innerText || '');
+      } catch (err) {
+        body = `ÉCHEC DE NAVIGATION : ${String(err).slice(0, 300)}`;
+      }
+
+      ok(
+        'réseau coupé : la page de repli s’affiche',
+        body.includes('hors connexion') || body.includes('غير متصل'),
+        body.slice(0, 300).replace(/\s+/g, ' ')
+      );
+      ok(
+        'avec le numéro du laboratoire',
+        body.includes('05 28 84 33 84') || body.includes('0528843384'),
+        body.slice(0, 200).replace(/\s+/g, ' ')
+      );
+    } else {
+      console.log(
+        '\n  ⚠ Coupure réseau NON testée dans ce mode : ni setOffline ni CDP\n' +
+          '    n’atteignent les requêtes du service worker. Lancer\n' +
+          '    `npm run test:pwa:offline:local` pour l’exercer pour de vrai.'
+      );
+    }
   } finally {
     await browser.close();
+    if (server) await killTree(server);
   }
 
   console.log('\n─────────────────────────────────────────────────────────────────');
