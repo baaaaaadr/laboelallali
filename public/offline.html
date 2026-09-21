@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Hors connexion — Laboratoire El Allali</title>
+    <!--
+      Page de repli hors connexion, servie par le service worker
+      (`src/lib/sw.js`, constante OFFLINE_PAGE) quand une navigation échoue et
+      qu'aucune version en cache n'existe.
+
+      ⚠ ELLE DOIT RESTER ENTIÈREMENT AUTONOME. Elle s'affiche précisément
+      lorsqu'il n'y a pas de réseau : aucune police distante, aucune feuille de
+      style externe, aucun script, aucune image. Le logo est un SVG écrit ici.
+
+      ⚠ Bilingue en dur, les deux langues affichées ensemble. La page est servie
+      par le service worker, hors de React et hors d'i18next : il n'y a aucun
+      moyen de connaître la langue choisie par le patient à ce moment-là.
+
+      Historique : ce fichier N'EXISTAIT PAS. `sw.js` y renvoyait depuis
+      toujours, et l'adresse répondait 307 puis 404 en production (vérifié le
+      21/09/2026). Le repli hors connexion n'a donc jamais fonctionné. De plus
+      le service worker ne pré-chargeait rien : la page est désormais mise en
+      cache dès son installation.
+    -->
+    <style>
+      :root {
+        --bordeaux: #800020;
+        --fuchsia: #ff4081;
+        --bg: #fdf8f9;
+        --text: #2d2d2d;
+        --muted: #6b6b6b;
+        --card: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bordeaux: #ff79a8;
+          --bg: #1a0f12;
+          --text: #f2eaec;
+          --muted: #b9a9ad;
+          --card: #241519;
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.55;
+      }
+      .card {
+        width: 100%;
+        max-width: 420px;
+        background: var(--card);
+        border-radius: 18px;
+        padding: 32px 24px;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+      .logo {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px;
+        display: block;
+      }
+      h1 { font-size: 1.35rem; margin: 0 0 8px; color: var(--bordeaux); }
+      h2 { font-size: 1.15rem; margin: 0 0 8px; color: var(--bordeaux); }
+      p { margin: 0 0 6px; color: var(--muted); font-size: 0.95rem; }
+      .sep {
+        height: 1px;
+        background: currentColor;
+        opacity: 0.12;
+        margin: 24px 0;
+      }
+      .rtl { direction: rtl; }
+      button {
+        margin-top: 24px;
+        width: 100%;
+        min-height: 48px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--bordeaux);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      button:active { filter: brightness(0.92); }
+      .tel {
+        display: inline-block;
+        margin-top: 16px;
+        color: var(--bordeaux);
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Laboratoire El Allali">
+        <rect width="64" height="64" rx="16" fill="#800020" />
+        <text
+          x="32"
+          y="44"
+          text-anchor="middle"
+          font-family="system-ui, sans-serif"
+          font-size="34"
+          font-weight="700"
+          fill="#ffffff"
+        >L</text>
+      </svg>
+
+      <h1>Vous êtes hors connexion</h1>
+      <p>Cette page n’a pas pu être chargée : votre téléphone n’a pas accès à Internet.</p>
+      <p>Vos données sont en sécurité. Reconnectez-vous, puis réessayez.</p>
+
+      <div class="sep"></div>
+
+      <div class="rtl">
+        <h2>أنت غير متصل بالإنترنت</h2>
+        <p>تعذّر تحميل هذه الصفحة: هاتفك غير متصل بالإنترنت.</p>
+        <p>معطياتك في أمان. أعد الاتصال ثم حاول من جديد.</p>
+      </div>
+
+      <button type="button" onclick="location.reload()">Réessayer · إعادة المحاولة</button>
+
+      <!-- ⚠ Numéro RECOPIÉ de `src/constants/contact.ts` (LAB_CONTACT.LANDLINE).
+           Cette page est un fichier statique servi hors de l'application : elle
+           ne peut rien importer. Si le fixe du laboratoire change là-bas, il
+           faut le changer ICI aussi. -->
+      <a class="tel" href="tel:0528843384">Appeler le laboratoire · 05 28 84 33 84</a>
+    </main>
+  </body>
+</html>

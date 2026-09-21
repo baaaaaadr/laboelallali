@@ -1,11 +1,36 @@
 // Service Worker for LaboElAllali PWA
-const CACHE_NAME = 'laboelallali-v4';
+const CACHE_NAME = 'laboelallali-v5';
 const OFFLINE_PAGE = '/offline.html';
 
-// Install event - cache the application shell
+// Install event - pre-cache the offline fallback, then take over immediately.
+//
+// ⚠ Le commentaire disait « cache the application shell », mais RIEN n'était
+// mis en cache : `waitUntil(self.skipWaiting())` ne fait qu'activer le worker.
+// Le repli hors connexion plus bas cherchait donc une page qui n'était jamais
+// arrivée dans le cache — et qui, en plus, n'existait pas sur le serveur
+// (`/offline.html` répondait 307 puis 404 en production, vérifié le
+// 21/09/2026). Le patient sans réseau ne voyait que la page d'erreur du
+// navigateur.
+//
+// ⚠ `cache.add` ÉCHOUE sur une réponse redirigée (`Cache.put` refuse un
+// `response.redirected`). La page doit donc exister en fichier statique à la
+// racine, servie directement par Firebase Hosting — voir `public/offline.html`
+// et l'exclusion correspondante dans `src/middleware.ts`.
+//
+// ⚠ Un échec de pré-cache ne doit JAMAIS empêcher l'installation du worker :
+// sans le `.catch`, une coupure réseau au mauvais moment laisserait la PWA
+// sans service worker du tout.
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...');
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.add(new Request(OFFLINE_PAGE, { cache: 'reload' })))
+      .catch((error) => {
+        console.warn('Service Worker: offline page not pre-cached', error);
+      })
+      .then(() => self.skipWaiting())
+  );
 });
 
 // Activate event - clean up old caches

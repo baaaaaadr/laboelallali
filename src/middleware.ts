@@ -11,8 +11,25 @@ export const config = {
     // Appliquer uniquement aux chemins qui n'incluent PAS déjà une locale supportée,
     // qui ne sont pas des chemins pour des assets statiques ou l'API Next.js,
     // et qui ne ressemblent pas à des chemins de fichiers avec une extension.
-    // Exclure manifest.json car on le gère séparément
-    '/((?!api|_next/static|_next/image|images|assets|favicon.ico|sw.js|locales|manifest.json|(?:[^/]+/)*?[^/]+\.\w+).*)'
+    //
+    // ⚠ LES ANTISLASHS SONT DOUBLÉS, et ce n'est pas cosmétique. Cette chaîne
+    // est une chaîne JavaScript ordinaire : `'\.'` y valait simplement `.` et
+    // `'\w'` valait `w`, car JavaScript supprime un antislash devant un
+    // caractère qui n'est pas une séquence d'échappement connue. Next recevait
+    // donc `[^/]+.w+` — « n'importe quel caractère, suivi de w répété » — au
+    // lieu de « extension de fichier ». L'exclusion des fichiers n'a JAMAIS
+    // fonctionné.
+    //
+    // Conséquence observée en production le 21/09/2026 : `/offline.html`
+    // répondait 307 vers `/ar/offline.html`, puis 404. Les fichiers racine
+    // courants (`robots.txt`, `sitemap.xml`, `manifest.json`, `sw.js`) y
+    // échappaient seulement parce qu'ils EXISTENT et sont servis par le CDN de
+    // Firebase avant d'atteindre le serveur Next.
+    //
+    // `offline.html` est aussi nommé explicitement : il est servi au moment où
+    // le réseau est défaillant, c'est le dernier endroit où l'on veut d'une
+    // redirection de langue.
+    '/((?!api|_next/static|_next/image|images|assets|favicon.ico|sw.js|locales|manifest.json|offline.html|(?:[^/]+/)*?[^/]+\.\w+).*)'
   ],
 };
 
