@@ -19,16 +19,18 @@
  * so the four-tile case only shows up in a production build.
  */
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { FlaskConical, Upload, FileText, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LAB_CONTACT } from '@/constants/contact';
 import { BILANS_ENABLED } from '@/constants/features';
 
-const PWAInstallButton = dynamic<{ variant?: 'button' | 'banner' | 'footer' | 'icon' | 'tile' }>(
-  () => import('@/components/features/pwa/PWAInstallButton'),
-  { ssr: false }
-);
+// ⚠ Import STATIQUE, plus `dynamic(..., { ssr: false })`. L'ancien bouton
+// lisait `window.deferredPrompt` PENDANT le rendu : il ne pouvait pas être
+// rendu côté serveur sans écart d'hydratation, d'où le chargement différé — et
+// un saut de mise en page à chaque arrivée. Son état vient désormais d'un
+// magasin qui répond la même chose au serveur et au premier rendu client
+// (`src/lib/pwa/installStore.ts`), donc le rendu serveur est sûr.
+import PWAInstallButton from '@/components/features/pwa/PWAInstallButton';
 
 export default function HeroShortcuts({ lang }: { lang: string }) {
   const { t } = useTranslation('common');

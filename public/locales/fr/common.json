@@ -627,20 +627,33 @@
   },
   "pwa": {
     "install_app_title": "Installer l'application du Labo",
-    "install_app_title_labo": "Installer l'application du Labo",
     "install_app_button": "Installer l'appli",
-    "install_banner_text": "Installez notre application pour un accès rapide !",
-    "install_popup_title": "Installer l'application du Labo ?",
-    "install_now": "Installer",
-    "install_popup_description": "Obtenez une expérience optimisée et un accès rapide à nos services en installant l'application sur votre appareil.",
-    "install_confirm": "Oui, Installer",
-    "later": "Plus tard",
-    "dismiss_popup_aria": "Fermer ce message",
     "ios_install_prompt_part1": "Pour un accès facile, ajoutez-nous à l'écran d'accueil :",
     "ios_install_prompt_part2": "Appuyez sur",
     "ios_install_prompt_part3": "puis 'Sur l'écran d'accueil'.",
     "ios_share_alt": "l'icône Partager",
-    "dismiss_banner_aria": "Fermer le bandeau d'installation"
+    "dismiss_banner_aria": "Fermer le bandeau d'installation",
+    "help": {
+      "title": "Installer l'application",
+      "inapp_title": "Ouvrez d’abord dans votre navigateur",
+      "intro": "En quelques secondes, le laboratoire s'installe comme une application sur votre téléphone : vos résultats en un seul geste, sans passer par le navigateur.",
+      "dismissed_note": "Vous venez de refuser la proposition d'installation. Rechargez la page pour la revoir, ou suivez les étapes ci-dessous.",
+      "ios_step1": "Appuyez sur l'icône Partager, en bas de l'écran.",
+      "ios_step2": "Faites défiler, puis choisissez « Sur l'écran d'accueil ».",
+      "ios_step3": "Appuyez sur « Ajouter », en haut à droite.",
+      "ios_note": "Sur iPhone, l'installation passe toujours par le menu Partager : c'est une règle d'Apple, aucune application web ne peut le faire à votre place.",
+      "android_step1": "Appuyez sur le menu ⋮, en haut à droite du navigateur.",
+      "android_step2": "Choisissez « Installer l'application » ou « Ajouter à l'écran d'accueil ».",
+      "android_step3": "Confirmez : l'icône du laboratoire apparaît sur votre écran.",
+      "desktop_step1": "Cherchez l'icône d'installation dans la barre d'adresse.",
+      "desktop_step2": "Ou ouvrez le menu ⋮ puis « Installer Laboratoire El Allali ».",
+      "inapp_step1": "Appuyez sur le menu « … » en haut de cette fenêtre.",
+      "inapp_step2": "Choisissez « Ouvrir dans le navigateur » (Chrome ou Safari).",
+      "inapp_step3": "Reprenez l'installation depuis là.",
+      "generic_note": "Le nom exact de l'option change selon le navigateur, mais elle est toujours dans son menu principal.",
+      "got_it": "J'ai compris",
+      "close": "Fermer"
+    }
   },
   "analyses_catalog": {
     "selection": {

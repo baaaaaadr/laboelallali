@@ -12,11 +12,13 @@ import {
   LAB_CONTACT
 } from '@/constants/contact';
 
-// Dynamically import the PWA install button with SSR disabled
-const PWAInstallButton = dynamic(
-  () => import('@/components/features/pwa/PWAInstallButton').then(mod => mod.default),
-  { ssr: false }
-);
+// ⚠ Import STATIQUE, plus `dynamic(..., { ssr: false })`. L'ancien bouton
+// lisait `window.deferredPrompt` PENDANT le rendu : il ne pouvait pas être
+// rendu côté serveur sans écart d'hydratation, d'où le chargement différé — et
+// un saut de mise en page à chaque arrivée. Son état vient désormais d'un
+// magasin qui répond la même chose au serveur et au premier rendu client
+// (`src/lib/pwa/installStore.ts`), donc le rendu serveur est sûr.
+import PWAInstallButton from '@/components/features/pwa/PWAInstallButton';
 
 const ContactModal = dynamic(() => import('@/components/ui/ContactModal'), { ssr: false });
 

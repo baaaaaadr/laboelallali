@@ -1,300 +1,237 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Check, Download, Share } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useInstallState } from '@/hooks/useInstallState';
+import InstallHelpDialog from './InstallHelpDialog';
 
 /**
- * BeforeInstallPromptEvent interface defines the browser event triggered when a PWA can be installed
- * This is the standardized definition that should be used in all PWA-related components
- */
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
-
-// Extend Window interface to include deferredPrompt
-declare global {
-  interface WindowEventMap {
-    beforeinstallprompt: BeforeInstallPromptEvent;
-  }
-  
-  interface Window {
-    deferredPrompt: BeforeInstallPromptEvent | null;
-  }
-}
-
-/**
- * Props for the PWAInstallButton component
+ * Le bouton « Installer l'application », en cinq présentations.
+ *
+ * ### La règle, sans exception
+ * **Un élément visible et cliquable fait toujours quelque chose.** Soit il
+ * lance le dialogue natif d'installation, soit il ouvre la fiche « comment
+ * installer » (`InstallHelpDialog`). Il n'existe aucun troisième cas.
+ *
+ * C'est la correction du défaut signalé par un patient le 21/09/2026 :
+ * « j'appuie ici, il ne se passe rien ». Le bouton du bas de page restait
+ * affiché, d'apparence normale, alors qu'il était devenu incapable d'agir —
+ * voir `src/lib/pwa/installStore.ts` pour les trois mécanismes qui y menaient.
+ *
+ * ### Trois états, décidés par le magasin, jamais par ce composant
+ * | état | bas de page / menu / bandeau | tuile de l'accueil |
+ * |---|---|---|
+ * | `installed`   | rien (le bouton disparaît) | « Application installée », non cliquable |
+ * | `installable` | le vrai bouton d'installation | le vrai bouton |
+ * | `needs_help`  | bouton → fiche d'aide | bouton → fiche d'aide |
+ *
+ * ### Ce qui a disparu, et pourquoi
+ * - **`forceShow` et les gardes `NODE_ENV === 'development'`.** Le bouton
+ *   n'était visible en production qu'après réception de `beforeinstallprompt` :
+ *   donc jamais sur iPhone, où cet événement n'existe pas. `docs/pages/home.md`
+ *   notait d'ailleurs que « le bouton est TOUJOURS visible sous `npm run dev` »
+ *   et qu'il fallait un `npm run build` pour voir le vrai comportement. Il n'y
+ *   a plus aucun écart entre développement et production.
+ * - **`isClientReady`.** Il renvoyait `null` le temps d'un rendu pour éviter un
+ *   écart d'hydratation causé par la lecture de `window.deferredPrompt` PENDANT
+ *   le rendu. L'état vient maintenant du magasin, qui répond `needs_help` au
+ *   serveur comme au premier rendu client : aucun écart possible.
+ * - **`window.deferredPrompt = null` au montage** — la cause du bug. Voir
+ *   l'en-tête de `installStore.ts`.
  */
 type PWAInstallButtonProps = {
-  /** Visual presentation style of the button */
+  /** Présentation visuelle. */
   variant?: 'button' | 'banner' | 'footer' | 'icon' | 'tile';
-  /** Additional CSS classes to apply */
   className?: string;
-  /** Force button to show regardless of installation state (useful for testing) */
-  forceShow?: boolean;
-  /** Additional styling for different contexts */
   style?: React.CSSProperties;
 };
 
-/**
- * PWAInstallButton - The official install button component for the Laboratoire El Allali PWA
- * 
- * This component handles detecting PWA install eligibility and provides various visual
- * presentations through the variant prop. It manages the browser's beforeinstallprompt event
- * and provides appropriate feedback for iOS Safari which handles installation differently.
- */
-export default function PWAInstallButton({ 
-  variant = 'button', 
-  className = '', 
-  forceShow = false,
-  style = {}
+export default function PWAInstallButton({
+  variant = 'button',
+  className = '',
+  style = {},
 }: PWAInstallButtonProps) {
-  const [showButton, setShowButton] = useState(process.env.NODE_ENV === 'development' || forceShow);
-  const [isAppInstalled, setIsAppInstalled] = useState(false);
-  const [isClientReady, setIsClientReady] = useState(false);
-  /** iOS never fires `beforeinstallprompt`; the tile has to say something else. */
-  const [isIOS, setIsIOS] = useState(false);
-  
-  useEffect(() => {
-    setIsClientReady(true);
-  }, []);
-  
   const { t } = useTranslation('common', { useSuspense: false });
-  
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    setIsIOS(isIOS);
-    
-    if (isStandalone || (isIOS && !isSafari)) {
-      setIsAppInstalled(true);
-      setShowButton(false);
-    }
-  }, []);
+  const { state, platform, inAppBrowser, dismissedHere, install } = useInstallState();
+  const [helpOpen, setHelpOpen] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsAppInstalled(true);
-      setShowButton(false);
+  /**
+   * Le geste unique de tous les points d'entrée. Sur `installable` il lance le
+   * dialogue natif ; si celui-ci n'aboutit pas — refus, ou événement déjà
+   * consommé — la fiche d'aide prend le relais immédiatement, plutôt que de
+   * laisser le patient devant un bouton qui n'a rien fait.
+   */
+  const handleClick = async () => {
+    if (state !== 'installable') {
+      setHelpOpen(true);
       return;
     }
-    
-    window.deferredPrompt = null;
-    
-    const handleBeforeInstallPrompt = (e: Event) => {
+    const outcome = await install();
+    if (outcome === 'unavailable' || outcome === 'error') setHelpOpen(true);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      const installEvent = e as unknown as BeforeInstallPromptEvent;
-      window.deferredPrompt = installEvent;
-      setShowButton(true);
-    };
-
-    const handleAppInstalled = () => {
-      setIsAppInstalled(true);
-      setShowButton(false);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  const handleInstallClick = useCallback(async () => {
-    if (!window.deferredPrompt) {
-      if (process.env.NODE_ENV === 'development') {
-        alert('PWA installation prompt not available in development. This button would trigger the PWA installation in production.');
-      }
-      return;
+      void handleClick();
     }
-    
-    try {
-      await window.deferredPrompt.prompt();
-      const choiceResult = await window.deferredPrompt.userChoice;
-      
-      if (choiceResult.outcome === 'accepted') {
-        setIsAppInstalled(true);
-        setShowButton(false);
-      }
-    } catch (error) {
-      console.error('PWA: Error showing install prompt:', error);
-    } finally {
-      window.deferredPrompt = null;
-    }
-  }, []);
+  };
 
-  if (!isClientReady) return null;
-  
-  // The hero tile is the ONE variant that must never vanish: it is the 5th cell
-  // of a 5-column grid, and returning null left a visible hole next to four
-  // filled tiles — which reads as a broken layout, not as "nothing to offer".
-  // It stays, and says something true instead. Every other variant keeps the
-  // old behaviour: a footer or banner with nothing to propose should disappear.
-  if (
-    variant !== 'tile' &&
-    (isAppInstalled || !showButton) &&
-    process.env.NODE_ENV !== 'development' &&
-    !forceShow
-  ) {
-    return null;
-  }
-  
-  const isDisabled = !isClientReady || (!window.deferredPrompt && process.env.NODE_ENV !== 'development' && !forceShow);
-  
-  if (variant === 'banner') {
-    return (
-      <div 
-        className={`fixed bottom-16 sm:bottom-4 right-4 z-[999] bg-[var(--brand-accent)] text-white px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:bg-[var(--brand-accent-hover)] transition-colors ${className}`}
-        style={style}
-      >
-        <button
-          onClick={handleInstallClick}
-          disabled={isDisabled}
-          className={`flex items-center space-x-2 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-          aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
-        >
-          <Download size={18} />
-          <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
-        </button>
-      </div>
-    );
-  }
-  
-  // Icon variant: compact icon-only button (used in the mobile menu's 3-icon action row).
-  // Rendered as a <div role="button"> to bypass the global button background reset.
-  if (variant === 'icon') {
-    return (
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={isDisabled ? undefined : handleInstallClick}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInstallClick(); } }}
-        className={`menu-icon-button ${className} ${isDisabled ? 'opacity-70 cursor-not-allowed pointer-events-none' : ''}`}
-        aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
-        title={isClientReady ? t('pwa.install_app_button') : 'Install App'}
-        style={style}
-      >
-        <Download size={22} className="flex-shrink-0" />
-      </div>
-    );
-  }
+  const label = t('pwa.install_app_button', "Installer l'appli");
 
-  // Tile variant: the 5th shortcut of the home hero grid (see HeroShortcuts).
-  // Uses the shared `.hero-tile*` classes so it is indistinguishable from the four
-  // <a> tiles beside it. <div role="button"> like the footer/icon variants, to
-  // bypass the global `button { background-color: transparent }` reset.
+  const dialog = (
+    <InstallHelpDialog
+      open={helpOpen}
+      onClose={() => setHelpOpen(false)}
+      platform={platform}
+      inAppBrowser={inAppBrowser}
+      dismissedHere={dismissedHere}
+    />
+  );
+
+  // ── La tuile de l'accueil : 5e cellule d'une grille de 5 ───────────────────
+  // Elle ne disparaît JAMAIS — un trou visible à côté de quatre tuiles pleines
+  // se lit comme une mise en page cassée, pas comme « rien à proposer ».
   if (variant === 'tile') {
-    // Three states, one cell. Whatever happens, the grid keeps its five tiles.
-    //   installed  → acknowledge it, quietly (this is the case the lab sees most,
-    //                since the staff all run the installed app)
-    //   installable→ the real install button
-    //   otherwise  → tell the visitor where the command lives in THEIR browser,
-    //                rather than offering a button that cannot do anything
-    const canInstall = !isAppInstalled && !!(typeof window !== 'undefined' && window.deferredPrompt);
-
-    const state = isAppInstalled
-      ? {
-          Icon: Check,
-          label: t('hero_shortcuts.installed_label', 'Application installée'),
-          desc: t('hero_shortcuts.installed_desc', 'Vous y êtes déjà'),
-        }
-      : canInstall
-        ? {
-            Icon: Download,
-            label: t('pwa.install_app_button', "Installer l'appli"),
-            desc: t('hero_shortcuts.install_desc', "Sur votre écran d'accueil"),
-          }
-        : isIOS
-          ? {
-              Icon: Share,
-              label: t('hero_shortcuts.install_ios_label', "Ajouter à l'écran d'accueil"),
-              desc: t('hero_shortcuts.install_ios_desc', 'Menu Partager de votre navigateur'),
-            }
-          : {
-              Icon: Download,
-              label: t('pwa.install_app_button', "Installer l'appli"),
-              desc: t('hero_shortcuts.install_menu_desc', 'Depuis le menu de votre navigateur'),
-            };
-
-    const { Icon } = state;
-
-    // Non-actionable states are plain <div>s: no role="button", no tabIndex, no
-    // handler. A focusable control that does nothing is worse than static text.
-    if (!canInstall) {
+    if (state === 'installed') {
       return (
         <div className={`hero-tile hero-tile--static ${className}`} style={style}>
           <span className="hero-tile__icon">
-            <Icon size={22} aria-hidden="true" />
+            <Check size={22} aria-hidden="true" />
           </span>
-          <span className="hero-tile__label">{state.label}</span>
-          <span className="hero-tile__desc">{state.desc}</span>
+          <span className="hero-tile__label">
+            {t('hero_shortcuts.installed_label', 'Application installée')}
+          </span>
+          <span className="hero-tile__desc">
+            {t('hero_shortcuts.installed_desc', 'Vous y êtes déjà')}
+          </span>
         </div>
       );
     }
 
+    const tileIsIOS = state === 'needs_help' && platform === 'ios';
+    const TileIcon = tileIsIOS ? Share : Download;
+    const tileLabel = tileIsIOS
+      ? t('hero_shortcuts.install_ios_label', "Ajouter à l'écran d'accueil")
+      : label;
+    const tileDesc =
+      state === 'installable'
+        ? t('hero_shortcuts.install_desc', "Sur votre écran d'accueil")
+        : tileIsIOS
+          ? t('hero_shortcuts.install_ios_desc', 'Menu Partager de votre navigateur')
+          : t('hero_shortcuts.install_menu_desc', 'Depuis le menu de votre navigateur');
+
     return (
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={handleInstallClick}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInstallClick(); } }}
-        className={`hero-tile ${className}`}
-        aria-label={state.label}
-        style={style}
-      >
-        <span className="hero-tile__icon">
-          <Icon size={22} aria-hidden="true" />
-        </span>
-        <span className="hero-tile__label">{state.label}</span>
-        <span className="hero-tile__desc">{state.desc}</span>
-      </div>
+      <>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => void handleClick()}
+          onKeyDown={onKeyDown}
+          className={`hero-tile ${className}`}
+          aria-label={tileLabel}
+          style={style}
+        >
+          <span className="hero-tile__icon">
+            <TileIcon size={22} aria-hidden="true" />
+          </span>
+          <span className="hero-tile__label">{tileLabel}</span>
+          <span className="hero-tile__desc">{tileDesc}</span>
+        </div>
+        {dialog}
+      </>
     );
   }
 
-  // Footer variant: rendered as a <div role="button"> to bypass the global `button { background-color: transparent }` reset.
-  // The WhatsApp link is an <a> tag and doesn't suffer from this. Using <div> is the cleanest fix.
-  if (variant === 'footer') {
+  // ── Partout ailleurs : rien à proposer à qui a déjà l'application ─────────
+  if (state === 'installed') return null;
+
+  if (variant === 'icon') {
     return (
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={isDisabled ? undefined : handleInstallClick}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInstallClick(); } }}
-        className={`bg-[var(--brand-primary)] hover:bg-[var(--color-bordeaux-light)] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center space-x-2 transition-colors shadow-sm hover:shadow-md w-full cursor-pointer select-none ${className} ${isDisabled ? 'opacity-70 cursor-not-allowed pointer-events-none' : ''}`}
-        aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
-        style={style}
-      >
-        <Download size={20} className="flex-shrink-0" />
-        <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
-      </div>
+      <>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => void handleClick()}
+          onKeyDown={onKeyDown}
+          className={`menu-icon-button ${className}`}
+          aria-label={label}
+          title={label}
+          style={style}
+        >
+          <Download size={22} className="flex-shrink-0" />
+        </div>
+        {dialog}
+      </>
     );
   }
-  
+
+  // Rendu en <div role="button"> et non en <button> : la remise à zéro globale
+  // de Tailwind v4 force `background-color: transparent` sur les boutons, ce
+  // qui effacerait le fond bordeaux. Le lien WhatsApp voisin est un <a> et n'a
+  // pas le problème. Voir docs/CSS_ARCHITECTURE_GUIDE.md.
+  if (variant === 'footer') {
+    return (
+      <>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => void handleClick()}
+          onKeyDown={onKeyDown}
+          className={`bg-[var(--brand-primary)] hover:bg-[var(--color-bordeaux-light)] text-white px-6 py-3 rounded-lg inline-flex items-center justify-center space-x-2 transition-colors shadow-sm hover:shadow-md w-full cursor-pointer select-none ${className}`}
+          aria-label={label}
+          style={style}
+        >
+          <Download size={20} className="flex-shrink-0" />
+          <span>{label}</span>
+        </div>
+        {dialog}
+      </>
+    );
+  }
+
+  if (variant === 'banner') {
+    return (
+      <>
+        <div
+          className={`fixed bottom-16 sm:bottom-4 right-4 z-[999] bg-[var(--brand-accent)] text-white px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:bg-[var(--brand-accent-hover)] transition-colors ${className}`}
+          style={style}
+        >
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => void handleClick()}
+            onKeyDown={onKeyDown}
+            className="flex items-center space-x-2 cursor-pointer select-none"
+            aria-label={label}
+          >
+            <Download size={18} />
+            <span>{label}</span>
+          </div>
+        </div>
+        {dialog}
+      </>
+    );
+  }
+
   return (
-    <div className={`w-full sm:w-auto ${className}`} style={style}>
-      <button
-        onClick={handleInstallClick}
-        className={`bg-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-bright)] text-white text-base font-semibold px-[1.75rem] py-[0.875rem] min-h-[48px] rounded-lg flex items-center justify-center gap-2 w-full transition-all ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        title={isClientReady ? t('pwa.install_app_title') : 'Install Application'}
-        disabled={isDisabled}
-        aria-label={isClientReady ? t('pwa.install_app_button') : 'Install App'}
-      >
-        <Download size={20} />
-        <span>{isClientReady ? t('pwa.install_app_button') : 'Install App'}</span>
-      </button>
-    </div>
+    <>
+      <div className={`w-full sm:w-auto ${className}`} style={style}>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => void handleClick()}
+          onKeyDown={onKeyDown}
+          className="bg-[var(--color-fuchsia-accent)] hover:bg-[var(--color-fuchsia-bright)] text-white text-base font-semibold px-[1.75rem] py-[0.875rem] min-h-[48px] rounded-lg flex items-center justify-center gap-2 w-full transition-all cursor-pointer select-none"
+          title={t('pwa.install_app_title', "Installer l'application du Labo")}
+          aria-label={label}
+        >
+          <Download size={20} />
+          <span>{label}</span>
+        </div>
+      </div>
+      {dialog}
+    </>
   );
 }

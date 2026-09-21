@@ -15,14 +15,13 @@ import { getLangFromPath, isActivePath } from '@/lib/navigation/isActivePath';
 // Debug version - update this to verify deployment
 const HEADER_VERSION = 'v2.0.2-hydration-fix-2026-05-02';
 
-// Import the PWA install button component with SSR disabled
-const PWAInstallButton = dynamic(
-  () => import('@/components/features/pwa/PWAInstallButton').then(mod => mod.default),
-  {
-    ssr: false,
-    loading: () => <div className="w-full h-3"></div> // Minimal loading placeholder
-  }
-);
+// ⚠ Import STATIQUE, plus `dynamic(..., { ssr: false })`. L'ancien bouton
+// lisait `window.deferredPrompt` PENDANT le rendu : il ne pouvait pas être
+// rendu côté serveur sans écart d'hydratation, d'où le chargement différé — et
+// un saut de mise en page à chaque arrivée. Son état vient désormais d'un
+// magasin qui répond la même chose au serveur et au premier rendu client
+// (`src/lib/pwa/installStore.ts`), donc le rendu serveur est sûr.
+import PWAInstallButton from '@/components/features/pwa/PWAInstallButton';
 
 const UniversalSearchModal = dynamic(
   () => import('@/components/features/search/UniversalSearchModal'),

@@ -1,6 +1,5 @@
 import '@/styles/index.css';
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import i18nConfig, { defaultNS, supportedLngs } from '../../../i18n'; 
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next/initReactI18next';
@@ -179,16 +178,12 @@ export default async function LangLayout({
             <GoogleSignInPrompt />
             <ToastProvider />
             <SplashRemover />
-            <Script id="pwa-init" strategy="afterInteractive">
-              {`
-                // Listen for beforeinstallprompt event
-                window.addEventListener('beforeinstallprompt', (e) => {
-                  e.preventDefault();
-                  // Store the event for later use
-                  window.deferredPrompt = e;
-                });
-              `}
-            </Script>
+            {/* Le script `pwa-init` qui vivait ici a été SUPPRIMÉ (21/09/2026).
+                Posé en `afterInteractive`, il s'exécutait après l'hydratation —
+                donc trop tard pour capter `beforeinstallprompt` — et il
+                écrivait dans une globale que chaque bouton remettait ensuite à
+                zéro. La capture se fait désormais dans le <head> du layout
+                RACINE (`src/app/layout.tsx`), avant tout JavaScript applicatif. */}
           </div>
         </TranslationsProvider>
       </ThemeProvider>

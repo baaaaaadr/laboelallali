@@ -44,6 +44,34 @@ export default function RootLayout({
             On la garde par prudence pour les anciens iOS déjà installés. */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
 
+        {/* ⚠ CAPTURE PRÉCOCE de `beforeinstallprompt` — ne pas déplacer.
+
+            Chrome émet cet événement TRÈS TÔT, souvent avant que React ait
+            monté quoi que ce soit. Un écouteur posé dans un `useEffect` le
+            rate purement et simplement, et plus aucun bouton d'installation ne
+            peut fonctionner de toute la visite.
+
+            La version précédente vivait dans le layout [lang] avec
+            `strategy="afterInteractive"` : next/script l'injectait APRÈS
+            l'hydratation, donc trop tard, et le segment [lang] ne couvre pas
+            les pages d'erreur. Ici, balise inline dans le <head> du layout
+            racine : l'écouteur existe avant le premier octet de JavaScript
+            applicatif.
+
+            L'événement est déposé dans `window.__pwaInstallPrompt`, que lit
+            `src/lib/pwa/installStore.ts`. ⚠ PERSONNE d'autre ne doit écrire
+            cette variable — l'ancien code la remettait à `null` au montage de
+            chaque bouton, ce qui effaçait la capture. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){window.__pwaInstallPrompt=null;" +
+              "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pwaInstallPrompt=e;});" +
+              "window.addEventListener('appinstalled',function(){window.__pwaInstallPrompt=null;});" +
+              "})();",
+          }}
+        />
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         

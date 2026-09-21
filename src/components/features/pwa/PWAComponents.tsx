@@ -3,91 +3,47 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import ServiceWorkerRegistration from './ServiceWorkerRegistration';
+import { detectCurrentPlatform, isRunningStandalone } from '@/lib/pwa/platform';
 
-// Dynamically import PWA components with SSR disabled
-const IOSInstallBanner = dynamic(
-  () => import('@/components/features/pwa/IOSInstallBanner'),
-  { ssr: false }
-);
+const IOSInstallBanner = dynamic(() => import('./IOSInstallBanner'), { ssr: false });
 
-const PWAInstallButton = dynamic(
-  () => import('./PWAInstallButton'),
-  { ssr: false }
-);
-
-// Use a ref to track if we've already set up the PWA components
-let isPWAInitialized = false;
-
+/**
+ * Les deux morceaux de PWA qui vivent en permanence dans la page : l'inscription
+ * du service worker, et le bandeau d'installation iOS.
+ *
+ * ### Trois défauts corrigés ici le 21/09/2026
+ *
+ * 1. **Un verrou de module gelait le composant après un changement de langue.**
+ *    Une variable `isPWAInitialized` déclarée au niveau du MODULE (et non dans
+ *    une `ref`) faisait sortir l'effet immédiatement au second montage. Or le
+ *    sous-arbre `[lang]` est remonté à chaque changement de langue : `isClient`
+ *    restait alors `false`, le composant renvoyait `null`, et le bandeau iOS
+ *    comme `ServiceWorkerRegistration` disparaissaient pour le reste de la
+ *    visite. Le verrou est supprimé ; un effet à dépendances vides suffit.
+ *
+ * 2. **`ServiceWorkerRegistration` était démonté dans l'application installée.**
+ *    Le garde `isStandalone` renvoyait `null` pour tout le composant. C'est
+ *    précisément en mode installé que le service worker compte le plus : il
+ *    contrôle alors chaque requête. Le garde ne concerne plus que le bandeau.
+ *
+ * 3. **Un quatrième écouteur `beforeinstallprompt` vivait ici**, dont le
+ *    résultat (`showInstallButton`) n'était lu nulle part, et qui écrivait dans
+ *    la même globale que les boutons. Supprimé : la capture est faite une seule
+ *    fois, dans le <head> du layout racine, et l'état vit dans
+ *    `src/lib/pwa/installStore.ts`.
+ */
 export default function PWAComponents() {
-  const [isClient, setIsClient] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [showInstallButton, setShowInstallButton] = useState(process.env.NODE_ENV === 'development');
+  const [showIOSBanner, setShowIOSBanner] = useState(false);
 
   useEffect(() => {
-    // Only run on client side and only once
-    if (typeof window === 'undefined' || isPWAInitialized) return;
-    
-    console.log('>>> PWA: Initializing PWA components...');
-    isPWAInitialized = true;
-    setIsClient(true);
-    
-    // Check if iOS
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(iOS);
-    
-    // Check if running in standalone mode
-    const standalone = 
-      window.matchMedia('(display-mode: standalone)').matches || 
-      (window.navigator as any).standalone;
-    
-    setIsStandalone(!!standalone);
-    
-    // Debug info
-    console.log('>>> PWA: Platform detection:', {
-      isIOS: iOS,
-      isStandalone: !!standalone,
-      userAgent: navigator.userAgent,
-      isSecure: window.location.protocol === 'https:' || window.location.hostname === 'localhost',
-      isPWA: (window as any).deferredPrompt !== undefined
-    });
-    
-    // Listen for beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      console.log('>>> PWA: beforeinstallprompt event fired');
-      // Store the event for later use
-      (window as any).deferredPrompt = e;
-      setShowInstallButton(true);
-    };
-    
-    // Check if we already have a deferred prompt
-    if ((window as any).deferredPrompt) {
-      console.log('>>> PWA: Found existing deferred prompt');
-      setShowInstallButton(true);
-    }
-    
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
+    // Le bandeau ne s'adresse qu'à un iPhone/iPad qui n'a pas encore installé.
+    setShowIOSBanner(detectCurrentPlatform() === 'ios' && !isRunningStandalone());
   }, []);
 
-  // Only render PWA components on the client side and if not in standalone mode
-  // However, always render in development mode for testing
-  if ((!isClient || isStandalone) && process.env.NODE_ENV !== 'development') {
-    console.log(`>>> PWA: Not rendering PWA components. isClient: ${isClient}, isStandalone: ${isStandalone}`);
-    return null;
-  }
-
-  console.log('>>> PWA: Rendering PWA components');
-  
   return (
     <>
       <ServiceWorkerRegistration />
-      {isIOS && <IOSInstallBanner />}
-      {/* Le bouton flottant a été supprimé */}
+      {showIOSBanner && <IOSInstallBanner />}
     </>
   );
 }
