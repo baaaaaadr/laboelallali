@@ -69,10 +69,14 @@ This is the main landing page of the Laboratoire El Allali PWA. It serves as the
 - **i18n:** `hero_panel.*` (new) plus `resultats.access_title`, `resultats.checkup_*` reused verbatim.
 #### The 5th shortcut tile never disappears (septembre 2026)
 - `PWAInstallButton variant="tile"` used to `return null` when the app was already installed or the browser offered no install command. In a `lg:grid-cols-5` grid that left **a visible hole beside four filled tiles**, which reads as a broken layout rather than as "nothing to offer". Reported from a screenshot by the owner.
-- The tile now always renders, in one of three states — **installed** (`Check`, "Application installée / Vous y êtes déjà"), **installable** (`Download`, the real install button), **otherwise** (`Share` + the iOS Share-menu wording on iOS, else "Depuis le menu de votre navigateur"). The non-actionable states are plain `<div>`s: no `role="button"`, no `tabIndex`, no handler — a focusable control that does nothing is worse than static text.
-- **Only the `tile` variant changed.** `banner` / `footer` / `icon` / `button` still return null when they have nothing to propose: a footer button with no purpose *should* disappear; a grid cell may not.
+- The tile now always renders, in one of three states — **installed** (`Check`, "Application installée / Vous y êtes déjà"), **installable** (`Download`, the real install button), **`needs_help`** (`Share` + the iOS Share-menu wording on iOS, else "Depuis le menu de votre navigateur").
 - `.hero-tile--static` is a **double-class** selector (`.hero-tile.hero-tile--static`) because `.hero-tile:hover` is a class plus a pseudo-class and would otherwise win on specificity.
-- Note the dev-mode quirk: `showButton` starts `true` in development, so a headless driver sees the "browser menu" state, not the install button.
+
+##### ⚠ Rewritten 21/09/2026 — read `docs/pwa-install.md` before touching any install button
+Two statements above are now **obsolete**, and the reasons matter:
+- **The `needs_help` state is no longer a static `<div>`.** It opens `InstallHelpDialog`, which gives the install steps for *that* browser. A patient reported "j'appuie ici, il ne se passe rien" on the FOOTER button; the rule since is absolute — **a visible, clickable element always does something**. Static text was the least-bad answer only while there was nothing to open.
+- **`footer` / `icon` no longer return null when they have nothing to propose.** That is exactly what hid them on **iPhone**, where `beforeinstallprompt` does not exist: iPhone patients had no install entry point at all outside this tile. They now render in `needs_help` and open the same dialog. Only `installed` hides them.
+- **There is no dev-mode quirk any more.** `showButton`, `forceShow` and every `NODE_ENV` branch are gone; state comes from `src/lib/pwa/installStore.ts`, identical in dev and prod. A headless driver sees the real thing. The three buttons are also plain **static imports** now (no `dynamic(..., { ssr: false })`), so they are server-rendered and no longer shift the layout on arrival.
 
 #### ⚠ The hero blur was silently dead — and how (septembre 2026)
 The owner reported that raising the blur "changed nothing". He was right, for a deeper reason:
