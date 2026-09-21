@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Bon de commande n° 2 — Laboratoire El Allali</title>
+<style>
+  /* ------------------------------------------------------------------
+     Bon de commande complementaire n° 2.
+     Reprend la trame du bon de commande n° 1 du 30/04/2026 (colonnes
+     Article / P.HT / Qte / PT.HT, bloc TOTAL HT - REMISE - Total Net -
+     TVA - TOTAL TTC) pour que le service comptable rapproche les deux
+     documents sans effort.
+     Page 1 : le bon de commande + le rapprochement comptable.
+     Page 2 : l'annexe de justification, ligne par ligne, en jours-homme.
+     Rendu A4 par marketing/scripts/render-bon-commande.js
+     ------------------------------------------------------------------ */
+  @font-face { font-family:"Inter";       src:url("../assets/fonts/inter-latin.woff2") format("woff2"); font-weight:100 900; font-display:block; }
+  @font-face { font-family:"Public Sans"; src:url("../assets/fonts/publicsans-700-latin.woff2") format("woff2"); font-weight:700; font-display:block; }
+
+  :root {
+    --bordeaux:#800020;
+    --encre:#1F1416;
+    --gris:#6B565C;
+    --trait:#2B2124;      /* cadres du formulaire : noir doux, comme l'original */
+    --filet:#B9A9AE;      /* filets interieurs */
+    --pale:#F5EEF0;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:"Inter","Segoe UI",sans-serif;
+    color:var(--encre);
+    background:#E7E2E3;
+    -webkit-font-smoothing:antialiased;
+    font-size:9pt;
+    line-height:1.32;
+  }
+
+  .page {
+    width:210mm; height:296.8mm;
+    padding:11mm 12mm 9mm;
+    background:#FFFFFF;
+    margin:0 auto 6mm;
+    position:relative;
+    display:flex; flex-direction:column;
+  }
+
+  /* ------------------------------------------------------------ en-tete */
+  .entete { display:flex; align-items:flex-start; gap:5mm; margin-bottom:4mm; }
+  .marque { display:flex; align-items:center; gap:2.6mm; width:50mm; flex:none; }
+  .marque svg { width:12mm; height:12mm; flex:none; }
+  .marque .nom { font-family:"Public Sans","Inter",sans-serif; font-weight:700; font-size:7.4pt; line-height:1.25; color:var(--bordeaux); text-transform:uppercase; letter-spacing:.02em; }
+  .marque .nom span { display:block; font-weight:400; font-size:6.4pt; color:var(--gris); text-transform:none; letter-spacing:0; }
+
+  .titre-doc { flex:1; text-align:center; padding-top:1mm; }
+  .titre-doc h1 { font-family:"Public Sans","Inter",sans-serif; font-size:15pt; color:var(--encre); letter-spacing:.01em; }
+  .titre-doc .rang { font-size:7.6pt; color:var(--gris); margin-top:.8mm; }
+
+  /* Cartouche administratif, calque sur celui du bon de commande n° 1 */
+  .cartouche { width:74mm; flex:none; border:1px solid var(--trait); }
+  .cartouche div { display:flex; border-bottom:1px solid var(--trait); }
+  .cartouche div:last-child { border-bottom:0; }
+  .cartouche span { padding:1.2mm 2mm; font-size:7.8pt; }
+  .cartouche .k { flex:1; }
+  .cartouche .v { width:26mm; border-inline-start:1px solid var(--trait); }
+
+  .rappel {
+    border:1px solid var(--trait); border-inline-start:3px solid var(--bordeaux);
+    padding:2mm 2.8mm; font-size:8pt; margin-bottom:3mm; background:var(--pale);
+  }
+  .rappel b { color:var(--bordeaux); }
+
+  /* -------------------------------------------------------------- table */
+  .objet {
+    border:1px solid var(--trait); border-bottom:0;
+    padding:1.8mm 2.8mm; font-size:9.2pt; font-weight:700;
+  }
+  table { width:100%; border-collapse:collapse; }
+  th, td { border:1px solid var(--trait); padding:1.2mm 1.8mm; vertical-align:top; }
+  thead th { font-size:8.2pt; font-weight:700; text-align:center; background:var(--pale); }
+  th.art, td.art { text-align:start; font-size:8.6pt; }
+  td.n { text-align:end; white-space:nowrap; font-variant-numeric:tabular-nums; width:17mm; font-size:8.6pt; }
+  td.q { text-align:center; width:10mm; white-space:nowrap; font-size:8.6pt; }
+  .art b { color:var(--bordeaux); }
+  .art em { font-style:normal; font-weight:700; color:var(--encre); white-space:nowrap; }
+
+  /* --------------------------------------------------------- pied chiffre */
+  .pied { display:flex; margin-top:-1px; }
+  .conditions { flex:1; border:1px solid var(--trait); border-top:0; padding:2.2mm 2.8mm; font-size:8pt; }
+  .conditions p { margin-bottom:1.5mm; }
+  .conditions p:last-child { margin-bottom:0; }
+  .conditions b { color:var(--bordeaux); }
+
+  .totaux { width:76mm; flex:none; }
+  .totaux td { font-size:8.8pt; }
+  .totaux td.lib { text-align:start; }
+  .totaux td.val { text-align:end; width:29mm; font-variant-numeric:tabular-nums; }
+  .totaux tr.net td { font-weight:700; }
+  .totaux tr.ttc td { font-weight:700; font-size:10.2pt; background:var(--pale); color:var(--bordeaux); }
+
+  /* ------------------------------------------------------- rapprochement */
+  h2 {
+    font-family:"Public Sans","Inter",sans-serif; font-size:9.6pt; color:var(--bordeaux);
+    margin:3mm 0 1.6mm; padding-bottom:.8mm; border-bottom:1.4pt solid var(--bordeaux);
+  }
+  table.recap td, table.recap th { font-size:8.4pt; padding:1.2mm 2mm; }
+  table.recap thead th { text-align:end; }
+  table.recap thead th:first-child { text-align:start; }
+  table.recap td.n { width:25mm; }
+  table.recap tr.fort td { font-weight:700; background:var(--pale); }
+  table.recap tr.fort.brand td { color:var(--bordeaux); }
+
+  .signatures { display:flex; gap:4mm; margin-top:3.5mm; }
+  .signatures div { flex:1; border:1px solid var(--trait); height:17mm; padding:1.8mm 2.6mm; font-size:7.8pt; color:var(--gris); }
+
+  .bas { margin-top:auto; padding-top:2mm; font-size:7.2pt; color:var(--gris); text-align:center; }
+  .bas .ident { display:block; margin-bottom:.8mm; }
+
+  /* --------------------------------------------------------- page 2 : annexe */
+  .intro { font-size:8.2pt; color:var(--gris); margin-bottom:2.4mm; }
+  .lots { display:grid; grid-template-columns:1fr 1fr; gap:1.8mm 3.4mm; }
+  .lot { border:1px solid var(--filet); border-inline-start:2.5pt solid var(--bordeaux); padding:1.6mm 2.2mm; break-inside:avoid; }
+  .lot h3 { font-size:8.4pt; color:var(--bordeaux); font-family:"Public Sans","Inter",sans-serif; display:flex; justify-content:space-between; gap:2mm; align-items:baseline; }
+  .lot h3 em { font-style:normal; font-family:"Inter",sans-serif; font-size:7.4pt; color:var(--gris); white-space:nowrap; }
+  .lot ul { margin:.6mm 0 0; padding-inline-start:3.2mm; }
+  .lot li { font-size:7pt; line-height:1.24; margin-bottom:.35mm; }
+
+  .encart { border:1px solid var(--trait); padding:1.8mm 2.4mm; margin-top:2.4mm; font-size:7.4pt; }
+  .encart h3 { font-size:8.6pt; color:var(--bordeaux); font-family:"Public Sans","Inter",sans-serif; margin-bottom:1mm; }
+  .encart ul { padding-inline-start:3.6mm; margin-top:.6mm; }
+  .encart li { margin-bottom:.6mm; line-height:1.3; }
+  .encart .off { color:var(--gris); }
+
+  .bareme { display:grid; grid-template-columns:repeat(4,1fr); gap:2.2mm; margin-top:2.6mm; }
+  .bareme div { border:1px solid var(--filet); padding:1.6mm 2mm; text-align:center; }
+  .bareme b { display:block; font-size:10.5pt; color:var(--bordeaux); font-family:"Public Sans","Inter",sans-serif; }
+  .bareme span { font-size:7pt; color:var(--gris); line-height:1.2; display:block; }
+
+  @page { size:A4; margin:0; }
+  @media print {
+    body { background:#FFFFFF; }
+    .page { margin:0; box-shadow:none; break-after:page; }
+    .page:last-child { break-after:auto; }
+  }
+  @media screen {
+    body { padding:6mm 0; }
+    .page { box-shadow:0 2px 14px rgba(0,0,0,.18); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================================================================ PAGE 1 -->
+<section class="page">
+
+  <div class="entete">
+    <div class="marque">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" role="img" aria-label="Laboratoire El Allali">
+        <path d="M 843.79 1081.074 L 238.106 1081.074 C 107.669 1081.074 0.947 974.353 0.947 843.916 L 0.947 238.106 C 0.947 107.669 107.669 0.948 238.106 0.948 L 843.79 0.948 C 974.227 0.948 1080.948 107.669 1080.948 238.106 L 1080.948 843.916 C 1080.948 974.353 974.227 1081.074 843.79 1081.074" fill="#800020"/>
+        <g fill="#FFFFFF">
+          <path d="M 403.337 888.39 L 331.716 888.39 C 310.978 888.39 294.011 871.423 294.011 850.685 L 294.011 230.915 C 294.011 210.178 310.978 193.211 331.716 193.211 L 403.337 193.211 C 424.075 193.211 441.042 210.178 441.042 230.915 L 441.042 850.685 C 441.042 871.423 424.075 888.39 403.337 888.39"/>
+          <path d="M 331.495 888.326 L 749.916 888.326 C 770.532 888.326 787.4 871.458 787.4 850.842 L 787.4 776.947 C 787.4 756.331 770.532 739.463 749.916 739.463 L 331.495 739.463 C 310.879 739.463 294.011 756.331 294.011 776.947 L 294.011 850.842 C 294.011 871.458 310.879 888.326 331.495 888.326"/>
+        </g>
+      </svg>
+      <p class="nom">Laboratoire EL ALLALI<span>d'Analyse de Biologie Médicale</span></p>
+    </div>
+
+    <div class="titre-doc">
+      <h1>Bon de commande</h1>
+      <p class="rang">N° 2 — complémentaire au bon de commande du 30/04/2026</p>
+    </div>
+
+    <div class="cartouche">
+      <div><span class="k">La date : 07/09/2026</span><span class="v">Visa :</span></div>
+      <div><span class="k">Service : LABO</span></div>
+      <div><span class="k">Fournisseur : THE SWARMERS SARL</span></div>
+    </div>
+  </div>
+
+  <p class="rappel">
+    <b>Objet.</b> Le bon de commande n° 1 du 30/04/2026 couvre la <b>phase 1</b> de l'application
+    (33 jours-homme — 62 700,00 DH HT / 75 240,00 DH TTC). Les prestations ci-dessous, commandées
+    <b>après</b> cette date et validées par écrit par Dr Aziz El Allali au fil du projet, constituent la
+    <b>phase 2</b> et n'ont jamais fait l'objet d'un bon de commande : le présent document les régularise.
+    Barème et remise identiques au n° 1 ; détail des travaux par ligne en annexe, page 2.
+  </p>
+
+  <div class="objet">Titre : Application PWA Médicale Bilingue – Labo EL ALLALI — Phase 2 : espace patient &amp; résultats en ligne</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="art">Article</th>
+        <th>P.HT</th>
+        <th>Qté</th>
+        <th>PT.HT</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="art"><b>Portail Résultats</b> <em>— 3 j/h :</em> liaison sécurisée et signée avec le serveur d'analyses, consultation du PDF par le patient, surveillance du service et alerte en cas de panne.</td>
+        <td class="n">7 500,00</td><td class="q">1</td><td class="n">7 500,00</td>
+      </tr>
+      <tr>
+        <td class="art"><b>Gestion des accès &amp; back-office</b> <em>— 2 j/h :</em> demande d'accès en libre-service, validation par le personnel, espace administrateur à niveaux de droits, rattachement au dossier laboratoire.</td>
+        <td class="n">5 000,00</td><td class="q">1</td><td class="n">5 000,00</td>
+      </tr>
+      <tr>
+        <td class="art"><b>Espace patient sécurisé</b> <em>— 2 j/h :</em> création de compte, connexion par e-mail et par Google, téléphone obligatoire, base de données des comptes, devis PDF réservé aux inscrits.</td>
+        <td class="n">5 000,00</td><td class="q">1</td><td class="n">5 000,00</td>
+      </tr>
+      <tr>
+        <td class="art"><b>Refonte de la page d'accueil</b> <em>— 2 j/h :</em> hub de services, mise en avant des résultats, indicateur Ouvert/Fermé en temps réel, rappel du dernier bilan, menu mobile épuré.</td>
+        <td class="n">5 000,00</td><td class="q">1</td><td class="n">5 000,00</td>
+      </tr>
+      <tr>
+        <td class="art"><b>Tableau de bord &amp; pilotage</b> <em>— 3 j/h :</em> suivi de l'espace patient pour la direction — comptes, accès activés, demandes en attente, graphiques d'évolution, conformité CNDP.</td>
+        <td class="n">7 500,00</td><td class="q">1</td><td class="n">7 500,00</td>
+      </tr>
+      <tr>
+        <td class="art"><b>Boarding Pass numérique</b> <em>— 3 j/h :</em> récapitulatif après le panier — jeûne, tube de prélèvement et délai de rendu calculés analyse par analyse, panier conservé d'une visite à l'autre.</td>
+        <td class="n">7 500,00</td><td class="q">1</td><td class="n">7 500,00</td>
+      </tr>
+      <tr>
+        <td class="art"><b>Moteur de recherche global</b> <em>— 1 j/h :</em> barre unique interrogeant analyses, bilans, médecins et informations pratiques, tolérante aux fautes, en français et en arabe.</td>
+        <td class="n">2 500,00</td><td class="q">1</td><td class="n">2 500,00</td>
+      </tr>
+      <tr>
+        <td class="art"><b>Devis PDF — refonte</b> <em>— 1 j/h :</em> mise en page premium, montants en dirhams, QR code de rendez-vous, coordonnées du patient reprises, prélèvement compté une seule fois.</td>
+        <td class="n">2 500,00</td><td class="q">1</td><td class="n">2 500,00</td>
+      </tr>
+      <tr>
+        <td class="art"><b>Bouton WhatsApp direct</b> <em>— 0,2 j/h :</em> bouton de contact flottant vers le laboratoire, message pré-rempli.</td>
+        <td class="n">500,00</td><td class="q">1</td><td class="n">500,00</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pied">
+    <div class="conditions">
+      <p><b>Conditions de règlement :</b> par acomptes mensuels, comme pour le bon de commande n° 1.</p>
+      <p><b>Mode de règlement :</b> virement bancaire.</p>
+      <p><b>Volume total :</b> 17,2 jours-homme au tarif catalogue de 2 500,00 DH HT le jour, remisé de 24 % — soit un coût effectif de <b>1 900,00 DH HT le jour</b>, strictement identique au bon de commande n° 1.</p>
+      <p><b>État :</b> sept lignes livrées et en production ; deux lignes — Tableau de bord &amp; pilotage et Bouton WhatsApp — commandées et en cours de réalisation.</p>
+    </div>
+    <div class="totaux">
+      <table>
+        <tr><td class="lib">TOTAL HT</td><td class="val">43 000,00</td></tr>
+        <tr><td class="lib">REMISE (24 %)</td><td class="val">10 320,00</td></tr>
+        <tr class="net"><td class="lib">Total Net</td><td class="val">32 680,00</td></tr>
+        <tr><td class="lib">TVA (20 %)</td><td class="val">6 536,00</td></tr>
+        <tr class="ttc"><td class="lib">TOTAL TTC</td><td class="val">39 216,00</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h2>Rapprochement comptable au 07/09/2026</h2>
+  <table class="recap">
+    <thead>
+      <tr><th>Élément</th><th class="n">Montant HT</th><th class="n">Montant TTC</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Bon de commande n° 1 du 30/04/2026 — phase 1 (33 j/h)</td><td class="n">62 700,00</td><td class="n">75 240,00</td></tr>
+      <tr><td>Bon de commande n° 2 — présent document, phase 2 (17,2 j/h)</td><td class="n">32 680,00</td><td class="n">39 216,00</td></tr>
+      <tr class="fort brand"><td>Total engagé (50,2 j/h)</td><td class="n">95 380,00</td><td class="n">114 456,00</td></tr>
+      <tr><td>Déjà facturé — 4 factures : 2026017, 2026020, 2026027, 2026031</td><td class="n">66 666,68</td><td class="n">80 000,00</td></tr>
+      <tr><td>Déjà réglé — 3 virements des 25/05, 08/07 et 31/07/2026</td><td class="n">50 000,01</td><td class="n">60 000,00</td></tr>
+      <tr class="fort"><td>Reste à payer après le présent bon de commande</td><td class="n">45 379,99</td><td class="n">54 456,00</td></tr>
+    </tbody>
+  </table>
+
+  <div class="signatures">
+    <div>Date de validation :</div>
+    <div>Visa / cachet du laboratoire :</div>
+    <div>Le fournisseur — The Swarmers SARL :</div>
+  </div>
+
+  <p class="bas"><span class="ident">Fournisseur : <b>The Swarmers SARL</b> — ICE 001702973000057 — représentée par Hassan El Allali, signataire du bon de commande n° 1 du 30/04/2026.</span>Bon de commande n° 2 — Application PWA Laboratoire El Allali — page 1 / 2</p>
+</section>
+
+<!-- ================================================================ PAGE 2 -->
+<section class="page">
+
+  <div class="entete">
+    <div class="marque">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" role="img" aria-label="Laboratoire El Allali">
+        <path d="M 843.79 1081.074 L 238.106 1081.074 C 107.669 1081.074 0.947 974.353 0.947 843.916 L 0.947 238.106 C 0.947 107.669 107.669 0.948 238.106 0.948 L 843.79 0.948 C 974.227 0.948 1080.948 107.669 1080.948 238.106 L 1080.948 843.916 C 1080.948 974.353 974.227 1081.074 843.79 1081.074" fill="#800020"/>
+        <g fill="#FFFFFF">
+          <path d="M 403.337 888.39 L 331.716 888.39 C 310.978 888.39 294.011 871.423 294.011 850.685 L 294.011 230.915 C 294.011 210.178 310.978 193.211 331.716 193.211 L 403.337 193.211 C 424.075 193.211 441.042 210.178 441.042 230.915 L 441.042 850.685 C 441.042 871.423 424.075 888.39 403.337 888.39"/>
+          <path d="M 331.495 888.326 L 749.916 888.326 C 770.532 888.326 787.4 871.458 787.4 850.842 L 787.4 776.947 C 787.4 756.331 770.532 739.463 749.916 739.463 L 331.495 739.463 C 310.879 739.463 294.011 756.331 294.011 776.947 L 294.011 850.842 C 294.011 871.458 310.879 888.326 331.495 888.326"/>
+        </g>
+      </svg>
+      <p class="nom">Laboratoire EL ALLALI<span>d'Analyse de Biologie Médicale</span></p>
+    </div>
+    <div class="titre-doc">
+      <h1>Annexe — détail des travaux</h1>
+      <p class="rang">Justification ligne par ligne du bon de commande n° 2</p>
+    </div>
+    <div class="cartouche">
+      <div><span class="k">La date : 07/09/2026</span><span class="v">Page 2 / 2</span></div>
+      <div><span class="k">Service : LABO</span></div>
+      <div><span class="k">Fournisseur : THE SWARMERS SARL</span></div>
+    </div>
+  </div>
+
+  <p class="intro">
+    Chaque ligne du bon de commande est détaillée ci-dessous par le travail livré, vérifiable dans l'application en
+    production (www.laboelallali.com) — ou, pour les deux lignes marquées « à livrer », par le contenu commandé et en
+    cours de réalisation. Un jour-homme = une journée complète de conception, de développement, de test et de mise en production.
+  </p>
+
+  <div class="lots">
+
+    <div class="lot">
+      <h3>Portail Résultats <em>3 j/h</em></h3>
+      <ul>
+        <li>Liaison chiffrée et signée à chaque appel (clé, horodatage, jeton unique, signature) avec le serveur d'analyses du laboratoire.</li>
+        <li>Spécification technique rédigée et transmise au prestataire du serveur, puis batterie de tests sur serveur simulé avant mise en production.</li>
+        <li>Écran patient : liste des dossiers, ouverture et téléchargement du PDF, chargement en deux temps pour rester rapide en 3G.</li>
+        <li>Aucun résultat enregistré ni journalisé, conformément au secret médical.</li>
+        <li>Surveillance du serveur toutes les 5 minutes, alerte e-mail au laboratoire en cas de panne et rappel aux patients dès le retour du service.</li>
+      </ul>
+    </div>
+
+    <div class="lot">
+      <h3>Gestion des accès &amp; back-office <em>2 j/h</em></h3>
+      <ul>
+        <li>Le patient demande lui-même l'accès à son dossier depuis l'application, sans passer par l'accueil.</li>
+        <li>Le personnel valide ou refuse en un clic, depuis un espace administrateur dédié.</li>
+        <li>Niveaux de droits : qui consulte, qui valide, qui administre.</li>
+        <li>Rattachement de chaque compte à son numéro de dossier laboratoire, avec traçabilité (qui a validé, quand).</li>
+        <li>Règles de sécurité côté serveur interdisant à un patient d'appeler le dossier d'un autre.</li>
+      </ul>
+    </div>
+
+    <div class="lot">
+      <h3>Espace patient sécurisé <em>2 j/h</em></h3>
+      <ul>
+        <li>Création de compte et connexion par e-mail / mot de passe et par Google, y compris la connexion en un clic.</li>
+        <li>Téléphone obligatoire à l'inscription, profil patient, base de données des comptes.</li>
+        <li>Accès au devis PDF réservé aux inscrits, avec retour automatique à la page d'origine après connexion.</li>
+        <li>Textes d'aide, récupération de mot de passe, alerte e-mail au laboratoire à chaque demande de compte.</li>
+      </ul>
+    </div>
+
+    <div class="lot">
+      <h3>Refonte de la page d'accueil <em>2 j/h</em></h3>
+      <ul>
+        <li>Hub de services et bannière « Consultez vos résultats », Résultats promu en tête du menu.</li>
+        <li>Indicateur Ouvert / Fermé en temps réel avec compte à rebours jusqu'à la prochaine ouverture.</li>
+        <li>Bloc personnalisé : rappel du dernier bilan et accès direct au dernier résultat depuis l'accueil.</li>
+        <li>Raccourcis « faire mon bilan », « envoyer mon ordonnance », « mes résultats », WhatsApp, installation de l'application.</li>
+        <li>Menu mobile épuré, en français et en arabe, mode clair et mode sombre.</li>
+      </ul>
+    </div>
+
+    <div class="lot">
+      <h3>Tableau de bord &amp; pilotage <em>3 j/h · à livrer</em></h3>
+      <ul>
+        <li>Comptes créés, accès activés, demandes en attente, répartition par type de compte.</li>
+        <li>Courbe de croissance mois par mois et entonnoir inscrits → accès activés → utilisateurs réels.</li>
+        <li>Comptes dormants à relancer, suivi des relances et taux de retour.</li>
+        <li>Délai moyen d'activation des accès, avec alerte sur les demandes qui traînent.</li>
+        <li>Mesure d'usage conforme CNDP : dates et compteurs uniquement, jamais un résultat ni un dossier.</li>
+      </ul>
+    </div>
+
+    <div class="lot">
+      <h3>Boarding Pass numérique <em>3 j/h</em></h3>
+      <ul>
+        <li>Récapitulatif automatique après le panier : ce que le patient doit faire avant de venir.</li>
+        <li>Consigne de jeûne, tube de prélèvement et délai de rendu calculés analyse par analyse.</li>
+        <li>Règles croisées entre analyses : la contrainte la plus stricte l'emporte sur l'ensemble du bilan.</li>
+        <li>Panier conservé d'une visite à l'autre sur le téléphone du patient.</li>
+      </ul>
+    </div>
+
+    <div class="lot">
+      <h3>Moteur de recherche global <em>1 j/h</em></h3>
+      <ul>
+        <li>Barre unique interrogeant en même temps analyses, bilans, médecins et informations pratiques.</li>
+        <li>Tolérante aux fautes de frappe et aux accents, en français et en arabe.</li>
+        <li>Accessible depuis toutes les pages de l'application.</li>
+      </ul>
+    </div>
+
+    <div class="lot">
+      <h3>Devis PDF — refonte <em>1 j/h</em></h3>
+      <ul>
+        <li>Mise en page premium : polices agrandies, montants en dirhams, en-tête et coordonnées du laboratoire.</li>
+        <li>QR code renvoyant directement à la prise de rendez-vous.</li>
+        <li>Nom et téléphone du patient repris automatiquement depuis son compte.</li>
+        <li>Frais de prélèvement comptés une seule fois, analyses en double facturées à zéro.</li>
+      </ul>
+    </div>
+
+    <div class="lot">
+      <h3>Bouton WhatsApp direct <em>0,2 j/h · à livrer</em></h3>
+      <ul>
+        <li>Bouton de contact flottant présent sur toutes les pages, message pré-rempli vers la ligne du laboratoire.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="encart">
+    <h3>Prestations livrées au laboratoire sans facturation</h3>
+    <p class="off">Réalisées pendant la même période et volontairement non portées au présent bon de commande :</p>
+    <ul class="off">
+      <li>Logo remis en vectoriel depuis le fichier d'origine et décliné pour l'imprimerie ; icônes de l'application régénérées aux couleurs officielles de la charte.</li>
+      <li>Huit demandes d'août 2026 traitées au titre de la maintenance : compte à rebours d'ouverture, raccourcis d'accueil, onglets du catalogue, réponse « comment récupérer mes résultats », alerte e-mail des demandes de compte, connexion Google mise en avant, textes d'aide, ouverture directe dans l'application installée.</li>
+      <li>Septembre 2026 : adresse de prélèvement à domicile qui n'arrivait pas au laboratoire par e-mail, lien mort figurant dans les devis PDF déjà remis aux patients, connexion Google en un clic, refonte du bloc d'accueil des visiteurs.</li>
+      <li>Deux versions du tableau de bord ont été chiffrées puis écartées d'un commun accord (3 jours-homme, 5 700,00 DH HT) : elles ne sont ni facturées ni portées au présent bon de commande.</li>
+    </ul>
+  </div>
+
+  <div class="bareme">
+    <div><b>17,2</b><span>jours-homme commandés</span></div>
+    <div><b>2 500,00</b><span>DH HT / jour, tarif catalogue</span></div>
+    <div><b>−24 %</b><span>remise, comme au BC n° 1</span></div>
+    <div><b>1 900,00</b><span>DH HT / jour effectif</span></div>
+  </div>
+
+  <p class="bas">Bon de commande n° 2 — Application PWA Laboratoire El Allali — page 2 / 2</p>
+</section>
+
+</body>
+</html>
