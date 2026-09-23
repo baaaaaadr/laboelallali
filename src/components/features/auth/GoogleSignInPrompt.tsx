@@ -89,6 +89,9 @@ const HIDDEN_ROUTES = new Set([
   'admin',
   'resultats',
   'confidentialite',
+  // The doctors' space: only ever reached signed in (the page redirects to
+  // /login otherwise) — a sign-in invitation there is noise, or worse.
+  'mes-patients',
 ]);
 
 /** '/fr/analyses' → 'analyses'; '/fr' → ''. */

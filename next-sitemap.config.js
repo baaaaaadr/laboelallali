@@ -11,6 +11,9 @@ module.exports = {
     '/admin', '/admin/*', '/*/admin', '/*/admin/*',
     '/test-rdv', '/*/test-rdv',
     '/test-rdv2', '/*/test-rdv2',
+    // Espace des medecins prescripteurs : resultats nominatifs derriere un
+    // compte. Rien a faire dans un moteur de recherche.
+    '/mes-patients', '/*/mes-patients',
   ],
   robotsTxtOptions: {
     policies: [
@@ -23,6 +26,7 @@ module.exports = {
           '/admin', '/*/admin',
           '/test-rdv', '/*/test-rdv',
           '/test-rdv2', '/*/test-rdv2',
+          '/mes-patients', '/*/mes-patients',
         ],
       },
     ],
