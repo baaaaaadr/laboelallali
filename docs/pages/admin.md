@@ -156,6 +156,19 @@ The label is the **only nominative third-party datum in the system** — the lab
 
 i18n lives under `admin.link_*` (flat prefix, matching the local `dash_*` / `test_*` / `req_*` convention — **not** a nested `admin.links.*` object), fr **and** ar.
 
+## Doctor access — the Patients tab, third card (23/09/2026)
+
+`PractitionerCard` (`src/components/features/admin/PractitionerCard.tsx`) renders below `LinkedRequestersCard`, for the selected account. It gives the account a prescribing doctor's **Qalam code**, which opens `/[lang]/mes-patients` (see `docs/pages/mes-patients.md`).
+
+- **Presentational only.** The draft (`practDraft`: code, type, label, the two confirmation ticks) and all state live in the page (`practCurrent`, `practCheck`, `practBusy`, `practError`, `practNotice`) — the Tester tab unmounts the Patients block, same lesson as `linkDraft`. Handlers: `checkPractitioner` (dry run), `activatePractitioner`, `removePractitioner`, all → `adminSetPractitioner`. `selectPatient` prefills the draft from `p.practitioner` (returned by the search — no read callable).
+- **Two steps, « Vérifier » then « Activer ».** « Vérifier » is a dry run: the server asks the lab what the code would show — `N bilan(s), P patient(s)`, **never a name** — and lists the other accounts already holding it. **« Activer » unlocks only when that verification matches exactly what is typed** (`check.code === normalizePractitionerId(draft.requester_id)` and same type): editing the code after checking invalidates it. A lab that does not know the code yet, or a code held by another account, each need their own explicit tick. **The locked button always says why** (`pract_need_*`), like the relative-request queue.
+- **Read-only for staff** (`canEdit = isManager`): activating a doctor is an admin decision. The server enforces it (`requireLevel(LEVEL.admin)`).
+- **Removal** is confirmed in-page (never `window.confirm()`), like the relatives card.
+- **Never a real code in the placeholder** (`DRCODE`), same rule as the dossier-id field.
+- The search results show a **« Médecin : CODE »** badge on accounts holding an access, and the search finds an account by its doctor code or displayed name.
+- If the account also has a **pending patient access request** (signup files one automatically), the card says so and suggests refusing it in the Demandes tab when the doctor has no dossier at the lab — the operator decides.
+- i18n under `admin.pract_*` (flat prefix), fr **and** ar. The dashboard card « Accès médecins » (`admin.dash_pract_*`) replaced the old « Types de comptes » chart, whose hint announced this feature.
+
 ## Relative requests — the second queue in the Demandes tab
 
 `RelativeRequestsSection` (`src/components/features/admin/RelativeRequestsSection.tsx`) renders **below** the access-request queue, in the same tab, visually separated. The tab badge counts both.

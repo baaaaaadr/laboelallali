@@ -90,6 +90,15 @@ section("Type et libellé");
     "type inconnu → refusé"
   );
   assert(thrown(() => parsePractitionerInput({ requester_id: "MOUSTZOU", label: "Dr" })) !== null, "libellé trop court → refusé");
+  assert(thrown(() => parsePractitionerInput({ requester_id: "MOUSTZOU" })) !== null, "libellé absent → refusé pour écrire");
+  assert(
+    parsePractitionerInput({ requester_id: "MOUSTZOU" }, false).code === "MOUSTZOU",
+    "…mais accepté pour une simple vérification (dry run)"
+  );
+  assert(
+    thrown(() => parsePractitionerInput({ requester_id: "MOUSTZOU", label: "Dr" }, false)) !== null,
+    "un libellé saisi reste contrôlé même en vérification"
+  );
   assert(
     thrown(() => parsePractitionerInput({ requester_id: "MOUSTZOU", label: "x".repeat(61) })) !== null,
     "libellé de plus de 60 caractères → refusé"

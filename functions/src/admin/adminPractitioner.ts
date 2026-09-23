@@ -158,10 +158,17 @@ export interface PractitionerInput {
 /**
  * Validate and normalise what the admin typed. Throws the French message the
  * admin screen displays as is.
+ *
+ * The label is only required to WRITE: « Vérifier » (a dry run) is about the
+ * code, and must work before the operator has typed a display name.
  * @param {SetPractitionerData} data the callable payload.
+ * @param {boolean} requireLabel false for a dry run.
  * @return {PractitionerInput} canonical code, type and label.
  */
-export function parsePractitionerInput(data: SetPractitionerData): PractitionerInput {
+export function parsePractitionerInput(
+  data: SetPractitionerData,
+  requireLabel = true
+): PractitionerInput {
   const code = normalizePractitionerId(data.requester_id);
   if (!code) throw new HttpsError("invalid-argument", "Code du médecin requis.");
   if (!CODE_RE.test(code)) {
@@ -175,6 +182,7 @@ export function parsePractitionerInput(data: SetPractitionerData): PractitionerI
     throw new HttpsError("invalid-argument", "Type invalide (médecin ou correspondant).");
   }
   const label = String(data.label || "").trim();
+  if (!requireLabel && label === "") return { code, type, label };
   if (label.length < MIN_LABEL || label.length > MAX_LABEL) {
     throw new HttpsError(
       "invalid-argument",
@@ -342,7 +350,7 @@ export const adminSetPractitioner = onCall(
     }
 
     // ── Validation ────────────────────────────────────────────────────────────
-    const { code, type, label } = parsePractitionerInput(data);
+    const { code, type, label } = parsePractitionerInput(data, data.dryRun !== true);
 
     // A code equal to one of the account's PATIENT ids would be shadowed by the
     // patient side (resolveIdentity checks it first): the doctor would open his

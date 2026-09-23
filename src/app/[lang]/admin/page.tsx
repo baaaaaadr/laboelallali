@@ -34,7 +34,13 @@ import RelativeRequestsSection, {
   type RelativeInputs,
   type RelativeRequest,
 } from '@/components/features/admin/RelativeRequestsSection';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, ArrowLeft, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList } from 'lucide-react';
+import PractitionerCard, {
+  type PractitionerCheck,
+  type PractitionerDraft,
+  type PractitionerDTO,
+} from '@/components/features/admin/PractitionerCard';
+import { normalizePractitionerId } from '@/lib/results/identities';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, ArrowLeft, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList, Stethoscope } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
@@ -125,7 +131,28 @@ interface SearchResult {
   /** Relatives' dossiers attached to this account — returned by the search. */
   links?: LinkRow[];
   linkedCount?: number;
+  /** The doctor access (« Mes patients »), when the account has one. */
+  practitioner?: PractitionerDTO | null;
 }
+
+/** What `adminSetPractitioner` answers (dry run or real write). */
+interface PractitionerResponse {
+  ok: boolean;
+  dryRun: boolean;
+  practitioner: PractitionerDTO | null;
+  probe?: PractitionerCheck['probe'];
+  sharedWith?: PractitionerCheck['sharedWith'];
+  pendingAccessRequest?: boolean;
+  notified?: boolean;
+}
+
+const EMPTY_PRACT_DRAFT: PractitionerDraft = {
+  requester_id: '',
+  type: 'medecin',
+  label: '',
+  allowUnknown: false,
+  allowShared: false,
+};
 interface SetResult { success: boolean; uid: string; fullName: string; requester_id: string; type: string; }
 interface Member { uid: string; email: string; fullName: string; role: string; }
 interface ListResult { members: Member[]; callerLevel: number; }
@@ -224,6 +251,15 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   // brought the operator back before: the tab bar is not sticky, so after the
   // test results they had to scroll to the top to find it again.
   const [testOrigin, setTestOrigin] = useState<AdminTab | null>(null);
+
+  // Doctor access (« Mes patients ») of the selected account. The draft lives in
+  // the PAGE for the same reason as `linkDraft`: the Tester tab unmounts the card.
+  const [practCurrent, setPractCurrent] = useState<PractitionerDTO | null>(null);
+  const [practDraft, setPractDraft] = useState<PractitionerDraft>(EMPTY_PRACT_DRAFT);
+  const [practCheck, setPractCheck] = useState<PractitionerCheck | null>(null);
+  const [practBusy, setPractBusy] = useState<'check' | 'activate' | 'remove' | null>(null);
+  const [practError, setPractError] = useState<string | null>(null);
+  const [practNotice, setPractNotice] = useState<string | null>(null);
 
   // Patient-initiated requests for a relative's dossier (Demandes tab).
   const [relReqs, setRelReqs] = useState<RelativeRequest[]>([]);
@@ -688,6 +724,110 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     // (the user document was read anyway). Add/remove return the fresh list too,
     // so this screen never needs a dedicated read callable.
     setLinkRows(p.links ?? []);
+    // Doctor access: same principle — the search already returned it.
+    setPractCurrent(p.practitioner ?? null);
+    setPractDraft({
+      ...EMPTY_PRACT_DRAFT,
+      requester_id: p.practitioner?.requester_id ?? '',
+      type: p.practitioner?.type === 'correspondant' ? 'correspondant' : 'medecin',
+      label: p.practitioner?.label ?? '',
+    });
+    setPractCheck(null);
+    setPractError(null);
+    setPractNotice(null);
+  };
+
+  // ── Doctor access (« Mes patients ») — adminSetPractitioner, admin level ────
+  // « Vérifier » = a dry run: the server asks the lab what the code would show
+  // (counts only) and who else holds it. Nothing is written.
+  const checkPractitioner = async () => {
+    if (!selected?.uid) return;
+    const code = normalizePractitionerId(practDraft.requester_id);
+    if (!code) return;
+    setPractBusy('check');
+    setPractError(null);
+    setPractNotice(null);
+    try {
+      const res = await callFn<PractitionerResponse>('adminSetPractitioner', {
+        uid: selected.uid,
+        requester_id: code,
+        type: practDraft.type,
+        label: practDraft.label.trim(),
+        dryRun: true,
+      });
+      setPractCheck({
+        code,
+        type: practDraft.type,
+        probe: res.probe ?? { status: 'error', dossierCount: 0, patientCount: 0 },
+        sharedWith: res.sharedWith ?? [],
+        pendingAccessRequest: res.pendingAccessRequest === true,
+      });
+      // A fresh verification asks for fresh confirmations.
+      setPractDraft((d) => ({ ...d, allowUnknown: false, allowShared: false }));
+    } catch (err: unknown) {
+      setPractError(errMsg(err));
+    } finally {
+      setPractBusy(null);
+    }
+  };
+
+  const activatePractitioner = async () => {
+    if (!selected?.uid) return;
+    setPractBusy('activate');
+    setPractError(null);
+    setPractNotice(null);
+    const wasSameCode = practCurrent?.requester_id === normalizePractitionerId(practDraft.requester_id);
+    try {
+      const res = await callFn<PractitionerResponse>('adminSetPractitioner', {
+        uid: selected.uid,
+        requester_id: normalizePractitionerId(practDraft.requester_id),
+        type: practDraft.type,
+        label: practDraft.label.trim(),
+        allowUnknown: practDraft.allowUnknown,
+        allowShared: practDraft.allowShared,
+      });
+      setPractCurrent(res.practitioner);
+      // Keep the search list in sync, so re-selecting the account shows it.
+      const patch = (r: SearchResult) =>
+        r.uid === selected.uid ? { ...r, practitioner: res.practitioner } : r;
+      setResults((prev) => prev.map(patch));
+      setSelected((prev) => (prev ? patch(prev) : prev));
+      setPractCheck(null);
+      setPractNotice(
+        wasSameCode
+          ? t('admin.pract_updated', 'Accès médecin mis à jour.')
+          : res.notified
+            ? t('admin.pract_activated_notified', 'Accès médecin activé. Le médecin a été prévenu par e-mail.')
+            : t(
+                'admin.pract_activated_no_email',
+                "Accès médecin activé. Ce compte n'a pas d'e-mail : prévenez le médecin vous-même."
+              )
+      );
+    } catch (err: unknown) {
+      setPractError(errMsg(err));
+    } finally {
+      setPractBusy(null);
+    }
+  };
+
+  const removePractitioner = async () => {
+    if (!selected?.uid) return;
+    setPractBusy('remove');
+    setPractError(null);
+    setPractNotice(null);
+    try {
+      await callFn<PractitionerResponse>('adminSetPractitioner', { uid: selected.uid, clear: true });
+      setPractCurrent(null);
+      const patch = (r: SearchResult) => (r.uid === selected.uid ? { ...r, practitioner: null } : r);
+      setResults((prev) => prev.map(patch));
+      setSelected((prev) => (prev ? patch(prev) : prev));
+      setPractCheck(null);
+      setPractNotice(t('admin.pract_removed', 'Accès médecin retiré.'));
+    } catch (err: unknown) {
+      setPractError(errMsg(err));
+    } finally {
+      setPractBusy(null);
+    }
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -1143,6 +1283,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                               {t('admin.requester_id_label', 'Identifiant patient (requester_id)')} : {r.requester_id}
                             </span>
                           )}
+                          {r.practitioner && (
+                            <span className="inline-flex items-center gap-1 mt-2 ms-2 text-xs font-semibold px-2 py-0.5 rounded-lg bg-[var(--color-bordeaux-primary)]/10 text-[var(--color-bordeaux-primary)]">
+                              <Stethoscope size={12} />
+                              {t('admin.pract_badge', 'Médecin')} : <span dir="ltr">{r.practitioner.requester_id}</span>
+                            </span>
+                          )}
                           {!r.hasProfile && (
                             <p className="text-sm text-[var(--status-error)] mt-1">
                               {t('admin.no_profile_warning', "Ce compte existe mais le profil n'est pas encore complété.")}
@@ -1264,6 +1410,20 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 onAdd={addLink}
                 onRemove={removeLink}
                 onTest={testFromLink}
+                fmtDate={fmtWhen}
+              />
+              <PractitionerCard
+                current={practCurrent}
+                canEdit={isManager}
+                draft={practDraft}
+                onDraft={(patch) => setPractDraft((prev) => ({ ...prev, ...patch }))}
+                check={practCheck}
+                busy={practBusy}
+                error={practError}
+                notice={practNotice}
+                onCheck={checkPractitioner}
+                onActivate={activatePractitioner}
+                onRemove={removePractitioner}
                 fmtDate={fmtWhen}
               />
               </>

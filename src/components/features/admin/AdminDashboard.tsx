@@ -55,6 +55,11 @@ export interface DashboardStats {
   team: { uid: string; name: string; count: number }[];
   weekly: { label: string; consultations: number }[];
   shares: { month: number; signups: number };
+  /**
+   * Doctor access (« Mes patients »), counted apart from the patients. Optional:
+   * absent from a payload served by a function deployed before 23/09/2026.
+   */
+  practitioners?: { accounts: number; active: number; consultations30d: number };
   latestCreated: DashAccount[];
   latestActive: DashAccount[];
   truncated: boolean;
@@ -337,20 +342,37 @@ export default function AdminDashboard({
           />
         </ChartCard>
 
+        {/* Replaces the old « Types de comptes » chart, whose hint announced
+            exactly this: doctors now have their own access (« Mes patients »),
+            kept apart from the patient identities — so an own-identity type
+            of médecin/correspondant no longer means anything to track. */}
         <ChartCard
-          title={t('admin.dash_types_title', 'Types de comptes')}
-          subtitle={t('admin.dash_types_sub', 'Patients, médecins et correspondants')}
-          hint={t('admin.dash_types_hint', "Discret aujourd'hui, mais essentiel le jour où l'on voudra développer l'accès pour les médecins prescripteurs.")}
+          title={t('admin.dash_pract_title', 'Accès médecins')}
+          subtitle={t('admin.dash_pract_sub', 'Médecins prescripteurs qui consultent leurs patients dans l’application')}
+          hint={t(
+            'admin.dash_pract_hint',
+            'Un compte médecin sans dossier personnel n’entre ni dans les chiffres patients ni dans les relances.'
+          )}
         >
-          <HBars
-            rows={[
-              { label: t('admin.type_patient', 'Patient'), value: dash.totals.byType.patient || 0, display: String(dash.totals.byType.patient || 0) },
-              { label: t('admin.type_medecin', 'Médecin'), value: dash.totals.byType.medecin || 0, display: String(dash.totals.byType.medecin || 0) },
-              { label: t('admin.type_correspondant', 'Correspondant'), value: dash.totals.byType.correspondant || 0, display: String(dash.totals.byType.correspondant || 0) },
-            ]}
-            ariaLabel={t('admin.dash_types_title', 'Types de comptes')}
-            emptyLabel={collecting}
-          />
+          {dash.practitioners && dash.practitioners.accounts > 0 ? (
+            <>
+              <StatBig
+                value={String(dash.practitioners.accounts)}
+                caption={t('admin.dash_pract_caption', {
+                  n: dash.practitioners.active,
+                  defaultValue: 'accès médecin — {{n}} utilisés ces 30 derniers jours',
+                })}
+              />
+              <p className="text-sm text-[var(--text-secondary)] mt-3">
+                {t('admin.dash_pract_consult', {
+                  n: dash.practitioners.consultations30d,
+                  defaultValue: '{{n}} consultations de « Mes patients » sur 30 jours',
+                })}
+              </p>
+            </>
+          ) : (
+            <StatBig value="0" caption={t('admin.dash_pract_none', 'Aucun médecin activé pour le moment.')} />
+          )}
         </ChartCard>
       </div>
 
