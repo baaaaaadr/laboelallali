@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail, Activity, BellRing, Users } from 'lucide-react';
+import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail, Activity, BellRing, Users, Stethoscope } from 'lucide-react';
 
 export default function ConfidentialitePage() {
   const { t } = useTranslation('common');
@@ -24,6 +24,12 @@ export default function ConfidentialitePage() {
     // AND a new disclosure of medical data to a third party. Under loi 09-08 that
     // is declarable, and it must be stated here, not only in the admin screen.
     { icon: Users, title: 'confidentialite.relatives_title', text: 'confidentialite.relatives_text' },
+    // Declares the prescribing doctor's access (« Mes patients », 23/09/2026):
+    // a third party reading patients' results — only the reports HE prescribed,
+    // a rule enforced by the lab server. Same reasoning as the relatives card.
+    // ⚠ The wording is a DRAFT until Aziz validates it; no doctor is activated
+    // before that. See docs/pages/confidentialite.md.
+    { icon: Stethoscope, title: 'confidentialite.practitioner_title', text: 'confidentialite.practitioner_text' },
   ];
   const rights = [
     'confidentialite.rights_access',

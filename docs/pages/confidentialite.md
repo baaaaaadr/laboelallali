@@ -10,7 +10,7 @@ Public privacy policy page (Moroccan loi 09-08 / CNDP). Explains what personal d
 ## Context & Key Components
 - No state, no auth, no data fetching. Renders content entirely from i18n.
 - `useTranslation('common')`; all copy under `confidentialite.*` in `public/locales/{fr,ar}/common.json`.
-- Structure: intro, `sections` cards (collect / results location / profile location / **usage tracking**), a rights list (5 items), then `afterRights` cards (security / retention / **outage waitlist** / contact). Icons from lucide-react (`ShieldCheck`, `FileText`, `Server`, `UserCog`, `Scale`, `Lock`, `Clock`, `Mail`, `Activity`, `BellRing`).
+- Structure: intro, `sections` cards (collect / results location / profile location / **usage tracking** / **relatives** / **prescribing doctors**), a rights list (5 items), then `afterRights` cards (security / retention / **outage waitlist** / contact). Icons from lucide-react (`ShieldCheck`, `FileText`, `Server`, `UserCog`, `Scale`, `Lock`, `Clock`, `Mail`, `Activity`, `BellRing`, `Users`, `Stethoscope`).
 - **Outage waitlist card** (`confidentialite.outage_waitlist_*`, `BellRing` icon): declares the opt-in "notify me when the results server is back" processing — an email kept temporarily, only if the patient asks, deleted right after the recovery message. New PII processing → must stay declared here. See `src/components/features/results/OutageOptIn.tsx` + `docs/integrations/server-monitoring.md`.
 - Styling: `.card`, bordeaux heading, CSS vars.
 
@@ -36,3 +36,20 @@ Le patient peut désormais **demander** lui-même le rattachement d'un proche de
 
 - la demande enregistre le **nom et la date de naissance du proche**, fournis par le demandeur — une donnée personnelle de tiers de plus, en amont du libellé ;
 - le motif de l'octroi (**titulaire présent / autorisation écrite / autorité parentale**) est conservé. C'est une donnée de preuve, pas une donnée de santé, et c'est ce qui permet au laboratoire de répondre « sur quelle base ? » en cas de contestation.
+
+## Section « Accès des médecins prescripteurs » (23/09/2026)
+
+Ajoutée avec l'espace « Mes patients » (voir `docs/pages/mes-patients.md`). Carte `Stethoscope` dans `sections`, juste après celle des proches. Clés : `confidentialite.practitioner_title` / `practitioner_text`, fr **et** ar.
+
+**Pourquoi elle ne peut pas être omise.** C'est une **nouvelle divulgation de données médicales à un tiers** — le médecin prescripteur lit, dans l'application, les résultats de ses patients, avec leur nom et prénom (renvoyés par le serveur du laboratoire pour ce type d'accès). Sous la loi 09-08, cela se déclare, au même titre que l'accès d'un proche.
+
+Le texte affirme, dans cet ordre, et chaque affirmation doit rester vraie :
+1. **seul le médecin prescripteur**, et **seulement les analyses qu'il a lui-même prescrites** — règle tenue par le **serveur du laboratoire** (un dossier prescrit par un confrère répond 404, vérifié le 23/09/2026), pas par l'application ;
+2. il ne voit ni les autres bilans du patient, ni son compte, ni ses proches ;
+3. c'est le prolongement de l'envoi habituel des résultats au prescripteur ;
+4. l'accès est **accordé nominativement par le laboratoire**, **après engagement écrit du médecin**, et **retirable à tout moment** (carte « Accès médecin » de `/admin`, niveau admin) ;
+5. les résultats ne sont **jamais conservés** dans l'application (lus à la demande).
+
+⚠ **BROUILLON — à faire valider par Aziz avant d'activer le premier vrai médecin.** En particulier « **après engagement écrit du médecin** » n'est vrai que si le laboratoire fait réellement signer un engagement : c'est une étape de `docs/procedures/activation-medecin.md` (modèle fourni). Si le laboratoire ne le fait pas, **retirer ces mots** du texte fr ET ar — ne jamais laisser une promesse que la pratique ne tient pas.
+
+**Télémétrie du médecin :** l'application enregistre, sur le compte du médecin, la date de sa dernière consultation (`practitioner.lastUsedAt`, au plus une fois toutes les 6 h) et un compteur global **anonyme** (`usageDaily.practitionerConsultations`) — jamais quel patient il a ouvert. C'est de même nature que ce que déclare la carte « Suivi d'utilisation » (`usage_*`), dont le texte couvre ce cas sans modification.

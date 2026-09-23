@@ -13,7 +13,8 @@
  *  F. `firestore.rules` : « practitioner » dans les DEUX listes verrouillées ;
  *  G. chaque texte de l'espace médecin existe en français ET en arabe — la
  *     doublure de traduction du banc navigateur retombe sur le texte français,
- *     elle ne peut donc pas voir une clé arabe manquante.
+ *     elle ne peut donc pas voir une clé arabe manquante ;
+ *  H. la page de confidentialité déclare l'accès des médecins (fr et ar).
  */
 import fs from 'fs';
 import path from 'path';
@@ -241,6 +242,27 @@ section('G — chaque texte de l’espace médecin existe en français ET en ara
     }
   }
   ok('aucune clé manquante (fr et ar, six formes plurielles en arabe)', missing.length === 0, missing.slice(0, 12).join(', '));
+}
+
+// ── H. La déclaration de confidentialité ────────────────────────────────────
+// La page cite ses clés dans un tableau (`t(s.title)`), hors de portée du
+// relevé de G : on vérifie donc la carte et ses deux textes directement.
+section('H — la page de confidentialité déclare l’accès des médecins (fr et ar)');
+{
+  type Dict = Record<string, unknown>;
+  const page = fs.readFileSync(path.join(ROOT, 'src', 'app', '[lang]', 'confidentialite', 'page.tsx'), 'utf8');
+  ok(
+    'la carte « Accès des médecins prescripteurs » est montée',
+    page.includes("'confidentialite.practitioner_title'") && page.includes("'confidentialite.practitioner_text'")
+  );
+  for (const lang of ['fr', 'ar']) {
+    const all = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'locales', lang, 'common.json'), 'utf8')) as Dict;
+    const c = (all.confidentialite ?? {}) as Dict;
+    ok(
+      `${lang} : titre et texte présents`,
+      typeof c.practitioner_title === 'string' && typeof c.practitioner_text === 'string' && c.practitioner_text.length > 200
+    );
+  }
 }
 
 console.log('\n─────────────────────────────────────────────────────────────────');
