@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, getClientAuth } from '@/config/firebase';
@@ -72,10 +72,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Who owns the session right now — read after an await, to drop a stale answer.
+  const sessionUidRef = useRef<string | null>(null);
+
+  /**
+   * Re-read the profile, e.g. after the lab activated an access while the page
+   * was open (the doctor's « Vérifier à nouveau »). The profile is a one-shot
+   * read, not a live listener, so this is the only way such a change shows up
+   * without a reload.
+   *
+   * ⚠ Two guards (23/09/2026):
+   *  - a TRANSIENT read error keeps the current profile. Replacing it with null
+   *    (what `fetchProfile` returns on error) made every consumer believe the
+   *    account had no profile at all — the profile-completion form, the
+   *    activation card — because of one flaky request;
+   *  - an answer that lands after the session changed (shared family phone,
+   *    One Tap sign-in in place) is dropped instead of writing account A's
+   *    profile into account B's session.
+   */
   const refreshProfile = async () => {
-    if (user) {
-      const profile = await fetchProfile(user.uid);
-      setUserProfile(profile);
+    if (!user || !db) return;
+    const uid = user.uid;
+    try {
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (sessionUidRef.current !== uid) return;
+      setUserProfile(snap.exists() ? (snap.data() as UserProfile) : null);
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
     }
   };
 
@@ -90,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+        sessionUidRef.current = currentUser?.uid ?? null;
         setUser(currentUser);
         if (currentUser) {
           const profile = await fetchProfile(currentUser.uid);

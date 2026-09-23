@@ -44,7 +44,8 @@ import React, {
 import { httpsCallable } from 'firebase/functions';
 import { getClientFunctions } from '@/config/firebase';
 import { useAuth } from './AuthContext';
-import { primaryIdentity } from '@/lib/results/identities';
+import { primaryIdentity, resolveIdentities } from '@/lib/results/identities';
+import { newestOf } from '@/lib/results/dossiers';
 import type {
   CyberlabResult,
   CyberlabResponse,
@@ -96,7 +97,7 @@ const bucketKey = (uid: string, requesterId: string): BucketKey => `${uid}::${re
 const pdfKey = (requesterId: string, dossierId: string): string => `${requesterId}::${dossierId}`;
 
 /** What both hooks expose. Identical to the pre-multi-identity contract. */
-interface ResultsView {
+export interface ResultsView {
   results: CyberlabResult[];
   status: ResultsStatus;
   /**
@@ -137,11 +138,6 @@ const ResultsContext = createContext<ResultsContextValue>({
   ensureLoadedFor: () => {},
   refreshFor: () => {},
 });
-
-function newestOf(list: CyberlabResult[]): string | null {
-  if (!list.length) return null;
-  return list.reduce((m, x) => (!m || x.date_dossier > m.date_dossier ? x : m), list[0]).dossier_id;
-}
 
 /**
  * Turn the raw context into the stable per-identity view both hooks return.
@@ -219,6 +215,27 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
   const primaryRequesterId = useMemo(
     () => primaryIdentity(userProfile, '')?.requester_id ?? null,
     [userProfile]
+  );
+
+  // The account's PATIENT-side identities (own dossier + relatives): the only
+  // ones whose newest PDF is auto-loaded after the list. A doctor's roster
+  // (« Mes patients ») must NOT be: the newest dossier of a whole roster is some
+  // patient the doctor did not ask to open — ~2.5 s and ~260 KB of someone's
+  // medical record, fetched for nothing (measured 23/09/2026). The doctor's page
+  // loads a patient's PDF when he opens that patient.
+  //
+  // Derived synchronously from the profile, so every path that loads a list —
+  // the login prefetch, the page's ensureLoaded, the background retry, the
+  // « Actualiser » button — applies the same rule without a per-call option
+  // that could race. The string key keeps `load` stable when a profile refresh
+  // returns the same identities.
+  const autoPdfKey = useMemo(
+    () => resolveIdentities(userProfile, '').map((i) => i.requester_id).join('\n'),
+    [userProfile]
+  );
+  const autoPdfIds = useMemo(
+    () => new Set(autoPdfKey ? autoPdfKey.split('\n') : []),
+    [autoPdfKey]
   );
 
   // Buckets that reached a DEFINITIVE answer (ready / empty / unknown_id).
@@ -396,9 +413,10 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
           lastUpdated: Date.now(),
         });
 
-        // Phase 2 — auto-load the most recent dossier's PDF in the background.
+        // Phase 2 — auto-load the most recent dossier's PDF in the background,
+        // for the account's own / relatives' dossiers only (see `autoPdfIds`).
         const newest = newestOf(list);
-        if (newest) void loadPdfFor(requesterId, newest);
+        if (newest && autoPdfIds.has(requesterId)) void loadPdfFor(requesterId, newest);
       } catch (err: unknown) {
         const code = ((err as { code?: string })?.code || '').replace('functions/', '');
         if (currentUidRef.current !== uidAtCall) return;
@@ -456,7 +474,17 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
         if (currentUidRef.current === uidAtCall) loadingRef.current.delete(key);
       }
     },
-    [user, callFetch, argsFor, loadPdfFor, patchBucket, primaryRequesterId, resetPdfsFor, resolve]
+    [
+      user,
+      callFetch,
+      argsFor,
+      autoPdfIds,
+      loadPdfFor,
+      patchBucket,
+      primaryRequesterId,
+      resetPdfsFor,
+      resolve,
+    ]
   );
 
   // Reset everything on login / logout / account switch.

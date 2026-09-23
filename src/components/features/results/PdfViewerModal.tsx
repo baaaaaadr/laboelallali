@@ -78,10 +78,29 @@ export interface PdfViewerModalProps {
   /** Shown in the header, interpolated into `resultats.viewer_title`. */
   dossierId: string;
   onClose: () => void;
+  /**
+   * Overrides for the doctor's « Mes patients » page. The defaults speak in the
+   * PATIENT's voice (« Mon résultat… ») and must not travel with a doctor's share.
+   * The file name deliberately never carries a patient's name: it ends up in
+   * download folders and chat previews.
+   */
+  title?: string;
+  shareTitle?: string;
+  shareText?: string;
+  fileName?: string;
 }
 
-export default function PdfViewerModal({ base64, dossierId, onClose }: PdfViewerModalProps) {
+export default function PdfViewerModal({
+  base64,
+  dossierId,
+  onClose,
+  title,
+  shareTitle,
+  shareText,
+  fileName,
+}: PdfViewerModalProps) {
   const { t } = useTranslation('common');
+  const pdfName = fileName || `resultat-${dossierId}.pdf`;
 
   const [url, setUrl] = useState<string | null>(null);
   const [pdfPages, setPdfPages] = useState(0);
@@ -262,24 +281,24 @@ export default function PdfViewerModal({ base64, dossierId, onClose }: PdfViewer
     const objectUrl = URL.createObjectURL(base64ToPdfBlob(base64));
     const a = document.createElement('a');
     a.href = objectUrl;
-    a.download = `resultat-${dossierId}.pdf`;
+    a.download = pdfName;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 15000);
-  }, [base64, dossierId]);
+  }, [base64, pdfName]);
 
   // Mobile share via the Web Share API (email / WhatsApp / … chosen by the OS).
   // User-initiated, like a download — the File is handed to the OS share sheet
   // and never persisted by us.
   const handleShare = useCallback(async () => {
-    const file = new File([base64ToPdfBlob(base64)], `resultat-${dossierId}.pdf`, {
+    const file = new File([base64ToPdfBlob(base64)], pdfName, {
       type: 'application/pdf',
     });
     try {
       const shareData = {
-        title: t('resultats.share_title', "Résultat d'analyses"),
-        text: t('resultats.share_text', "Mon résultat d'analyses — Labo El Allali"),
+        title: shareTitle ?? t('resultats.share_title', "Résultat d'analyses"),
+        text: shareText ?? t('resultats.share_text', "Mon résultat d'analyses — Labo El Allali"),
       };
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ ...shareData, files: [file] });
@@ -289,7 +308,7 @@ export default function PdfViewerModal({ base64, dossierId, onClose }: PdfViewer
     } catch {
       // User cancelled (AbortError) or the platform refused — nothing to do.
     }
-  }, [base64, dossierId, t]);
+  }, [base64, pdfName, shareTitle, shareText, t]);
 
   if (!mounted) return null;
 
@@ -305,7 +324,7 @@ export default function PdfViewerModal({ base64, dossierId, onClose }: PdfViewer
       {/* Header */}
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--border-default)]">
         <p className="font-semibold text-[var(--text-primary)] truncate">
-          {t('resultats.viewer_title', 'Résultat — dossier {{id}}', { id: dossierId })}
+          {title ?? t('resultats.viewer_title', 'Résultat — dossier {{id}}', { id: dossierId })}
         </p>
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
