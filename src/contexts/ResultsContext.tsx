@@ -36,6 +36,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -53,6 +54,9 @@ import type {
 } from '@/types/cyberlab';
 
 type FetchArgs = { include_pdf?: IncludePdf; dossier_id?: string; requester_id?: string };
+
+/** A layout effect in the browser, a plain effect during server rendering. */
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const IDLE_PDF: PdfState = { status: 'idle' };
 
@@ -139,21 +143,40 @@ function newestOf(list: CyberlabResult[]): string | null {
   return list.reduce((m, x) => (!m || x.date_dossier > m.date_dossier ? x : m), list[0]).dossier_id;
 }
 
-/** Turn the raw context into the stable per-identity view both hooks return. */
+/**
+ * Turn the raw context into the stable per-identity view both hooks return.
+ *
+ * ⚠ Depend on the provider's FUNCTIONS, never on the whole context value. The
+ * value changes on every bucket or PDF update; callbacks built on it changed
+ * identity just as often, and /resultats runs `useEffect(() => ensureLoaded(),
+ * [ensureLoaded])`. After a failed load the bucket is neither loading nor
+ * loaded, so every state update re-fired the load at once: measured by
+ * `scripts/test-results-ui.js` (S2), a permanent error produced ~80 calls in
+ * 3 s and ~290 in 10 s — one per round trip, for as long as the page stayed
+ * open, during exactly the outages the lab server already struggles with.
+ * `ensureLoadedFor`, `loadPdfFor` and `refreshFor` only change when the
+ * identity or session does, which is precisely when a reload is wanted.
+ * `pdfStateFor` still changes with every PDF update, on purpose: it is read
+ * during render, not used as an effect trigger.
+ */
 function useView(requesterId: string | null): ResultsView {
-  const ctx = useContext(ResultsContext);
-  const bucket = ctx.getBucket(requesterId);
+  const { getBucket, pdfStateFor, loadPdfFor, ensureLoadedFor, refreshFor } =
+    useContext(ResultsContext);
+  const bucket = getBucket(requesterId);
 
   const pdfState = useCallback(
-    (dossierId: string) => ctx.pdfStateFor(requesterId, dossierId),
-    [ctx, requesterId]
+    (dossierId: string) => pdfStateFor(requesterId, dossierId),
+    [pdfStateFor, requesterId]
   );
   const loadPdf = useCallback(
-    (dossierId: string) => ctx.loadPdfFor(requesterId, dossierId),
-    [ctx, requesterId]
+    (dossierId: string) => loadPdfFor(requesterId, dossierId),
+    [loadPdfFor, requesterId]
   );
-  const ensureLoaded = useCallback(() => ctx.ensureLoadedFor(requesterId), [ctx, requesterId]);
-  const refresh = useCallback(() => ctx.refreshFor(requesterId), [ctx, requesterId]);
+  const ensureLoaded = useCallback(
+    () => ensureLoadedFor(requesterId),
+    [ensureLoadedFor, requesterId]
+  );
+  const refresh = useCallback(() => refreshFor(requesterId), [refreshFor, requesterId]);
   const newestDossierId = useMemo(() => newestOf(bucket.results), [bucket.results]);
 
   return {
@@ -437,7 +460,16 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Reset everything on login / logout / account switch.
-  useEffect(() => {
+  //
+  // ⚠ A LAYOUT effect, so it runs before any passive effect of the same commit —
+  // children's included. React runs children's passive effects BEFORE their
+  // parent's, so as a plain effect this reset ran AFTER /resultats had already
+  // started its first load: it wiped `loadingRef`, the prefetch below saw no
+  // load in flight, and the list was requested TWICE on every cold visit to
+  // the page (`scripts/test-results-ui.js`, S1). It also left `currentUidRef`
+  // null during that first load, so a PDF requested in the same window was
+  // discarded on arrival and stayed 'loading'.
+  useIsomorphicLayoutEffect(() => {
     const uid = user?.uid ?? null;
     if (currentUidRef.current !== uid) {
       currentUidRef.current = uid;
