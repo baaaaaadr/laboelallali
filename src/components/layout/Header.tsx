@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList, LayoutList } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList, LayoutList, Users } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -11,6 +11,7 @@ import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import { getLangFromPath, isActivePath } from '@/lib/navigation/isActivePath';
+import { readPractitioner } from '@/lib/results/identities';
 
 // Debug version - update this to verify deployment
 const HEADER_VERSION = 'v2.0.2-hydration-fix-2026-05-02';
@@ -134,6 +135,11 @@ const Header = () => {
 
   const currentLanguagePath = `/${urlLang}`;
   const isStaff = ['owner', 'admin', 'staff'].includes(userProfile?.role || '');
+  // Compte titulaire d'un accès médecin (« Mes patients », docs/pages/mes-patients.md).
+  const isPractitioner = readPractitioner(userProfile) !== null;
+  // Barre desktop : « Mes patients » y REMPLACE « Médecins » — voir la mesure
+  // au-dessus du lien. L'équipe garde sa barre telle quelle.
+  const practitionerInBar = isPractitioner && !isStaff;
   // Libelle du lien de validation du parcours patient (namespace `journey`,
   // charge par le layout). Disparait quand le parcours deviendra /rendez-vous.
   const journeyTestLabel = t('journey:nav.test_link', 'Parcours (test)');
@@ -264,6 +270,26 @@ const Header = () => {
               {t('resultats.nav', { defaultValue: "Résultats" })}
               <span className="nav-badge-new">{t('services_hub.results_badge')}</span>
             </Link>
+            {/* « Mes patients » (compte médecin) — il REMPLACE « Médecins », il ne
+                s'ajoute pas, et c'est mesuré (23/09/2026, build de production,
+                compte connecté donc avec le bouton Déconnexion) :
+                  · en 8e lien, il déborde de 38 px à 1024 px en français et ne
+                    laisse que 12 px de marge à 1280 (l'icône le fait déborder) ;
+                  · à la place de « Médecins » : 46 px de marge à 1024, 113 à 1280.
+                  · l'arabe garde plus de 140 px de marge dans ces deux cas.
+                Placé juste après Résultats, comme dans le tiroir mobile.
+                L'ÉQUIPE garde « Médecins » : ses 8 liens débordent DÉJÀ de 6 px à
+                1024 ; elle atteint « Mes patients » par la carte du profil, le
+                bandeau de /resultats ou le tiroir sur mobile. */}
+            {practitionerInBar && (
+              <Link
+                href={`${currentLanguagePath}/mes-patients`}
+                className={`nav-link font-semibold text-sm lg:text-base ${isHere('/mes-patients') ? 'active' : ''}`}
+                aria-current={isHere('/mes-patients') ? 'page' : undefined}
+              >
+                {t('mes_patients.nav', 'Mes patients')}
+              </Link>
+            )}
             <Link
               href={`${currentLanguagePath}/rendez-vous`}
               className={`nav-link font-semibold text-sm lg:text-base ${isHere('/rendez-vous') ? 'active' : ''}`}
@@ -285,13 +311,15 @@ const Header = () => {
             >
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
-            <Link
-              href={`${currentLanguagePath}/medecins`}
-              className={`nav-link font-semibold text-sm lg:text-base ${isHere('/medecins') ? 'active' : ''}`}
-              aria-current={isHere('/medecins') ? 'page' : undefined}
-            >
-              {t('navigation.medecins', { ns: 'common', defaultValue: "Médecins" })}
-            </Link>
+            {!practitionerInBar && (
+              <Link
+                href={`${currentLanguagePath}/medecins`}
+                className={`nav-link font-semibold text-sm lg:text-base ${isHere('/medecins') ? 'active' : ''}`}
+                aria-current={isHere('/medecins') ? 'page' : undefined}
+              >
+                {t('navigation.medecins', { ns: 'common', defaultValue: "Médecins" })}
+              </Link>
+            )}
             <Link
               href={`${currentLanguagePath}/contact`}
               className={`nav-link text-sm lg:text-base ${isHere('/contact') ? 'active' : ''}`}
@@ -498,6 +526,24 @@ const Header = () => {
                 {t('services_hub.results_badge')}
               </span>
             </Link>
+
+            {/* « Mes patients » — tout compte titulaire d'un accès médecin, équipe
+                comprise : liste verticale, aucune contrainte de largeur, donc
+                AJOUTÉ (« Médecins » reste plus bas). Icône `Users` et non le
+                stéthoscope, déjà porté par « Médecins » quatre lignes plus bas. */}
+            {isPractitioner && (
+              <Link
+                href={`${currentLanguagePath}/mes-patients`}
+                style={drawerLinkStyle(isHere('/mes-patients'))}
+                aria-current={isHere('/mes-patients') ? 'page' : undefined}
+                onClick={toggleMenu}
+              >
+                <Users size={20} style={drawerIconStyle(isHere('/mes-patients'))} />
+                <span style={drawerTextStyle(isHere('/mes-patients'))}>
+                  {t('mes_patients.nav', 'Mes patients')}
+                </span>
+              </Link>
+            )}
 
             <Link
               href={`${currentLanguagePath}/rendez-vous`}

@@ -17,7 +17,10 @@
  *   reminder  results loaded        → "your last bilan was N months ago" → book
  *   generic   anything else linked  → "think about your next bilan" → book
  * médecin / correspondant accounts get nothing (the copy says "votre bilan",
- * which is wrong for someone consulting other people's dossiers).
+ * which is wrong for someone consulting other people's dossiers), and neither
+ * does a doctor whose only access is « Mes patients » (no dossier of his own
+ * nor of a relative): "activate your access" would send him to request a
+ * patient access he never asked for.
  *
  * ── Three invariants, each of which took a bug to learn ──────────────────────
  * 1. **`loading` is the only trustworthy gate.** `AuthContext` calls `setUser()`
@@ -55,14 +58,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useResults } from '@/contexts/ResultsContext';
 import { monthsSince } from '@/lib/results/stats';
 import { checkupTitle } from '@/lib/results/checkupCopy';
-import { primaryIdentity } from '@/lib/results/identities';
+import { primaryIdentity, readPractitioner } from '@/lib/results/identities';
 import type { CyberlabResult } from '@/types/cyberlab';
 import HeroGuestDoors from './HeroGuestDoors';
 import HeroLastBilan from './HeroLastBilan';
 
 type PanelState = 'guest' | 'noaccess' | 'reminder' | 'generic' | 'none';
 /** What we remember between visits. A category, never a value. */
-type Hint = 'guest' | 'linked' | 'noaccess';
+type Hint = 'guest' | 'linked' | 'noaccess' | 'none';
 
 const HINT_KEY = 'laboElAllali_heroPanel';
 
@@ -108,7 +111,7 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
     }
     // No hint means this browser never signed in here: Firebase persistence lives
     // in IndexedDB, so a returning patient always has one.
-    setHint(stored === 'linked' || stored === 'noaccess' ? stored : 'guest');
+    setHint(stored === 'linked' || stored === 'noaccess' || stored === 'none' ? stored : 'guest');
   }, []);
 
   // ONE source for both the dossier and its age. `newestDossierId` compares
@@ -134,36 +137,54 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
     [newest]
   );
 
+  // Accounts this panel has nothing to say to — the slot collapses:
+  //  · a médecin / correspondant PRIMARY type: the copy says « votre bilan »;
+  //  · a doctor whose only access is « Mes patients » (a practitioner access,
+  //    no patient dossier of his own nor of a relative). « Activer mon accès »
+  //    would send him to request a patient access he never asked for; his way in
+  //    is the « Mes patients » link of the menu (docs/pages/mes-patients.md).
+  //    `!primary` first: a doctor who IS also a patient keeps his reminder.
+  const silent = useMemo(
+    () =>
+      userProfile?.type === 'medecin' ||
+      userProfile?.type === 'correspondant' ||
+      (!primary && readPractitioner(userProfile) !== null),
+    [userProfile, primary]
+  );
+
   const state: PanelState | null = useMemo(() => {
     if (forced) return forced;
     if (loading) {
       if (hint === null) return null; // not mounted yet → empty slot
       if (hint === 'linked') return 'generic';
       if (hint === 'noaccess') return 'noaccess';
+      // Remembered as silent: stay collapsed rather than flash « Activer mon
+      // accès » (or "think about your next bilan") at a doctor for a second.
+      if (hint === 'none') return 'none';
       return 'guest';
     }
     if (!user) return 'guest';
-    if (userProfile?.type === 'medecin' || userProfile?.type === 'correspondant') return 'none';
+    if (silent) return 'none';
     // `primary`, not `requester_id`: an account whose only access is a relative's
     // dossier DOES have access. Gating on requester_id alone would strand that
     // person on "activate your access" forever, for a dossier that will never
     // exist — and reserve the wrong slot height for them too (see the hint below).
     if (!primary) return 'noaccess'; // invariants 1 and 2
     return monthsTitle ? 'reminder' : 'generic';
-  }, [forced, loading, hint, user, userProfile, primary, monthsTitle]);
+  }, [forced, loading, hint, user, silent, primary, monthsTitle]);
 
   // Refresh the hint once the truth is known. Written here rather than in
   // AuthContext so nothing else has to care; a hint left over from a signed-out
   // session is corrected on the next visit to the home page.
   useEffect(() => {
     if (loading || forced) return;
-    const next: Hint = !user ? 'guest' : primary ? 'linked' : 'noaccess';
+    const next: Hint = !user ? 'guest' : silent ? 'none' : primary ? 'linked' : 'noaccess';
     try {
       window.localStorage.setItem(HINT_KEY, next);
     } catch {
       // nothing to do — the panel still works, it just re-guesses next time
     }
-  }, [loading, forced, user, primary]);
+  }, [loading, forced, user, silent, primary]);
 
   const showsPanel = state !== null && state !== 'none';
   // Second slot tier for the linked population only. The enriched reminder is
@@ -177,6 +198,7 @@ export default function HeroPersonalPanel({ lang }: { lang: string }) {
   // base tier instead of paying for space it does not use. A visitor never
   // crosses two tiers within a session — the hint predicts the category before
   // Firebase answers — so reserving per category is exact, not approximate.
+  // The fourth category, `none`, reserves nothing: the slot collapses.
   const slotTier =
     state === 'guest' ? ' hero-panel-slot--guest'
     : state === 'reminder' || state === 'generic' ? ' hero-panel-slot--tall'

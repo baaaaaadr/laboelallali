@@ -8,6 +8,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import PatientCodeCard from '@/components/features/profile/PatientCodeCard';
+import PractitionerAccessCard from '@/components/features/practitioner/PractitionerAccessCard';
 import { User, Calendar, Mail, LogOut, CheckCircle, Phone } from 'lucide-react';
 
 export default function ProfilePage({ params }: { params: Promise<{ lang: string }> }) {
@@ -220,6 +221,12 @@ export default function ProfilePage({ params }: { params: Promise<{ lang: string
             patient opens this page to find. Renders its own "not activated yet"
             state, so no guard is needed here. */}
         <PatientCodeCard lang={lang} />
+
+        {/* « Espace médecin » → /mes-patients, for an account holding a doctor
+            access; renders nothing for everyone else. For a doctor with no
+            patient dossier, the code card above renders nothing and this card
+            takes its place right under the identity. */}
+        <PractitionerAccessCard lang={lang} />
 
         {/* Profile Details */}
         <div className="card p-8">

@@ -9,7 +9,7 @@ The **prescribing doctor's space** (23/09/2026, quote line 62 « Accès médecin
 
 ## Directory & File
 - **Route:** `src/app/[lang]/mes-patients/page.tsx` (Client Component) + `layout.tsx` (Server Component, `robots: noindex` — a client page cannot export `metadata`).
-- **Workspace:** `src/components/features/practitioner/` — `PractitionerWorkspace.tsx` (orchestration, states, search, phone back button), `PatientList.tsx`, `PatientDetail.tsx`, `PractitionerDossierCard.tsx`, `usePractitionerPdfActions.ts`, `PractitionerAccessCard.tsx` (entry card for `/profile` and `/resultats`).
+- **Workspace:** `src/components/features/practitioner/` — `PractitionerWorkspace.tsx` (orchestration, states, search, phone back button), `PatientList.tsx`, `PatientDetail.tsx`, `PractitionerDossierCard.tsx`, `usePractitionerPdfActions.ts`, `PractitionerAccessCard.tsx` (entry point: `variant="card"` on `/profile`, `variant="banner"` on `/resultats`; renders nothing without a doctor access).
 - **Pure logic:** `src/lib/practitioner/patients.ts` (grouping, search, display, cap), `src/lib/results/format.ts` (dates, lab status), `src/lib/results/dossiers.ts` (`newestOf`, shared with `ResultsContext`), `src/lib/results/identities.ts` (`readPractitioner`).
 - **Server:** `functions/src/cyberlab/identities.ts` (`practitionerIdentity`), `functions/src/cyberlab/fetchResults.ts`, `functions/src/admin/adminPractitioner.ts` (activation, admin level — see `docs/pages/admin.md`).
 
@@ -52,9 +52,15 @@ The lab returns **no patient identifier** (`patient_id` is ignored by the server
 ### 6. PDF actions (`usePractitionerPdfActions`)
 Same mechanics as `/resultats` (base64 stays in the context, the viewer keeps only the dossier id and closes by itself on an account switch). Differences: **neutral share texts** (`mes_patients.share_*`, never « Mon résultat »), viewer title « NOM Prénom — dossier N » (on screen only). `PdfViewerModal` got optional `title` / `shareTitle` / `shareText` / `fileName` props for this.
 
-### 7. Entry points
-- Mobile drawer and desktop header link (only for accounts holding an access — see `Header.tsx`), `PractitionerAccessCard` on `/profile`, a banner on `/resultats`.
-- Doctor-only accounts (no dossier of their own): the home hero panel collapses (no « Activer mon accès »), the barcode card is hidden while there is no patient dossier. See `docs/pages/home.md`, `docs/pages/profile.md`, `docs/pages/resultats.md`.
+### 7. Entry points (all gated on `readPractitioner(userProfile)`)
+- **Header (`src/components/layout/Header.tsx`):**
+  - **desktop bar — « Mes patients » REPLACES « Médecins »** (right after Résultats), because an 8th link does not fit: measured 23/09/2026 on the production build, logged-in account, it overflows by 38 px at 1024 px in French and leaves 12 px at 1280; replacing leaves 46 / 113 px. Full numbers in `docs/pages/resultats.md` §Notes (nav width). **Staff accounts keep their bar** (8 links, already 6 px over at 1024).
+  - **mobile drawer — « Mes patients » is ADDED** right after Résultats, for every doctor account including staff (icon `Users`; « Médecins » keeps the stethoscope and stays).
+  - `BottomNav` is unchanged.
+- **`/profile`:** `PractitionerAccessCard` (variant `card`) after the barcode card — `docs/pages/profile.md` §6.
+- **`/resultats`:** `PractitionerAccessCard variant="banner"`, one line under the header — `docs/pages/resultats.md` §1.055.
+- **Doctor-only accounts** (no patient dossier, own or relative's): the home hero panel **collapses** instead of showing « Activer mon accès », and remembers it (hint `none`) so the next visit does not flash it while Firebase loads — `docs/pages/home.md` §2.0-bis. The barcode card **renders nothing** — `docs/pages/profile.md` §5. A doctor who is also a patient keeps both, about his own dossier.
+- Tested by `scripts/test-practitioner-ui.js` M11 (menu), M12 (home), M13 (profile + banner).
 
 ### 8. Styles, i18n
 Semantic classes (`card`, `button-bordeaux`), colours from CSS variables only; keyframe `mpBar` (PDF progress). i18n block **`mes_patients.*`** in `public/locales/{fr,ar}/common.json` (+ `confidentialite.practitioner_*`); Arabic plurals in six forms (`patients_count_*`, `bilans_count_*`). Reused: `resultats.view/download/share/retry/pdf_loading/pdf_load_error/etat_final/refresh/error_title/year_unknown`.
@@ -64,7 +70,7 @@ Semantic classes (`card`, `button-bordeaux`), colours from CSS variables only; k
 - **No Firestore rule change for reading** — the profile is read by `AuthContext` like any profile.
 
 ## Notes for AI
-- **Tests:** `npm run test:practitioner` (pure: grouping, search, client twin, server parity, rules lock, fr/ar key completeness — 50 checks) and `npm run test:practitioner:ui` (Chromium: M1 journey + phone back button, M2 search, M3 missing PDF, M4 five blocked states, M5 no access + re-check, M6 collision, M7 doctor-patient never calls with his code at startup, M8 account switch, M9 Arabic, M10 the admin card's lock — 97 checks). Server: `node functions/scripts/test-identities.js`, `node functions/scripts/test-practitioner-admin.js`.
+- **Tests:** `npm run test:practitioner` (pure: grouping, search, client twin, server parity, rules lock, fr/ar key completeness — 50 checks) and `npm run test:practitioner:ui` (Chromium: M1 journey + phone back button, M2 search, M3 missing PDF, M4 five blocked states, M5 no access + re-check, M6 collision, M7 doctor-patient never calls with his code at startup, M8 account switch, M9 Arabic, M10 the admin card's lock, M11 menu, M12 home panel, M13 profile card + /resultats banner — 133 checks). Server: `node functions/scripts/test-identities.js`, `node functions/scripts/test-practitioner-admin.js`.
 - **Never put a patient name in a URL, `document.title`, `history.state`, a log line or a file name.**
 - **Never call `useResultsFor(null)` from this page**, and never add the practitioner to `resolveIdentities`.
 - **The lab side** (activating a prescriber in Qalam, re-saving old dossiers, the send queue, ~5 min delay): `docs/integrations/cyberlab-results-api.md` §« Accès praticien » and the lab procedure `docs/procedures/activation-medecin.md`.

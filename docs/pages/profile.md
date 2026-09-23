@@ -46,10 +46,18 @@ Rendered between the profile header and the details card, as a direct child of t
 - `src/components/common/Barcode.tsx` — maps geometry onto `<rect>`s. Also exports `barcodeFits()`.
 - `src/components/common/IdentitySelector.tsx` — shared with `/resultats`.
 - `src/lib/barcode/code128.ts` — pure encoder. Verified by `node scripts/test-barcode.js` (50 checks: reverse-decoding, check character, geometry, and a permanent comparison against `marketing/scripts/generer-code-barres.js`, the implementation the lab actually scanned).
-- `src/lib/results/identities.ts` — turns a profile into the ordered list of dossiers this account may consult.
+- `src/lib/results/identities.ts` — turns a profile into the ordered list of dossiers this account may consult (`resolveIdentities`), and reads the doctor access (`readPractitioner`) — never mixed.
 - `src/hooks/useScreenWakeLock.ts` — keeps the screen awake while the overlay is open.
 
 **Multi-person:** when the account carries relatives' dossiers (`linkedRequesters`), the selector switches *which* code is shown. It is usually the adult child who comes to the desk for a parent, so they need to present the parent's code, not their own.
+
+**Doctor-only accounts (23/09/2026):** the card **renders nothing** when the account has no patient dossier at all AND holds a doctor access (`!selected && readPractitioner(userProfile)`). The doctor code is never a patient identity (so never on the barcode), and the « pending » sentence (« Votre code apparaîtra ici dès que le laboratoire aura activé votre accès ») would read as if his doctor access were not active. The card comes back by itself the day the lab attaches a patient dossier to the account.
+
+### 6. « Espace médecin » card (`PractitionerAccessCard`, 23/09/2026)
+Mounted right after `PatientCodeCard`, unconditionally: `<PractitionerAccessCard lang={lang} />` (`src/components/features/practitioner/PractitionerAccessCard.tsx`, `data-testid="mp-access-card"`). It renders only for an account holding a doctor access (`readPractitioner(userProfile)`) — title « Espace médecin », one sentence, a full-width-on-phone `.button-bordeaux` « Ouvrir « Mes patients » » → `/{lang}/mes-patients` (keys `mes_patients.access_card_*`). For a doctor-only account the code card above is absent, so this card sits directly under the identity. See `docs/pages/mes-patients.md`.
+- **The button is under the icon row, not beside it:** `.button-bordeaux` is declared UNLAYERED in `src/styles/index.css` (padding 0.875 rem 1.75 rem, `white-space: nowrap`, 48 px min height), so no Tailwind utility can shrink it; beside the icon it had ~196 px at 320 px for a label that needs ~240.
+- **The title is a `<p>`, not an `<h2>`:** `base/reset.css` sizes and colours `h2` unlayered (2xl, brand colour).
+- Tested by `scripts/test-practitioner-ui.js` M13 (doctor-only: card, no code card, zero call; doctor-patient: both; patient: no card).
 
 ## Notes for AI — the patient code card
 - **Never put the barcode on a `.card`.** `.card` is `#FFF0F5` (pink) in light mode and is **redeclared in `src/styles/index.css` (~line 1084) after `cards.css` is imported**, so the later rule wins. The white quiet zone comes from the `.barcode-surface` class, which also kills the **global 1 s `background-color` transition** this project sets on `*` — without that, flipping the theme mid-scan fades the surface through grey for a second, and grey decodes as nothing.

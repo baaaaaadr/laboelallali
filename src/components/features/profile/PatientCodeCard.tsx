@@ -22,7 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Barcode from '@/components/common/Barcode';
 import IdentitySelector from '@/components/common/IdentitySelector';
 import ScanFullscreen from '@/components/features/profile/ScanFullscreen';
-import { findIdentity, resolveIdentities } from '@/lib/results/identities';
+import { findIdentity, readPractitioner, resolveIdentities } from '@/lib/results/identities';
 
 /** Width of the inline preview, in px. The real scan happens full screen. */
 const PREVIEW_WIDTH = 280;
@@ -62,6 +62,13 @@ export function PatientCodeCard({ lang }: PatientCodeCardProps) {
     const id = setTimeout(() => setCopied(false), 2000);
     return () => clearTimeout(id);
   }, [copied]);
+
+  // A doctor whose only access is « Mes patients » has no patient code to show,
+  // and "your code will appear once the lab has activated your access" would
+  // read as if his doctor access were not active. The profile shows him the
+  // « Espace médecin » card instead (PractitionerAccessCard). The card comes
+  // back by itself the day the lab attaches a patient dossier to the account.
+  if (!selected && readPractitioner(userProfile)) return null;
 
   // No dossier at all: the account exists but the lab has not activated access.
   // Show why, never an empty barcode — an empty symbol still encodes to
