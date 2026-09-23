@@ -160,7 +160,7 @@ section('D — identité praticien côté client : jamais une identité patient'
 // ── E. Parité avec le serveur ───────────────────────────────────────────────
 section('E — même clé de regroupement que le serveur (compte des patients de l’admin)');
 {
-  let server: { patientKey: (nom: unknown, prenom: unknown) => string } | null = null;
+  let server: { patientKey: (nom: unknown, prenom: unknown, dossierId?: unknown) => string } | null = null;
   try {
     const req = createRequire(path.join(ROOT, 'functions', 'package.json'));
     server = req(path.join(ROOT, 'functions', 'lib', 'admin', 'adminPractitioner.js'));
@@ -178,8 +178,14 @@ section('E — même clé de regroupement que le serveur (compte des patients de
       ['DÉMO', 'Ámina'],
     ];
     for (const [nom, prenom] of fixtures) {
-      ok(`« ${nom} ${prenom} » → même clé`, server.patientKey(nom, prenom) === patientKey({ patient_nom: nom, patient_prenom: prenom, dossier_id: 'x' }));
+      ok(`« ${nom} ${prenom} » → même clé`, server.patientKey(nom, prenom, 'x') === patientKey({ patient_nom: nom, patient_prenom: prenom, dossier_id: 'x' }));
     }
+    // Un bilan SANS nom n'est jamais fusionné — une ligne chacun dans « Mes
+    // patients », donc un patient chacun dans le compte « Vérifier » de l'admin.
+    ok(
+      'bilan sans nom → même clé (sur son n° de dossier)',
+      server.patientKey('', ' ', '050726905') === patientKey({ patient_nom: '', patient_prenom: ' ', dossier_id: '050726905' })
+    );
   }
 }
 

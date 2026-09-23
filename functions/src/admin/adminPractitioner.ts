@@ -100,12 +100,17 @@ export function readPractitionerDTO(
 
 /**
  * Same key as the client's `patientKey` (src/lib/practitioner/patients.ts):
- * accents off, upper case, punctuation as spaces, spaces collapsed.
+ * accents off, upper case, punctuation as spaces, spaces collapsed \u2014 and a
+ * dossier with NO name at all is never merged with another one (keyed on its
+ * own number), exactly as \u00ab Mes patients \u00bb shows it: one line each. Without
+ * that, the admin's \u00ab V\u00e9rifier \u00bb counted every nameless dossier as a single
+ * patient.
  * @param {unknown} nom family name as the lab returned it.
  * @param {unknown} prenom first name as the lab returned it.
+ * @param {unknown} dossierId the dossier number, used only when nameless.
  * @return {string} the grouping key.
  */
-export function patientKey(nom: unknown, prenom: unknown): string {
+export function patientKey(nom: unknown, prenom: unknown, dossierId?: unknown): string {
   const norm = (s: unknown) =>
     String(s ?? "")
       .normalize("NFD")
@@ -113,7 +118,10 @@ export function patientKey(nom: unknown, prenom: unknown): string {
       .toUpperCase()
       .replace(/[^A-Z0-9]+/g, " ")
       .trim();
-  return `${norm(nom)}|${norm(prenom)}`;
+  const n = norm(nom);
+  const p = norm(prenom);
+  if (!n && !p && dossierId !== undefined) return `#dossier:${String(dossierId)}`;
+  return `${n}|${p}`;
 }
 
 export interface SetPractitionerData {
@@ -249,7 +257,9 @@ async function probeCode(code: string, type: RequesterType): Promise<Probe> {
       { type, requester_id: code, max_results: 50, include_pdf: "none" }
     );
     const results = Array.isArray(resp.results) ? resp.results : [];
-    const patients = new Set(results.map((r) => patientKey(r.patient_nom, r.patient_prenom)));
+    const patients = new Set(
+      results.map((r) => patientKey(r.patient_nom, r.patient_prenom, r.dossier_id))
+    );
     return { status: "ok", dossierCount: results.length, patientCount: patients.size };
   } catch (err) {
     if (err instanceof CyberlabError && err.kind === "not_found") {

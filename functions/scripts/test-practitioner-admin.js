@@ -158,6 +158,11 @@ section("Clé de regroupement par patient (même règle que l'app)");
   assert(patientKey("FICTIF", "Hanaé") === patientKey("fictif", "HANAE"), "accents et casse ignorés");
   assert(patientKey("EL  ALLALI", "Aya") === patientKey("El-Allali", "aya"), "espaces multiples et tiret ignorés");
   assert(patientKey("DÉMO", "Amina") !== patientKey("DÉMO", "Karim"), "prénoms différents → patients différents");
+  assert(
+    patientKey("", "", "D1") !== patientKey("", " ", "D2"),
+    "deux bilans SANS nom → deux patients (jamais fusionnés, comme dans « Mes patients »)"
+  );
+  assert(patientKey("", "", "D1") === "#dossier:D1", "bilan sans nom → clé sur son numéro de dossier");
 }
 
 console.log("");
