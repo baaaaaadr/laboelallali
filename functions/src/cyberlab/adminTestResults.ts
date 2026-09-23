@@ -72,17 +72,23 @@ interface AdminTestResponse extends CyberlabResponse {
  * `patient_nom`/`patient_prenom` (data minimisation — verified on the real server,
  * see docs/integrations/test-results.md case A1). So the only name we can show for a
  * patient id is the one on the linked account. Best-effort: never fails the test.
+ *
+ * A prescriber / correspondent code is not stored in `requester_id` but in the
+ * doctor access `practitioner.requester_id` (see adminSetPractitioner), in
+ * capitals — looked up there for non-patient types, so testing "MOUSTZOU"
+ * names the doctor's own account.
  */
-async function linkedAccountName(requesterId: string): Promise<string> {
+async function linkedAccountName(requesterId: string, type: RequesterType): Promise<string> {
   try {
-    const snap = await admin
-      .firestore()
-      .collection("users")
-      .where("requester_id", "==", requesterId)
+    const users = admin.firestore().collection("users");
+    const snap = await users.where("requester_id", "==", requesterId).limit(1).get();
+    if (!snap.empty) return String(snap.docs[0].get("fullName") || "").trim();
+    if (type === "patient") return "";
+    const pro = await users
+      .where("practitioner.requester_id", "==", requesterId.toUpperCase())
       .limit(1)
       .get();
-    if (snap.empty) return "";
-    return String(snap.docs[0].get("fullName") || "").trim();
+    return pro.empty ? "" : String(pro.docs[0].get("fullName") || "").trim();
   } catch {
     return "";
   }
@@ -161,7 +167,7 @@ export const adminTestResults = onCall(
         }
       }
       if (!patientName) {
-        patientName = await linkedAccountName(requesterId);
+        patientName = await linkedAccountName(requesterId, req.type);
         if (patientName) nameSource = "account";
       }
 

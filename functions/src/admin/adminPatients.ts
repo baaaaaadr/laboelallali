@@ -30,6 +30,10 @@ import {
   alertRecipients,
   fmtCasablanca,
 } from "../email/mailer";
+// Doctor access (« Mes patients »): shown in the search results and counted
+// apart in the dashboard — a doctor-only account is not a patient account.
+import { readPractitionerDTO, PractitionerDTO } from "./adminPractitioner";
+import { practitionerIdentity } from "../cyberlab/identities";
 
 const VALID_TYPES = ["patient", "medecin", "correspondant"] as const;
 type RequesterType = (typeof VALID_TYPES)[number];
@@ -269,6 +273,8 @@ interface PatientMatch {
    * it saves the admin screen a round trip when staff picks a patient.
    */
   links: LinkDTO[];
+  /** The doctor access (« Mes patients »), when the account has one. */
+  practitioner: PractitionerDTO | null;
 }
 
 export const adminSearchPatients = onCall(
@@ -301,10 +307,15 @@ export const adminSearchPatients = onCall(
         d.linkedRequesterIds.map((x: unknown) => String(x)) :
         [];
       const links = readLinks(d).map(toLinkDTO);
+      // A doctor's code ("MOUSTZOU") or displayed name finds his account — the
+      // way the lab thinks of him. Codes are compared case-insensitively.
+      const practitioner = readPractitionerDTO(d);
+      const codeExact =
+        practitioner !== null && practitioner.requester_id === q.toUpperCase().replace(/\s+/g, "");
 
       const emailExact = email !== "" && stripAccents(email) === nq;
       const ridExact =
-        (rid !== "" && rid === q) || linkedIds.includes(q);
+        (rid !== "" && rid === q) || linkedIds.includes(q) || codeExact;
       const hit =
         stripAccents(fullName).includes(nq) ||
         (email !== "" && stripAccents(email).includes(nq)) ||
@@ -313,7 +324,8 @@ export const adminSearchPatients = onCall(
         (digits.length >= 1 &&
           linkedIds.some((id) => id.includes(digits))) ||
         (digits.length >= 4 && phone !== "" && phone.includes(digits)) ||
-        (dob !== "" && dob.includes(q));
+        (dob !== "" && dob.includes(q)) ||
+        (practitioner !== null && stripAccents(practitioner.label).includes(nq));
       if (!hit) return;
 
       matches.push({
@@ -330,6 +342,7 @@ export const adminSearchPatients = onCall(
         exact: emailExact || ridExact,
         linkedCount: linkedIds.length,
         links,
+        practitioner,
       });
     });
 
@@ -365,6 +378,7 @@ export const adminSearchPatients = onCall(
             d.linkedRequesterIds.length :
             0,
           links: readLinks(d).map(toLinkDTO),
+          practitioner: readPractitionerDTO(d),
           createdAt: String(d.createdAt || ""),
           dateOfBirth: String(d.dateOfBirth || ""),
           exact: true,
@@ -1378,11 +1392,20 @@ interface DashboardData {
  * definition of "a patient account". Returns the raw uid→name map too (team
  * members included) because the team-activity chart needs to name staff.
  */
+/** Doctor accesses (« Mes patients »), counted apart from the patient base. */
+interface PractitionerCounts {
+  /** Accounts holding a valid practitioner access. */
+  accounts: number;
+  /** …of which consulted their roster in the last 30 days. */
+  active: number;
+}
+
 async function scanAccounts(includeTeam: boolean): Promise<{
   accounts: AccountRow[];
   byType: Record<string, number>;
   teamAccounts: number;
   nameByUid: Record<string, string>;
+  practitioners: PractitionerCounts;
   truncated: boolean;
 }> {
   const snap = await admin.firestore().collection("users").limit(SCAN_LIMIT).get();
@@ -1390,6 +1413,8 @@ async function scanAccounts(includeTeam: boolean): Promise<{
   const accounts: AccountRow[] = [];
   const byType: Record<string, number> = { patient: 0, medecin: 0, correspondant: 0 };
   const nameByUid: Record<string, string> = {};
+  const practitioners: PractitionerCounts = { accounts: 0, active: 0 };
+  const now = Date.now();
   let teamAccounts = 0;
 
   snap.forEach((doc) => {
@@ -1411,6 +1436,18 @@ async function scanAccounts(includeTeam: boolean): Promise<{
       0;
     const hasAccess =
       String(d.requester_id || "").trim() !== "" || linkedCount > 0;
+
+    // Doctor access. Counted apart. A DOCTOR-ONLY account (no dossier of his own,
+    // no relative) is not a patient account at all: left in, it would read as
+    // "waiting for activation" in the adoption figures, and — worse — as a
+    // dormant patient in the front desk's relance list. A doctor who is ALSO a
+    // patient stays in the patient numbers, as the patient he is.
+    if (practitionerIdentity(d)) {
+      practitioners.accounts += 1;
+      const lastUsed = toMillis((d.practitioner as Record<string, unknown>)?.lastUsedAt);
+      if (lastUsed !== null && now - lastUsed < ACTIVE_WINDOW_MS) practitioners.active += 1;
+      if (!hasAccess) return;
+    }
     const type = String(d.type || "");
     if (hasAccess && type in byType) byType[type] += 1;
 
@@ -1431,7 +1468,14 @@ async function scanAccounts(includeTeam: boolean): Promise<{
     });
   });
 
-  return { accounts, byType, teamAccounts, nameByUid, truncated: snap.size >= SCAN_LIMIT };
+  return {
+    accounts,
+    byType,
+    teamAccounts,
+    nameByUid,
+    practitioners,
+    truncated: snap.size >= SCAN_LIMIT,
+  };
 }
 
 /**
@@ -1550,7 +1594,7 @@ export const adminDashboardStats = onCall(
 /** The whole computation, extracted so the callable can log what breaks. */
 async function buildDashboard(includeTeam: boolean) {
   {
-    const { accounts, byType, teamAccounts, nameByUid, truncated } =
+    const { accounts, byType, teamAccounts, nameByUid, practitioners, truncated } =
       await scanAccounts(includeTeam);
 
     const now = Date.now();
@@ -1757,6 +1801,9 @@ async function buildDashboard(includeTeam: boolean) {
     // simply come back as non-existent and count as zero.
     const consultByDay: Record<string, number> = {};
     const sharesByDay: Record<string, number> = {};
+    // Doctors' roster consultations, written by fetchResults apart from the
+    // patients' `consultations` (see touchPractitionerUsage) — never mixed in.
+    const practitionerByDay: Record<string, number> = {};
     try {
       const dayRefs = Array.from({ length: ACTIVITY_WEEKS * 7 + 7 }, (_, i) =>
         admin.firestore().doc(`usageDaily/${dayKey(new Date(now - i * DAY_MS))}`)
@@ -1766,6 +1813,7 @@ async function buildDashboard(includeTeam: boolean) {
         const d = doc.data() || {};
         consultByDay[doc.id] = Number(d.consultations || 0);
         sharesByDay[doc.id] = Number(d.shares || 0);
+        practitionerByDay[doc.id] = Number(d.practitionerConsultations || 0);
       });
     } catch (err) {
       // A single missing metric must never blank the whole dashboard — that is
@@ -1795,6 +1843,12 @@ async function buildDashboard(includeTeam: boolean) {
     const signupsFromShare = accounts.filter(
       (a) => a.signupRef === "partage" && a.createdAt.slice(0, 7) === monthPrefix
     ).length;
+
+    // Doctors' roster consultations over the last 30 days (anonymous tally).
+    let practitionerConsultations30d = 0;
+    for (let i = 0; i < 30; i++) {
+      practitionerConsultations30d += practitionerByDay[dayKey(new Date(now - i * DAY_MS))] || 0;
+    }
 
     // ── Detail lists (dashboard-side; the relance list has its own callable) ──
     const latestCreated = [...accounts]
@@ -1867,6 +1921,8 @@ async function buildDashboard(includeTeam: boolean) {
       team,
       weekly,
       shares: { month: sharesThisMonth, signups: signupsFromShare },
+      // Doctor access: accounts, those active in 30 days, roster consultations.
+      practitioners: { ...practitioners, consultations30d: practitionerConsultations30d },
       latestCreated,
       latestActive,
       truncated,

@@ -62,6 +62,10 @@ export {
   adminRecordRelance,
   recordShare,
 } from "./admin/adminPatients";
+// Doctor access (« Mes patients »): give an account a prescriber's code. ADMIN
+// level — a code opens a whole roster of named results. See
+// docs/pages/mes-patients.md.
+export { adminSetPractitioner } from "./admin/adminPractitioner";
 
 import { getStorage } from "firebase-admin/storage";
 import { FieldValue } from "firebase-admin/firestore";
