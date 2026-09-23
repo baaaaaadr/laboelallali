@@ -59,13 +59,50 @@ const PORT = 3001;
 const MAX_RESULTS_CAP = 50;
 const usedNonces = new Map();
 
-// Test identifiers provided by the lab editor.
+// Test identifiers provided by the lab editor, plus two FICTITIOUS prescribers
+// (DRDEMO, DRAUTRE) with a realistic roster — see ROSTERS below.
 const KNOWN = {
   patient: new Set(["7587", "142807"]),
   correspondant: new Set(["TESTA"]),
-  medecin: new Set(["TESTMED"]),
+  medecin: new Set(["TESTMED", "DRDEMO", "DRAUTRE"]),
 };
 const VALID_TYPES = new Set(["patient", "medecin", "correspondant"]);
+const VALID_INCLUDE_PDF = new Set(["latest", "none", "all"]);
+
+/**
+ * Realistic prescriber rosters, for developing and testing the "Mes patients"
+ * space (/[lang]/mes-patients). ⚠ ALL NAMES ARE FICTITIOUS on purpose — never
+ * put a real patient or doctor here.
+ *
+ * Mirrors what the REAL lab server showed on 23/09/2026 with a real prescriber
+ * code: several dossiers per patient, names filled in, newest first, and each
+ * prescriber confined to the dossiers he prescribed — a dossier of the SAME
+ * patient prescribed by another doctor answers 404. Hence the homonym
+ * "EXEMPLE Youssef" in both rosters, with different dossiers.
+ *
+ * `analyses_summary` uses the real format ("C GLY^C HBA1", section prefix + `^`).
+ * `noPdf: true` = the lab has not attached the PDF yet (200 + empty base64).
+ */
+const ROSTERS = {
+  "medecin:DRDEMO": [
+    { dossier_id: "100926901", nom: "DÉMO", prenom: "Amina", date: "2026-09-10T08:15:00Z", analyses: "C GLY^C HBA1^C CHOL^C HDL^C LDL^C TRIG" },
+    { dossier_id: "210826903", nom: "EXEMPLE", prenom: "Youssef", date: "2026-08-21T09:40:00Z", analyses: "H NFS^C CRP" },
+    { dossier_id: "050726905", nom: "FICTIF", prenom: "Hanaé", date: "2026-07-05T07:55:00Z", analyses: "C GLY^C HBA1^C CR^C U", noPdf: true },
+    { dossier_id: "020326902", nom: "DÉMO", prenom: "Amina", date: "2026-03-02T08:05:00Z", analyses: "C GLY^C HBA1" },
+    { dossier_id: "141125904", nom: "EXEMPLE", prenom: "Youssef", date: "2025-11-14T10:20:00Z", analyses: "N TSH^N T4L" },
+    { dossier_id: "180625906", nom: "ESSAI", prenom: "Karim", date: "2025-06-18T08:30:00Z", analyses: "V VITD^C FERR" },
+  ],
+  "medecin:DRAUTRE": [
+    { dossier_id: "300526907", nom: "EXEMPLE", prenom: "Youssef", date: "2026-05-30T09:10:00Z", analyses: "S HVC^S HBV" },
+    { dossier_id: "120426908", nom: "TÉMOIN", prenom: "Salma", date: "2026-04-12T08:45:00Z", analyses: "H NFS" },
+  ],
+};
+
+/** Codes of prescribers and correspondents are matched like the real server: trimmed, case-insensitive. */
+function canonicalRequester(type, id) {
+  const t = String(id).trim();
+  return type === "patient" ? t : t.toUpperCase();
+}
 
 // Minimal valid PDF ("%PDF-1.4 …") for the response-shape tests.
 const CANNED_PDF_B64 =
@@ -128,30 +165,71 @@ const server = http.createServer((req, res) => {
     } catch {
       return reject(res, 400, "bad_json");
     }
-    const { type, requester_id, max_results, include_pdf, dossier_id } = payload;
+    const { type, max_results, include_pdf, dossier_id } = payload;
 
     if (!VALID_TYPES.has(type)) {
       return reject(res, 400, "invalid_type");
     }
-    if (typeof requester_id !== "string" || requester_id.trim() === "") {
+    if (typeof payload.requester_id !== "string" || payload.requester_id.trim() === "") {
       return reject(res, 400, "missing_requester_id");
     }
+    const requester_id = canonicalRequester(type, payload.requester_id);
     if (!KNOWN[type].has(requester_id)) {
       return reject(res, 404, "requester_not_found");
+    }
+    // Like the real server (measured 23/09/2026): an unknown value is refused,
+    // never silently treated as "all" — which would embed every PDF.
+    if (include_pdf !== undefined && !VALID_INCLUDE_PDF.has(include_pdf)) {
+      return reject(res, 400, "invalid_include_pdf");
     }
 
     // max_results: clamp to [1, 50]; default 50 if absent/invalid.
     let n = Number.isInteger(max_results) && max_results > 0 ? max_results : 50;
     if (n > MAX_RESULTS_CAP) n = MAX_RESULTS_CAP;
 
+    // ── Fictitious prescriber rosters: newest first, confined per prescriber ──
+    const roster = ROSTERS[`${type}:${requester_id}`];
+    if (roster) {
+      const toResult = (d, withPdf) => ({
+        dossier_id: d.dossier_id,
+        patient_nom: d.nom,
+        patient_prenom: d.prenom,
+        date_dossier: d.date,
+        etat: "Final",
+        analyses_summary: d.analyses,
+        pdf_base64: withPdf && !d.noPdf ? CANNED_PDF_B64 : "",
+      });
+      let rosterResults;
+      if (dossier_id !== undefined) {
+        // Only THIS prescriber's dossiers: another doctor's dossier → 404, even
+        // for the same patient (the rule the real server enforces).
+        const one = roster.find((d) => d.dossier_id === dossier_id);
+        if (!one) return reject(res, 404, "dossier_not_found");
+        rosterResults = [toResult(one, true)];
+      } else {
+        const mode = include_pdf === undefined ? "all" : include_pdf;
+        rosterResults = [...roster]
+          .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+          .slice(0, n)
+          .map((d, i) => toResult(d, mode === "all" || (mode === "latest" && i === 0)));
+      }
+      res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      res.end(JSON.stringify({ type, requester_id, results: rosterResults }));
+      console.log(`[mock] 200 ${type}/${requester_id} — roster, ${rosterResults.length} result(s)`);
+      return;
+    }
+
     // patient_nom/prenom filled only for medecin/correspondant (§7.3).
     const isPatient = type === "patient";
+    const DAY_MS = 24 * 60 * 60 * 1000;
     const makeDossier = (i, withPdf) => ({
       dossier_id: `9990000${String(i).padStart(3, "0")}`, // fake, non-real
       patient_nom: isPatient ? "" : "TEST_NOM",
       patient_prenom: isPatient ? "" : "TEST_PRENOM",
-      // Distinct descending dates so "most recent" is well-defined (index 0 newest).
-      date_dossier: `2026-04-${String(15 - i).padStart(2, "0")}T08:52:20Z`,
+      // Distinct descending dates so "most recent" is well-defined (index 0
+      // newest). Real date arithmetic: the old `2026-04-${15 - i}` produced
+      // "2026-04-00" and "2026-04--1…" from i = 15, and a list call asks for 50.
+      date_dossier: new Date(Date.UTC(2026, 3, 15, 8, 52, 20) - i * DAY_MS).toISOString(),
       etat: "Final",
       analyses_summary: "NFS, GLY, HBA1C, U, CR",
       pdf_base64: withPdf ? CANNED_PDF_B64 : "",
