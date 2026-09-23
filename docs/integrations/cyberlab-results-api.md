@@ -655,3 +655,51 @@ Le rattachement d'un dossier de proche a **deux moitiés distinctes**, et elles 
 Le contrôle réel — « cette personne a-t-elle le droit de lire ce dossier ? » — se fait au comptoir et ne peut pas être déplacé dans le logiciel. Ce que le logiciel apporte, c'est la trace de la preuve vue.
 
 Collection `relativeAccessRequests/{autoId}`, serveur uniquement (aucune règle Firestore ajoutée : elle tombe dans le refus par défaut, tous les accès passent par un callable).
+
+## 13. Accès praticien — « Mes patients » (23/09/2026)
+
+Un médecin prescripteur consulte, dans l'application, les bilans **qu'il a lui-même prescrits** (règle d'Aziz). Espace `/[lang]/mes-patients` : voir `docs/pages/mes-patients.md` (écran) et `docs/pages/admin.md` (activation). Procédure du laboratoire : `docs/procedures/activation-medecin.md`.
+
+### 13.1 Ce que fait le serveur de résultats — mesuré sur le serveur réel
+
+Sondes du 22-23/09/2026 avec un vrai code prescripteur (`MOUSTZOU`), puis `functions/scripts/diag-practitioner.js` :
+
+| Question | Réponse mesurée |
+|---|---|
+| `{type:"medecin", requester_id:"<CODE>"}` | **200**, `patient_nom` / `patient_prenom` **renseignés** |
+| même code en `correspondant` ou `patient` | 404 |
+| casse, espaces dans le code | tolérés (l'application envoie de toute façon le code en MAJUSCULES, sans espace : `normalizePractitionerId`) |
+| dossier d'un **autre** prescripteur, via `dossier_id` | **404** |
+| dossier d'un de SES patients mais prescrit par un **confrère** | **404** — le cloisonnement est tenu par le serveur, par dossier |
+| ordre des résultats | du plus récent au plus ancien ; **la troncature garde les plus récents** (`max_results: 1` → le plus récent, vérifié sur 4 identités). Le plafond de 50 = les 50 bilans les plus récents |
+| `patient_id` (proposé par Si Brahim) | **ignoré** — aucun identifiant patient dans la réponse : l'application regroupe par nom + prénom (deux homonymes parfaits apparaissent ensemble, c'est dit à l'écran) |
+| `include_pdf` | **strict** : une valeur inconnue (`"no"`) → **400** |
+| temps (liste sans PDF) | 0,25 à 0,7 s |
+| temps (un PDF, `dossier_id`) | ~2,5 s, 150 à 260 Ko |
+| temps (tous les PDF, 4 dossiers) | 8,9 s — **jamais pour un médecin** : 50 PDF dépasseraient le délai de 20 s du transport et déclencheraient une fausse alerte de panne |
+
+Au 23/09/2026 : `MOUSTZOU` → 5 bilans, 4 patients.
+
+### 13.2 Côté Qalam (logiciel du laboratoire) — le mécanisme, confirmé par Si Brahim
+
+1. **Fiche Prescripteur → « Serveur Résultat » = Oui**, identifiant = le code du prescripteur (ex. `MOUSTZOU`). Le mot de passe de cette fenêtre sert à l'ancien portail cyberlab.ma, **pas à l'application**.
+2. **Seuls les dossiers FUTURS sont envoyés.** Activer un prescripteur n'envoie pas son historique. Pour un ancien dossier : lui retirer le médecin, enregistrer, le remettre, enregistrer (ou régénérer) — il entre alors dans la file d'envoi.
+3. **Envoi par lots** : le dossier passe dans la file « Attentes », puis part par FTP (« Envois ») ; surveiller aussi « Erreurs », dans l'écran « Serveur Résultat Prescripteur ». **Disponible dans l'API ~5 min après l'ENVOI** (pas après la saisie).
+4. Tant qu'aucun dossier n'a été envoyé pour un code, le serveur répond **404** pour ce code : l'écran du médecin affiche « pas encore actif côté laboratoire » (`unknown_id`), la carte admin refuse l'activation sauf confirmation explicite.
+5. **Ne pas remettre au médecin la lettre Qalam telle quelle** : elle renvoie vers cyberlab.ma (derrière Cloudflare, injoignable directement depuis internet) et parle d'identifiants que l'application n'utilise pas. Le médecin se connecte à l'application avec **son propre compte** de l'application (Google, ou e-mail et mot de passe).
+
+### 13.3 Le contrat côté application
+
+- **Où vit l'accès :** `users/{uid}.practitioner = { requester_id, type: "medecin"|"correspondant", label, linkedAt, linkedBy, lastUsedAt? }`, écrit **uniquement** par le callable `adminSetPractitioner` (niveau admin) et **verrouillé dans `firestore.rules`** (création ET mise à jour). Sans ce verrou, n'importe qui pourrait s'attribuer la patientèle d'un médecin.
+- **Jamais une identité par défaut** (`functions/src/cyberlab/identities.ts`) : l'accès praticien n'est résolu que sur un sélecteur **explicite et exact** ; en cas de collision avec un dossier patient du compte, **le côté patient gagne**. Il ne fait jamais partie de `authorizedIdentities` (sélecteur famille, préchargement, accueil).
+- **Liste forcée sans PDF** côté serveur pour un praticien, quoi que demande le client. Les PDF un par un par `dossier_id` — le serveur du laboratoire les cloisonne.
+- **Télémétrie à part** : `usageDaily/{jour}.practitionerConsultations` (anonyme) + `practitioner.lastUsedAt` (au plus toutes les 6 h, écriture **conditionnelle** sur `updateTime` pour ne pas ressusciter un accès retiré entre-temps). Jamais les compteurs patient (`lastResultsAt`, `resultsViewCount`), jamais la liste des relances.
+- **Activation (`adminSetPractitioner`)** : sonde le code avant d'activer (nombre de bilans et de patients, **jamais de nom** — même regroupement que l'écran, bilans sans nom compris) ; refuse un code égal à un dossier patient du compte ; refuse un code inconnu du serveur (404) ou déjà posé sur un autre compte, sauf case explicite ; e-mail au médecin à l'activation ; retrait possible à tout moment. Stagiaires : lecture seule.
+- **Outils** : serveur simulé `functions/scripts/mock-cyberlab-server.js` (médecins fictifs `DRDEMO`, `DRAUTRE`, cloisonnement par dossier, `include_pdf` strict) ; sonde en lecture seule `functions/scripts/diag-practitioner.js <CODE> [--dossier <n°>] [--pdf]` (initiales seulement) ; bancs `functions/scripts/test-identities.js`, `functions/scripts/test-practitioner-admin.js`, `npm run test:practitioner`, `npm run test:practitioner:ui`.
+
+### 13.4 Demandes à Si Brahim (hors application)
+
+- **Envoi automatique** de la file Qalam (sinon l'accueil doit déclencher l'envoi) — à confirmer.
+- **Reprise de l'historique** d'un prescripteur activé, en une fois, au lieu de ré-enregistrer chaque dossier.
+- Un **identifiant patient stable** dans la réponse, pour séparer deux homonymes.
+- Au-delà de 50 bilans : pagination ou filtre par date (aujourd'hui, seuls les 50 plus récents sont visibles).
