@@ -31,6 +31,27 @@ export interface LinkedRequester {
   linkedBy?: string;
 }
 
+/**
+ * A prescribing doctor's access (« Mes patients ») — his Qalam code, which opens
+ * the named results of the dossiers HE prescribed (the lab server enforces it).
+ *
+ * Stored in `users/{uid}.practitioner`, written ONLY by the admin callable
+ * `adminSetPractitioner`, locked against client writes in `firestore.rules`.
+ * Read through `readPractitioner` in `src/lib/results/identities.ts`, never field
+ * by field — and NEVER part of the patient identities (see that module).
+ */
+export interface PractitionerAccess {
+  requester_id: string;
+  type: RequesterType;
+  /** What the lab typed, e.g. « Dr Moustadraf Zouhair ». */
+  label: string;
+  /** Firestore Timestamps — never read client-side. */
+  linkedAt?: unknown;
+  lastUsedAt?: unknown;
+  /** uid of the admin who activated it. */
+  linkedBy?: string;
+}
+
 export interface CyberlabResult {
   dossier_id: string;
   patient_nom: string;

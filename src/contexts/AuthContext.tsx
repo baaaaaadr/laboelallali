@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, getClientAuth } from '@/config/firebase';
-import type { LinkedRequester, RequesterType } from '@/types/cyberlab';
+import type { LinkedRequester, PractitionerAccess, RequesterType } from '@/types/cyberlab';
 
 export interface UserProfile {
   uid: string;
@@ -23,6 +23,10 @@ export interface UserProfile {
   // The same ids, flattened — lets the lab answer "who else reads this dossier?"
   // with an indexed query instead of a full scan.
   linkedRequesterIds?: string[];
+  // A prescribing doctor's access (« Mes patients »). Written only by
+  // adminSetPractitioner, locked in firestore.rules. Read through
+  // readPractitioner() — it is NEVER one of the patient identities above.
+  practitioner?: PractitionerAccess;
   // 'admin' grants access to the /admin staff space.
   role?: string;
   // CNDP consent captured at registration.

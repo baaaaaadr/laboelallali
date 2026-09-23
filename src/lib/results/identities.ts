@@ -15,11 +15,21 @@
  *
  * ⚠ Ordering is meaningful. `identities[0]` is the PRIMARY: the one the home
  * page shows, and the one selected by default on `/resultats`.
+ *
+ * ⚠ The PRACTITIONER access (a doctor's code, « Mes patients ») is read by
+ * `readPractitioner` and is NEVER part of `resolveIdentities` — so never the
+ * primary, never in the family selector, never on the barcode, never
+ * prefetched at login. The home page would otherwise present a patient's
+ * result as « VOTRE dernier bilan ». Same invariant on the server
+ * (`practitionerIdentity`), where it is the security boundary.
  */
 
-import type { LinkedRequester, RequesterType } from '@/types/cyberlab';
+import type { LinkedRequester, PractitionerAccess, RequesterType } from '@/types/cyberlab';
 
 const VALID_TYPES: readonly RequesterType[] = ['patient', 'medecin', 'correspondant'];
+
+/** Types a practitioner access may carry — never "patient" (mirror of the server). */
+export const PRACTITIONER_TYPES: readonly RequesterType[] = ['medecin', 'correspondant'];
 
 /**
  * Canonical form of a `requester_id` — mirror of `normalizeRequesterId` in
@@ -46,11 +56,57 @@ export interface Identity {
   isSelf: boolean;
 }
 
+/**
+ * Canonical form of a prescriber code: no whitespace AND upper case — mirror of
+ * `normalizePractitionerId` in `functions/src/cyberlab/identities.ts`.
+ */
+export function normalizePractitionerId(raw: unknown): string {
+  return normalizeRequesterId(raw).toUpperCase();
+}
+
 /** The subset of the profile this module reads. */
 export interface IdentityProfile {
   requester_id?: string;
   type?: RequesterType;
   linkedRequesters?: LinkedRequester[];
+  practitioner?: PractitionerAccess | unknown;
+}
+
+/** The account's doctor access, as the « Mes patients » page uses it. */
+export interface PractitionerIdentity {
+  /** Canonical prescriber code — the SELECTOR sent to `fetchResults`. */
+  requester_id: string;
+  type: RequesterType;
+  /** What the lab typed (« Dr Moustadraf Zouhair »), "" when missing. */
+  label: string;
+}
+
+/**
+ * The account's doctor access, or `null`. Same validity test as the server's
+ * `practitionerIdentity`, so the page never offers an access the server would
+ * refuse (a patient type, an array, an empty code…).
+ */
+export function readPractitioner(
+  profile: IdentityProfile | null | undefined
+): PractitionerIdentity | null {
+  const p = profile?.practitioner;
+  if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
+  const entry = p as { requester_id?: unknown; type?: unknown; label?: unknown };
+  const id = normalizePractitionerId(entry.requester_id);
+  if (id === '') return null;
+  if (typeof entry.type !== 'string' || !PRACTITIONER_TYPES.includes(entry.type as RequesterType)) {
+    return null;
+  }
+  return {
+    requester_id: id,
+    type: entry.type as RequesterType,
+    label: typeof entry.label === 'string' ? entry.label.trim() : '',
+  };
+}
+
+/** Does the account see any PATIENT dossier (its own or a relative's)? */
+export function hasPatientIdentity(profile: IdentityProfile | null | undefined): boolean {
+  return resolveIdentities(profile, '').length > 0;
 }
 
 function isValidType(t: unknown): t is RequesterType {
