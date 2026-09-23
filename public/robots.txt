@@ -7,6 +7,8 @@ Disallow: /test-rdv
 Disallow: /*/test-rdv
 Disallow: /test-rdv2
 Disallow: /*/test-rdv2
+Disallow: /mes-patients
+Disallow: /*/mes-patients
 
 # Host
 Host: https://www.laboelallali.com
