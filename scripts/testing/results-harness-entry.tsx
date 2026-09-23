@@ -11,12 +11,16 @@
  * Tous les appels aux fonctions Firebase sont enregistrés dans `window.__calls`
  * par la doublure : c'est la mesure principale de ce banc.
  */
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, use, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
 import { ResultsProvider } from '../../src/contexts/ResultsContext';
+import { ThemeProvider } from '../../src/contexts/ThemeContext';
 import ResultatsPage from '../../src/app/[lang]/resultats/page';
 import MesPatientsPage from '../../src/app/[lang]/mes-patients/page';
+import ProfilePage from '../../src/app/[lang]/profile/page';
+import Header from '../../src/components/layout/Header';
+import HeroPersonalPanel from '../../src/components/features/home/HeroPersonalPanel';
 import PractitionerCard, {
   type PractitionerCheck,
   type PractitionerDraft,
@@ -163,10 +167,30 @@ function PractitionerCardHarness(_props: { params: Promise<{ lang: string }> }) 
   );
 }
 
+// ── Les points d'entrée de l'espace médecin ─────────────────────────────────
+// L'en-tête (barre desktop ET tiroir mobile : sans feuille de style, les deux
+// sont dans le DOM) — `ThemeSwitcher` exige le vrai `ThemeProvider`.
+function HeaderHarness() {
+  return (
+    <ThemeProvider>
+      <Header />
+    </ThemeProvider>
+  );
+}
+
+// Le panneau personnel du héros d'accueil, seul : il reçoit `lang`, pas `params`.
+function HeroPanelHarness({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = use(params);
+  return <HeroPersonalPanel lang={lang} />;
+}
+
 // ── Montage ─────────────────────────────────────────────────────────────────
 let root: Root | null = null;
 
-w.__mount = (page = 'resultats') => {
+// `page: string` explicite : les bancs du parcours et de la PWA déclarent
+// globalement `window.__mount` SANS paramètre ; intersecté avec le type d'ici,
+// le paramètre perd son type contextuel (TS2538 sur `pages[page]`).
+w.__mount = (page: string = 'resultats') => {
   const el = document.getElementById('app')!;
   root = createRoot(el);
   const lang = w.__lang === 'ar' ? 'ar' : 'fr';
@@ -177,6 +201,9 @@ w.__mount = (page = 'resultats') => {
     resultats: ResultatsPage,
     'mes-patients': MesPatientsPage,
     'practitioner-card': PractitionerCardHarness,
+    profile: ProfilePage,
+    header: HeaderHarness,
+    'home-panel': HeroPanelHarness,
   };
   const Page = pages[page];
   if (!Page) throw new Error(`page inconnue du banc : ${page}`);

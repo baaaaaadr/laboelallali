@@ -55,6 +55,7 @@ inchangées, pour ne rien casser chez leurs utilisateurs :
 | `stub-react-pdf` | `react-pdf` | pdf.js et son worker viennent d'un CDN |
 | `stub-i18n-stable` | `react-i18next` | enveloppe `stub-i18n` avec une fonction `t` **stable** |
 | `stub-navigation-stable` | `next/navigation` | routeur **stable** ; `replace` enregistré avec le préfixe `replace:` |
+| `stub-dynamic` | `next/dynamic` | le composant chargé à la demande n'est jamais rendu (la fenêtre de recherche de l'en-tête) |
 
 **Pourquoi des références stables :** ce banc COMPTE les appels. Une doublure
 qui recréerait `user`, `t` ou le routeur à chaque rendu relancerait les effets
@@ -66,10 +67,34 @@ Le serveur de résultats simulé est décrit dans `results-harness-entry.tsx`
 applique les mêmes règles que le vrai serveur (identifiant inconnu refusé,
 dossier hors périmètre en 404). Données **fictives** uniquement.
 
-Deux pièges propres à ce banc :
+Pages montables (`window.__mount(page)`, voir `results-harness-entry.tsx`) :
+`resultats`, `mes-patients`, `profile`, `practitioner-card` (la carte admin
+seule), `header` (l'en-tête : sans feuille de style, la barre desktop ET le
+tiroir mobile sont tous deux dans le DOM) et `home-panel` (le panneau personnel
+du héros d'accueil). `freshPage` (`results-bench.js`) accepte aussi `pathname`
+(ce que voit `usePathname()`), `authLoading` (monter pendant le chargement de
+l'authentification, le compte étant posé plus tard par `window.__setAuth`) et
+`storage` (clés `localStorage` posées avant le montage — l'indice du panneau
+d'accueil, par exemple).
+
+## Banc « médecin » (`npm run test:practitioner:ui`)
+
+`node scripts/test-practitioner-ui.js` — même mécanique et mêmes doublures que le
+banc « résultats ». 133 vérifications : l'espace « Mes patients » (M1–M9 : une
+liste = un appel sans PDF, un patient ouvert = un PDF, le sien ; recherche,
+états bloqués, collision, changement de compte, arabe), le verrou de la carte
+admin (M10), et les points d'entrée (M11 menu, M12 accueil, M13 profil et
+bandeau de `/resultats`). Les tests purs sont à part : `npm run test:practitioner`.
+
+Pièges propres à ces bancs :
 
 - `buildSync` d'esbuild refuse les greffons : le pilote utilise `build()` (même
   binaire, pas de `.cmd`, donc pas le piège `EINVAL` de Windows).
 - `TabsNavigation` utilise `<style jsx>`, que Next compile et qu'esbuild laisse
   tel quel : React signale un attribut `jsx` non booléen. C'est un artefact du
   banc, écarté explicitement dans `assertNoErrors`.
+- esbuild compile aussi les cibles des `import()` dynamiques, même jamais
+  exécutées : la fenêtre de recherche de l'en-tête tire `medecinsService`, d'où
+  `query`/`where`/`orderBy`/`limit` (sans effet) dans `stub-firebase-results`.
+- Un emplacement REPLIÉ (hauteur nulle) est « invisible » pour Playwright :
+  l'attendre avec `{ state: 'attached' }`, pas avec la visibilité par défaut.

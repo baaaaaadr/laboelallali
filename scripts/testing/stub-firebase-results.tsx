@@ -94,6 +94,21 @@ export async function getDocs(ref: { name: string }) {
   }));
   return { docs, empty: docs.length === 0, forEach: (fn: (d: unknown) => void) => docs.forEach(fn) };
 }
+// Contraintes de requête : sans effet (la requête rend la collection entière).
+// Présentes parce qu'esbuild compile aussi les cibles des `import()` — celle de
+// la fenêtre de recherche de l'en-tête importe `medecinsService`.
+export function query<T>(ref: T): T {
+  return ref;
+}
+export function where() {
+  return {};
+}
+export function orderBy() {
+  return {};
+}
+export function limit() {
+  return {};
+}
 export async function setDoc(ref: { path: string }, data: unknown) {
   w.__writes.push({ path: ref.path, data });
 }

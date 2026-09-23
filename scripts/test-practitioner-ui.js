@@ -17,7 +17,11 @@
  *  - un médecin qui est aussi patient ne déclenche AUCUN appel avec son code
  *    médecin au démarrage (l'accès médecin n'est jamais l'identité par défaut) ;
  *  - changer de compte ne laisse rien du médecin à l'écran ;
- *  - le verrou de la carte admin « Accès médecin ».
+ *  - le verrou de la carte admin « Accès médecin » ;
+ *  - les points d'entrée (M11–M13) : le menu (« Mes patients » à la place de
+ *    « Médecins » dans la barre, en plus dans le tiroir), l'accueil replié sans
+ *    flash « Activer mon accès » pour un médecin sans dossier personnel, la
+ *    carte « Espace médecin » du profil, le bandeau de /resultats.
  *
  * ⚠ Aucune feuille de style : les classes responsives (`hidden lg:block`) sont
  *   sans effet ici — on vérifie la structure, les textes et les appels.
@@ -369,6 +373,181 @@ async function m10AdminCard(browser) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ── M11 — le menu ───────────────────────────────────────────────────────────
+/** Les liens d'une zone de l'en-tête : la barre desktop ou le tiroir mobile. */
+async function headerLinks(p, zone) {
+  const sel = zone === 'desktop' ? 'nav.desktop-nav a' : '#mobile-menu-container nav a';
+  return p.$$eval(sel, (els) =>
+    els.map((a) => ({
+      href: a.getAttribute('href'),
+      text: (a.textContent || '').trim(),
+      current: a.getAttribute('aria-current') === 'page',
+    }))
+  );
+}
+const hrefs = (links) => links.map((l) => l.href);
+
+const PATIENT_ONLY = {
+  uid: 'uid-patient-banc',
+  fullName: 'Patient Banc',
+  phone: '0600000004',
+  email: 'patient.banc@example.test',
+  requester_id: '900002',
+  type: 'patient',
+};
+const MY_DOSSIERS = [
+  { dossier_id: 'D-9001-A', patient_nom: '', patient_prenom: '', date_dossier: '2026-05-01T08:00:00Z', etat: 'Final', analyses_summary: 'C GLY' },
+];
+const DOCTOR_PATIENT = { ...DOCTOR, requester_id: '900001', type: 'patient' };
+const doctorPatientServer = () =>
+  doctorServer({ primary: '900001', identities: { '900001': { list: MY_DOSSIERS }, [CODE]: { list: ROSTER } } });
+const patientServer = () => ({ primary: '900002', identities: { '900002': { list: MY_DOSSIERS } }, delayMs: 40 });
+
+async function m11Menu(browser) {
+  scenario('M11 — menu : « Mes patients » remplace « Médecins » dans la barre, s’ajoute au tiroir');
+  // Un patient : le menu ne change pas.
+  let p = await freshPage(browser, { page: 'header', profile: PATIENT_ONLY, server: patientServer(), pathname: '/fr' });
+  await p.waitForSelector('nav.desktop-nav a');
+  let desk = await headerLinks(p, 'desktop');
+  let drawer = await headerLinks(p, 'drawer');
+  ok('patient : « Médecins » dans la barre', hrefs(desk).includes('/fr/medecins'), JSON.stringify(hrefs(desk)));
+  ok('patient : aucun lien « Mes patients », ni barre ni tiroir', ![...desk, ...drawer].some((l) => l.href === '/fr/mes-patients'));
+  await p.close();
+
+  // Un médecin, sur sa page.
+  p = await freshPage(browser, { page: 'header', profile: DOCTOR, server: doctorServer(), pathname: '/fr/mes-patients' });
+  await p.waitForSelector('nav.desktop-nav a');
+  desk = await headerLinks(p, 'desktop');
+  drawer = await headerLinks(p, 'drawer');
+  const deskMp = desk.find((l) => l.href === '/fr/mes-patients');
+  ok('médecin : « Mes patients » dans la barre', deskMp?.text === 'Mes patients', JSON.stringify(deskMp));
+  // La mesure qui fonde ce choix est dans Header.tsx : un 8e lien déborde à 1024 px.
+  ok('…À LA PLACE de « Médecins » : toujours 7 liens', !hrefs(desk).includes('/fr/medecins') && desk.length === 7, JSON.stringify(hrefs(desk)));
+  ok('…juste après « Résultats »', hrefs(desk).indexOf('/fr/mes-patients') === hrefs(desk).indexOf('/fr/resultats') + 1);
+  ok('…marqué « vous êtes ici » sur sa page', deskMp?.current === true);
+  const i = drawer.findIndex((l) => l.href === '/fr/mes-patients');
+  ok('tiroir : « Mes patients » AJOUTÉ juste après « Résultats »', i > 0 && drawer[i - 1].href === '/fr/resultats', JSON.stringify(hrefs(drawer)));
+  ok('tiroir : « Médecins » reste (aucune contrainte de largeur)', hrefs(drawer).includes('/fr/medecins'));
+  ok('le menu n’appelle jamais le serveur de résultats', (await calls(p)).length === 0);
+  ok('aucune erreur JavaScript', realErrors(p).length === 0, realErrors(p).slice(0, 3).join(' | '));
+  await p.close();
+
+  // Un membre de l'équipe qui a aussi un accès médecin (la recette d'Aziz et Hassan).
+  p = await freshPage(browser, { page: 'header', profile: { ...DOCTOR, role: 'admin' }, server: doctorServer(), pathname: '/fr' });
+  await p.waitForSelector('nav.desktop-nav a');
+  desk = await headerLinks(p, 'desktop');
+  drawer = await headerLinks(p, 'drawer');
+  ok('équipe + médecin : la barre reste celle de l’équipe (« Médecins » et « Admin », pas de 9e lien)',
+    hrefs(desk).includes('/fr/medecins') && hrefs(desk).includes('/fr/admin') && !hrefs(desk).includes('/fr/mes-patients'),
+    JSON.stringify(hrefs(desk)));
+  ok('…« Mes patients » dans son tiroir', hrefs(drawer).includes('/fr/mes-patients'));
+  await p.close();
+
+  // En arabe.
+  p = await freshPage(browser, { lang: 'ar', page: 'header', profile: DOCTOR, server: doctorServer(), pathname: '/ar' });
+  await p.waitForSelector('nav.desktop-nav a');
+  desk = await headerLinks(p, 'desktop');
+  ok('arabe : « مرضاي » dans la barre', desk.some((l) => l.href === '/ar/mes-patients' && l.text === 'مرضاي'), JSON.stringify(desk.map((l) => l.text)));
+  await p.close();
+}
+
+// ── M12 — le panneau personnel de l'accueil ─────────────────────────────────
+const HINT_KEY = 'laboElAllali_heroPanel';
+
+async function heroSlot(p) {
+  return p.$eval('.hero-panel-slot', (el) => ({
+    collapsed: el.classList.contains('hero-panel-slot--collapsed'),
+    panel: !!el.querySelector('.hero-panel'),
+    text: el.textContent || '',
+  }));
+}
+const storedHint = (p) => p.evaluate((k) => window.localStorage.getItem(k), HINT_KEY);
+
+async function m12HomePanel(browser) {
+  scenario('M12 — accueil : un médecin sans dossier personnel ne voit jamais « Activer mon accès »');
+  // Première visite (aucun indice mémorisé) : l'authentification se résout.
+  let p = await freshPage(browser, { page: 'home-panel', server: doctorServer(), authLoading: true });
+  await p.waitForSelector('.hero-panel-slot', { state: 'attached' }); // replié = hauteur nulle, donc « invisible »
+  await p.waitForTimeout(200);
+  await p.evaluate((d) => window.__setAuth(d), DOCTOR);
+  await p.waitForTimeout(400);
+  let s = await heroSlot(p);
+  ok('médecin seul : l’emplacement se replie', s.collapsed && !s.panel, JSON.stringify(s));
+  ok('…jamais « Activer mon accès »', !s.text.includes('Activer'));
+  ok('indice mémorisé : « none » — une catégorie, rien d’autre', (await storedHint(p)) === 'none', String(await storedHint(p)));
+  ok('aucun appel au serveur de résultats', (await calls(p)).length === 0);
+  await p.close();
+
+  // Visite suivante : l'indice « none » replie AVANT que Firebase réponde.
+  p = await freshPage(browser, { page: 'home-panel', server: doctorServer(), authLoading: true, storage: { [HINT_KEY]: 'none' } });
+  await p.waitForSelector('.hero-panel-slot', { state: 'attached' }); // replié = hauteur nulle, donc « invisible »
+  await p.waitForTimeout(300);
+  s = await heroSlot(p);
+  ok('pendant le chargement : déjà replié, aucun flash', s.collapsed && !s.panel, JSON.stringify(s));
+  await p.evaluate((d) => window.__setAuth(d), DOCTOR);
+  await p.waitForTimeout(300);
+  ok('…et il le reste une fois le compte connu', (await heroSlot(p)).collapsed);
+  await p.close();
+
+  // Un médecin qui est AUSSI patient garde son panneau — sur SON dossier.
+  p = await freshPage(browser, { page: 'home-panel', profile: DOCTOR_PATIENT, server: doctorPatientServer() });
+  await p.waitForSelector('.hero-panel', { timeout: 8000 });
+  await p.waitForTimeout(800);
+  s = await heroSlot(p);
+  ok('médecin ET patient : panneau affiché', !s.collapsed && s.panel, JSON.stringify(s));
+  ok('…indice « linked »', (await storedHint(p)) === 'linked');
+  ok('…aucun appel avec le code médecin', withCode(await calls(p)).length === 0, JSON.stringify(await calls(p)));
+  ok('…aucun nom de ses patients', !/DÉMO|EXEMPLE|FICTIF|ESSAI/.test(s.text));
+  await p.close();
+
+  // Garde de non-régression : un compte sans AUCUN accès garde son invitation.
+  const plain = { uid: 'uid-sans-acces', fullName: 'Sans Accès', phone: '0600000002', email: 'x@example.test' };
+  p = await freshPage(browser, { page: 'home-panel', profile: plain, server: { identities: {} } });
+  await p.waitForSelector('.hero-panel');
+  s = await heroSlot(p);
+  ok('compte sans aucun accès : « Activer mon accès », inchangé', s.text.includes('Activer mon accès'), s.text.slice(0, 120));
+  ok('…indice « noaccess »', (await storedHint(p)) === 'noaccess');
+  await p.close();
+}
+
+// ── M13 — /profile et /resultats ────────────────────────────────────────────
+async function m13ProfileAndBanner(browser) {
+  scenario('M13 — profil : carte « Espace médecin », code-barres masqué ; bandeau sur /resultats');
+  let p = await freshPage(browser, { page: 'profile', profile: DOCTOR, server: doctorServer() });
+  await p.waitForSelector('[data-testid="mp-access-card"]', { timeout: 8000 });
+  let text = await visibleText(p, '#app');
+  ok('médecin seul : carte « Espace médecin »', text.includes('Espace médecin'));
+  ok('…qui mène à /fr/mes-patients', (await p.$eval('[data-testid="mp-access-card"] a', (a) => a.getAttribute('href'))) === '/fr/mes-patients');
+  ok('…et PAS de carte « Mon code patient » (il n’a pas de dossier)', !text.includes('Mon code patient'));
+  ok('aucun appel au serveur de résultats', (await calls(p)).length === 0);
+  assertClean(p, text);
+  await p.screenshot({ path: path.join(SHOTS, 'm13-profil-medecin.png'), fullPage: true });
+  await p.close();
+
+  p = await freshPage(browser, { page: 'profile', profile: DOCTOR_PATIENT, server: doctorPatientServer() });
+  await p.waitForSelector('[data-testid="mp-access-card"]', { timeout: 8000 });
+  text = await visibleText(p, '#app');
+  ok('médecin ET patient : son code patient (900001) ET la carte « Espace médecin »', text.includes('Mon code patient') && text.includes('900001'));
+  await p.close();
+
+  p = await freshPage(browser, { page: 'profile', profile: PATIENT_ONLY, server: patientServer() });
+  await p.getByText('Mon code patient').first().waitFor({ timeout: 8000 });
+  ok('patient : pas de carte « Espace médecin »', !(await p.$('[data-testid="mp-access-card"]')));
+  await p.close();
+
+  p = await freshPage(browser, { page: 'resultats', profile: DOCTOR, server: doctorServer() });
+  await p.waitForSelector('[data-testid="mp-resultats-banner"]', { timeout: 8000 });
+  ok('/resultats : un bandeau mène le médecin à « Mes patients »',
+    (await p.$eval('[data-testid="mp-resultats-banner"] a', (a) => a.getAttribute('href'))) === '/fr/mes-patients');
+  ok('…sans jamais appeler le serveur avec son code', withCode(await calls(p)).length === 0);
+  await p.close();
+
+  p = await freshPage(browser, { page: 'resultats', profile: PATIENT_ONLY, server: patientServer() });
+  await p.getByText('Dossier D-9001-A').first().waitFor({ timeout: 8000 });
+  ok('/resultats : aucun bandeau pour un patient', !(await p.$('[data-testid="mp-resultats-banner"]')));
+  await p.close();
+}
+
 async function main() {
   console.log('\n══ Banc « médecin » — /mes-patients sous le vrai ResultsProvider ══');
   await build();
@@ -384,6 +563,9 @@ async function main() {
     await m8AccountSwitch(browser);
     await m9Arabic(browser);
     await m10AdminCard(browser);
+    await m11Menu(browser);
+    await m12HomePanel(browser);
+    await m13ProfileAndBanner(browser);
   } finally {
     await browser.close();
   }

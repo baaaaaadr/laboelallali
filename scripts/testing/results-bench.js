@@ -46,6 +46,7 @@ async function build() {
       'react-hot-toast': T('stub-toast.tsx'),
       'next/navigation': T('stub-navigation-stable.tsx'),
       'next/link': T('stub-link.tsx'),
+      'next/dynamic': T('stub-dynamic.tsx'),
     },
     plugins: [
       {
@@ -107,8 +108,17 @@ const HTML = '<!doctype html><html><head><meta charset="utf-8"></head><body><div
  * Une page prête : banc chargé, langue, serveur simulé et compte posés, page
  * montée. Une VRAIE origine http (`labo.test`) : `localStorage` et l'historique
  * lèvent ou se comportent mal sur `about:blank`.
+ *
+ * Options pour les points d'entrée (menu, accueil) :
+ *   - `pathname`    : le chemin vu par `usePathname()` (défaut `/{lang}/{page}`) ;
+ *   - `authLoading` : monter PENDANT le chargement de l'authentification (le
+ *                     compte est posé plus tard par `window.__setAuth`) ;
+ *   - `storage`     : clés `localStorage` posées AVANT le montage.
  */
-async function freshPage(browser, { lang = 'fr', profile, server, page = 'resultats', width = 420 }) {
+async function freshPage(
+  browser,
+  { lang = 'fr', profile, server, page = 'resultats', width = 420, pathname = null, authLoading = false, storage = null }
+) {
   const p = await browser.newPage({ viewport: { width, height: 900 } });
   const errors = [];
   p.on('pageerror', (e) => errors.push(String(e)));
@@ -123,14 +133,15 @@ async function freshPage(browser, { lang = 'fr', profile, server, page = 'result
   await p.goto('http://labo.test/');
   await p.addScriptTag({ path: BUNDLE });
   await p.evaluate(
-    ([l, prof, srv, pg]) => {
+    ([l, prof, srv, pg, pn, waitAuth, store]) => {
       window.__lang = l;
       window.__server = srv;
-      window.__pathname = `/${l}/${pg}`;
-      window.__setAuth(prof);
+      window.__pathname = pn || `/${l}/${pg}`;
+      if (store) for (const [k, v] of Object.entries(store)) window.localStorage.setItem(k, v);
+      if (!waitAuth) window.__setAuth(prof);
       window.__mount(pg);
     },
-    [lang, profile, server || { identities: {} }, page]
+    [lang, profile, server || { identities: {} }, page, pathname, authLoading, storage]
   );
   p.__errors = errors;
   return p;
