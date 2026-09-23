@@ -11,11 +11,16 @@
  * Tous les appels aux fonctions Firebase sont enregistrés dans `window.__calls`
  * par la doublure : c'est la mesure principale de ce banc.
  */
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
 import { ResultsProvider } from '../../src/contexts/ResultsContext';
 import ResultatsPage from '../../src/app/[lang]/resultats/page';
+import MesPatientsPage from '../../src/app/[lang]/mes-patients/page';
+import PractitionerCard, {
+  type PractitionerCheck,
+  type PractitionerDraft,
+} from '../../src/components/features/admin/PractitionerCard';
 
 // ── Le serveur de résultats simulé ──────────────────────────────────────────
 interface Dossier {
@@ -41,6 +46,8 @@ interface ServerConfig {
   listError?: string | null;
   /** Code d'erreur renvoyé pour tout chargement de PDF. */
   pdfError?: string | null;
+  /** Identifiants que le serveur du laboratoire ne connaît pas (404 → `unknown_id`). */
+  notFound?: string[];
   /** Latence simulée, en millisecondes. */
   delayMs?: number;
   /** Plafond du serveur réel. */
@@ -82,6 +89,7 @@ async function fetchResults(raw: unknown) {
 
   const id = args.requester_id ?? s.primary ?? null;
   if (!id) throw fnError('failed-precondition');
+  if (s.notFound?.includes(id)) throw fnError('not-found');
   const ident = s.identities[id];
   if (!ident) throw fnError(args.requester_id ? 'permission-denied' : 'failed-precondition');
 
@@ -115,6 +123,46 @@ w.__callables.myRelativeRequests = () => ({ requests: [] });
 w.__callables.recordShare = () => ({});
 w.__callables.joinOutageWaitlist = () => ({ status: 'joined' });
 
+// ── La carte admin « Accès médecin », seule ─────────────────────────────────
+// Présentationnelle : son brouillon et ses callables vivent dans la page admin,
+// que ce banc ne monte pas. Cet habillage tient le brouillon, laisse le pilote
+// injecter le résultat d'une vérification (`__setPractCheck`) et enregistre les
+// actions demandées (`__practActions`) — c'est le VERROU qu'on éprouve.
+type CardWindow = typeof window & {
+  __setPractCheck?: (c: PractitionerCheck | null) => void;
+  __practActions?: string[];
+};
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function PractitionerCardHarness(_props: { params: Promise<{ lang: string }> }) {
+  const [draft, setDraft] = useState<PractitionerDraft>({
+    requester_id: '',
+    type: 'medecin',
+    label: '',
+    allowUnknown: false,
+    allowShared: false,
+  });
+  const [check, setCheck] = useState<PractitionerCheck | null>(null);
+  const cw = window as CardWindow;
+  cw.__setPractCheck = setCheck;
+  cw.__practActions = cw.__practActions || [];
+  return (
+    <PractitionerCard
+      current={null}
+      canEdit
+      draft={draft}
+      onDraft={(p) => setDraft((d) => ({ ...d, ...p }))}
+      check={check}
+      busy={null}
+      error={null}
+      notice={null}
+      onCheck={() => cw.__practActions!.push('check')}
+      onActivate={() => cw.__practActions!.push('activate')}
+      onRemove={() => cw.__practActions!.push('remove')}
+      fmtDate={(ms) => new Date(ms).toISOString().slice(0, 10)}
+    />
+  );
+}
+
 // ── Montage ─────────────────────────────────────────────────────────────────
 let root: Root | null = null;
 
@@ -127,6 +175,8 @@ w.__mount = (page = 'resultats') => {
   const params = Promise.resolve({ lang });
   const pages: Record<string, React.ComponentType<{ params: Promise<{ lang: string }> }>> = {
     resultats: ResultatsPage,
+    'mes-patients': MesPatientsPage,
+    'practitioner-card': PractitionerCardHarness,
   };
   const Page = pages[page];
   if (!Page) throw new Error(`page inconnue du banc : ${page}`);

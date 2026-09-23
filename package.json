@@ -15,6 +15,8 @@
     "test:pwa:offline": "node scripts/test-pwa-offline.js",
     "test:pwa:offline:local": "node scripts/test-pwa-offline.js --local",
     "test:results:ui": "node scripts/test-results-ui.js",
+    "test:practitioner": "node scripts/test-practitioner.js",
+    "test:practitioner:ui": "node scripts/test-practitioner-ui.js",
     "deploy": "npm run clean:devcache && npm run build && firebase deploy",
     "deploy:hosting": "npm run clean:devcache && npm run build && firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",
