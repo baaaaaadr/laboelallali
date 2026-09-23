@@ -36,3 +36,40 @@ c'est elle qu'on inspecte, exactement celle qui partirait en production.
 
 ⚠ Aucune feuille de style n'est chargée : ce banc vérifie la **structure et les
 textes**, jamais l'apparence. Pour l'apparence, ouvrir les pages à la main.
+
+## Banc « résultats » (`npm run test:results:ui`)
+
+`node scripts/test-results-ui.js` monte la vraie page `/resultats` sous le vrai
+`ResultsProvider`, et vérifie ce qu'elle **demande au serveur** : nombre,
+ordre et arguments de chaque appel à `fetchResults`. C'est la garde de
+non-régression du parcours patient, et c'est lui qui a mis en évidence la
+boucle d'appels après une erreur (80 appels en 3 s, corrigée le 23/09/2026).
+
+Il a ses **propres** doublures ; celles du parcours ci-dessus restent
+inchangées, pour ne rien casser chez leurs utilisateurs :
+
+| Doublure | Remplace | Pourquoi une nouvelle |
+|---|---|---|
+| `stub-auth-store` | `@/contexts/AuthContext` (et l'import relatif `./AuthContext` du contexte des résultats, via un greffon esbuild) | profil **complet** et **modifiable en cours d'essai** (`window.__setAuth`), références **stables** entre deux rendus |
+| `stub-firebase-results` | `@/config/firebase`, `firebase/functions`, `firebase/firestore`, `firebase/analytics` | **enregistre chaque appel** dans `window.__calls` et délègue à `window.__callables[nom]` ; `getDoc`/`getDocs` lisent `window.__docs`/`__collections` |
+| `stub-react-pdf` | `react-pdf` | pdf.js et son worker viennent d'un CDN |
+| `stub-i18n-stable` | `react-i18next` | enveloppe `stub-i18n` avec une fonction `t` **stable** |
+| `stub-navigation-stable` | `next/navigation` | routeur **stable** ; `replace` enregistré avec le préfixe `replace:` |
+
+**Pourquoi des références stables :** ce banc COMPTE les appels. Une doublure
+qui recréerait `user`, `t` ou le routeur à chaque rendu relancerait les effets
+qui en dépendent et inventerait des boucles qui n'existent pas en production —
+ou, pire, en masquerait une vraie.
+
+Le serveur de résultats simulé est décrit dans `results-harness-entry.tsx`
+(`window.__server`) : identités, erreurs forcées, latence, plafond de 50. Il
+applique les mêmes règles que le vrai serveur (identifiant inconnu refusé,
+dossier hors périmètre en 404). Données **fictives** uniquement.
+
+Deux pièges propres à ce banc :
+
+- `buildSync` d'esbuild refuse les greffons : le pilote utilise `build()` (même
+  binaire, pas de `.cmd`, donc pas le piège `EINVAL` de Windows).
+- `TabsNavigation` utilise `<style jsx>`, que Next compile et qu'esbuild laisse
+  tel quel : React signale un attribut `jsx` non booléen. C'est un artefact du
+  banc, écarté explicitement dans `assertNoErrors`.
