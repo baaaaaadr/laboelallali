@@ -46,7 +46,14 @@ All rows carry `items-start`: a short chart gains nothing from being padded out 
 Hierarchy, higher does everything lower can:
 - **`owner`** (level 3): manage admins + everything below. (Bootstrapped: hassanelallali@gmail.com, azizelallali@gmail.com.)
 - **`admin`** (level 2): add/remove **staff** + encode. Cannot touch admins/owners.
-- **`staff`** (level 1, "stagiaire"): encode `requester_id`/`type` + test a `requester_id`.
+- **`staff`** (level 1, "stagiaire"): encode `requester_id` with type **`patient`** + test a `requester_id` (any type — read-only, and the front desk already sees every result in Qalam).
+
+### Non-patient types are admin-only (23/09/2026)
+A `medecin`/`correspondant` identity opens a whole **roster of named results** — and since 23/09/2026 a real prescriber code answers on the lab server. So:
+- `adminSetRequester` / `adminFulfillAccessRequest` accept a non-patient type **only from an admin** (`assertOwnTypeAllowed`, `permission-denied` otherwise); the Demandes and Patients selects only offer `Médecin`/`Correspondant` when `isManager`.
+- A **relative is always a patient dossier**: `adminLinkRequester` / `adminFulfillRelativeRequest` refuse any other type (`assertRelativeType`), and the two attach forms (`LinkedRequestersCard`, `RelativeRequestsSection`) no longer show a type selector. A doctor's code attached as a "relative" would have dropped his roster into the family tabs, with a dossier-holder email announcing « un proche peut consulter vos résultats ».
+- Doctors get their access through the separate **accès médecin** (`adminSetPractitioner`, admin level) — see below and `docs/pages/mes-patients.md`.
+- Audit on 23/09/2026: every existing identity (58 own + 4 relatives) was of type `patient` — nothing to migrate.
 
 `levelOf(role)` = `{owner:3, admin:2, staff:1}`. Page sections: encode + test-a-requester_id (level ≥ 1), team management (level ≥ 2), the "add admin" form + admin-removal (level = 3).
 
@@ -74,13 +81,13 @@ The role gate (`LEVEL`/`levelOf`/`requireLevel`) + `REGION` live in a shared lea
 All region `europe-southwest1`, all guarded by `requireLevel`:
 - `adminLookupPatient(email)` (≥staff) → patient profile/identity, or `{ found:false }`. Kept for compat; the UI now uses `adminSearchPatients`.
 - `adminSearchPatients(query)` (≥staff) → `{ results: SearchResult[], truncated }`. Scans `users` (`.limit(SCAN_LIMIT=5000)`, Admin SDK bypasses rules) and matches the normalized query (lowercase + strip diacritics) as a substring of `fullName`/`email`, equality/inclusion on `requester_id`, phone digits (query ≥ 4 digits), or `dateOfBirth`. Exact email/`requester_id` ranked first; capped at `MAX_RESULTS=25` (`truncated` flags overflow). Email fallback via `getUserByEmail` for a profile-less account. Returns `createdAt`/`dateOfBirth` for display. In-memory match (Firestore has no substring search) — see scale caveat in Notes. Never logs PII.
-- `adminSetRequester(email, requester_id, type)` (≥staff) → merges `{requester_id, type}` onto `users/{uid}` (Admin SDK, bypasses rules). Validates `type ∈ {patient,medecin,correspondant}`.
+- `adminSetRequester(email, requester_id, type)` (≥staff) → merges `{requester_id, type}` onto `users/{uid}` (Admin SDK, bypasses rules). Validates `type ∈ {patient,medecin,correspondant}`; **a non-patient type requires ≥admin** (see "Non-patient types are admin-only").
 - **`adminLinkRequester(uid, requester_id, type, label)`** (≥staff) → attaches a RELATIVE's dossier to an account ("ayant droit"). Returns `{success, links, holderNotified}`.
   - Targets by **`uid`**, not email (the Patients tab already holds it; email is a weaker key).
   - Uses a **transaction with an upsert keyed on `requester_id`** — NOT `arrayUnion`, which dedupes by deep equality and would create a duplicate row when a label is corrected.
   - Writes **both** `linkedRequesters` (the rows) and `linkedRequesterIds` (flat ids). The flat array exists because `array-contains` cannot query a sub-field of a map inside an array, and "which accounts can read this dossier?" is a question the lab must be able to answer.
   - **`linkedAt` uses `Timestamp.now()`, never `serverTimestamp()`** — Firestore rejects a sentinel inside an array element, at runtime, in production only.
-  - Refuses: an id equal to the account's own `requester_id`, a missing/over-60-char label, more than `MAX_LINKS` (10) rows.
+  - Refuses: an id equal to the account's own `requester_id`, a missing/over-60-char label, more than `MAX_LINKS` (10) rows, and **any type other than `patient`** (23/09/2026).
   - **Never writes to the dossier holder's document.** Two accounts may point at the same `requester_id`; the holder loses nothing.
   - Emails the **dossier holder** (looked up via `users where requester_id == id`) that a relative can now read their results — best-effort, and only possible when the holder has an account carrying an email. `holderNotified` tells the screen whether anything was actually sent.
 - **`adminUnlinkRequester(uid, requester_id)`** (≥staff) → removes one row, same transaction shape. Returns the fresh `links`.
@@ -95,7 +102,7 @@ All region `europe-southwest1`, all guarded by `requireLevel`:
 
 Access requests (`resultAccessRequests/{uid}`, only touched via callables):
 - `adminListAccessRequests()` (≥staff) → pending requests (`{uid, fullName, email, phone, createdAt}`).
-- `adminFulfillAccessRequest(uid, requester_id, type)` (≥staff) → merges identity onto `users/{uid}` + marks the request `fulfilled` (records `fulfilledBy`/`fulfilledAt`).
+- `adminFulfillAccessRequest(uid, requester_id, type)` (≥staff; **non-patient type ≥admin**) → merges identity onto `users/{uid}` + marks the request `fulfilled` (records `fulfilledBy`/`fulfilledAt`).
 - `adminRejectAccessRequest(uid)` (≥staff) → marks the request `rejected`.
 - Patient-side (not admin-gated): `requestResultsAccess()` creates a `pending` request; `myAccessRequest()` returns its status (used by `/resultats`). **Also fired automatically once per signup** by the login page (`autoRequestResultsAccess()`), so most `pending` requests now originate from signup rather than the button (Dr Aziz onboarding queue; see `docs/pages/login.md`).
 

@@ -34,6 +34,41 @@ import {
 const VALID_TYPES = ["patient", "medecin", "correspondant"] as const;
 type RequesterType = (typeof VALID_TYPES)[number];
 
+/**
+ * ⚠ A non-patient type (médecin / correspondant) opens a whole ROSTER of named
+ * results — since 23/09/2026 a real prescriber code answers on the lab server.
+ * Interns (staff) activate patients every day; only an admin may give an
+ * account a non-patient identity of its own. Doctors normally get their access
+ * through `adminSetPractitioner`, which keeps it apart from their patient
+ * identity.
+ * @param {RequesterType} type the type about to be written.
+ * @param {number} level the caller's level (from `requireLevel`).
+ */
+function assertOwnTypeAllowed(type: RequesterType, level: number): void {
+  if (type !== "patient" && level < LEVEL.admin) {
+    throw new HttpsError(
+      "permission-denied",
+      "Seul un administrateur peut attribuer un type médecin ou correspondant."
+    );
+  }
+}
+
+/**
+ * A relative is a PATIENT dossier, by definition. A doctor's code attached as a
+ * "relative" would drop his whole roster into the family tab selector, and the
+ * dossier-holder email would announce « un proche peut consulter vos
+ * résultats ».
+ * @param {string} type the type about to be written.
+ */
+function assertRelativeType(type: string): void {
+  if (type !== "patient") {
+    throw new HttpsError(
+      "invalid-argument",
+      "Un proche est toujours un dossier patient. Pour un médecin, utilisez l'accès médecin."
+    );
+  }
+}
+
 async function getUidByEmail(email: string, subject: string): Promise<string> {
   try {
     const rec = await admin.auth().getUserByEmail(email);
@@ -160,7 +195,7 @@ interface SetData {
 export const adminSetRequester = onCall(
   { region: REGION },
   async (request: CallableRequest<SetData>) => {
-    await requireLevel(request, LEVEL.staff);
+    const { level } = await requireLevel(request, LEVEL.staff);
     const email = (request.data?.email || "").trim();
     const requesterId = normalizeRequesterId(request.data?.requester_id);
     const type = (request.data?.type || "").trim();
@@ -171,6 +206,7 @@ export const adminSetRequester = onCall(
     if (!VALID_TYPES.includes(type as RequesterType)) {
       throw new HttpsError("invalid-argument", "Type invalide.");
     }
+    assertOwnTypeAllowed(type as RequesterType, level);
     const uid = await getUidByEmail(email, "Le patient");
     await admin
       .firestore()
@@ -564,7 +600,7 @@ export const adminFulfillAccessRequest = onCall(
   async (
     request: CallableRequest<{ uid?: string; requester_id?: string; type?: string }>
   ) => {
-    const { uid: adminUid } = await requireLevel(request, LEVEL.staff);
+    const { uid: adminUid, level } = await requireLevel(request, LEVEL.staff);
     const targetUid = (request.data?.uid || "").trim();
     const requesterId = normalizeRequesterId(request.data?.requester_id);
     const type = (request.data?.type || "").trim();
@@ -575,6 +611,7 @@ export const adminFulfillAccessRequest = onCall(
     if (!VALID_TYPES.includes(type as RequesterType)) {
       throw new HttpsError("invalid-argument", "Type invalide.");
     }
+    assertOwnTypeAllowed(type as RequesterType, level);
     await admin
       .firestore()
       .doc(`users/${targetUid}`)
@@ -816,6 +853,7 @@ export const adminLinkRequester = onCall(
     if (!VALID_TYPES.includes(type as RequesterType)) {
       throw new HttpsError("invalid-argument", "Type invalide.");
     }
+    assertRelativeType(type);
     if (!label) {
       throw new HttpsError(
         "invalid-argument",
@@ -1192,6 +1230,7 @@ export const adminFulfillRelativeRequest = onCall(
     if (!VALID_TYPES.includes(type as RequesterType)) {
       throw new HttpsError("invalid-argument", "Type invalide.");
     }
+    assertRelativeType(type);
     if (!label) {
       throw new HttpsError("invalid-argument", "Libelle requis.");
     }

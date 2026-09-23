@@ -221,20 +221,8 @@ export default function RelativeRequestsSection({
                   className={inputClass}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
-                  {t('admin.type_label', 'Type')}
-                </label>
-                <select
-                  value={v.type}
-                  onChange={(e) => onInput(req.id, { type: e.target.value as RequesterType })}
-                  className={inputClass}
-                >
-                  <option value="patient">{t('admin.type_patient', 'Patient')}</option>
-                  <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
-                  <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
-                </select>
-              </div>
+              {/* No type selector: a relative is ALWAYS a patient dossier
+                  (the server refuses anything else — assertRelativeType). */}
             </div>
 
             <div>

@@ -87,7 +87,9 @@ export default function LinkedRequestersCard({
 }: Props) {
   const { t } = useTranslation('common');
   const newId = draft.requester_id;
-  const newType = draft.type;
+  // Always 'patient', whatever an older draft held: a relative is a patient
+  // dossier by definition, and the server refuses anything else.
+  const newType: RequesterType = 'patient';
   const newLabel = draft.label;
   // Which row is asking "are you sure?". An IN-PAGE confirmation, not
   // window.confirm(). The native dialog was tried and replaced: it is painted by
@@ -289,20 +291,10 @@ export default function LinkedRequestersCard({
             )}
           </p>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
-            {t('admin.type_label', 'Type')}
-          </label>
-          <select
-            value={newType}
-            onChange={(e) => onDraft({ type: e.target.value as RequesterType })}
-            className={inputClass}
-          >
-            <option value="patient">{t('admin.type_patient', 'Patient')}</option>
-            <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
-            <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
-          </select>
-        </div>
+        {/* No type selector: a relative is ALWAYS a patient dossier. A doctor's
+            code attached here would drop his whole named roster into the
+            family tabs — doctors get the separate « accès médecin » instead.
+            The server refuses any other type (assertRelativeType). */}
 
         <div className="flex flex-wrap gap-3">
           <button

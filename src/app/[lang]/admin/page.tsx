@@ -1000,8 +1000,14 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         className="rounded-lg px-3 py-2.5 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
                       >
                         <option value="patient">{t('admin.type_patient', 'Patient')}</option>
-                        <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
-                        <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
+                        {/* Non-patient types open a whole roster of named
+                            results: admins only (the server enforces it too). */}
+                        {isManager && (
+                          <>
+                            <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
+                            <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
+                          </>
+                        )}
                       </select>
                     </div>
                     <div className="flex gap-2">
@@ -1205,8 +1211,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                       className="w-full rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
                     >
                       <option value="patient">{t('admin.type_patient', 'Patient')}</option>
-                      <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
-                      <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
+                      {/* Admins only — see the same guard in the Demandes tab. */}
+                      {isManager && (
+                        <>
+                          <option value="medecin">{t('admin.type_medecin', 'Médecin')}</option>
+                          <option value="correspondant">{t('admin.type_correspondant', 'Correspondant')}</option>
+                        </>
+                      )}
                     </select>
                   </div>
                   {/* The most prominent button on the page is also the one that
