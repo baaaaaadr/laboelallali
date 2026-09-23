@@ -44,6 +44,14 @@ service cloud.firestore {
     // the newest and most serious — self-granting access to ANOTHER PATIENT'S
     // dossier by writing linkedRequesters. Attaching a relative is a decision the
     // lab staff makes in person; it can never originate from the client.
+    //
+    // `practitioner` (23/09/2026) is the heaviest of all: a prescribing doctor's
+    // code opens the named results of EVERY patient he prescribed for. It is set
+    // only by adminSetPractitioner (admin level), and fetchResults honours it on
+    // an explicit selector. Without it in BOTH lists below, any signed-in user
+    // could write practitioner:{requester_id:"<a doctor's code>"} on their own
+    // profile and read that doctor's whole roster. Keep the two lists identical —
+    // scripts/test-practitioner.js checks it.
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
 
@@ -54,7 +62,8 @@ service cloud.firestore {
               .hasAny(['role', 'requester_id', 'type', 'lastResultsAt',
                        'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
                        'lastRelanceAt', 'relanceCount',
-                       'linkedRequesters', 'linkedRequesterIds']);
+                       'linkedRequesters', 'linkedRequesterIds',
+                       'practitioner']);
 
       // Update: allowed only if it does not CHANGE any privileged field. diff()
       // compares values, so a {merge:true} write that echoes an unchanged role /
@@ -66,7 +75,8 @@ service cloud.firestore {
               .hasAny(['role', 'requester_id', 'type', 'lastResultsAt',
                        'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
                        'lastRelanceAt', 'relanceCount',
-                       'linkedRequesters', 'linkedRequesterIds']);
+                       'linkedRequesters', 'linkedRequesterIds',
+                       'practitioner']);
     }
 
     // Anonymous global usage counters (usageDaily/{YYYY-MM-DD}) are written ONLY

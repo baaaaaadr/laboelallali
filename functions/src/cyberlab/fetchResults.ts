@@ -31,7 +31,7 @@ import {
   IncludePdf,
   normalizeRequesterId,
 } from "./client";
-import {authorizedIdentities, resolveIdentity} from "./identities";
+import {hasAnyIdentity, resolveIdentity} from "./identities";
 import {
   alertRecipients,
   fmtCasablanca,
@@ -130,6 +130,55 @@ async function bumpProxyConsultation(): Promise<void> {
         {proxyConsultations: admin.firestore.FieldValue.increment(1)},
         {merge: true}
       );
+  } catch {
+    /* best-effort only */
+  }
+}
+
+/**
+ * A doctor consulted his "Mes patients" roster (practitioner access).
+ *
+ * Kept APART from the patient telemetry on purpose. `lastResultsAt`,
+ * `resultsViewCount` and `usageDaily.consultations` feed the dashboard's patient
+ * adoption and dormancy views — and the relances list, where staff call dormant
+ * PATIENTS. A doctor's roster views would pollute all three. Recorded instead:
+ *  - `usageDaily/{day}.practitionerConsultations`, an anonymous daily tally;
+ *  - `practitioner.lastUsedAt` on the doctor's own profile, throttled like the
+ *    patient stamp, so the lab can see whether an activated doctor uses it.
+ *
+ * The profile stamp is a CONDITIONAL update (the document must be unchanged
+ * since we read it): if the lab removed or changed the access in the meantime,
+ * the write fails silently instead of resurrecting a partial `practitioner` map.
+ * Never throws — usage tracking must never break a doctor's results.
+ */
+async function touchPractitionerUsage(
+  uid: string,
+  snap: admin.firestore.DocumentSnapshot,
+  practitioner: unknown
+): Promise<void> {
+  try {
+    const db = admin.firestore();
+    const writes: Promise<unknown>[] = [
+      db
+        .doc(`usageDaily/${todayKey()}`)
+        .set(
+          {practitionerConsultations: admin.firestore.FieldValue.increment(1)},
+          {merge: true}
+        ),
+    ];
+    const last = (practitioner as {lastUsedAt?: unknown} | undefined)?.lastUsedAt as
+      | admin.firestore.Timestamp
+      | undefined;
+    const lastMs = last && typeof last.toMillis === "function" ? last.toMillis() : 0;
+    if (Date.now() - lastMs >= USAGE_THROTTLE_MS && snap.updateTime) {
+      writes.push(
+        db.doc(`users/${uid}`).update(
+          {"practitioner.lastUsedAt": admin.firestore.FieldValue.serverTimestamp()},
+          {lastUpdateTime: snap.updateTime}
+        )
+      );
+    }
+    await Promise.allSettled(writes);
   } catch {
     /* best-effort only */
   }
@@ -267,8 +316,9 @@ export async function fetchResultsForUser(
 
   const data = snap.data() ?? {};
 
-  // Which identity to read: the caller's own dossier, or one of the relatives'
-  // dossiers the lab attached to this account. Ids are normalized on BOTH sides
+  // Which identity to read: the caller's own dossier, one of the relatives'
+  // dossiers the lab attached to this account, or — on an explicit selector
+  // only — the account's practitioner roster. Ids are normalized on BOTH sides
   // inside `resolveIdentity` — a profile saved before the whitespace fix may
   // still hold "67 305", which the lab server 404s.
   const identity = resolveIdentity(data, opts.requester_id);
@@ -276,9 +326,7 @@ export async function fetchResultsForUser(
     // Asked for a specific dossier and did not get it → it is not (or no longer)
     // theirs. Asked for nothing and got nothing → the account has no access yet.
     throw new ProfileError(
-      opts.requester_id && authorizedIdentities(data).length > 0 ?
-        "not_authorized" :
-        "no_requester"
+      opts.requester_id && hasAnyIdentity(data) ? "not_authorized" : "no_requester"
     );
   }
 
@@ -291,7 +339,13 @@ export async function fetchResultsForUser(
     req.dossier_id = opts.dossier_id;
   } else {
     req.max_results = MAX_RESULTS;
-    if (opts.include_pdf) req.include_pdf = opts.include_pdf;
+    // A practitioner's list NEVER embeds PDFs, whatever the client asked: a
+    // roster reaches 50 dossiers, and a PDF costs ~260 KB and ~2.5 s (measured
+    // 23/09/2026). "all" would blow the 20 s transport timeout, surface as a
+    // network outage and fire a false "un patient est bloqué" alert. PDFs are
+    // fetched one by one, when the doctor opens a patient.
+    const include = identity.kind === "practitioner" ? "none" : opts.include_pdf;
+    if (include) req.include_pdf = include;
   }
 
   const resp = await callCyberlab(cfg, req);
@@ -302,11 +356,14 @@ export async function fetchResultsForUser(
   // the function instance freezes; the 6 h throttle makes it a no-op most times.
   //
   // A relative's dossier never stamps the profile — see `bumpProxyConsultation`.
+  // A practitioner roster has its own counters — see `touchPractitionerUsage`.
   if (!opts.dossier_id) {
-    if (identity.isSelf) {
+    if (identity.kind === "self") {
       await touchLastResultsAt(uid, data.lastResultsAt, Boolean(data.firstResultsAt));
-    } else {
+    } else if (identity.kind === "linked") {
       await bumpProxyConsultation();
+    } else {
+      await touchPractitionerUsage(uid, snap, data.practitioner);
     }
   }
 

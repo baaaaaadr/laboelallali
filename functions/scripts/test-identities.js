@@ -21,6 +21,10 @@ const {
   authorizedIdentities,
   resolveIdentity,
   wasRefused,
+  practitionerIdentity,
+  hasAnyIdentity,
+  normalizePractitionerId,
+  PRACTITIONER_TYPES,
   MAX_LINKED_REQUESTERS,
 } = require(path.join(FN_DIR, "lib/cyberlab/identities"));
 
@@ -176,6 +180,119 @@ section("Pas d'oracle d'énumération");
     wasRefused(data, "1002") === wasRefused(data, "999999"),
     "les deux refus sont indiscernables"
   );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Accès PRATICIEN (médecin prescripteur) — ajouté le 23/09/2026.
+// Le risque : un code médecin ouvre les résultats NOMINATIFS de toute sa
+// patientèle. Il ne doit JAMAIS devenir l'identité par défaut (l'accueil
+// afficherait le bilan d'un patient comme « VOTRE dernier bilan »), et ne doit
+// répondre qu'à une demande explicite et exacte.
+// ═════════════════════════════════════════════════════════════════════════════
+const PRO = { requester_id: "DRDEMO", type: "medecin", label: "Dr Démo" };
+
+// ── 9. Jamais l'identité par défaut ─────────────────────────────────────────
+section("Praticien : jamais l'identité par défaut");
+{
+  const both = { requester_id: "7587", type: "patient", practitioner: PRO };
+  assert(resolveIdentity(both).requester_id === "7587", "médecin-patient : par défaut, SON dossier");
+  assert(resolveIdentity(both).kind === "self", "…de nature « self »");
+  assert(
+    authorizedIdentities(both).every((x) => x.kind !== "practitioner"),
+    "la liste des identités patient ne contient jamais le praticien"
+  );
+  const proOnly = { practitioner: PRO };
+  assert(resolveIdentity(proOnly) === null, "médecin sans dossier : aucun dossier par défaut");
+  assert(authorizedIdentities(proOnly).length === 0, "…et aucune identité patient");
+  const withRelative = { practitioner: PRO, linkedRequesters: [link("1001", "Papa")] };
+  assert(
+    resolveIdentity(withRelative).requester_id === "1001",
+    "médecin avec un proche : le proche reste le principal, pas le code médecin"
+  );
+}
+
+// ── 10. Sélection explicite ─────────────────────────────────────────────────
+section("Praticien : seulement sur sélection explicite et exacte");
+{
+  const data = { requester_id: "7587", type: "patient", practitioner: PRO };
+  const r = resolveIdentity(data, "DRDEMO");
+  assert(r && r.kind === "practitioner", "le code exact → l'identité praticien");
+  assert(r && r.type === "medecin" && !r.isSelf, "de type médecin, jamais « self »");
+  assert(resolveIdentity(data, " drdemo ")?.requester_id === "DRDEMO", "casse et espaces tolérés");
+  assert(resolveIdentity(data, "DRAUTRE") === null, "le code d'un autre médecin est refusé");
+  assert(
+    wasRefused(data, "DRAUTRE") === wasRefused(data, "INCONNU"),
+    "refus indiscernable d'un code inexistant (pas d'oracle)"
+  );
+  assert(resolveIdentity(data, "7587").kind === "self", "son propre dossier reste accessible");
+}
+
+// ── 11. Compte médecin seul ─────────────────────────────────────────────────
+section("Praticien : compte médecin sans dossier personnel");
+{
+  const proOnly = { practitioner: PRO };
+  assert(hasAnyIdentity(proOnly), "le compte a bien un accès");
+  assert(resolveIdentity(proOnly, "DRDEMO")?.kind === "practitioner", "son code fonctionne");
+  assert(!hasAnyIdentity({}), "un compte vide n'a aucun accès");
+}
+
+// ── 12. Accès retiré ────────────────────────────────────────────────────────
+section("Praticien : accès retiré par le laboratoire");
+{
+  const revoked = { requester_id: "7587", type: "patient" };
+  assert(resolveIdentity(revoked, "DRDEMO") === null, "le code ne passe plus");
+  assert(practitionerIdentity(revoked) === null, "plus d'identité praticien");
+  const cleared = { practitioner: null };
+  assert(practitionerIdentity(cleared) === null, "un champ vidé (null) est sans effet");
+}
+
+// ── 13. Valeurs malformées ──────────────────────────────────────────────────
+section("Praticien : valeurs malformées ignorées, jamais fatales");
+{
+  const bad = [
+    ["type patient", { requester_id: "DRDEMO", type: "patient" }],
+    ["type absent", { requester_id: "DRDEMO" }],
+    ["type inconnu", { requester_id: "DRDEMO", type: "chirurgien" }],
+    ["code vide", { requester_id: "   ", type: "medecin" }],
+    ["tableau", [PRO]],
+    ["chaîne", "DRDEMO"],
+    ["nombre", 42],
+  ];
+  for (const [label, value] of bad) {
+    assert(practitionerIdentity({ practitioner: value }) === null, `${label} → ignoré`);
+  }
+  const data = { requester_id: "7587", type: "patient", practitioner: [PRO] };
+  assert(resolveIdentity(data).requester_id === "7587", "le dossier propre reste accessible");
+  assert(!PRACTITIONER_TYPES.includes("patient"), "« patient » n'est jamais un type praticien");
+  assert(
+    practitionerIdentity({ practitioner: { requester_id: "TESTA", type: "correspondant" } })?.type ===
+      "correspondant",
+    "un correspondant (clinique) est accepté"
+  );
+  assert(normalizePractitionerId(" mous tzou ") === "MOUSTZOU", "normalisation : espaces retirés, majuscules");
+}
+
+// ── 14. Collisions : le côté patient l'emporte ──────────────────────────────
+section("Praticien : collision avec un dossier patient");
+{
+  const own = { requester_id: "ABC1", type: "patient", practitioner: { requester_id: "abc1", type: "medecin" } };
+  assert(resolveIdentity(own, "ABC1").kind === "self", "code = dossier propre → le dossier propre");
+  const rel = {
+    requester_id: "7587",
+    type: "patient",
+    linkedRequesters: [link("XY9", "Papa")],
+    practitioner: { requester_id: "XY9", type: "medecin" },
+  };
+  assert(resolveIdentity(rel, "XY9").kind === "linked", "code = proche → le proche, jamais la patientèle");
+}
+
+// ── 15. La nature des identités patient ─────────────────────────────────────
+section("Nature des identités (télémétrie)");
+{
+  const data = { requester_id: "7587", type: "patient", linkedRequesters: [link("1001")] };
+  const ids = authorizedIdentities(data);
+  assert(ids[0].kind === "self" && ids[0].isSelf, "le dossier propre est « self »");
+  assert(ids[1].kind === "linked" && !ids[1].isSelf, "un proche est « linked »");
 }
 
 console.log("");

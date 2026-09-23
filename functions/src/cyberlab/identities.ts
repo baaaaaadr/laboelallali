@@ -14,6 +14,13 @@
  *
  * `src/lib/results/identities.ts` is the display-side twin. It must stay in
  * sync, but it is not a security boundary: this file is.
+ *
+ * Two families of identities live on a profile:
+ *  - the PATIENT side (`authorizedIdentities`): the account's own dossier and
+ *    the relatives' dossiers the lab attached to it;
+ *  - the PRACTITIONER access (`practitionerIdentity`): a prescribing doctor's
+ *    code, which gives access to the dossiers HE prescribed. Kept apart on
+ *    purpose — see `practitionerIdentity`.
  */
 import {normalizeRequesterId, RequesterType} from "./client";
 
@@ -22,6 +29,19 @@ const VALID_TYPES: readonly RequesterType[] = [
   "medecin",
   "correspondant",
 ];
+
+/**
+ * Types a practitioner access may carry. Never "patient": a patient dossier
+ * attached to someone else's account is a RELATIVE (`linkedRequesters`), a
+ * decision with its own proof and notification flow.
+ */
+export const PRACTITIONER_TYPES: readonly RequesterType[] = [
+  "medecin",
+  "correspondant",
+];
+
+/** Where an identity comes from — drives usage telemetry in `fetchResults`. */
+export type IdentityKind = "self" | "linked" | "practitioner";
 
 /**
  * Hard cap on attached dossiers, enforced on write by `adminLinkRequester` and
@@ -35,6 +55,8 @@ export interface ProfileIdentity {
   type: RequesterType;
   /** True only for the profile's own `requester_id`. */
   isSelf: boolean;
+  /** "self" ⇔ `isSelf`; "linked" = a relative; "practitioner" = a doctor's roster. */
+  kind: IdentityKind;
 }
 
 /** Minimal shape read from `users/{uid}` — a Firestore DocumentData in practice. */
@@ -42,6 +64,19 @@ export interface IdentityData {
   requester_id?: unknown;
   type?: unknown;
   linkedRequesters?: unknown;
+  practitioner?: unknown;
+}
+
+/**
+ * Canonical form of a prescriber / correspondent code: no whitespace (like every
+ * id) AND upper case. Qalam prints its codes in capitals ("MOUSTZOU"); the lab
+ * server tolerates case (measured 23/09/2026) but our comparisons do not, so a
+ * code saved as "moustzou" would otherwise never match its selector.
+ * @param {unknown} raw candidate code.
+ * @return {string} canonical code, "" when unusable.
+ */
+export function normalizePractitionerId(raw: unknown): string {
+  return normalizeRequesterId(raw).toUpperCase();
 }
 
 /**
@@ -71,7 +106,7 @@ export function authorizedIdentities(data: IdentityData): ProfileIdentity[] {
 
   const ownId = normalizeRequesterId(data.requester_id);
   if (ownId !== "" && isValidType(data.type)) {
-    out.push({requester_id: ownId, type: data.type, isSelf: true});
+    out.push({requester_id: ownId, type: data.type, isSelf: true, kind: "self"});
     seen.add(ownId);
   }
 
@@ -84,11 +119,60 @@ export function authorizedIdentities(data: IdentityData): ProfileIdentity[] {
     const entry = raw as {requester_id?: unknown; type?: unknown};
     const id = normalizeRequesterId(entry.requester_id);
     if (id === "" || seen.has(id) || !isValidType(entry.type)) continue;
-    out.push({requester_id: id, type: entry.type, isSelf: false});
+    out.push({requester_id: id, type: entry.type, isSelf: false, kind: "linked"});
     seen.add(id);
   }
 
   return out;
+}
+
+/**
+ * The account's PRACTITIONER access: a prescribing doctor's code (or a
+ * correspondent's), which reads the dossiers HE prescribed — the lab server
+ * does the confinement (a dossier prescribed by another doctor answers 404,
+ * verified 23/09/2026). Written ONLY by the staff (`adminSetPractitioner`) and
+ * locked against client writes in `firestore.rules`.
+ *
+ * ⚠ Deliberately NOT part of `authorizedIdentities()`, and therefore NEVER the
+ * default (primary) identity. The primary is what the home page presents as
+ * "VOTRE dernier bilan", what the barcode encodes and what the app prefetches
+ * at login: a practitioner code there would put a patient's result under the
+ * doctor's own name. It is resolved only on an explicit, exact selector — sent
+ * by the "Mes patients" page alone.
+ *
+ * Malformed values (a patient type, an array, an empty code) are ignored rather
+ * than throwing, like the relatives' rows.
+ * @param {IdentityData} data the `users/{uid}` document data.
+ * @return {ProfileIdentity|null} the practitioner identity, or null.
+ */
+export function practitionerIdentity(data: IdentityData): ProfileIdentity | null {
+  const p = data.practitioner;
+  if (!p || typeof p !== "object" || Array.isArray(p)) return null;
+  const entry = p as {requester_id?: unknown; type?: unknown};
+  const id = normalizePractitionerId(entry.requester_id);
+  if (id === "") return null;
+  if (
+    typeof entry.type !== "string" ||
+    !PRACTITIONER_TYPES.includes(entry.type as RequesterType)
+  ) {
+    return null;
+  }
+  return {
+    requester_id: id,
+    type: entry.type as RequesterType,
+    isSelf: false,
+    kind: "practitioner",
+  };
+}
+
+/**
+ * Does this profile grant any access at all — patient side or practitioner?
+ * Lets `fetchResults` tell "refused" (permission-denied) from "no access yet".
+ * @param {IdentityData} data the `users/{uid}` document data.
+ * @return {boolean} true when at least one identity is usable.
+ */
+export function hasAnyIdentity(data: IdentityData): boolean {
+  return authorizedIdentities(data).length > 0 || practitionerIdentity(data) !== null;
 }
 
 /**
@@ -99,8 +183,14 @@ export function authorizedIdentities(data: IdentityData): ProfileIdentity[] {
  * account with no dossier of its own (someone who never had a test but manages
  * their parents') still land on results instead of an activation screen.
  *
- * A `requested` id → that identity, and only if it is in the authorized list.
- * `null` otherwise, which the caller maps to `permission-denied`.
+ * A `requested` id → that identity, and only if it is in the authorized list —
+ * or if it is EXACTLY this account's practitioner code. `null` otherwise, which
+ * the caller maps to `permission-denied`.
+ *
+ * The practitioner access is never returned without an explicit selector (see
+ * `practitionerIdentity`), and the patient side wins a collision: should a code
+ * ever equal one of the account's patient ids (the admin refuses it on write),
+ * the answer is the patient dossier the account already sees, never a roster.
  *
  * An unknown id and an unauthorized id are indistinguishable from outside, so
  * this cannot be used to enumerate other patients' dossier numbers.
@@ -113,12 +203,15 @@ export function resolveIdentity(
   requested?: string
 ): ProfileIdentity | null {
   const identities = authorizedIdentities(data);
-  if (identities.length === 0) return null;
 
   const wanted = normalizeRequesterId(requested);
-  if (wanted === "") return identities[0];
+  if (wanted === "") return identities[0] ?? null; // never the practitioner
 
-  return identities.find((x) => x.requester_id === wanted) ?? null;
+  const own = identities.find((x) => x.requester_id === wanted);
+  if (own) return own;
+
+  const pro = practitionerIdentity(data);
+  return pro && pro.requester_id === wanted.toUpperCase() ? pro : null;
 }
 
 /**
