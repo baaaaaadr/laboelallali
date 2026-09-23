@@ -25,7 +25,7 @@ export const LIST_CAP = 50;
 export function normalizeName(s: unknown): string {
   return String(s ?? '')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, ' ')
     .trim();
