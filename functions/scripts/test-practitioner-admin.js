@@ -11,7 +11,10 @@
  *   - the activation gate: a lab outage always refuses, an unknown code or a
  *     code already held elsewhere refuses unless explicitly confirmed;
  *   - the admin screen only ever sees a VALID access (same test as fetchResults);
- *   - the patient-grouping key ignores accents, case and punctuation.
+ *   - the patient-grouping key ignores accents, case and punctuation;
+ *   - the doctor's own request form, and its confidentiality engagement;
+ *   - the engagement record (current text only) and the per-doctor usage
+ *     summary (days of visit, reports opened, « ce mois-ci »).
  *
  * Requires a build first (npm run build) so lib/ exists. No network, no Firebase.
  *   node scripts/test-practitioner-admin.js
@@ -200,6 +203,76 @@ section("Demande d'accès faite par le médecin (parsePractitionerRequest)");
     codeOf(() => parsePractitionerRequest({ label: "Dr Démo Banc", place: "x".repeat(81), attest: true })) === "invalid-argument",
     "ville / cabinet de plus de 80 caractères → refusé"
   );
+  // L'engagement de confidentialité coché sur le formulaire.
+  const { PRACTITIONER_ENGAGEMENT_VERSION: V } = require(path.join(FN_DIR, "lib/admin/practitionerEngagement"));
+  assert(
+    parsePractitionerRequest({ label: "Dr Démo Banc", attest: true, engagement: V }).engagement === true,
+    "engagement accepté pour le texte ACTUEL → enregistré"
+  );
+  assert(
+    bare.engagement === false,
+    "sans engagement (page d'avant) → la demande passe, l'engagement sera demandé à sa première visite"
+  );
+  assert(
+    parsePractitionerRequest({ label: "Dr Démo Banc", attest: true, engagement: V - 1 }).engagement === false &&
+      parsePractitionerRequest({ label: "Dr Démo Banc", attest: true, engagement: String(V) }).engagement === false,
+    "ancienne version, ou version en texte → pas d'engagement enregistré"
+  );
+}
+
+section("Engagement de confidentialité (engagementOf)");
+{
+  const { engagementOf, PRACTITIONER_ENGAGEMENT_VERSION: V } = require(path.join(FN_DIR, "lib/admin/practitionerEngagement"));
+  const ts = (ms) => ({ toMillis: () => ms });
+  const e = engagementOf({ practitionerEngagement: { version: V, acceptedAt: ts(1727170000000), via: "request" } });
+  assert(e && e.version === V && e.acceptedAt === 1727170000000 && e.via === "request", "engagement actuel : version, date, origine");
+  assert(engagementOf({ practitionerEngagement: { version: V - 1, acceptedAt: ts(1) } }) === null, "texte plus ancien → à redemander");
+  assert(engagementOf({ practitionerEngagement: { version: String(V) } }) === null, "version en texte → ignorée");
+  assert(
+    engagementOf({ practitionerEngagement: [V] }) === null && engagementOf({}) === null && engagementOf(undefined) === null,
+    "forme invalide ou absente → null, sans erreur"
+  );
+  const noDate = engagementOf({ practitionerEngagement: { version: V } });
+  assert(noDate && noDate.acceptedAt === null, "date illisible → engagement reconnu, date null");
+  const { readPractitionerDTO: dtoOf } = require(path.join(FN_DIR, "lib/admin/adminPractitioner"));
+  const withE = dtoOf({
+    practitioner: { requester_id: "DRDEMO", type: "medecin", label: "Dr Démo" },
+    practitionerEngagement: { version: V, acceptedAt: ts(5) },
+  });
+  assert(withE && withE.engaged === true && withE.engagementAt === 5, "la carte admin voit l'engagement et sa date");
+  const withoutE = dtoOf({ practitioner: { requester_id: "DRDEMO", type: "medecin", label: "Dr Démo" } });
+  assert(withoutE && withoutE.engaged === false && withoutE.engagementAt === null, "…et son absence");
+}
+
+section("Utilisation par médecin (usageSummary, isNewDay)");
+{
+  const { usageSummary, isNewDay, dayKeyUTC } = require(path.join(FN_DIR, "lib/admin/practitionerUsage"));
+  const ts = (ms) => ({ toMillis: () => ms });
+  const now = new Date(Date.UTC(2026, 8, 24, 10, 0));
+  const u = usageSummary(
+    {
+      days: 5,
+      reports: 12,
+      firstAt: ts(1),
+      lastAt: ts(2),
+      lastReportAt: ts(3),
+      months: { "2026-08": { days: 2, reports: 4 }, "2026-09": { days: 3, reports: 8 } },
+    },
+    now
+  );
+  assert(u.days === 5 && u.reports === 12, "totaux depuis le début");
+  assert(u.monthDays === 3 && u.monthReports === 8, "« ce mois-ci » = septembre 2026, pas août");
+  assert(u.firstAt === 1 && u.lastAt === 2 && u.lastReportAt === 3, "dates en millisecondes");
+  const empty = usageSummary(undefined, now);
+  assert(
+    empty.days === 0 && empty.reports === 0 && empty.monthDays === 0 && empty.lastAt === null,
+    "médecin jamais venu → zéros et dates nulles"
+  );
+  const junk = usageSummary({ days: -3, reports: "7", months: { "2026-09": "x" } }, now);
+  assert(junk.days === 0 && junk.reports === 0 && junk.monthReports === 0, "valeurs invalides → zéro, sans erreur");
+  assert(dayKeyUTC(new Date(Date.UTC(2026, 8, 24, 23, 30))) === "2026-09-24", "jour compté en UTC (convention usageDaily)");
+  assert(isNewDay(undefined, "2026-09-24") && isNewDay("2026-09-23", "2026-09-24"), "premier passage du jour → un jour de plus");
+  assert(!isNewDay("2026-09-24", "2026-09-24"), "deuxième passage le même jour → pas de jour en plus");
 }
 
 console.log("");

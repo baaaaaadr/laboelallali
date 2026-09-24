@@ -32,6 +32,7 @@ import {
   normalizeRequesterId,
 } from "./client";
 import {hasAnyIdentity, resolveIdentity} from "./identities";
+import {recordPractitionerReport, recordPractitionerVisit} from "../admin/practitionerUsage";
 import {
   alertRecipients,
   fmtCasablanca,
@@ -144,7 +145,10 @@ async function bumpProxyConsultation(): Promise<void> {
  * PATIENTS. A doctor's roster views would pollute all three. Recorded instead:
  *  - `usageDaily/{day}.practitionerConsultations`, an anonymous daily tally;
  *  - `practitioner.lastUsedAt` on the doctor's own profile, throttled like the
- *    patient stamp, so the lab can see whether an activated doctor uses it.
+ *    patient stamp, so the lab can see whether an activated doctor uses it;
+ *  - since 24/09/2026, per-doctor counts in `practitionerUsage/{uid}` (days of
+ *    visit, reports opened — `../admin/practitionerUsage.ts`), for the admin
+ *    « Médecins » tab and dashboard. Dates and counts only.
  *
  * The profile stamp is a CONDITIONAL update (the document must be unchanged
  * since we read it): if the lab removed or changed the access in the meantime,
@@ -363,8 +367,18 @@ export async function fetchResultsForUser(
     } else if (identity.kind === "linked") {
       await bumpProxyConsultation();
     } else {
-      await touchPractitionerUsage(uid, snap, data.practitioner);
+      await Promise.all([
+        touchPractitionerUsage(uid, snap, data.practitioner),
+        recordPractitionerVisit(uid),
+      ]);
     }
+  } else if (
+    identity.kind === "practitioner" &&
+    (resp.results || []).some((r) => typeof r.pdf_base64 === "string" && r.pdf_base64 !== "")
+  ) {
+    // A doctor opened one of his patients' reports. Counted only when the lab
+    // really returned the document — never which one.
+    await recordPractitionerReport(uid);
   }
 
   return resp;

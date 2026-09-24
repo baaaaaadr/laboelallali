@@ -52,6 +52,11 @@ service cloud.firestore {
     // could write practitioner:{requester_id:"<a doctor's code>"} on their own
     // profile and read that doctor's whole roster. Keep the two lists identical —
     // scripts/test-practitioner.js checks it.
+    //
+    // `practitionerEngagement` (24/09/2026) is the doctor's confidentiality
+    // engagement — the date and version he accepted, the lab's proof. Written
+    // only by requestPractitionerAccess / acceptPractitionerEngagement: a client
+    // must not be able to forge its date, or skip the text by writing it.
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
 
@@ -63,7 +68,7 @@ service cloud.firestore {
                        'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
                        'lastRelanceAt', 'relanceCount',
                        'linkedRequesters', 'linkedRequesterIds',
-                       'practitioner']);
+                       'practitioner', 'practitionerEngagement']);
 
       // Update: allowed only if it does not CHANGE any privileged field. diff()
       // compares values, so a {merge:true} write that echoes an unchanged role /
@@ -76,12 +81,14 @@ service cloud.firestore {
                        'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
                        'lastRelanceAt', 'relanceCount',
                        'linkedRequesters', 'linkedRequesterIds',
-                       'practitioner']);
+                       'practitioner', 'practitionerEngagement']);
     }
 
     // Anonymous global usage counters (usageDaily/{YYYY-MM-DD}) are written ONLY
     // by the Admin SDK and read only by the dashboard callable — they fall through
     // to the default deny below on purpose. Do not open them to clients.
+    // Same for practitionerUsage/{uid} (each doctor's days of visit and reports
+    // opened, written by fetchResults, read by the admin callables).
 
     // Results-server health status — written ONLY by the Admin SDK
     // (checkCyberlabHealth / fetchResults). Signed-in patients read it so

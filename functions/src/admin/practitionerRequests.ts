@@ -18,6 +18,11 @@
  * A doctor who never had a test at the lab has no patient dossier: nothing here
  * depends on one (the profile only needs a name and a phone, like every account).
  *
+ * The form also carries his CONFIDENTIALITY ENGAGEMENT (« Je suis médecin et
+ * j'accepte cet engagement », owner's request 24/09/2026): recorded on his
+ * account here, so the lab does not ask him again after activating him — see
+ * ./practitionerEngagement.ts.
+ *
  * Collection `practitionerAccessRequests/{uid}` — one per account, like
  * `resultAccessRequests`. Server only: no Firestore rule, default deny.
  * Never logged: the name, the e-mail, the phone. Only uids.
@@ -27,6 +32,11 @@ import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { LEVEL, requireLevel, REGION } from "./roles";
 import { practitionerIdentity } from "../cyberlab/identities";
+import {
+  engagementOf,
+  engagementRecord,
+  PRACTITIONER_ENGAGEMENT_VERSION,
+} from "./practitionerEngagement";
 import {
   alertRecipients,
   APP_URL,
@@ -50,14 +60,23 @@ export interface PractitionerRequestInput {
   specialty?: unknown;
   /** City or practice. */
   place?: unknown;
-  /** « Je suis médecin et je demande l'accès… » — must be ticked. */
+  /** « Je suis médecin et j'accepte cet engagement » — must be ticked. */
   attest?: unknown;
+  /**
+   * The engagement version the page showed him. Equal to the current version →
+   * the engagement is recorded. Anything else (a page older than the text) →
+   * the request still goes through, and the engagement is asked again at his
+   * first visit.
+   */
+  engagement?: unknown;
 }
 
 export interface PractitionerRequestFields {
   label: string;
   specialty: string;
   place: string;
+  /** He accepted the CURRENT engagement text on the form. */
+  engagement: boolean;
 }
 
 const clean = (v: unknown): string =>
@@ -88,7 +107,12 @@ export function parsePractitionerRequest(data: PractitionerRequestInput): Practi
   if (place.length > PLACE_MAX) {
     throw new HttpsError("invalid-argument", "Ville ou cabinet trop long (80 caractères au plus).");
   }
-  return { label, specialty, place };
+  return {
+    label,
+    specialty,
+    place,
+    engagement: data.engagement === PRACTITIONER_ENGAGEMENT_VERSION,
+  };
 }
 
 const millis = (v: unknown): number | null => {
@@ -104,13 +128,22 @@ export const requestPractitionerAccess = onCall(
     const uid = request.auth.uid;
     const fields = parsePractitionerRequest(request.data || {});
 
-    const u = (await admin.firestore().doc(`users/${uid}`).get()).data() || {};
+    const userRef = admin.firestore().doc(`users/${uid}`);
+    const u = (await userRef.get()).data() || {};
     if (!u.fullName || !u.phone) {
       throw new HttpsError(
         "failed-precondition",
         "Complétez d'abord votre profil (nom et téléphone)."
       );
     }
+    // The engagement is his, whatever happens to the request: recorded first, so
+    // the lab's activation does not ask him again. Never overwritten (the first
+    // acceptance date is the one that counts).
+    const previous = engagementOf(u);
+    if (fields.engagement && !previous) {
+      await userRef.set({ practitionerEngagement: engagementRecord("request") }, { merge: true });
+    }
+
     // Already active (the profile was read before the admin's activation).
     if (practitionerIdentity(u)) return { status: "already_granted" };
 
@@ -134,6 +167,13 @@ export const requestPractitionerAccess = onCall(
         place: fields.place,
         status: "pending",
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        // Shown on the admin card: the lab sees he accepted it (now, or before —
+        // then with its real date).
+        engagementAt: previous?.acceptedAt ?
+          admin.firestore.Timestamp.fromMillis(previous.acceptedAt) :
+          fields.engagement ?
+            admin.firestore.FieldValue.serverTimestamp() :
+            admin.firestore.FieldValue.delete(),
         rejectedBy: admin.firestore.FieldValue.delete(),
         rejectedAt: admin.firestore.FieldValue.delete(),
         fulfilledBy: admin.firestore.FieldValue.delete(),
@@ -155,6 +195,12 @@ export const requestPractitionerAccess = onCall(
           ["Nom sur ses ordonnances", fields.label],
           ["Spécialité", fields.specialty || "—"],
           ["Ville / cabinet", fields.place || "—"],
+          [
+            "Engagement de confidentialité",
+            fields.engagement || previous ?
+              "Accepté" :
+              "Pas encore (demandé à sa première visite)",
+          ],
           ["Nom du compte", String(u.fullName)],
           ["Téléphone", String(u.phone)],
           ["E-mail", email ? String(email) : "—"],
@@ -224,6 +270,7 @@ export const adminListPractitionerRequests = onCall(
           specialty: String(d.specialty || ""),
           place: String(d.place || ""),
           createdAt: millis(d.createdAt),
+          engagementAt: millis(d.engagementAt),
         };
       })
       .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));

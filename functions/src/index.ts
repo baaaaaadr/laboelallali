@@ -66,6 +66,10 @@ export {
 // level — a code opens a whole roster of named results. See
 // docs/pages/mes-patients.md.
 export { adminSetPractitioner } from "./admin/adminPractitioner";
+// The doctor's confidentiality engagement (first visit) and the admin list of
+// doctors holding an access (« Médecins » tab), 24/09/2026.
+export { acceptPractitionerEngagement } from "./admin/practitionerEngagement";
+export { adminListPractitioners } from "./admin/practitionerDirectory";
 // The doctor ASKS from the app (invitation link → « Demander mon accès
 // médecin »); an admin attaches his code. Asking grants nothing.
 export {

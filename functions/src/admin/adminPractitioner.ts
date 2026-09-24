@@ -45,6 +45,7 @@ import {
   SMTP_USER,
 } from "../email/mailer";
 import { fulfillPractitionerRequest } from "./practitionerRequests";
+import { engagementOf } from "./practitionerEngagement";
 
 // Same secret/param names as fetchResults — defineSecret is idempotent by name.
 const CYBERLAB_API_KEY = defineSecret("CYBERLAB_API_KEY");
@@ -69,6 +70,9 @@ export interface PractitionerDTO {
   label: string;
   linkedAt: number | null;
   lastUsedAt: number | null;
+  /** He accepted the confidentiality engagement (current text) on this account. */
+  engaged: boolean;
+  engagementAt: number | null;
 }
 
 function toMs(v: unknown): number | null {
@@ -90,12 +94,15 @@ export function readPractitionerDTO(
   const identity = practitionerIdentity(data);
   if (!identity) return null;
   const raw = (data.practitioner || {}) as Record<string, unknown>;
+  const engagement = engagementOf(data);
   return {
     requester_id: identity.requester_id,
     type: identity.type,
     label: typeof raw.label === "string" ? raw.label : "",
     linkedAt: toMs(raw.linkedAt),
     lastUsedAt: toMs(raw.lastUsedAt),
+    engaged: engagement !== null,
+    engagementAt: engagement?.acceptedAt ?? null,
   };
 }
 

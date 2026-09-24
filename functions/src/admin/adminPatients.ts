@@ -34,6 +34,8 @@ import {
 // apart in the dashboard — a doctor-only account is not a patient account.
 import { readPractitionerDTO, PractitionerDTO } from "./adminPractitioner";
 import { practitionerIdentity } from "../cyberlab/identities";
+// The dashboard's « Les médecins » section: one row per doctor, with usage.
+import { listPractitionerRows, PractitionerRow } from "./practitionerDirectory";
 
 const VALID_TYPES = ["patient", "medecin", "correspondant"] as const;
 type RequesterType = (typeof VALID_TYPES)[number];
@@ -1850,6 +1852,52 @@ async function buildDashboard(includeTeam: boolean) {
       practitionerConsultations30d += practitionerByDay[dayKey(new Date(now - i * DAY_MS))] || 0;
     }
 
+    // ── Doctors, one by one (« Les médecins », 24/09/2026) ───────────────────
+    // Same team rule as every other figure here: the lab's own accounts (its
+    // tests, a doctor on the staff) are out unless « Inclure les comptes de
+    // l'équipe » is ticked — and the screen says how many were left out.
+    // Its own try/catch: a missing metric must never blank the dashboard.
+    let doctorRows: PractitionerRow[] | null = null;
+    try {
+      doctorRows = await listPractitionerRows(new Date(now));
+    } catch (err) {
+      logger.warn("adminDashboardStats: practitioner list unavailable", {
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+    const doctorsInScope = (doctorRows || []).filter((r) => includeTeam || !r.team);
+    const practitionersOut = {
+      // Without the list, the scan's own counts (same team rule).
+      accounts: doctorRows ? doctorsInScope.length : practitioners.accounts,
+      active: doctorRows ?
+        doctorsInScope.filter(
+          (r) => r.lastVisitAt !== null && now - r.lastVisitAt < ACTIVE_WINDOW_MS
+        ).length :
+        practitioners.active,
+      consultations30d: practitionerConsultations30d,
+      monthDays: doctorsInScope.reduce((n, r) => n + r.usage.monthDays, 0),
+      monthReports: doctorsInScope.reduce((n, r) => n + r.usage.monthReports, 0),
+      teamExcluded: doctorRows ? doctorRows.length - doctorsInScope.length : 0,
+      // Most recent visit first; never-seen doctors last. Names of DOCTORS and
+      // counts — no patient, no dossier.
+      list: [...doctorsInScope]
+        .sort((a, b) => (b.lastVisitAt ?? -1) - (a.lastVisitAt ?? -1))
+        .map((r) => ({
+          uid: r.uid,
+          label: r.label,
+          fullName: r.fullName,
+          requester_id: r.requester_id,
+          team: r.team,
+          engaged: r.engaged,
+          linkedAt: r.linkedAt,
+          lastVisitAt: r.lastVisitAt,
+          days: r.usage.days,
+          reports: r.usage.reports,
+          monthDays: r.usage.monthDays,
+          monthReports: r.usage.monthReports,
+        })),
+    };
+
     // ── Detail lists (dashboard-side; the relance list has its own callable) ──
     const latestCreated = [...accounts]
       .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""))
@@ -1921,8 +1969,9 @@ async function buildDashboard(includeTeam: boolean) {
       team,
       weekly,
       shares: { month: sharesThisMonth, signups: signupsFromShare },
-      // Doctor access: accounts, those active in 30 days, roster consultations.
-      practitioners: { ...practitioners, consultations30d: practitionerConsultations30d },
+      // Doctor access: accounts, those active in 30 days, roster consultations,
+      // this month's days of visit and reports opened, and one row per doctor.
+      practitioners: practitionersOut,
       latestCreated,
       latestActive,
       truncated,
