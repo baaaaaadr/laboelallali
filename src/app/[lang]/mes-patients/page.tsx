@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import VerdictPanel from '@/components/ui/VerdictPanel';
 import PractitionerWorkspace from '@/components/features/practitioner/PractitionerWorkspace';
+import ResultsSpaceSwitch from '@/components/features/practitioner/ResultsSpaceSwitch';
 import { readPractitioner, resolveIdentities } from '@/lib/results/identities';
 import { LAB_CONTACT } from '@/constants/contact';
 
@@ -80,6 +81,9 @@ export default function MesPatientsPage({ params }: { params: Promise<{ lang: st
   return (
     <div className="min-h-[80vh] py-12 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
       <div className="max-w-2xl mx-auto space-y-6">
+        {/* Shown only in the collision case (the account HAS a doctor access):
+            his own results stay one tap away. Nothing without an access. */}
+        <ResultsSpaceSwitch lang={lang} current="patients" />
         <h1 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] flex items-center gap-2">
           <Stethoscope size={26} />
           {t('mes_patients.title', 'Mes patients')}

@@ -34,6 +34,7 @@ import { displayName, groupByPatient, isCapped, LIST_CAP, matchesQuery } from '@
 import type { PractitionerIdentity } from '@/lib/results/identities';
 import PatientList from './PatientList';
 import PatientDetail from './PatientDetail';
+import ResultsSpaceSwitch from './ResultsSpaceSwitch';
 import { usePractitionerPdfActions } from './usePractitionerPdfActions';
 
 interface Props {
@@ -307,6 +308,9 @@ export default function PractitionerWorkspace({ lang, practitioner }: Props) {
     <div className="min-h-[80vh] py-10 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
       <style>{`@keyframes mpBar { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }`}</style>
       <div className="max-w-5xl mx-auto space-y-6">
+        {/* « Moi et ma famille | Mes patients » — back to his own results in one tap. */}
+        <ResultsSpaceSwitch lang={lang} current="patients" />
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] flex items-center gap-2">

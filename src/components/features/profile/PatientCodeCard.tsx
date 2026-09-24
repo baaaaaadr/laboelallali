@@ -65,8 +65,8 @@ export function PatientCodeCard({ lang }: PatientCodeCardProps) {
 
   // A doctor whose only access is « Mes patients » has no patient code to show,
   // and "your code will appear once the lab has activated your access" would
-  // read as if his doctor access were not active. The profile shows him the
-  // « Espace médecin » card instead (PractitionerAccessCard). The card comes
+  // read as if his doctor access were not active. His space lives under
+  // « Résultats » (header menu + the switch on /resultats). The card comes
   // back by itself the day the lab attaches a patient dossier to the account.
   if (!selected && readPractitioner(userProfile)) return null;
 

@@ -32,7 +32,7 @@ import ShareAccessCard from '@/components/features/results/ShareAccessCard';
 import AddRelativeCard from '@/components/features/results/AddRelativeCard';
 import OutageOptIn, { useOutageStatus } from '@/components/features/results/OutageOptIn';
 import LastUpdatedLabel from '@/components/features/results/LastUpdatedLabel';
-import PractitionerAccessCard from '@/components/features/practitioner/PractitionerAccessCard';
+import ResultsSpaceSwitch from '@/components/features/practitioner/ResultsSpaceSwitch';
 import MedicalLoader from '@/components/ui/MedicalLoader';
 import VerdictPanel from '@/components/ui/VerdictPanel';
 import { LAB_CONTACT } from '@/constants/contact';
@@ -575,6 +575,12 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   return (
     <div className="min-h-[80vh] py-12 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
       <div className="max-w-3xl mx-auto space-y-8">
+        {/* Doctor accounts only: « Moi et ma famille | Mes patients », the two
+            halves of Résultats. This page is the first half — the account's own
+            dossiers and its relatives'; the doctor code is never one of its
+            identities. Renders nothing for everyone else. */}
+        <ResultsSpaceSwitch lang={lang} current="mine" />
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -612,12 +618,6 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             )}
           </div>
         </div>
-
-        {/* A doctor looking here for his PATIENTS: this page only shows the
-            account's own dossiers and its relatives' — the doctor code is never
-            one of its identities. One line pointing to « Mes patients »; renders
-            nothing for an account without a doctor access. */}
-        <PractitionerAccessCard lang={lang} variant="banner" />
 
         {/* Person selector. Placed here ON PURPOSE: this is the only spot ABOVE
             every status branch below. If a relative's dossier comes back empty or

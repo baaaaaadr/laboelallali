@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList, LayoutList, Users } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList, LayoutList } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -12,6 +12,7 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import { getLangFromPath, isActivePath } from '@/lib/navigation/isActivePath';
 import { readPractitioner } from '@/lib/results/identities';
+import ResultsNavMenu from '@/components/layout/ResultsNavMenu';
 
 // Debug version - update this to verify deployment
 const HEADER_VERSION = 'v2.0.2-hydration-fix-2026-05-02';
@@ -135,11 +136,9 @@ const Header = () => {
 
   const currentLanguagePath = `/${urlLang}`;
   const isStaff = ['owner', 'admin', 'staff'].includes(userProfile?.role || '');
-  // Compte titulaire d'un accès médecin (« Mes patients », docs/pages/mes-patients.md).
+  // Compte titulaire d'un accès médecin : « Résultats » se divise alors en
+  // « Moi et ma famille » et « Mes patients » (docs/pages/mes-patients.md §7).
   const isPractitioner = readPractitioner(userProfile) !== null;
-  // Barre desktop : « Mes patients » y REMPLACE « Médecins » — voir la mesure
-  // au-dessus du lien. L'équipe garde sa barre telle quelle.
-  const practitionerInBar = isPractitioner && !isStaff;
   // Libelle du lien de validation du parcours patient (namespace `journey`,
   // charge par le layout). Disparait quand le parcours deviendra /rendez-vous.
   const journeyTestLabel = t('journey:nav.test_link', 'Parcours (test)');
@@ -260,34 +259,28 @@ const Header = () => {
               {t('home')}
             </Link>
             {/* Service vedette : contour + badge fuchsia. Jamais de fond plein —
-                le fond plein est réservé à l'état « vous êtes ici ». */}
-            <Link
-              href={`${currentLanguagePath}/resultats`}
-              className={`nav-link nav-link-featured text-sm lg:text-base ${isHere('/resultats') ? 'active' : ''}`}
-              aria-current={isHere('/resultats') ? 'page' : undefined}
-            >
-              <FileText size={16} />
-              {t('resultats.nav', { defaultValue: "Résultats" })}
-              <span className="nav-badge-new">{t('services_hub.results_badge')}</span>
-            </Link>
-            {/* « Mes patients » (compte médecin) — il REMPLACE « Médecins », il ne
-                s'ajoute pas, et c'est mesuré (23/09/2026, build de production,
-                compte connecté donc avec le bouton Déconnexion) :
-                  · en 8e lien, il déborde de 38 px à 1024 px en français et ne
-                    laisse que 12 px de marge à 1280 (l'icône le fait déborder) ;
-                  · à la place de « Médecins » : 46 px de marge à 1024, 113 à 1280.
-                  · l'arabe garde plus de 140 px de marge dans ces deux cas.
-                Placé juste après Résultats, comme dans le tiroir mobile.
-                L'ÉQUIPE garde « Médecins » : ses 8 liens débordent DÉJÀ de 6 px à
-                1024 ; elle atteint « Mes patients » par la carte du profil, le
-                bandeau de /resultats ou le tiroir sur mobile. */}
-            {practitionerInBar && (
+                le fond plein est réservé à l'état « vous êtes ici ».
+                Compte médecin : le même lien devient un MENU à deux entrées,
+                « Moi et ma famille » et « Mes patients » (décision du
+                propriétaire, 24/09/2026). Pas de lien supplémentaire : la barre
+                est pleine — mesuré le 23/09, un 8e lien déborde de 38 px à
+                1024 px en français. Voir ResultsNavMenu. */}
+            {isPractitioner ? (
+              <ResultsNavMenu
+                lang={urlLang}
+                hereMine={isHere('/resultats')}
+                herePatients={isHere('/mes-patients')}
+                pathname={pathname}
+              />
+            ) : (
               <Link
-                href={`${currentLanguagePath}/mes-patients`}
-                className={`nav-link font-semibold text-sm lg:text-base ${isHere('/mes-patients') ? 'active' : ''}`}
-                aria-current={isHere('/mes-patients') ? 'page' : undefined}
+                href={`${currentLanguagePath}/resultats`}
+                className={`nav-link nav-link-featured text-sm lg:text-base ${isHere('/resultats') ? 'active' : ''}`}
+                aria-current={isHere('/resultats') ? 'page' : undefined}
               >
-                {t('mes_patients.nav', 'Mes patients')}
+                <FileText size={16} />
+                {t('resultats.nav', { defaultValue: "Résultats" })}
+                <span className="nav-badge-new">{t('services_hub.results_badge')}</span>
               </Link>
             )}
             <Link
@@ -311,15 +304,13 @@ const Header = () => {
             >
               {t('navigation.analyses_catalog', { ns: 'common', defaultValue: "Catalogue Analyses" })}
             </Link>
-            {!practitionerInBar && (
-              <Link
-                href={`${currentLanguagePath}/medecins`}
-                className={`nav-link font-semibold text-sm lg:text-base ${isHere('/medecins') ? 'active' : ''}`}
-                aria-current={isHere('/medecins') ? 'page' : undefined}
-              >
-                {t('navigation.medecins', { ns: 'common', defaultValue: "Médecins" })}
-              </Link>
-            )}
+            <Link
+              href={`${currentLanguagePath}/medecins`}
+              className={`nav-link font-semibold text-sm lg:text-base ${isHere('/medecins') ? 'active' : ''}`}
+              aria-current={isHere('/medecins') ? 'page' : undefined}
+            >
+              {t('navigation.medecins', { ns: 'common', defaultValue: "Médecins" })}
+            </Link>
             <Link
               href={`${currentLanguagePath}/contact`}
               className={`nav-link text-sm lg:text-base ${isHere('/contact') ? 'active' : ''}`}
@@ -501,46 +492,68 @@ const Header = () => {
             </Link>
 
             {/* Service vedette : icône fuchsia + badge « Nouveau ».
-                Plus de fond rose permanent — ce canal signale désormais la page courante. */}
-            <Link
-              href={`${currentLanguagePath}/resultats`}
-              style={drawerLinkStyle(isHere('/resultats'))}
-              aria-current={isHere('/resultats') ? 'page' : undefined}
-              onClick={toggleMenu}
-            >
-              <FileText
-                size={20}
-                style={
-                  isHere('/resultats')
-                    ? drawerIconStyle(true)
-                    : { ...menuStyles.navIcon, color: 'var(--color-fuchsia-accent)' }
-                }
-              />
-              <span style={drawerTextStyle(isHere('/resultats'))}>
-                {t('resultats.nav', { defaultValue: 'Résultats' })}
-              </span>
-              <span
-                className="nav-badge-new"
-                style={{ marginInlineStart: 'auto', fontSize: '11px', padding: '2px 8px' }}
-              >
-                {t('services_hub.results_badge')}
-              </span>
-            </Link>
-
-            {/* « Mes patients » — tout compte titulaire d'un accès médecin, équipe
-                comprise : liste verticale, aucune contrainte de largeur, donc
-                AJOUTÉ (« Médecins » reste plus bas). Icône `Users` et non le
-                stéthoscope, déjà porté par « Médecins » quatre lignes plus bas. */}
-            {isPractitioner && (
+                Plus de fond rose permanent — ce canal signale désormais la page courante.
+                Compte médecin : « Résultats » devient un TITRE de groupe (non
+                cliquable) suivi de deux sous-lignes, « Moi et ma famille » et
+                « Mes patients » — même découpage que le menu de la barre desktop
+                et que le sélecteur en haut des deux pages. */}
+            {isPractitioner ? (
+              <div role="group" aria-labelledby="drawer-results-caption" data-testid="drawer-results-group">
+                <div
+                  id="drawer-results-caption"
+                  style={{ ...menuStyles.navLink, cursor: 'default', paddingBottom: '4px' }}
+                >
+                  <FileText size={20} style={{ ...menuStyles.navIcon, color: 'var(--color-fuchsia-accent)' }} />
+                  <span style={{ ...drawerTextStyle(false), fontWeight: 700 }}>
+                    {t('resultats.nav', { defaultValue: 'Résultats' })}
+                  </span>
+                  <span
+                    className="nav-badge-new"
+                    style={{ marginInlineStart: 'auto', fontSize: '11px', padding: '2px 8px' }}
+                  >
+                    {t('services_hub.results_badge')}
+                  </span>
+                </div>
+                {([
+                  ['/resultats', t('mes_patients.switch_mine', 'Moi et ma famille')],
+                  ['/mes-patients', t('mes_patients.nav', 'Mes patients')],
+                ] as const).map(([target, label]) => (
+                  <Link
+                    key={target}
+                    href={`${currentLanguagePath}${target}`}
+                    // Texte aligné sous « Résultats » (16 + 24 + 12 px) ; la
+                    // ligne active garde cet alignement malgré son rail de 4 px.
+                    style={{ ...drawerLinkStyle(isHere(target)), paddingInlineStart: isHere(target) ? '48px' : '52px' }}
+                    aria-current={isHere(target) ? 'page' : undefined}
+                    onClick={toggleMenu}
+                  >
+                    <span style={drawerTextStyle(isHere(target))}>{label}</span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
               <Link
-                href={`${currentLanguagePath}/mes-patients`}
-                style={drawerLinkStyle(isHere('/mes-patients'))}
-                aria-current={isHere('/mes-patients') ? 'page' : undefined}
+                href={`${currentLanguagePath}/resultats`}
+                style={drawerLinkStyle(isHere('/resultats'))}
+                aria-current={isHere('/resultats') ? 'page' : undefined}
                 onClick={toggleMenu}
               >
-                <Users size={20} style={drawerIconStyle(isHere('/mes-patients'))} />
-                <span style={drawerTextStyle(isHere('/mes-patients'))}>
-                  {t('mes_patients.nav', 'Mes patients')}
+                <FileText
+                  size={20}
+                  style={
+                    isHere('/resultats')
+                      ? drawerIconStyle(true)
+                      : { ...menuStyles.navIcon, color: 'var(--color-fuchsia-accent)' }
+                  }
+                />
+                <span style={drawerTextStyle(isHere('/resultats'))}>
+                  {t('resultats.nav', { defaultValue: 'Résultats' })}
+                </span>
+                <span
+                  className="nav-badge-new"
+                  style={{ marginInlineStart: 'auto', fontSize: '11px', padding: '2px 8px' }}
+                >
+                  {t('services_hub.results_badge')}
                 </span>
               </Link>
             )}

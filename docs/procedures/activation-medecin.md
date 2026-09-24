@@ -35,9 +35,9 @@ Activer un médecin n'envoie **que ses futurs dossiers**. Chaque ancien dossier 
 - Il ouvre **laboelallali.com** (ou l'application installée) et choisit « Se connecter ».
 - Il se connecte avec **son compte Google**, ou avec son e-mail et un mot de passe.
 - Il complète son profil : nom, date de naissance, téléphone.
-- **S'il est aussi patient du laboratoire**, il garde un seul compte :
-  - ses propres résultats et ceux de sa famille sont dans « Mes résultats » ;
-  - ses patients sont à part, dans « Mes patients ».
+- **S'il est aussi patient du laboratoire**, il garde un seul compte. Sous « Résultats », il trouve deux entrées :
+  - « Moi et ma famille » : ses propres résultats et ceux de ses proches ;
+  - « Mes patients » : les bilans qu'il a prescrits.
 
 ## Étape 4 — L'engagement écrit du médecin
 
@@ -62,9 +62,8 @@ Il faut un compte **administrateur ou propriétaire** : un stagiaire voit la car
 ## Étape 6 — Vérifier avec le médecin
 
 - Il ouvre **« Mes patients »** par l'une de ces entrées :
-  - le menu ;
-  - la carte « Espace médecin » de son profil ;
-  - le bandeau de « Mes résultats ».
+  - le menu « Résultats » → « Mes patients » ;
+  - le sélecteur « Moi et ma famille | Mes patients » en haut de la page Résultats.
 - Il voit la liste de ses patients et peut chercher un nom.
 - En ouvrant un patient, son dernier bilan s'affiche. Les anciens s'ouvrent d'un clic.
 - **Il ne voit pas un patient ?** Deux raisons possibles :

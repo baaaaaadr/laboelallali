@@ -775,6 +775,10 @@
   },
   "mes_patients": {
     "nav": "Mes patients",
+    "switch_label": "Quels résultats afficher ?",
+    "switch_mine": "Moi et ma famille",
+    "menu_mine_desc": "Vos résultats et ceux de vos proches",
+    "menu_patients_desc": "Les bilans que vous avez prescrits",
     "title": "Mes patients",
     "subtitle": "Les bilans que vous avez prescrits.",
     "subtitle_label": "{{label}} — les bilans que vous avez prescrits.",
@@ -818,11 +822,6 @@
     "config_body": "Le code médecin de ce compte est aussi l’un de vos dossiers patient. Rien n’est affiché tant que ce n’est pas corrigé.",
     "config_todo": "Contactez le laboratoire pour le corriger.",
     "rule_note": "Vous ne voyez que les bilans que vous avez vous-même prescrits. Rien n’est conservé sur votre appareil : les résultats sont lus à la demande auprès du laboratoire.",
-    "homonym_note": "Deux patients portant exactement le même nom apparaissent ensemble : fiez-vous à la date et au numéro de dossier.",
-    "access_card_title": "Espace médecin",
-    "access_card_desc": "Consultez les résultats des patients dont vous êtes le prescripteur.",
-    "access_card_cta": "Ouvrir « Mes patients »",
-    "resultats_banner": "Vous êtes médecin : les résultats de vos patients sont dans « Mes patients ».",
-    "resultats_banner_cta": "Mes patients"
+    "homonym_note": "Deux patients portant exactement le même nom apparaissent ensemble : fiez-vous à la date et au numéro de dossier."
   }
 }
