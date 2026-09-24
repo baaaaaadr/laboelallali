@@ -2,14 +2,15 @@
 
 /**
  * « Inviter un médecin » — where the lab finds the doctor invitation link
- * (owner's decision, 24/09/2026). Demandes tab, above the doctor requests.
+ * (owner's decision, 24/09/2026). « Médecins » tab, below the doctors who
+ * already hold an access.
  *
  * The two onboarding cases, as the card says:
  *  - the doctor ALREADY has an account → no invitation: find him in the
  *    Patients tab and give him his code (« Accès médecin » card);
  *  - he has no account yet → send him this link, usually over WhatsApp (the lab
  *    has his phone, rarely his e-mail). He signs up, asks, and his request
- *    lands in the queue below.
+ *    lands in the queue at the top of the « Médecins » tab.
  *
  * The link is `/{lang}/mes-patients` on this site's origin: the same URL shows
  * the request form before activation and his patients after — his bookmark.
@@ -19,21 +20,12 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, Copy, MessageCircle, Stethoscope } from 'lucide-react';
 import { doctorSpacePath, whatsappInviteLink } from '@/lib/practitioner/invitation';
-
-const PROD_ORIGIN = 'https://www.laboelallali.com';
+import { useSiteOrigin } from '@/hooks/useSiteOrigin';
 
 export default function InviteDoctorCard({ lang }: { lang: string }) {
   const { t } = useTranslation('common');
-  // The page is client-rendered, but read the origin after mount anyway: the
-  // link must point at the site actually in use (production, a preview…).
-  const [origin, setOrigin] = useState(PROD_ORIGIN);
-  useEffect(() => {
-    try {
-      setOrigin(window.location.origin);
-    } catch {
-      /* keep the production origin */
-    }
-  }, []);
+  // The link must point at the site actually in use (production, a preview…).
+  const origin = useSiteOrigin();
   const [phone, setPhone] = useState('');
   const [copied, setCopied] = useState(false);
 

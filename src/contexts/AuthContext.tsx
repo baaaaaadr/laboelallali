@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import type { User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, getClientAuth } from '@/config/firebase';
-import type { LinkedRequester, PractitionerAccess, RequesterType } from '@/types/cyberlab';
+import type { LinkedRequester, PractitionerAccess, PractitionerEngagement, RequesterType } from '@/types/cyberlab';
 
 export interface UserProfile {
   uid: string;
@@ -27,6 +27,9 @@ export interface UserProfile {
   // adminSetPractitioner, locked in firestore.rules. Read through
   // readPractitioner() — it is NEVER one of the patient identities above.
   practitioner?: PractitionerAccess;
+  // His confidentiality engagement — on the account, server-written, locked.
+  // Read through hasEngagement() (src/lib/practitioner/engagement.ts).
+  practitionerEngagement?: PractitionerEngagement;
   // 'admin' grants access to the /admin staff space.
   role?: string;
   // CNDP consent captured at registration.

@@ -14,6 +14,11 @@
  * Works for a doctor who never had a test at the lab — nothing here needs a
  * patient dossier.
  *
+ * The single tick is also his CONFIDENTIALITY ENGAGEMENT (owner's request,
+ * 24/09/2026): the text (`EngagementTerms`) sits right above it, and the server
+ * records its date and version on his account — the lab will not ask him again
+ * once it activates him.
+ *
  * States: loading → form (none) | pending | rejected (→ form again on demand)
  * | fulfilled (the session's profile predates the activation: re-read it).
  */
@@ -28,6 +33,8 @@ import MedicalLoader from '@/components/ui/MedicalLoader';
 import VerdictPanel from '@/components/ui/VerdictPanel';
 import { LAB_CONTACT } from '@/constants/contact';
 import { formatDossierDate } from '@/lib/results/format';
+import { PRACTITIONER_ENGAGEMENT_VERSION } from '@/lib/practitioner/engagement';
+import EngagementTerms from './EngagementTerms';
 
 type ReqStatus = 'loading' | 'none' | 'pending' | 'rejected' | 'fulfilled';
 
@@ -107,7 +114,7 @@ export default function PractitionerAccessRequest({ lang, onRecheck, checking }:
     trimmed.length < LABEL_MIN
       ? t('mes_patients.request_need_label', 'Indiquez votre nom tel qu’il figure sur vos ordonnances.')
       : !attest
-        ? t('mes_patients.request_need_attest', 'Cochez la case pour confirmer que vous êtes médecin.')
+        ? t('mes_patients.request_need_attest', 'Cochez la case : vous confirmez être médecin et accepter l’engagement.')
         : null;
 
   const submit = async (e: React.FormEvent) => {
@@ -121,6 +128,8 @@ export default function PractitionerAccessRequest({ lang, onRecheck, checking }:
         specialty: specialty.trim(),
         place: place.trim(),
         attest: true,
+        // The text he just read — the server records it only if it is the current one.
+        engagement: PRACTITIONER_ENGAGEMENT_VERSION,
       });
       if (res?.status === 'already_granted') {
         await onRecheck();
@@ -287,6 +296,9 @@ export default function PractitionerAccessRequest({ lang, onRecheck, checking }:
           </div>
         </div>
 
+        {/* His engagement, then ONE tick: « I am a doctor » and « I accept it ». */}
+        <EngagementTerms />
+
         <label className="flex items-start gap-3 text-sm text-[var(--text-primary)] cursor-pointer">
           <input
             type="checkbox"
@@ -295,12 +307,7 @@ export default function PractitionerAccessRequest({ lang, onRecheck, checking }:
             className="mt-1 h-4 w-4 flex-shrink-0"
             data-testid="mp-request-attest"
           />
-          <span>
-            {t(
-              'mes_patients.request_attest',
-              'Je suis médecin et je demande l’accès aux résultats des patients dont je suis le prescripteur.'
-            )}
-          </span>
+          <span>{t('mes_patients.request_attest', 'Je suis médecin et j’accepte cet engagement.')}</span>
         </label>
 
         {error && <p className="text-sm text-[var(--status-error)]">{error}</p>}
@@ -312,7 +319,7 @@ export default function PractitionerAccessRequest({ lang, onRecheck, checking }:
             className="button-bordeaux justify-center flex items-center gap-2 w-full sm:w-auto disabled:opacity-60 disabled:cursor-not-allowed"
             data-testid="mp-request-submit"
           >
-            <Send size={18} />
+            <Send size={18} className="flex-shrink-0" />
             {sending
               ? t('mes_patients.request_sending', 'Envoi…')
               : t('mes_patients.request_submit', 'Demander mon accès médecin')}

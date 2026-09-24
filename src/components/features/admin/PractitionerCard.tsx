@@ -36,6 +36,9 @@ export interface PractitionerDTO {
   label: string;
   linkedAt: number | null;
   lastUsedAt: number | null;
+  /** His confidentiality engagement (optional: absent from an older function). */
+  engaged?: boolean;
+  engagementAt?: number | null;
 }
 
 /** The form. Held by the PAGE, not by this component (see header). */
@@ -169,6 +172,22 @@ export default function PractitionerCard({
                 {current.lastUsedAt
                   ? t('admin.pract_last_used', 'dernière consultation le {{date}}', { date: fmtDate(current.lastUsedAt) })
                   : t('admin.pract_never_used', 'pas encore consulté')}
+              </p>
+            )}
+            {/* His confidentiality engagement: accepted on his request form or
+                at his first visit — never by the lab on his behalf. */}
+            {!confirmingRemove && current.engaged !== undefined && (
+              <p
+                className={`text-sm ${current.engaged ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}
+                data-testid="practitioner-engagement"
+              >
+                {current.engaged
+                  ? current.engagementAt
+                    ? t('admin.pract_engaged', 'Engagement de confidentialité accepté le {{date}}', {
+                        date: fmtDate(current.engagementAt),
+                      })
+                    : t('admin.doctors_engaged_nodate', 'Engagement de confidentialité accepté')
+                  : t('admin.pract_not_engaged', 'Engagement de confidentialité : il lui sera demandé à sa prochaine visite.')}
               </p>
             )}
           </div>

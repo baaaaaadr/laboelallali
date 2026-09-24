@@ -7,10 +7,10 @@
  *
  * Narrative order, validated with the lab director on the mockup:
  *   1. key figures + this month          5. where it breaks (funnel, freshness)
- *   2. oldest pending request (action)   6. who uses it (age, frequency, type)
- *   3. usage gauge + scope note          7. team responsiveness
- *   4. evolution over time (growth)      8. relances & acquisition
- *   9. collapsed detail lists
+ *   2. oldest pending request (action)   6. who uses it (age, frequency)
+ *   3. usage gauge + scope note          6b. the doctors, one row each
+ *   4. evolution over time (growth)      7. team responsiveness
+ *   8. relances & acquisition            9. collapsed detail lists
  *
  * Charts read metadata only — counts and dates. No result, no medical value ever
  * reaches this screen.
@@ -31,6 +31,23 @@ export interface DashAccount {
   createdAt?: string;
   hasAccess?: boolean;
   lastResultsAt?: number | null;
+}
+
+/** One doctor in « Les médecins » (24/09/2026) — counts only, never a patient. */
+export interface DashPractitioner {
+  uid: string;
+  label: string;
+  fullName: string;
+  requester_id: string;
+  team: boolean;
+  engaged: boolean;
+  linkedAt: number | null;
+  lastVisitAt: number | null;
+  /** Days with a visit, reports opened: since the start, and this month. */
+  days: number;
+  reports: number;
+  monthDays: number;
+  monthReports: number;
 }
 
 export interface DashboardStats {
@@ -57,9 +74,19 @@ export interface DashboardStats {
   shares: { month: number; signups: number };
   /**
    * Doctor access (« Mes patients »), counted apart from the patients. Optional:
-   * absent from a payload served by a function deployed before 23/09/2026.
+   * absent from a payload served by a function deployed before 23/09/2026; the
+   * per-doctor fields (`list`, `monthReports`, `teamExcluded`…) since 24/09/2026.
    */
-  practitioners?: { accounts: number; active: number; consultations30d: number };
+  practitioners?: {
+    accounts: number;
+    active: number;
+    consultations30d: number;
+    monthDays?: number;
+    monthReports?: number;
+    /** Doctors on team accounts left out (the « Inclure l'équipe » rule). */
+    teamExcluded?: number;
+    list?: DashPractitioner[];
+  };
   latestCreated: DashAccount[];
   latestActive: DashAccount[];
   truncated: boolean;
@@ -135,6 +162,8 @@ export default function AdminDashboard({
       <p className="text-sm text-[var(--text-secondary)] mt-0.5">{desc}</p>
     </div>
   );
+
+  const pr = dash.practitioners;
 
   const tiles = [
     { icon: Users, label: t('admin.dash_accounts', 'Comptes patients'), value: dash.totals.accounts, sub: '' },
@@ -306,7 +335,7 @@ export default function AdminDashboard({
         t('admin.dash_sec_who_desc', "Pour cibler l'accompagnement là où il manque vraiment.")
       )}
 
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+      <div className="grid md:grid-cols-2 gap-4 items-start">
         <ChartCard
         title={t('admin.dash_age_title', "Utilisation selon l'âge")}
         subtitle={t('admin.dash_age_sub', 'Part des patients qui consultent, par tranche d’âge')}
@@ -342,39 +371,134 @@ export default function AdminDashboard({
           />
         </ChartCard>
 
-        {/* Replaces the old « Types de comptes » chart, whose hint announced
-            exactly this: doctors now have their own access (« Mes patients »),
-            kept apart from the patient identities — so an own-identity type
-            of médecin/correspondant no longer means anything to track. */}
-        <ChartCard
-          title={t('admin.dash_pract_title', 'Accès médecins')}
-          subtitle={t('admin.dash_pract_sub', 'Médecins prescripteurs qui consultent leurs patients dans l’application')}
-          hint={t(
-            'admin.dash_pract_hint',
-            'Un compte médecin sans dossier personnel n’entre ni dans les chiffres patients ni dans les relances.'
-          )}
-        >
-          {dash.practitioners && dash.practitioners.accounts > 0 ? (
-            <>
-              <StatBig
-                value={String(dash.practitioners.accounts)}
-                caption={t('admin.dash_pract_caption', {
-                  n: dash.practitioners.active,
-                  defaultValue: 'accès médecin — {{n}} utilisés ces 30 derniers jours',
-                })}
-              />
-              <p className="text-sm text-[var(--text-secondary)] mt-3">
-                {t('admin.dash_pract_consult', {
-                  n: dash.practitioners.consultations30d,
-                  defaultValue: '{{n}} consultations de « Mes patients » sur 30 jours',
-                })}
-              </p>
-            </>
-          ) : (
-            <StatBig value="0" caption={t('admin.dash_pract_none', 'Aucun médecin activé pour le moment.')} />
-          )}
-        </ChartCard>
       </div>
+
+      {/* 6b — The doctors (« Mes patients », 24/09/2026 — owner's request: « voir
+          à quel point ils consultent les dossiers de leurs patients »). Replaces
+          the single « Accès médecins » card that sat in section 6 — itself the
+          successor of the old « Types de comptes » chart. One row per doctor:
+          last visit, days of visit and reports opened. Counts ONLY — never which
+          patient, never which report (practitionerUsage). Same team rule as the
+          rest of the screen, and it says how many team doctors it left out. */}
+      {sectionTitle(
+        t('admin.dash_sec_doctors', 'Les médecins'),
+        t('admin.dash_sec_doctors_desc', 'Les médecins activés consultent-ils vraiment les bilans de leurs patients ?')
+      )}
+
+      <ChartCard
+        title={t('admin.dash_pract_title', 'Utilisation par médecin')}
+        subtitle={t('admin.dash_pract_sub', 'Visites et bilans ouverts dans « Mes patients »')}
+        hint={t(
+          'admin.dash_pract_hint',
+          'Un médecin activé qui ne vient jamais : appelez-le, il ne sait peut-être pas où trouver ses patients. Des nombres seulement, jamais quels patients ni quels bilans. Un compte médecin sans dossier personnel n’entre ni dans les chiffres patients ni dans les relances.'
+        )}
+      >
+        {pr && pr.accounts > 0 ? (
+          <div className="space-y-4">
+            <dl className="grid grid-cols-3 gap-3" data-testid="dash-doctors-figures">
+              {(
+                [
+                  [t('admin.dash_pract_accounts', 'Médecins activés'), pr.accounts],
+                  [t('admin.dash_pract_active', 'Actifs ces 30 jours'), pr.active],
+                  [t('admin.dash_pract_month_reports', 'Bilans ouverts ce mois-ci'), pr.monthReports ?? 0],
+                ] as [string, number][]
+              ).map(([label, value]) => (
+                <div key={label} className="rounded-lg bg-[var(--background-secondary)] px-3 py-2">
+                  <dt className="text-xs text-[var(--text-tertiary)] leading-tight">{label}</dt>
+                  <dd className="mt-1 text-2xl font-bold text-[var(--text-primary)] tabular-nums">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            {pr.list && pr.list.length > 0 && (
+              <>
+              {/* Phones: one block per doctor — a five-column table does not fit
+                  390 px (measured: the last two columns needed a sideways
+                  scroll). Label/value pairs, so no plural forms. */}
+              <ul className="sm:hidden divide-y divide-[var(--border-default)]" data-testid="dash-doctors-list">
+                {pr.list.map((d) => (
+                  <li key={d.uid} className="py-3 space-y-2">
+                    {/* flex + gap, not a margin: in Arabic a margin on the
+                        dir="ltr" code lands on the wrong side and glues it to
+                        the name. */}
+                    <p className="flex flex-wrap items-baseline gap-x-2">
+                      <span className="font-medium text-[var(--text-primary)]">{d.label || d.fullName}</span>
+                      <span dir="ltr" className="text-xs text-[var(--text-tertiary)]">{d.requester_id}</span>
+                    </p>
+                    <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-xs">
+                      {(
+                        [
+                          [t('admin.dash_pract_col_last', 'Dernière visite'), d.lastVisitAt ? fmtWhen(d.lastVisitAt) : t('admin.dash_pract_never', 'jamais')],
+                          [t('admin.dash_pract_col_month_days', 'Jours de visite (mois)'), d.monthDays],
+                          [t('admin.dash_pract_col_month_reports', 'Bilans ouverts (mois)'), d.monthReports],
+                          [t('admin.dash_pract_col_total_reports', 'Bilans ouverts (total)'), d.reports],
+                        ] as [string, string | number][]
+                      ).map(([label, value]) => (
+                        <React.Fragment key={label}>
+                          <dt className="text-[var(--text-tertiary)]">{label}</dt>
+                          <dd className="text-end tabular-nums text-[var(--text-primary)]">{value}</dd>
+                        </React.Fragment>
+                      ))}
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-sm" data-testid="dash-doctors">
+                  <thead>
+                    <tr className="text-xs text-[var(--text-tertiary)]">
+                      <th className="py-2 pe-3 font-medium text-start">{t('admin.dash_pract_col_doctor', 'Médecin')}</th>
+                      <th className="py-2 pe-3 font-medium text-start">{t('admin.dash_pract_col_last', 'Dernière visite')}</th>
+                      <th className="py-2 pe-3 font-medium text-end">{t('admin.dash_pract_col_month_days', 'Jours de visite (mois)')}</th>
+                      <th className="py-2 pe-3 font-medium text-end">{t('admin.dash_pract_col_month_reports', 'Bilans ouverts (mois)')}</th>
+                      <th className="py-2 font-medium text-end">{t('admin.dash_pract_col_total_reports', 'Bilans ouverts (total)')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border-default)]">
+                    {pr.list.map((d) => (
+                      <tr key={d.uid} data-testid="dash-doctor-row">
+                        <td className="py-2 pe-3">
+                          <span className="flex flex-wrap items-baseline gap-x-2">
+                            <span className="font-medium text-[var(--text-primary)]">{d.label || d.fullName}</span>
+                            <span dir="ltr" className="text-xs text-[var(--text-tertiary)]">{d.requester_id}</span>
+                          </span>
+                        </td>
+                        <td className="py-2 pe-3 whitespace-nowrap text-[var(--text-secondary)]">
+                          {d.lastVisitAt ? fmtWhen(d.lastVisitAt) : t('admin.dash_pract_never', 'jamais')}
+                        </td>
+                        <td className="py-2 pe-3 text-end tabular-nums text-[var(--text-primary)]">{d.monthDays}</td>
+                        <td className="py-2 pe-3 text-end tabular-nums text-[var(--text-primary)]">{d.monthReports}</td>
+                        <td className="py-2 text-end tabular-nums text-[var(--text-primary)]">{d.reports}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <StatBig
+            value="0"
+            caption={
+              (pr?.teamExcluded ?? 0) > 0
+                ? t('admin.dash_pract_none_team', 'Aucun médecin en dehors des comptes de l’équipe.')
+                : t('admin.dash_pract_none', 'Aucun médecin activé pour le moment.')
+            }
+          />
+        )}
+        {(pr?.teamExcluded ?? 0) > 0 && (
+          <p className="text-xs text-[var(--text-tertiary)] mt-3 flex items-start gap-1.5" data-testid="dash-doctors-team">
+            <Users size={13} className="flex-shrink-0 mt-0.5" />
+            <span>
+              {t('admin.dash_pract_team_note', {
+                n: pr?.teamExcluded ?? 0,
+                defaultValue:
+                  'Comptes de l’équipe non comptés ici : {{n}}. Cochez « Inclure les comptes de l’équipe » en haut de la page pour les voir.',
+              })}
+            </span>
+          </p>
+        )}
+      </ChartCard>
 
       {/* 7 — Team responsiveness */}
       {sectionTitle(

@@ -52,6 +52,22 @@ export interface PractitionerAccess {
   linkedBy?: string;
 }
 
+/**
+ * The doctor's confidentiality engagement (24/09/2026) — on the ACCOUNT, not
+ * inside `practitioner`: `users/{uid}.practitionerEngagement`, written only by
+ * the server (`requestPractitionerAccess`, `acceptPractitionerEngagement`),
+ * locked in `firestore.rules`. Read through `hasEngagement` in
+ * `src/lib/practitioner/engagement.ts`.
+ */
+export interface PractitionerEngagement {
+  /** The text version he accepted. */
+  version: number;
+  /** Firestore Timestamp — never read client-side. */
+  acceptedAt?: unknown;
+  /** 'request' (the request form) or 'visit' (his first visit). */
+  via?: string;
+}
+
 export interface CyberlabResult {
   dossier_id: string;
   patient_nom: string;

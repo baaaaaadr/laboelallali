@@ -19,6 +19,9 @@
  *  - a doctor access whose code equals one of the account's PATIENT ids →
  *    a configuration error, never a call (the server would answer with the
  *    patient's own dossier, which would be shown as « Mes patients »);
+ *  - a doctor access, but the confidentiality engagement not accepted yet (a
+ *    doctor the lab activated directly, 24/09/2026) → `PractitionerEngagementGate`,
+ *    once, and NO call to the results server before he accepts;
  *  - otherwise → `PractitionerWorkspace`, keyed by uid + code.
  */
 import React, { use, useEffect, useMemo, useState } from 'react';
@@ -30,9 +33,11 @@ import MedicalLoader from '@/components/ui/MedicalLoader';
 import VerdictPanel from '@/components/ui/VerdictPanel';
 import PractitionerWorkspace from '@/components/features/practitioner/PractitionerWorkspace';
 import PractitionerAccessRequest from '@/components/features/practitioner/PractitionerAccessRequest';
+import PractitionerEngagementGate from '@/components/features/practitioner/PractitionerEngagementGate';
 import ResultsSpaceSwitch from '@/components/features/practitioner/ResultsSpaceSwitch';
 import { readPractitioner, resolveIdentities } from '@/lib/results/identities';
 import { doctorSpacePath } from '@/lib/practitioner/invitation';
+import { hasEngagement } from '@/lib/practitioner/engagement';
 
 export default function MesPatientsPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = use(params);
@@ -63,7 +68,7 @@ export default function MesPatientsPage({ params }: { params: Promise<{ lang: st
     );
   }
 
-  if (practitioner && !collides) {
+  if (practitioner && !collides && hasEngagement(userProfile)) {
     return (
       <PractitionerWorkspace
         key={`${user.uid}:${practitioner.requester_id}`}
@@ -85,7 +90,7 @@ export default function MesPatientsPage({ params }: { params: Promise<{ lang: st
   return (
     <div className="min-h-[80vh] py-12 px-4 sm:px-6 lg:px-8 bg-[var(--background-default)]">
       <div className="max-w-2xl mx-auto space-y-6">
-        {/* Shown only in the collision case (the account HAS a doctor access):
+        {/* Shown when the account HAS a doctor access (collision, engagement):
             his own results stay one tap away. Nothing without an access. */}
         <ResultsSpaceSwitch lang={lang} current="patients" />
         <h1 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] flex items-center gap-2">
@@ -102,6 +107,9 @@ export default function MesPatientsPage({ params }: { params: Promise<{ lang: st
             )}
             todo={t('mes_patients.config_todo', 'Contactez le laboratoire pour le corriger.')}
           />
+        ) : practitioner ? (
+          // Access active, engagement not accepted yet: the text, once.
+          <PractitionerEngagementGate onAccepted={refreshProfile} />
         ) : (
           // No doctor access: the request form (the lab's invitation link lands
           // here), or where the request stands. Asking grants nothing.

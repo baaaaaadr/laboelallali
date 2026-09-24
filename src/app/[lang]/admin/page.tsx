@@ -43,6 +43,7 @@ import PractitionerRequestsSection, {
   type PractitionerRequest,
 } from '@/components/features/admin/PractitionerRequestsSection';
 import InviteDoctorCard from '@/components/features/admin/InviteDoctorCard';
+import PractitionersSection, { type PractitionerRow } from '@/components/features/admin/PractitionersSection';
 import { normalizePractitionerId } from '@/lib/results/identities';
 import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, ArrowLeft, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList, Stethoscope } from 'lucide-react';
 
@@ -51,7 +52,9 @@ const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
 const LEVEL: Record<string, number> = { owner: 3, admin: 2, staff: 1 };
 
 // `dashboard` and `team` need level >= 2; everything else is staff-level.
-type AdminTab = 'dashboard' | 'patients' | 'requests' | 'relances' | 'test' | 'team';
+// `doctors` (24/09/2026): the doctors holding an access, their requests, the
+// invitation link — everything « Mes patients » in one place.
+type AdminTab = 'dashboard' | 'patients' | 'requests' | 'doctors' | 'relances' | 'test' | 'team';
 /**
  * Largeur utile du contenu, par onglet.
  *
@@ -81,6 +84,8 @@ const CONTENT_WIDTH: Record<AdminTab, string> = {
   relances: '',
   requests: '',
   patients: 'max-w-4xl',
+  // One card per doctor, with its actions: a reading measure, like Patients.
+  doctors: 'max-w-4xl',
   test: 'max-w-4xl',
   team: 'max-w-4xl',
 };
@@ -267,11 +272,18 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
 
   // Patient-initiated requests for a relative's dossier (Demandes tab).
   const [relReqs, setRelReqs] = useState<RelativeRequest[]>([]);
-  // Doctor access requests (« Demander mon accès médecin »): the third queue.
+  // Doctor access requests (« Demander mon accès médecin ») — « Médecins » tab.
   const [practReqs, setPractReqs] = useState<PractitionerRequest[]>([]);
   const [practReqBusy, setPractReqBusy] = useState<string | null>(null);
   const [practReqError, setPractReqError] = useState<string | null>(null);
   const [practReqMsg, setPractReqMsg] = useState<string | null>(null);
+  // The doctors who hold an access (« Médecins » tab). `null` = not loaded yet:
+  // fetched when the tab is first opened, and again after any change to an
+  // access (activation, edit, withdrawal) — see `setDoctors(null)` below.
+  const [doctors, setDoctors] = useState<PractitionerRow[] | null>(null);
+  const [doctorsError, setDoctorsError] = useState<string | null>(null);
+  const [doctorsBusy, setDoctorsBusy] = useState<string | null>(null);
+  const [doctorsMsg, setDoctorsMsg] = useState<string | null>(null);
   const [relInputs, setRelInputs] = useState<Record<string, RelativeInputs>>({});
   const [relBusy, setRelBusy] = useState<string | null>(null);
   const [relError, setRelError] = useState<string | null>(null);
@@ -803,6 +815,8 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       setSelected((prev) => (prev ? patch(prev) : prev));
       // His request (if he asked from the app) was closed by the server.
       setPractReqs((prev) => prev.filter((r) => r.uid !== selected.uid));
+      // The « Médecins » list re-reads itself on its next opening.
+      setDoctors(null);
       setPractCheck(null);
       setPractNotice(
         wasSameCode
@@ -832,6 +846,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       const patch = (r: SearchResult) => (r.uid === selected.uid ? { ...r, practitioner: null } : r);
       setResults((prev) => prev.map(patch));
       setSelected((prev) => (prev ? patch(prev) : prev));
+      setDoctors(null);
       setPractCheck(null);
       setPractNotice(t('admin.pract_removed', 'Accès médecin retiré.'));
     } catch (err: unknown) {
@@ -892,18 +907,18 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   }, [loading, isStaff, loadPractReqs]);
 
   /**
-   * « Ouvrir sa fiche » : the Patients tab, his account selected, the « Accès
-   * médecin » card prefilled with the name he gave (as on his prescriptions).
-   * The admin types the Qalam code, « Vérifier », « Activer » — which closes the
-   * request server-side (`adminSetPractitioner`).
+   * Open one account in the Patients tab — searched by its e-mail (unique),
+   * else its name, then selected by uid. Returns the hit, or null (with a
+   * message) when the search does not find it. Shared by the doctor requests
+   * and the doctors list.
    */
-  const openPractReq = async (req: PractitionerRequest) => {
+  const openAccount = async (target: { uid: string; email: string | null; fullName: string }) => {
     setActiveTab('patients');
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
-    const q = req.email || req.fullName;
+    const q = target.email || target.fullName;
     setQuery(q);
     const list = await runSearch(q);
-    const hit = list.find((r) => r.uid === req.uid);
+    const hit = list.find((r) => r.uid === target.uid);
     if (!hit) {
       setError(
         t(
@@ -911,10 +926,76 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
           'Ce compte n’a pas été retrouvé par la recherche. Cherchez-le par son nom ou son téléphone.'
         )
       );
-      return;
+      return null;
     }
     selectPatient(hit);
-    setPractDraft((d) => ({ ...d, label: d.label || req.label }));
+    return hit;
+  };
+
+  /**
+   * « Ouvrir sa fiche » on a request: his account selected, the « Accès
+   * médecin » card prefilled with the name he gave (as on his prescriptions).
+   * The admin types the Qalam code, « Vérifier », « Activer » — which closes the
+   * request server-side (`adminSetPractitioner`).
+   */
+  const openPractReq = async (req: PractitionerRequest) => {
+    if (await openAccount(req)) setPractDraft((d) => ({ ...d, label: d.label || req.label }));
+  };
+
+  // ── Doctors holding an access (« Médecins » tab) ───────────────────────────
+  const loadDoctors = useCallback(async () => {
+    setDoctorsError(null);
+    try {
+      const res = await callFn<{ practitioners: PractitionerRow[] }>('adminListPractitioners', {});
+      setDoctors(res.practitioners || []);
+    } catch (err: unknown) {
+      setDoctorsError(errMsg(err));
+    }
+  }, [errMsg]);
+
+  // Fetched when the tab is opened, not on every visit of the admin space.
+  // A failure leaves `doctors` null WITHOUT looping: the deps do not change,
+  // and the section offers « Réessayer ».
+  useEffect(() => {
+    if (!loading && isStaff && activeTab === 'doctors' && doctors === null) void loadDoctors();
+  }, [loading, isStaff, activeTab, doctors, loadDoctors]);
+
+  /**
+   * « Ouvrir sa fiche » on a doctor: his account in the Patients tab, scrolled
+   * to the « Accès médecin » card — where code, type and name are edited.
+   */
+  const openDoctor = async (row: PractitionerRow) => {
+    if (!(await openAccount(row))) return;
+    // After the render that mounts the card.
+    setTimeout(() => {
+      document
+        .querySelector('[data-testid="practitioner-card"]')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  };
+
+  /** « Retirer l'accès » from the list (confirmed in place; admin level, server-enforced). */
+  const revokeDoctor = async (row: PractitionerRow) => {
+    setDoctorsBusy(row.uid);
+    setDoctorsError(null);
+    setDoctorsMsg(null);
+    try {
+      await callFn<PractitionerResponse>('adminSetPractitioner', { uid: row.uid, clear: true });
+      setDoctors((prev) => (prev ? prev.filter((d) => d.uid !== row.uid) : prev));
+      setDoctorsMsg(t('admin.doctors_revoked', 'Accès de {{name}} retiré.', { name: row.label || row.fullName }));
+      // The Patients tab may be showing this account: keep it in step.
+      if (selected?.uid === row.uid) {
+        setPractCurrent(null);
+        setPractCheck(null);
+      }
+      const patch = (r: SearchResult) => (r.uid === row.uid ? { ...r, practitioner: null } : r);
+      setResults((prev) => prev.map(patch));
+      setSelected((prev) => (prev ? patch(prev) : prev));
+    } catch (err: unknown) {
+      setDoctorsError(errMsg(err));
+    } finally {
+      setDoctorsBusy(null);
+    }
   };
 
   const rejectPractReq = async (req: PractitionerRequest) => {
@@ -1022,7 +1103,9 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       ? [{ id: 'dashboard', label: t('admin.tab_dashboard', 'Tableau de bord'), icon: LayoutDashboard }]
       : []),
     { id: 'patients', label: t('admin.tab_patients', 'Patients'), icon: User },
-    { id: 'requests', label: t('admin.tab_requests', 'Demandes'), icon: Inbox, count: accessReqs.length + relReqs.length + practReqs.length },
+    { id: 'requests', label: t('admin.tab_requests', 'Demandes'), icon: Inbox, count: accessReqs.length + relReqs.length },
+    // Its badge = the doctors waiting for an activation.
+    { id: 'doctors', label: t('admin.tab_doctors', 'Médecins'), icon: Stethoscope, count: practReqs.length },
     { id: 'relances', label: t('admin.tab_relances', 'Relances'), icon: MessageCircle, count: dormant?.length },
     { id: 'test', label: t('admin.tab_test', 'Tester'), icon: FlaskConical },
     ...(isManager ? [{ id: 'team', label: t('admin.tab_team', 'Équipe'), icon: Users }] : []),
@@ -1275,22 +1358,42 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
           </div>
         )}
 
-        {/* Doctors: the invitation link (a doctor with no account yet), then the
-            requests made through it. A doctor who already HAS an account needs
-            neither — his code is given from the Patients tab directly. */}
-        {activeTab === 'requests' && (
-          <div className="mt-8 max-w-4xl space-y-4">
-            <InviteDoctorCard lang={lang} />
-            <PractitionerRequestsSection
-              requests={practReqs}
+        {/* ── Médecins tab (24/09/2026): everything « Mes patients » ─────────
+            1. the doctors WAITING (requests made through the invitation link) —
+               only when there are some, or a message to show: the tab badge
+               already says whether anything waits;
+            2. the doctors who HOLD an access, with their usage and quick
+               actions;
+            3. the invitation link, for a doctor who has no account yet. A
+               doctor who already has one needs no invitation — his code is
+               given from his fiche (Patients tab). */}
+        {activeTab === 'doctors' && (
+          <div className="space-y-10">
+            {(practReqs.length > 0 || practReqMsg || practReqError) && (
+              <PractitionerRequestsSection
+                requests={practReqs}
+                canAct={isManager}
+                busyUid={practReqBusy}
+                error={practReqError}
+                message={practReqMsg}
+                onOpen={(req) => void openPractReq(req)}
+                onReject={(req) => void rejectPractReq(req)}
+                fmtWhenTime={fmtWhenTime}
+              />
+            )}
+            <PractitionersSection
+              lang={lang}
+              doctors={doctors}
+              error={doctorsError}
+              message={doctorsMsg}
               canAct={isManager}
-              busyUid={practReqBusy}
-              error={practReqError}
-              message={practReqMsg}
-              onOpen={(req) => void openPractReq(req)}
-              onReject={(req) => void rejectPractReq(req)}
-              fmtWhenTime={fmtWhenTime}
+              busyUid={doctorsBusy}
+              onOpen={(row) => void openDoctor(row)}
+              onRevoke={(row) => void revokeDoctor(row)}
+              onRetry={() => void loadDoctors()}
+              fmtWhen={fmtWhen}
             />
+            <InviteDoctorCard lang={lang} />
           </div>
         )}
 

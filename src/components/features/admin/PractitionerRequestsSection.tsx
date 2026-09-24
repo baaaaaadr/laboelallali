@@ -2,8 +2,8 @@
 
 /**
  * « Demandes d'accès médecin » — the queue of doctors who asked from the app
- * (invitation link → « Demander mon accès médecin »). Demandes tab, below the
- * patient queues. See docs/pages/admin.md and docs/pages/mes-patients.md.
+ * (invitation link → « Demander mon accès médecin »). Top of the « Médecins »
+ * tab, when requests wait. See docs/pages/admin.md and docs/pages/mes-patients.md.
  *
  * Presentational only, like the other admin sub-components: state and callables
  * live in `/admin/page.tsx`.
@@ -19,7 +19,7 @@
  */
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, Check, ExternalLink, Stethoscope } from 'lucide-react';
+import { AlertCircle, Check, CheckCircle, ExternalLink, Stethoscope } from 'lucide-react';
 
 export interface PractitionerRequest {
   uid: string;
@@ -31,6 +31,8 @@ export interface PractitionerRequest {
   specialty: string;
   place: string;
   createdAt: number | null;
+  /** He ticked the confidentiality engagement (optional: older function). */
+  engagementAt?: number | null;
 }
 
 interface Props {
@@ -121,6 +123,12 @@ export default function PractitionerRequestsSection({
               {req.createdAt != null && (
                 <p>
                   {t('admin.req_created_at', 'Demandé le')} {fmtWhenTime(req.createdAt)}
+                </p>
+              )}
+              {req.engagementAt != null && (
+                <p className="flex items-center gap-1.5 text-[var(--status-success)]" data-testid="pract-request-engaged">
+                  <CheckCircle size={14} className="flex-shrink-0" />
+                  {t('admin.pract_req_engaged', 'Engagement de confidentialité accepté')}
                 </p>
               )}
             </div>
