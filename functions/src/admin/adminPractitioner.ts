@@ -44,6 +44,7 @@ import {
   SMTP_PASS,
   SMTP_USER,
 } from "../email/mailer";
+import { fulfillPractitionerRequest } from "./practitionerRequests";
 
 // Same secret/param names as fetchResults — defineSecret is idempotent by name.
 const CYBERLAB_API_KEY = defineSecret("CYBERLAB_API_KEY");
@@ -441,6 +442,10 @@ export const adminSetPractitioner = onCall(
       by: adminUid,
       action: sameCode ? "update" : "activate",
     });
+
+    // The doctor asked in the app (« Demander mon accès médecin »)? His request
+    // leaves the admin queue now. Best-effort: the access is already written.
+    await fulfillPractitionerRequest(targetUid, adminUid, code);
 
     // Tell the doctor, but only when access is NEW (not on a label edit).
     let notified = false;

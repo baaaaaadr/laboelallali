@@ -66,6 +66,14 @@ export {
 // level — a code opens a whole roster of named results. See
 // docs/pages/mes-patients.md.
 export { adminSetPractitioner } from "./admin/adminPractitioner";
+// The doctor ASKS from the app (invitation link → « Demander mon accès
+// médecin »); an admin attaches his code. Asking grants nothing.
+export {
+  requestPractitionerAccess,
+  myPractitionerRequest,
+  adminListPractitionerRequests,
+  adminRejectPractitionerRequest,
+} from "./admin/practitionerRequests";
 
 import { getStorage } from "firebase-admin/storage";
 import { FieldValue } from "firebase-admin/firestore";

@@ -165,6 +165,43 @@ section("Clé de regroupement par patient (même règle que l'app)");
   assert(patientKey("", "", "D1") === "#dossier:D1", "bilan sans nom → clé sur son numéro de dossier");
 }
 
+section("Demande d'accès faite par le médecin (parsePractitionerRequest)");
+{
+  const { parsePractitionerRequest } = require(path.join(FN_DIR, "lib/admin/practitionerRequests"));
+  const codeOf = (fn) => {
+    try {
+      fn();
+      return null;
+    } catch (e) {
+      return e.code || "erreur";
+    }
+  };
+  assert(
+    codeOf(() => parsePractitionerRequest({ label: "Dr Démo Banc" })) === "invalid-argument",
+    "case « je suis médecin » non cochée → refusée"
+  );
+  assert(
+    codeOf(() => parsePractitionerRequest({ label: "Dr Démo Banc", attest: "true" })) === "invalid-argument",
+    "« attest » doit être un vrai booléen, pas le texte \"true\""
+  );
+  assert(codeOf(() => parsePractitionerRequest({ label: "Dr", attest: true })) === "invalid-argument", "nom trop court → refusé");
+  const ok = parsePractitionerRequest({ label: "  Dr   Démo  Banc ", specialty: " Cardiologie ", place: "Agadir", attest: true });
+  assert(
+    ok.label === "Dr Démo Banc" && ok.specialty === "Cardiologie" && ok.place === "Agadir",
+    "espaces nettoyés, les trois champs gardés"
+  );
+  const bare = parsePractitionerRequest({ label: "Dr Démo Banc", attest: true });
+  assert(bare.specialty === "" && bare.place === "", "spécialité et ville facultatives");
+  assert(
+    codeOf(() => parsePractitionerRequest({ label: "Dr Démo Banc", specialty: "x".repeat(61), attest: true })) === "invalid-argument",
+    "spécialité de plus de 60 caractères → refusée"
+  );
+  assert(
+    codeOf(() => parsePractitionerRequest({ label: "Dr Démo Banc", place: "x".repeat(81), attest: true })) === "invalid-argument",
+    "ville / cabinet de plus de 80 caractères → refusé"
+  );
+}
+
 console.log("");
 if (failures === 0) {
   console.log("Tout est vert.");
