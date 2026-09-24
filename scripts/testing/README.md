@@ -68,7 +68,7 @@ applique les mêmes règles que le vrai serveur (identifiant inconnu refusé,
 dossier hors périmètre en 404). Données **fictives** uniquement.
 
 Pages montables (`window.__mount(page)`, voir `results-harness-entry.tsx`) :
-`resultats`, `mes-patients`, `profile`, `practitioner-card` (la carte admin
+`resultats`, `mes-patients`, `profile`, `admin` (monter en stagiaire : onglet Patients, sans tableau de bord), `practitioner-card` (la carte admin
 seule), `header` (l'en-tête : sans feuille de style, la barre desktop ET le
 tiroir mobile sont tous deux dans le DOM) et `home-panel` (le panneau personnel
 du héros d'accueil). `freshPage` (`results-bench.js`) accepte aussi `pathname`
@@ -80,11 +80,16 @@ d'accueil, par exemple).
 ## Banc « médecin » (`npm run test:practitioner:ui`)
 
 `node scripts/test-practitioner-ui.js` — même mécanique et mêmes doublures que le
-banc « résultats ». 133 vérifications : l'espace « Mes patients » (M1–M9 : une
-liste = un appel sans PDF, un patient ouvert = un PDF, le sien ; recherche,
-états bloqués, collision, changement de compte, arabe), le verrou de la carte
-admin (M10), et les points d'entrée (M11 menu, M12 accueil, M13 profil et
-bandeau de `/resultats`). Les tests purs sont à part : `npm run test:practitioner`.
+banc « résultats ». 145 vérifications :
+- l'espace « Mes patients » (M1–M9) : une liste = un appel sans PDF, un patient
+  ouvert = un PDF, le sien ; recherche, états bloqués, collision, changement de
+  compte, arabe ;
+- le verrou de la carte admin « Accès médecin » (M10) ;
+- les points d'entrée : M11 menu, M12 accueil, M13 profil et bandeau de
+  `/resultats` ;
+- l'onglet Patients de l'admin (M14) : une seule fiche par personne.
+
+Les tests purs sont à part : `npm run test:practitioner`.
 
 Pièges propres à ces bancs :
 

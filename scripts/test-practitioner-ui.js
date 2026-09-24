@@ -21,7 +21,8 @@
  *  - les points d'entrée (M11–M13) : le menu (« Mes patients » à la place de
  *    « Médecins » dans la barre, en plus dans le tiroir), l'accueil replié sans
  *    flash « Activer mon accès » pour un médecin sans dossier personnel, la
- *    carte « Espace médecin » du profil, le bandeau de /resultats.
+ *    carte « Espace médecin » du profil, le bandeau de /resultats ;
+ *  - l'onglet Patients de l'admin (M14) : une seule fiche par personne.
  *
  * ⚠ Aucune feuille de style : les classes responsives (`hidden lg:block`) sont
  *   sans effet ici — on vérifie la structure, les textes et les appels.
@@ -548,6 +549,79 @@ async function m13ProfileAndBanner(browser) {
   await p.close();
 }
 
+// ── M14 — admin, onglet Patients : une seule fiche par personne ─────────────
+// Signalé par le propriétaire le 24/09/2026 : après une recherche, le résultat
+// restait affiché au-dessus de la carte « Compte sélectionné », qui répète le
+// même nom, e-mail et téléphone — « deux fiches pour une même personne ».
+const STAFF = {
+  uid: 'uid-stagiaire-banc',
+  fullName: 'Stagiaire Banc',
+  phone: '0600000009',
+  email: 'stagiaire.banc@example.test',
+  role: 'staff',
+};
+
+async function adminSearch(p, q) {
+  await p.getByPlaceholder(/Email, nom/).fill(q);
+  await p.getByRole('button', { name: 'Rechercher' }).click();
+  await p.waitForTimeout(400);
+}
+const occurrences = (text, needle) => text.split(needle).length - 1;
+
+async function m14AdminOneCard(browser) {
+  scenario('M14 — admin, onglet Patients : une seule fiche pour une même personne');
+  const p = await freshPage(browser, { page: 'admin', profile: STAFF, server: { identities: {} } });
+  // Recherche simulée : « amina » → 1 compte ; « demo » → 3 comptes (fictifs).
+  await p.evaluate(() => {
+    const acc = (uid, fullName, email, extra) => ({
+      uid, fullName, email, hasProfile: true, phone: '060000' + uid.slice(-4),
+      createdAt: '2026-05-21T10:00:00Z', dateOfBirth: '1984-04-22', links: [], linkedCount: 0, practitioner: null, ...extra,
+    });
+    const A = acc('u-banc-0011', 'DÉMO Amina', 'amina.demo@example.test', { requester_id: '900011', type: 'patient' });
+    const B = acc('u-banc-0012', 'DÉMO Karim', 'karim.demo@example.test', {
+      requester_id: '900012', type: 'patient',
+      practitioner: { requester_id: 'DRDEMO', type: 'medecin', label: 'Dr Démo Banc', linkedAt: Date.UTC(2026, 8, 23), lastUsedAt: null },
+    });
+    const C = acc('u-banc-0013', 'DÉMO Salma', 'salma.demo@example.test', {});
+    window.__callables.adminSearchPatients = (args) => {
+      const q = String((args && args.query) || '').toLowerCase();
+      if (q.includes('amina')) return { results: [A], truncated: false };
+      if (q.includes('demo')) return { results: [A, B, C], truncated: false };
+      return { results: [], truncated: false };
+    };
+  });
+  await p.getByPlaceholder(/Email, nom/).waitFor({ timeout: 8000 });
+
+  // Un seul résultat : la fiche est ouverte d'office, et c'est la SEULE.
+  await adminSearch(p, 'amina.demo@example.test');
+  let text = await visibleText(p, '#app');
+  ok('1 résultat : la liste n’est pas affichée', !(await p.$('[data-testid="admin-results"]')));
+  ok('…la fiche du compte est ouverte', !!(await p.$('[data-testid="admin-selected"]')));
+  ok('…son e-mail n’apparaît qu’UNE fois à l’écran', occurrences(text, 'amina.demo@example.test') === 1, `${occurrences(text, 'amina.demo@example.test')} fois`);
+  ok('…pas de bouton « Retour aux résultats » (il n’y a rien d’autre)', !(await p.$('[data-testid="admin-back-to-results"]')));
+
+  // Plusieurs résultats : la liste, puis une seule fiche, puis retour à la liste.
+  await adminSearch(p, 'demo');
+  ok('3 résultats : la liste s’affiche, aucune fiche ouverte',
+    (await p.$$('[data-testid="admin-results"] > button')).length === 3 && !(await p.$('[data-testid="admin-selected"]')));
+  await p.getByText('DÉMO Karim').first().click();
+  await p.waitForTimeout(300);
+  text = await visibleText(p, '#app');
+  ok('choisir un compte replie la liste', !(await p.$('[data-testid="admin-results"]')));
+  ok('…une seule fiche : celle de Karim, e-mail présent UNE fois',
+    text.includes('DÉMO Karim') && occurrences(text, 'karim.demo@example.test') === 1 && !text.includes('DÉMO Amina'));
+  const back = p.getByTestId('admin-back-to-results');
+  ok('…bouton « Retour aux résultats (3) »', (await back.textContent()).includes('Retour aux résultats (3)'));
+  ok('…la carte « Accès médecin » de Karim montre son code', (await visibleText(p, '[data-testid="practitioner-card"]')).includes('DRDEMO'));
+  await back.click();
+  await p.waitForTimeout(300);
+  ok('« Retour aux résultats » : les 3 comptes reviennent, plus de fiche ouverte',
+    (await p.$$('[data-testid="admin-results"] > button')).length === 3 && !(await p.$('[data-testid="admin-selected"]')));
+  assertClean(p, await visibleText(p, '#app'));
+  await p.screenshot({ path: path.join(SHOTS, 'm14-admin-une-fiche.png'), fullPage: true });
+  await p.close();
+}
+
 async function main() {
   console.log('\n══ Banc « médecin » — /mes-patients sous le vrai ResultsProvider ══');
   await build();
@@ -566,6 +640,7 @@ async function main() {
     await m11Menu(browser);
     await m12HomePanel(browser);
     await m13ProfileAndBanner(browser);
+    await m14AdminOneCard(browser);
   } finally {
     await browser.close();
   }

@@ -19,6 +19,7 @@ import { ThemeProvider } from '../../src/contexts/ThemeContext';
 import ResultatsPage from '../../src/app/[lang]/resultats/page';
 import MesPatientsPage from '../../src/app/[lang]/mes-patients/page';
 import ProfilePage from '../../src/app/[lang]/profile/page';
+import AdminPage from '../../src/app/[lang]/admin/page';
 import Header from '../../src/components/layout/Header';
 import HeroPersonalPanel from '../../src/components/features/home/HeroPersonalPanel';
 import PractitionerCard, {
@@ -202,6 +203,9 @@ w.__mount = (page: string = 'resultats') => {
     'mes-patients': MesPatientsPage,
     'practitioner-card': PractitionerCardHarness,
     profile: ProfilePage,
+    // Monter en STAGIAIRE (role 'staff') : la page s'ouvre alors sur l'onglet
+    // Patients, sans le tableau de bord ni l'équipe (réservés aux managers).
+    admin: AdminPage,
     header: HeaderHarness,
     'home-panel': HeroPanelHarness,
   };
