@@ -19,7 +19,8 @@ import { doc, setDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db } from '@/config/firebase';
 import MedicalLoader from '@/components/ui/MedicalLoader';
-import { Mail, Lock, LogIn, UserPlus, User, Calendar, Phone, CheckCircle, ArrowLeft, ExternalLink } from 'lucide-react';
+import { isDoctorSpacePath } from '@/lib/practitioner/invitation';
+import { Mail, Lock, LogIn, UserPlus, User, Calendar, Phone, CheckCircle, ArrowLeft, ExternalLink, Stethoscope } from 'lucide-react';
 
 const inputClass =
   'appearance-none rounded-lg relative block w-full pl-10 pr-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] focus:border-transparent sm:text-sm transition-colors';
@@ -89,7 +90,12 @@ function getRedirectTarget(lang: string): string {
  * A 2.5 s cap keeps a slow call from delaying the post-signup redirect; the
  * request still completes in the background (soft client-side navigation).
  */
-async function autoRequestResultsAccess(): Promise<void> {
+async function autoRequestResultsAccess(lang: string): Promise<void> {
+  // A doctor who came through the lab's invitation link (redirect to
+  // /{lang}/mes-patients) asks for his DOCTOR access on the next screen: filing
+  // him in the PATIENT onboarding queue too would have the front desk call a
+  // doctor to offer him his own results. He can still ask for those later.
+  if (isDoctorSpacePath(getRedirectTarget(lang))) return;
   try {
     const functions = await getClientFunctions();
     if (!functions) return;
@@ -142,6 +148,14 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
 
   // Guards against a race where onAuthStateChanged fires before the profile is saved
   const isSigningUp = useRef(false);
+
+  // Arrived through the lab's doctor invitation (?redirect=/{lang}/mes-patients):
+  // say why a login page, since the link promised « Mes patients ». Read after
+  // mount — the prerendered HTML cannot know the query string.
+  const [doctorInvite, setDoctorInvite] = useState(false);
+  useEffect(() => {
+    setDoctorInvite(isDoctorSpacePath(getRedirectTarget(lang)));
+  }, [lang]);
 
   const getAuthErrorMessage = useCallback(
     (err: unknown, fallbackKey: string, fallbackMessage: string) => {
@@ -329,7 +343,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
         await refreshProfile();
         isSigningUp.current = false;
         // New account → queue it for staff onboarding (Dr Aziz). Best-effort.
-        await autoRequestResultsAccess();
+        await autoRequestResultsAccess(lang);
         router.push(getRedirectTarget(lang));
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -356,7 +370,7 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
       await persistProfile(user.uid, user.email);
       await refreshProfile();
       // New account (Google, profile just completed) → queue for staff onboarding.
-      await autoRequestResultsAccess();
+      await autoRequestResultsAccess(lang);
       router.push(getRedirectTarget(lang));
     } catch (err: unknown) {
       console.error(err);
@@ -631,6 +645,21 @@ export default function LoginPage({ params }: { params: Promise<{ lang: string }
               : t('signin_subtitle', 'Accédez à votre espace patient')}
           </p>
         </div>
+
+        {doctorInvite && (
+          <div
+            className="flex items-start gap-2 rounded-lg p-3 bg-[var(--background-tertiary)] border border-[var(--border-default)]"
+            data-testid="login-doctor-hint"
+          >
+            <Stethoscope size={18} className="flex-shrink-0 mt-0.5 text-[var(--color-bordeaux-primary)]" />
+            <p className="text-sm text-[var(--text-primary)]">
+              {t(
+                'mes_patients.login_hint',
+                'Espace médecin : connectez-vous — ou créez votre compte si vous n’en avez pas — puis demandez votre accès aux résultats de vos patients.'
+              )}
+            </p>
+          </div>
+        )}
 
         {/* Help text (demande n. 21). Sits above the Google button because that is
             the path we actually want patients to take. The third item the lab

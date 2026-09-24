@@ -147,7 +147,7 @@ export default function RelativeRequestsSection({
       {message && (
         <div
           role="status"
-          className="flex items-start gap-2 rounded-lg p-3 bg-[var(--background-tertiary)] text-[var(--color-bordeaux-primary)]"
+          className="flex items-start gap-2 rounded-lg p-3 bg-[var(--background-tertiary)] text-[var(--status-success)]"
         >
           <Check size={18} className="flex-shrink-0 mt-0.5" />
           <span className="font-medium">{message}</span>

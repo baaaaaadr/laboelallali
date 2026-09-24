@@ -101,6 +101,7 @@ All region `europe-southwest1`, all guarded by `requireLevel`:
   - Pure rules (`parsePractitionerInput`, `collidesWithPatientIds`, `activationRefusal`, `readPractitionerDTO`, `patientKey`) are unit-tested by `functions/scripts/test-practitioner-admin.js` (32 checks, run after `npm run build`).
   - `adminSearchPatients` returns `practitioner` on every result and also finds an account by its **doctor code** (case-insensitive, ranked exact) or by the access label. `adminTestResults` names the account holding a code for non-patient types (`practitioner.requester_id`).
   - Dashboard: `practitioners = {accounts, active (30 d), consultations30d}` (from `usageDaily.practitionerConsultations`). **A doctor-only account (no dossier, no relative) is excluded from the patient figures and from the relance list**: it would read as a patient awaiting activation, then as a dormant patient to call. A doctor who is also a patient stays in the patient figures.
+- **Doctor requests** (`functions/src/admin/practitionerRequests.ts`, 24/09/2026): `requestPractitionerAccess` (any signed-in account — writes `practitionerAccessRequests/{uid}` pending + staff e-mail; grants nothing), `myPractitionerRequest` (auth), `adminListPractitionerRequests` (≥staff), `adminRejectPractitionerRequest` (≥admin). `adminSetPractitioner` marks the pending request `fulfilled` on activation.
 - `adminSetStaff(email, grant)` (≥admin) → set `role: 'staff'` / remove. Refuses if target is admin/owner.
 - `adminSetAdmin(email, grant)` (owner only) → set `role: 'admin'` / remove. Refuses if target is owner.
 - `adminListStaff()` (≥admin) → `{ members: [{uid,email,fullName,role}], callerLevel }`, sorted owner→admin→staff.
@@ -169,6 +170,17 @@ i18n lives under `admin.link_*` (flat prefix, matching the local `dash_*` / `tes
 - The search results show a **« Médecin : CODE »** badge on accounts holding an access, and the search finds an account by its doctor code or displayed name.
 - If the account also has a **pending patient access request** (signup files one automatically), the card says so and suggests refusing it in the Demandes tab when the doctor has no dossier at the lab — the operator decides.
 - i18n under `admin.pract_*` (flat prefix), fr **and** ar. The dashboard card « Accès médecins » (`admin.dash_pract_*`) replaced the old « Types de comptes » chart, whose hint announced this feature.
+
+## Doctors in the Demandes tab — invitation + requests (24/09/2026)
+
+Below the two patient queues, a « Médecins » block: `InviteDoctorCard` then `PractitionerRequestsSection` (`src/components/features/admin/`, presentational; state and callables in the page: `practReqs`, `practReqBusy`, `practReqError`, `practReqMsg`, `loadPractReqs`, `openPractReq`, `rejectPractReq`). The tab badge counts these requests too.
+
+- **Two onboarding cases** (owner's decision): the doctor already has an account → give him his code from the Patients tab, no request needed; he has none → **send him the invitation link**, and his request arrives here. The card says so in its first sentence.
+- **« Inviter un médecin »**: the link `{origin}/{lang}/mes-patients` (read-only field + « Copier le lien »), an optional phone field and **« Envoyer par WhatsApp »** — a `wa.me` link with a prefilled three-step message (`admin.invite_message`, the link interpolated; `src/lib/practitioner/invitation.ts`: Moroccan `06…` → `2126…`; no number → WhatsApp's contact picker). The link is the doctor's future workspace as well. Staff level: inviting grants nothing.
+- **« Demandes d'accès médecin »**: one card per pending request — his name **as on his prescriptions**, specialty · city, account name, e-mail · phone, date. **« Ouvrir sa fiche et activer »** (`openPractReq`) switches to the Patients tab, searches his e-mail through the shared `runSearch` (the search form uses it too), selects HIS account (`uid` match) and prefills the « Accès médecin » card's label with his prescription name; the admin types the Qalam code, « Vérifier », « Activer ». **Activation closes the request server-side** (`adminSetPractitioner` → `fulfillPractitionerRequest`) and the page drops it from the list. **« Refuser la demande »** is a quiet link on its own row, **two clicks** (confirm in place). A stagiaire sees the queue and can open the account read-only (« Ouvrir sa fiche »); refusing and activating are admin acts (server-enforced).
+- Backend: `functions/src/admin/practitionerRequests.ts` — see `docs/pages/mes-patients.md` §9.
+
+**Success messages are green** (24/09/2026, owner's request): every « action done » line of this space — the doctor-access notice and the « code known » verification, identity saved, request fulfilled/refused, relative attached, team changes, the relative and doctor request messages — uses `--status-success` (green; light green in dark mode). They were bordeaux, the brand colour, which does not read as success.
 
 ## Relative requests — the second queue in the Demandes tab
 

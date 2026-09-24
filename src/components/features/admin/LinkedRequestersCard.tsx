@@ -140,7 +140,7 @@ export default function LinkedRequestersCard({
       )}
 
       {notice && (
-        <div className="flex items-start gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+        <div className="flex items-start gap-2 text-sm text-[var(--status-success)]">
           <CheckCircle size={18} className="flex-shrink-0 mt-0.5" />
           <span>{notice}</span>
         </div>

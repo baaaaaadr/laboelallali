@@ -30,11 +30,17 @@ Activer un médecin n'envoie **que ses futurs dossiers**. Chaque ancien dossier 
    - vérifier que la file **« Erreurs »** est vide.
 5. Attendre **5 minutes** après l'envoi. C'est le délai avant que le serveur de résultats voie les dossiers.
 
-## Étape 3 — Le médecin crée son compte dans l'application
+## Étape 3 — Son compte dans l'application
 
-- Il ouvre **laboelallali.com** (ou l'application installée) et choisit « Se connecter ».
-- Il se connecte avec **son compte Google**, ou avec son e-mail et un mot de passe.
-- Il complète son profil : nom, date de naissance, téléphone.
+**Il a déjà un compte** (il est patient du labo, ou s'est déjà inscrit) : rien à lui demander, passez à l'étape 5.
+
+**Il n'a pas encore de compte** : envoyez-lui le lien d'invitation.
+1. Admin → onglet **« Demandes »** → carte **« Inviter un médecin »**.
+2. Tapez son téléphone (facultatif), puis **« Envoyer par WhatsApp »** : le message contient le lien et les trois étapes. Ou **« Copier le lien »** pour l'envoyer autrement.
+3. Le médecin ouvre le lien, se connecte avec **son compte Google** ou crée son compte (e-mail et mot de passe), complète son profil (nom, date de naissance, téléphone), puis touche **« Demander mon accès médecin »**. Un médecin qui n'a jamais fait d'analyse au labo peut le faire aussi.
+4. Sa demande arrive dans l'onglet **« Demandes »** (« Demandes d'accès médecin »), et le labo reçoit un e-mail.
+5. Le même lien ouvrira ses patients une fois l'accès activé : c'est aussi son marque-page.
+
 - **S'il est aussi patient du laboratoire**, il garde un seul compte. Sous « Résultats », il trouve deux entrées :
   - « Moi et ma famille » : ses propres résultats et ceux de ses proches ;
   - « Mes patients » : les bilans qu'il a prescrits.
@@ -47,8 +53,9 @@ Activer un médecin n'envoie **que ses futurs dossiers**. Chaque ancien dossier 
 
 Il faut un compte **administrateur ou propriétaire** : un stagiaire voit la carte mais ne peut pas activer.
 
-1. Aller dans **Admin → onglet « Patients »**.
-2. Chercher le médecin par son nom, son e-mail ou son téléphone, puis ouvrir sa fiche.
+1. **S'il a fait la demande depuis le lien** : onglet « Demandes » → sa demande → **« Ouvrir sa fiche et activer »**. Sa fiche s'ouvre, carte « Accès médecin » déjà remplie avec le nom de ses ordonnances.
+   **Sinon** : onglet **« Patients »**, cherchez-le par son nom, son e-mail ou son téléphone, puis ouvrez sa fiche.
+2. Vérifiez que c'est bien lui (nom, téléphone).
 3. Remplir la carte **« Accès médecin — « Mes patients » »** :
    - **Code du médecin dans Qalam** : le code de l'étape 1 ;
    - **Type** : Médecin (« Correspondant » est réservé aux cliniques) ;

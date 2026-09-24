@@ -142,7 +142,7 @@ export default function PractitionerCard({
         </div>
       )}
       {notice && (
-        <div className="flex items-start gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+        <div className="flex items-start gap-2 text-sm text-[var(--status-success)]">
           <CheckCircle size={18} className="flex-shrink-0 mt-0.5" />
           <span>{notice}</span>
         </div>
@@ -290,7 +290,7 @@ export default function PractitionerCard({
           {checkMatches && check && (
             <div className="space-y-3" data-testid="practitioner-check">
               {check.probe.status === 'ok' && (
-                <div className="flex items-start gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+                <div className="flex items-start gap-2 text-sm text-[var(--status-success)]">
                   <CheckCircle size={18} className="flex-shrink-0 mt-0.5" />
                   <span>
                     {t('admin.pract_probe_ok', 'Le serveur du laboratoire connaît ce code : {{dossiers}} bilan(s), {{patients}} patient(s).', {

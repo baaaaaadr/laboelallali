@@ -39,6 +39,10 @@ import PractitionerCard, {
   type PractitionerDraft,
   type PractitionerDTO,
 } from '@/components/features/admin/PractitionerCard';
+import PractitionerRequestsSection, {
+  type PractitionerRequest,
+} from '@/components/features/admin/PractitionerRequestsSection';
+import InviteDoctorCard from '@/components/features/admin/InviteDoctorCard';
 import { normalizePractitionerId } from '@/lib/results/identities';
 import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, ArrowLeft, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList, Stethoscope } from 'lucide-react';
 
@@ -263,6 +267,11 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
 
   // Patient-initiated requests for a relative's dossier (Demandes tab).
   const [relReqs, setRelReqs] = useState<RelativeRequest[]>([]);
+  // Doctor access requests (« Demander mon accès médecin »): the third queue.
+  const [practReqs, setPractReqs] = useState<PractitionerRequest[]>([]);
+  const [practReqBusy, setPractReqBusy] = useState<string | null>(null);
+  const [practReqError, setPractReqError] = useState<string | null>(null);
+  const [practReqMsg, setPractReqMsg] = useState<string | null>(null);
   const [relInputs, setRelInputs] = useState<Record<string, RelativeInputs>>({});
   const [relBusy, setRelBusy] = useState<string | null>(null);
   const [relError, setRelError] = useState<string | null>(null);
@@ -792,6 +801,8 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         r.uid === selected.uid ? { ...r, practitioner: res.practitioner } : r;
       setResults((prev) => prev.map(patch));
       setSelected((prev) => (prev ? patch(prev) : prev));
+      // His request (if he asked from the app) was closed by the server.
+      setPractReqs((prev) => prev.filter((r) => r.uid !== selected.uid));
       setPractCheck(null);
       setPractNotice(
         wasSameCode
@@ -830,18 +841,19 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     }
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // The search itself, returning its list — shared by the search form and by
+  // « Ouvrir sa fiche » on a doctor request.
+  const runSearch = async (raw: string): Promise<SearchResult[]> => {
     setError(null);
     setSaved(null);
     setSelected(null);
     setResults([]);
     setTruncated(false);
     setSearched(false);
-    const q = query.trim();
+    const q = raw.trim();
     if (q.length < 2) {
       setError(t('admin.search_min', 'Tapez au moins 2 caractères pour lancer la recherche.'));
-      return;
+      return [];
     }
     setBusy('search');
     try {
@@ -851,10 +863,72 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       setTruncated(!!res.truncated);
       setSearched(true);
       if (list.length === 1) selectPatient(list[0]); // single hit → open the attach form directly
+      return list;
     } catch (err: unknown) {
       setError(errMsg(err));
+      return [];
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await runSearch(query);
+  };
+
+  // ── Doctor requests (« Demander mon accès médecin ») — Demandes tab ────────
+  const loadPractReqs = useCallback(async () => {
+    try {
+      const res = await callFn<{ requests: PractitionerRequest[] }>('adminListPractitionerRequests', {});
+      setPractReqs(res.requests || []);
+    } catch (err: unknown) {
+      setPractReqError(errMsg(err));
+    }
+  }, [errMsg]);
+
+  useEffect(() => {
+    if (!loading && isStaff) void loadPractReqs();
+  }, [loading, isStaff, loadPractReqs]);
+
+  /**
+   * « Ouvrir sa fiche » : the Patients tab, his account selected, the « Accès
+   * médecin » card prefilled with the name he gave (as on his prescriptions).
+   * The admin types the Qalam code, « Vérifier », « Activer » — which closes the
+   * request server-side (`adminSetPractitioner`).
+   */
+  const openPractReq = async (req: PractitionerRequest) => {
+    setActiveTab('patients');
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    const q = req.email || req.fullName;
+    setQuery(q);
+    const list = await runSearch(q);
+    const hit = list.find((r) => r.uid === req.uid);
+    if (!hit) {
+      setError(
+        t(
+          'admin.pract_req_not_found',
+          'Ce compte n’a pas été retrouvé par la recherche. Cherchez-le par son nom ou son téléphone.'
+        )
+      );
+      return;
+    }
+    selectPatient(hit);
+    setPractDraft((d) => ({ ...d, label: d.label || req.label }));
+  };
+
+  const rejectPractReq = async (req: PractitionerRequest) => {
+    setPractReqBusy(req.uid);
+    setPractReqError(null);
+    setPractReqMsg(null);
+    try {
+      await callFn('adminRejectPractitionerRequest', { uid: req.uid });
+      setPractReqMsg(t('admin.pract_req_rejected', 'Demande de {{name}} refusée.', { name: req.label }));
+      await loadPractReqs();
+    } catch (err: unknown) {
+      setPractReqError(errMsg(err));
+    } finally {
+      setPractReqBusy(null);
     }
   };
 
@@ -948,7 +1022,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       ? [{ id: 'dashboard', label: t('admin.tab_dashboard', 'Tableau de bord'), icon: LayoutDashboard }]
       : []),
     { id: 'patients', label: t('admin.tab_patients', 'Patients'), icon: User },
-    { id: 'requests', label: t('admin.tab_requests', 'Demandes'), icon: Inbox, count: accessReqs.length + relReqs.length },
+    { id: 'requests', label: t('admin.tab_requests', 'Demandes'), icon: Inbox, count: accessReqs.length + relReqs.length + practReqs.length },
     { id: 'relances', label: t('admin.tab_relances', 'Relances'), icon: MessageCircle, count: dormant?.length },
     { id: 'test', label: t('admin.tab_test', 'Tester'), icon: FlaskConical },
     ...(isManager ? [{ id: 'team', label: t('admin.tab_team', 'Équipe'), icon: Users }] : []),
@@ -1092,7 +1166,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
               </div>
             )}
             {arMsg && (
-              <div className="flex items-center gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+              <div className="flex items-center gap-2 text-sm text-[var(--status-success)]">
                 <CheckCircle size={16} /> <span>{arMsg}</span>
               </div>
             )}
@@ -1196,6 +1270,25 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
               onTest={testFromLink}
               tested={testedIds}
               fmtDate={fmtDate}
+              fmtWhenTime={fmtWhenTime}
+            />
+          </div>
+        )}
+
+        {/* Doctors: the invitation link (a doctor with no account yet), then the
+            requests made through it. A doctor who already HAS an account needs
+            neither — his code is given from the Patients tab directly. */}
+        {activeTab === 'requests' && (
+          <div className="mt-8 max-w-4xl space-y-4">
+            <InviteDoctorCard lang={lang} />
+            <PractitionerRequestsSection
+              requests={practReqs}
+              canAct={isManager}
+              busyUid={practReqBusy}
+              error={practReqError}
+              message={practReqMsg}
+              onOpen={(req) => void openPractReq(req)}
+              onReject={(req) => void rejectPractReq(req)}
               fmtWhenTime={fmtWhenTime}
             />
           </div>
@@ -1396,7 +1489,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                     </div>
                   )}
                   {saved && (
-                    <div className="flex items-center gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+                    <div className="flex items-center gap-2 text-sm text-[var(--status-success)]">
                       <CheckCircle size={18} />
                       <span>{saved}</span>
                     </div>
@@ -1658,7 +1751,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
               </div>
             )}
             {teamMsg && (
-              <div className="flex items-center gap-2 text-sm text-[var(--color-bordeaux-primary)]">
+              <div className="flex items-center gap-2 text-sm text-[var(--status-success)]">
                 <CheckCircle size={16} /> <span>{teamMsg}</span>
               </div>
             )}
