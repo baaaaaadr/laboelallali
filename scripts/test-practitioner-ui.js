@@ -18,10 +18,11 @@
  *    médecin au démarrage (l'accès médecin n'est jamais l'identité par défaut) ;
  *  - changer de compte ne laisse rien du médecin à l'écran ;
  *  - le verrou de la carte admin « Accès médecin » ;
- *  - les points d'entrée (M11–M13) : le menu (« Mes patients » à la place de
- *    « Médecins » dans la barre, en plus dans le tiroir), l'accueil replié sans
- *    flash « Activer mon accès » pour un médecin sans dossier personnel, la
- *    carte « Espace médecin » du profil, le bandeau de /resultats ;
+ *  - les points d'entrée (M11–M13) : « Résultats » divisé en « Moi et ma
+ *    famille » et « Mes patients » (menu de la barre, sous-lignes du tiroir,
+ *    sélecteur en haut des deux pages), l'accueil replié sans flash « Activer
+ *    mon accès » pour un médecin sans dossier personnel, le profil sans carte
+ *    médecin ;
  *  - l'onglet Patients de l'admin (M14) : une seule fiche par personne.
  *
  * ⚠ Aucune feuille de style : les classes responsives (`hidden lg:block`) sont
@@ -405,50 +406,78 @@ const doctorPatientServer = () =>
 const patientServer = () => ({ primary: '900002', identities: { '900002': { list: MY_DOSSIERS } }, delayMs: 40 });
 
 async function m11Menu(browser) {
-  scenario('M11 — menu : « Mes patients » remplace « Médecins » dans la barre, s’ajoute au tiroir');
+  scenario('M11 — menu : pour un médecin, « Résultats » se divise en « Moi et ma famille » et « Mes patients »');
   // Un patient : le menu ne change pas.
   let p = await freshPage(browser, { page: 'header', profile: PATIENT_ONLY, server: patientServer(), pathname: '/fr' });
   await p.waitForSelector('nav.desktop-nav a');
   let desk = await headerLinks(p, 'desktop');
   let drawer = await headerLinks(p, 'drawer');
+  ok('patient : « Résultats » reste un lien simple, sans menu',
+    !(await p.$('[data-testid="results-nav-trigger"]')) && hrefs(desk).includes('/fr/resultats'));
   ok('patient : « Médecins » dans la barre', hrefs(desk).includes('/fr/medecins'), JSON.stringify(hrefs(desk)));
   ok('patient : aucun lien « Mes patients », ni barre ni tiroir', ![...desk, ...drawer].some((l) => l.href === '/fr/mes-patients'));
+  ok('patient : pas de groupe « Résultats » dans le tiroir', !(await p.$('[data-testid="drawer-results-group"]')));
   await p.close();
 
-  // Un médecin, sur sa page.
+  // Un médecin, sur sa page « Mes patients ».
   p = await freshPage(browser, { page: 'header', profile: DOCTOR, server: doctorServer(), pathname: '/fr/mes-patients' });
-  await p.waitForSelector('nav.desktop-nav a');
+  await p.waitForSelector('[data-testid="results-nav-trigger"]');
   desk = await headerLinks(p, 'desktop');
+  ok('médecin : la barre garde ses 7 entrées, « Médecins » compris', hrefs(desk).includes('/fr/medecins') && desk.length === 7, JSON.stringify(hrefs(desk)));
+  ok('…« Mes patients » n’y est PAS un lien de plus', !hrefs(desk).includes('/fr/mes-patients'));
+  const trigger = p.getByTestId('results-nav-trigger');
+  ok('…« Résultats » annonce un menu, fermé',
+    (await trigger.getAttribute('aria-haspopup')) === 'menu' && (await trigger.getAttribute('aria-expanded')) === 'false');
+  ok('…et reste marqué « vous êtes ici » sur Mes patients', ((await trigger.getAttribute('class')) || '').split(/\s+/).includes('active'));
+  await trigger.click();
+  await p.waitForSelector('[data-testid="results-nav-menu"]', { timeout: 3000 });
+  const items = await p.$$eval('[data-testid="results-nav-menu"] [role="menuitem"]', (els) =>
+    els.map((a) => ({ href: a.getAttribute('href'), text: a.textContent.trim(), current: a.getAttribute('aria-current') === 'page' }))
+  );
+  ok('clic : le menu s’ouvre, deux entrées dans cet ordre', same(items.map((i) => i.href), ['/fr/resultats', '/fr/mes-patients']), JSON.stringify(items));
+  ok('…« Moi et ma famille » puis « Mes patients »', !!items[0]?.text.startsWith('Moi et ma famille') && !!items[1]?.text.startsWith('Mes patients'));
+  ok('…la page courante y est marquée', items[1]?.current === true && items[0]?.current === false);
+  ok('…aria-expanded passe à true', (await trigger.getAttribute('aria-expanded')) === 'true');
+  await p.keyboard.press('Escape');
+  await p.waitForTimeout(150);
+  ok('Échap referme le menu', !(await p.$('[data-testid="results-nav-menu"]')));
+  await trigger.click();
+  await p.waitForSelector('[data-testid="results-nav-menu"]');
+  await p.dispatchEvent('#mobile-menu-container', 'mousedown');
+  await p.waitForTimeout(150);
+  ok('un clic ailleurs le referme', !(await p.$('[data-testid="results-nav-menu"]')));
+  // Tiroir mobile : un titre « Résultats » (pas un lien) et deux sous-lignes.
+  const group = await p.$$eval('[data-testid="drawer-results-group"] a', (els) =>
+    els.map((a) => ({ href: a.getAttribute('href'), text: a.textContent.trim(), current: a.getAttribute('aria-current') === 'page' }))
+  );
+  ok('tiroir : sous « Résultats », « Moi et ma famille » puis « Mes patients »',
+    same(group.map((g) => g.href), ['/fr/resultats', '/fr/mes-patients']) && group[0]?.text === 'Moi et ma famille' && group[1]?.text === 'Mes patients',
+    JSON.stringify(group));
+  ok('…le titre « Résultats » n’est pas un lien', (await p.$eval('#drawer-results-caption', (el) => el.tagName)) === 'DIV');
+  ok('…la sous-ligne de la page courante est marquée', group[1]?.current === true && group[0]?.current === false);
   drawer = await headerLinks(p, 'drawer');
-  const deskMp = desk.find((l) => l.href === '/fr/mes-patients');
-  ok('médecin : « Mes patients » dans la barre', deskMp?.text === 'Mes patients', JSON.stringify(deskMp));
-  // La mesure qui fonde ce choix est dans Header.tsx : un 8e lien déborde à 1024 px.
-  ok('…À LA PLACE de « Médecins » : toujours 7 liens', !hrefs(desk).includes('/fr/medecins') && desk.length === 7, JSON.stringify(hrefs(desk)));
-  ok('…juste après « Résultats »', hrefs(desk).indexOf('/fr/mes-patients') === hrefs(desk).indexOf('/fr/resultats') + 1);
-  ok('…marqué « vous êtes ici » sur sa page', deskMp?.current === true);
-  const i = drawer.findIndex((l) => l.href === '/fr/mes-patients');
-  ok('tiroir : « Mes patients » AJOUTÉ juste après « Résultats »', i > 0 && drawer[i - 1].href === '/fr/resultats', JSON.stringify(hrefs(drawer)));
-  ok('tiroir : « Médecins » reste (aucune contrainte de largeur)', hrefs(drawer).includes('/fr/medecins'));
+  ok('tiroir : « Médecins » reste', hrefs(drawer).includes('/fr/medecins'));
   ok('le menu n’appelle jamais le serveur de résultats', (await calls(p)).length === 0);
   ok('aucune erreur JavaScript', realErrors(p).length === 0, realErrors(p).slice(0, 3).join(' | '));
   await p.close();
 
-  // Un membre de l'équipe qui a aussi un accès médecin (la recette d'Aziz et Hassan).
+  // Un membre de l'équipe qui a aussi un accès médecin : le même menu, « Admin » en plus.
   p = await freshPage(browser, { page: 'header', profile: { ...DOCTOR, role: 'admin' }, server: doctorServer(), pathname: '/fr' });
-  await p.waitForSelector('nav.desktop-nav a');
+  await p.waitForSelector('[data-testid="results-nav-trigger"]');
   desk = await headerLinks(p, 'desktop');
-  drawer = await headerLinks(p, 'drawer');
-  ok('équipe + médecin : la barre reste celle de l’équipe (« Médecins » et « Admin », pas de 9e lien)',
+  ok('équipe + médecin : le même menu « Résultats », avec « Médecins » et « Admin »',
     hrefs(desk).includes('/fr/medecins') && hrefs(desk).includes('/fr/admin') && !hrefs(desk).includes('/fr/mes-patients'),
     JSON.stringify(hrefs(desk)));
-  ok('…« Mes patients » dans son tiroir', hrefs(drawer).includes('/fr/mes-patients'));
   await p.close();
 
   // En arabe.
   p = await freshPage(browser, { lang: 'ar', page: 'header', profile: DOCTOR, server: doctorServer(), pathname: '/ar' });
-  await p.waitForSelector('nav.desktop-nav a');
-  desk = await headerLinks(p, 'desktop');
-  ok('arabe : « مرضاي » dans la barre', desk.some((l) => l.href === '/ar/mes-patients' && l.text === 'مرضاي'), JSON.stringify(desk.map((l) => l.text)));
+  await p.waitForSelector('[data-testid="results-nav-trigger"]');
+  await p.getByTestId('results-nav-trigger').click();
+  await p.waitForSelector('[data-testid="results-nav-menu"]');
+  const menuDir = await p.getAttribute('[data-testid="results-nav-menu"]', 'dir');
+  const arText = await visibleText(p, '[data-testid="results-nav-menu"]');
+  ok('arabe : menu de droite à gauche, « أنا وعائلتي » et « مرضاي »', menuDir === 'rtl' && arText.includes('أنا وعائلتي') && arText.includes('مرضاي'), arText);
   await p.close();
 }
 
@@ -511,41 +540,48 @@ async function m12HomePanel(browser) {
   await p.close();
 }
 
-// ── M13 — /profile et /resultats ────────────────────────────────────────────
-async function m13ProfileAndBanner(browser) {
-  scenario('M13 — profil : carte « Espace médecin », code-barres masqué ; bandeau sur /resultats');
+// ── M13 — le profil, et le sélecteur en haut des deux pages ─────────────────
+async function m13ProfileAndSwitch(browser) {
+  scenario('M13 — profil sans carte médecin ; « Moi et ma famille | Mes patients » en haut des deux pages');
   let p = await freshPage(browser, { page: 'profile', profile: DOCTOR, server: doctorServer() });
-  await p.waitForSelector('[data-testid="mp-access-card"]', { timeout: 8000 });
+  await p.getByText('Médecin Banc Essai').first().waitFor({ timeout: 8000 });
   let text = await visibleText(p, '#app');
-  ok('médecin seul : carte « Espace médecin »', text.includes('Espace médecin'));
-  ok('…qui mène à /fr/mes-patients', (await p.$eval('[data-testid="mp-access-card"] a', (a) => a.getAttribute('href'))) === '/fr/mes-patients');
-  ok('…et PAS de carte « Mon code patient » (il n’a pas de dossier)', !text.includes('Mon code patient'));
+  ok('profil d’un médecin sans dossier : ni code patient, ni carte médecin',
+    !text.includes('Mon code patient') && !text.includes('Espace médecin') && !text.includes('Mes patients'));
   ok('aucun appel au serveur de résultats', (await calls(p)).length === 0);
   assertClean(p, text);
-  await p.screenshot({ path: path.join(SHOTS, 'm13-profil-medecin.png'), fullPage: true });
   await p.close();
 
   p = await freshPage(browser, { page: 'profile', profile: DOCTOR_PATIENT, server: doctorPatientServer() });
-  await p.waitForSelector('[data-testid="mp-access-card"]', { timeout: 8000 });
-  text = await visibleText(p, '#app');
-  ok('médecin ET patient : son code patient (900001) ET la carte « Espace médecin »', text.includes('Mon code patient') && text.includes('900001'));
-  await p.close();
-
-  p = await freshPage(browser, { page: 'profile', profile: PATIENT_ONLY, server: patientServer() });
   await p.getByText('Mon code patient').first().waitFor({ timeout: 8000 });
-  ok('patient : pas de carte « Espace médecin »', !(await p.$('[data-testid="mp-access-card"]')));
+  text = await visibleText(p, '#app');
+  ok('médecin ET patient : son code patient (900001), rien de l’espace médecin', text.includes('900001') && !text.includes('Mes patients'));
   await p.close();
 
-  p = await freshPage(browser, { page: 'resultats', profile: DOCTOR, server: doctorServer() });
-  await p.waitForSelector('[data-testid="mp-resultats-banner"]', { timeout: 8000 });
-  ok('/resultats : un bandeau mène le médecin à « Mes patients »',
-    (await p.$eval('[data-testid="mp-resultats-banner"] a', (a) => a.getAttribute('href'))) === '/fr/mes-patients');
+  // /resultats d'un médecin : le sélecteur en tête, « Moi et ma famille » actif.
+  p = await freshPage(browser, { page: 'resultats', profile: DOCTOR_PATIENT, server: doctorPatientServer() });
+  await p.waitForSelector('[data-testid="results-space-switch"]', { timeout: 8000 });
+  ok('/resultats : « Moi et ma famille » actif, « Mes patients » mène à /fr/mes-patients',
+    (await p.getAttribute('[data-testid="results-space-mine"]', 'aria-current')) === 'page' &&
+      (await p.getAttribute('[data-testid="results-space-patients"]', 'href')) === '/fr/mes-patients');
+  ok('…c’est le PREMIER élément de la page',
+    await p.evaluate(() => document.querySelector('#app .max-w-3xl > *')?.getAttribute('data-testid') === 'results-space-switch'));
+  await p.waitForTimeout(600);
   ok('…sans jamais appeler le serveur avec son code', withCode(await calls(p)).length === 0);
   await p.close();
 
+  // /mes-patients : le même sélecteur, « Mes patients » actif.
+  p = await freshPage(browser, { page: 'mes-patients', profile: DOCTOR, server: doctorServer() });
+  await waitForList(p);
+  ok('/mes-patients : le même sélecteur, « Mes patients » actif',
+    (await p.getAttribute('[data-testid="results-space-patients"]', 'aria-current')) === 'page' &&
+      (await p.getAttribute('[data-testid="results-space-mine"]', 'href')) === '/fr/resultats');
+  await p.close();
+
+  // Un patient : aucun sélecteur.
   p = await freshPage(browser, { page: 'resultats', profile: PATIENT_ONLY, server: patientServer() });
   await p.getByText('Dossier D-9001-A').first().waitFor({ timeout: 8000 });
-  ok('/resultats : aucun bandeau pour un patient', !(await p.$('[data-testid="mp-resultats-banner"]')));
+  ok('/resultats d’un patient : aucun sélecteur', !(await p.$('[data-testid="results-space-switch"]')));
   await p.close();
 }
 
@@ -639,7 +675,7 @@ async function main() {
     await m10AdminCard(browser);
     await m11Menu(browser);
     await m12HomePanel(browser);
-    await m13ProfileAndBanner(browser);
+    await m13ProfileAndSwitch(browser);
     await m14AdminOneCard(browser);
   } finally {
     await browser.close();

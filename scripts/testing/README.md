@@ -80,13 +80,13 @@ d'accueil, par exemple).
 ## Banc « médecin » (`npm run test:practitioner:ui`)
 
 `node scripts/test-practitioner-ui.js` — même mécanique et mêmes doublures que le
-banc « résultats ». 145 vérifications :
+banc « résultats ». 153 vérifications :
 - l'espace « Mes patients » (M1–M9) : une liste = un appel sans PDF, un patient
   ouvert = un PDF, le sien ; recherche, états bloqués, collision, changement de
   compte, arabe ;
 - le verrou de la carte admin « Accès médecin » (M10) ;
-- les points d'entrée : M11 menu, M12 accueil, M13 profil et bandeau de
-  `/resultats` ;
+- les points d'entrée : M11 le menu « Résultats » (barre et tiroir), M12
+  accueil, M13 profil et sélecteur « Moi et ma famille | Mes patients » ;
 - l'onglet Patients de l'admin (M14) : une seule fiche par personne.
 
 Les tests purs sont à part : `npm run test:practitioner`.
