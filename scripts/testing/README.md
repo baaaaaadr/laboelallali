@@ -75,19 +75,26 @@ du héros d'accueil). `freshPage` (`results-bench.js`) accepte aussi `pathname`
 (ce que voit `usePathname()`), `authLoading` (monter pendant le chargement de
 l'authentification, le compte étant posé plus tard par `window.__setAuth`) et
 `storage` (clés `localStorage` posées avant le montage — l'indice du panneau
-d'accueil, par exemple).
+d'accueil, par exemple) et `responses` (réponses fixes de fonctions Firebase
+posées avant le montage, `{ nomDuCallable: valeur }` ; l'appel reste
+enregistré). `rawKeys` ignore les adresses e-mail (« prenom.nom@… » ressemble à
+une clé).
 
 ## Banc « médecin » (`npm run test:practitioner:ui`)
 
 `node scripts/test-practitioner-ui.js` — même mécanique et mêmes doublures que le
-banc « résultats ». 153 vérifications :
+banc « résultats ». 179 vérifications :
 - l'espace « Mes patients » (M1–M9) : une liste = un appel sans PDF, un patient
   ouvert = un PDF, le sien ; recherche, états bloqués, collision, changement de
   compte, arabe ;
 - le verrou de la carte admin « Accès médecin » (M10) ;
 - les points d'entrée : M11 le menu « Résultats » (barre et tiroir), M12
   accueil, M13 profil et sélecteur « Moi et ma famille | Mes patients » ;
-- l'onglet Patients de l'admin (M14) : une seule fiche par personne.
+- l'onglet Patients de l'admin (M14) : une seule fiche par personne ;
+- la demande d'accès du médecin (M15 : formulaire, verrou, envoi, en attente,
+  refusée, arabe ; M5 : « Vérifier à nouveau » après activation) et, côté admin
+  (M16), le lien d'invitation, la file des demandes, « Ouvrir sa fiche » et le
+  refus en deux clics.
 
 Les tests purs sont à part : `npm run test:practitioner`.
 

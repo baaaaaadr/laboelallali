@@ -221,12 +221,17 @@ async function m4States(browser) {
 
 // ── M5 — compte sans accès, puis accès donné par le labo ────────────────────
 async function m5NoAccess(browser) {
-  scenario('M5 — compte sans accès médecin, puis « Vérifier à nouveau » après activation');
+  scenario('M5 — demande en attente, puis « Vérifier à nouveau » après l’activation par le labo');
   const plain = { uid: 'uid-sans-acces', fullName: 'Sans Accès', phone: '0600000002', email: 'x@example.test' };
-  const p = await freshPage(browser, { page: 'mes-patients', profile: plain, server: doctorServer() });
-  await p.waitForSelector('[data-testid="mp-recheck"]', { timeout: 8000 });
+  const p = await freshPage(browser, {
+    page: 'mes-patients',
+    profile: plain,
+    server: doctorServer(),
+    responses: { myPractitionerRequest: { status: 'pending', createdAt: Date.UTC(2026, 8, 24, 9, 30) } },
+  });
+  await p.waitForSelector('[data-testid="mp-request-pending"]', { timeout: 8000 });
   const text = await visibleText(p, '#app');
-  ok('explication : espace réservé aux médecins partenaires', text.includes('réservé aux médecins partenaires'));
+  ok('demande en attente : « Votre demande est bien arrivée », avec sa date', text.includes('Votre demande est bien arrivée') && text.includes('2026'));
   ok('aucun appel au serveur de résultats', (await calls(p)).length === 0);
   await p.evaluate((doc) => {
     window.__profileOnRefresh = doc;
@@ -290,7 +295,7 @@ async function m8AccountSwitch(browser) {
   await p.waitForTimeout(800);
   const text = await visibleText(p, '#app');
   ok('plus aucun nom de patient du médecin', !/EXEMPLE|DÉMO|FICTIF|ESSAI/.test(text));
-  ok('l’autre compte voit l’explication « réservé aux médecins »', text.includes('réservé aux médecins partenaires'));
+  ok('l’autre compte voit le formulaire de demande d’accès médecin', text.includes('Demander votre accès médecin'));
   ok('aucun appel avec le code médecin après le changement', withCode((await calls(p)).slice(before)).length === 0);
   await p.close();
 }
@@ -658,6 +663,132 @@ async function m14AdminOneCard(browser) {
   await p.close();
 }
 
+// ── M15 — le médecin demande son accès (lien d'invitation) ──────────────────
+// Décision du propriétaire, 24/09/2026 : le labo envoie le lien /fr/mes-patients
+// à un médecin sans compte ; il s'inscrit, puis demande. Demander n'ouvre RIEN.
+async function m15DoctorRequest(browser) {
+  scenario('M15 — médecin sans dossier au labo : il demande son accès depuis le lien d’invitation');
+  // Un médecin qui n'a JAMAIS fait d'analyse au labo : ni dossier, ni proche.
+  const newDoctor = { uid: 'uid-nouveau-medecin', fullName: 'Nouveau Banc', phone: '0600000031', email: 'nouveau.medecin@example.test' };
+  let p = await freshPage(browser, {
+    page: 'mes-patients',
+    profile: newDoctor,
+    server: { identities: {} },
+    responses: { requestPractitionerAccess: { status: 'pending', createdAt: Date.UTC(2026, 8, 24, 10, 0) } },
+  });
+  await p.waitForSelector('[data-testid="mp-request-form"]', { timeout: 8000 });
+  let text = await visibleText(p, '#app');
+  ok('le formulaire « Demander votre accès médecin » s’affiche', text.includes('Demander votre accès médecin'));
+  ok('son nom est prérempli avec « Dr »', (await p.inputValue('#mp-req-label')) === 'Dr Nouveau Banc');
+  const submit = p.getByTestId('mp-request-submit');
+  ok('bouton verrouillé tant que la case n’est pas cochée…', await submit.isDisabled());
+  ok('…et il dit pourquoi', (await p.textContent('[data-testid="mp-request-why"]')).includes('Cochez la case'));
+  await p.fill('#mp-req-specialty', 'Cardiologie');
+  await p.fill('#mp-req-place', 'Agadir');
+  await p.getByTestId('mp-request-attest').check();
+  ok('case cochée : bouton déverrouillé', !(await submit.isDisabled()));
+  await submit.click();
+  await p.waitForSelector('[data-testid="mp-request-pending"]', { timeout: 5000 });
+  const sent = await calls(p, 'requestPractitionerAccess');
+  ok('UNE demande envoyée, avec ses trois champs et la case',
+    sent.length === 1 && same(sent[0], { label: 'Dr Nouveau Banc', specialty: 'Cardiologie', place: 'Agadir', attest: true }),
+    JSON.stringify(sent));
+  ok('…puis « Votre demande est bien arrivée »', (await visibleText(p, '#app')).includes('Votre demande est bien arrivée'));
+  ok('jamais d’appel au serveur de résultats', (await calls(p)).length === 0);
+  assertClean(p, await visibleText(p, '#app'));
+  await p.screenshot({ path: path.join(SHOTS, 'm15-demande-medecin.png'), fullPage: true });
+  await p.close();
+
+  // Demande refusée : le médecin peut en refaire une.
+  p = await freshPage(browser, {
+    page: 'mes-patients',
+    profile: newDoctor,
+    server: { identities: {} },
+    responses: { myPractitionerRequest: { status: 'rejected', createdAt: Date.UTC(2026, 8, 20) } },
+  });
+  await p.waitForSelector('[data-testid="mp-request-rejected"]', { timeout: 8000 });
+  ok('demande refusée : message clair', (await visibleText(p, '#app')).includes('n’a pas été acceptée'));
+  await p.getByTestId('mp-request-again').click();
+  ok('« Faire une nouvelle demande » rouvre le formulaire', !!(await p.$('[data-testid="mp-request-form"]')));
+  await p.close();
+
+  // En arabe : aucun texte manquant.
+  p = await freshPage(browser, { lang: 'ar', page: 'mes-patients', profile: newDoctor, server: { identities: {} } });
+  await p.waitForSelector('[data-testid="mp-request-form"]', { timeout: 8000 });
+  text = await visibleText(p, '#app');
+  ok('arabe : le formulaire en arabe (« طلب وصولي كطبيب »)', text.includes('طلب وصولي كطبيب'));
+  assertClean(p, text);
+  await p.close();
+}
+
+// ── M16 — l'admin : inviter un médecin, sa demande, « Ouvrir sa fiche » ─────
+async function m16AdminDoctorRequests(browser) {
+  scenario('M16 — admin : le lien d’invitation, la demande du médecin, « Ouvrir sa fiche » préremplit la carte');
+  const ADMIN_USER = { uid: 'uid-admin-banc', fullName: 'Admin Banc', phone: '0600000010', email: 'admin.banc@example.test', role: 'admin' };
+  const REQ = {
+    uid: 'u-banc-0021',
+    fullName: 'Médecin Invité',
+    email: 'invite.medecin@example.test',
+    phone: '0600000021',
+    label: 'Dr Invité Banc',
+    specialty: 'Cardiologie',
+    place: 'Agadir',
+    createdAt: Date.UTC(2026, 8, 24, 9, 0),
+  };
+  const p = await freshPage(browser, {
+    page: 'admin',
+    profile: ADMIN_USER,
+    server: { identities: {} },
+    responses: {
+      adminDashboardStats: null,
+      adminListStaff: { members: [], callerLevel: 2 },
+      adminListPractitionerRequests: { requests: [REQ] },
+      adminRejectPractitionerRequest: { ok: true },
+      adminSearchPatients: {
+        results: [
+          { uid: REQ.uid, email: REQ.email, hasProfile: true, fullName: REQ.fullName, phone: REQ.phone, links: [], linkedCount: 0, practitioner: null },
+        ],
+        truncated: false,
+      },
+    },
+  });
+  await p.getByRole('button', { name: /Demandes/ }).first().click();
+  await p.waitForSelector('[data-testid="invite-doctor-card"]', { timeout: 8000 });
+  const link = await p.inputValue('[data-testid="invite-link"]');
+  ok('le lien d’invitation est celui de l’espace médecin', link === 'http://labo.test/fr/mes-patients', link);
+  let wa = await p.getAttribute('[data-testid="invite-whatsapp"]', 'href');
+  ok('WhatsApp sans numéro : message prérempli qui contient le lien',
+    wa.startsWith('https://wa.me/?text=') && decodeURIComponent(wa.split('text=')[1]).includes('http://labo.test/fr/mes-patients'), wa.slice(0, 80));
+  await p.fill('#invite-phone', '06 12 34 56 78');
+  wa = await p.getAttribute('[data-testid="invite-whatsapp"]', 'href');
+  ok('…avec un numéro marocain : au format international', wa.startsWith('https://wa.me/212612345678?text='), wa.slice(0, 60));
+
+  const reqText = await visibleText(p, '[data-testid="pract-request"]');
+  ok('la demande montre son nom d’ordonnance, sa spécialité, sa ville, son compte',
+    ['Dr Invité Banc', 'Cardiologie', 'Agadir', 'invite.medecin@example.test'].every((s) => reqText.includes(s)), reqText.slice(0, 160));
+
+  await p.getByTestId('pract-request-open').click();
+  await p.waitForSelector('[data-testid="practitioner-card"]', { timeout: 5000 });
+  const search = await calls(p, 'adminSearchPatients');
+  ok('« Ouvrir sa fiche » : recherche par SON e-mail', search.length === 1 && search[0]?.query === REQ.email, JSON.stringify(search));
+  ok('…onglet Patients, SON compte sélectionné', (await visibleText(p, '[data-testid="admin-selected"]')).includes(REQ.email));
+  const label = await p.inputValue('[data-testid="practitioner-card"] input[placeholder="Ex. : Dr Nom Prénom"]');
+  ok('…la carte « Accès médecin » préremplie avec son nom d’ordonnance', label === 'Dr Invité Banc', label);
+
+  // Refus : deux clics, jamais un seul.
+  await p.getByRole('button', { name: /Demandes/ }).first().click();
+  await p.waitForSelector('[data-testid="pract-request-reject"]');
+  await p.getByTestId('pract-request-reject').click();
+  ok('« Refuser » demande une confirmation, rien n’est envoyé', (await calls(p, 'adminRejectPractitionerRequest')).length === 0);
+  await p.getByTestId('pract-request-reject-confirm').click();
+  await p.waitForTimeout(300);
+  const rej = await calls(p, 'adminRejectPractitionerRequest');
+  ok('…confirmé : le refus part pour CE compte', rej.length === 1 && rej[0]?.uid === REQ.uid, JSON.stringify(rej));
+  assertClean(p, await visibleText(p, '#app'));
+  await p.screenshot({ path: path.join(SHOTS, 'm16-admin-demandes-medecin.png'), fullPage: true });
+  await p.close();
+}
+
 async function main() {
   console.log('\n══ Banc « médecin » — /mes-patients sous le vrai ResultsProvider ══');
   await build();
@@ -677,6 +808,8 @@ async function main() {
     await m12HomePanel(browser);
     await m13ProfileAndSwitch(browser);
     await m14AdminOneCard(browser);
+    await m15DoctorRequest(browser);
+    await m16AdminDoctorRequests(browser);
   } finally {
     await browser.close();
   }

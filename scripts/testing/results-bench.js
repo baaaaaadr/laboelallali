@@ -113,11 +113,24 @@ const HTML = '<!doctype html><html><head><meta charset="utf-8"></head><body><div
  *   - `pathname`    : le chemin vu par `usePathname()` (défaut `/{lang}/{page}`) ;
  *   - `authLoading` : monter PENDANT le chargement de l'authentification (le
  *                     compte est posé plus tard par `window.__setAuth`) ;
- *   - `storage`     : clés `localStorage` posées AVANT le montage.
+ *   - `storage`     : clés `localStorage` posées AVANT le montage ;
+ *   - `responses`   : réponses fixes de fonctions Firebase, posées AVANT le
+ *                     montage (`{ nomDuCallable: valeur }`) — l'appel reste
+ *                     enregistré dans `window.__calls`.
  */
 async function freshPage(
   browser,
-  { lang = 'fr', profile, server, page = 'resultats', width = 420, pathname = null, authLoading = false, storage = null }
+  {
+    lang = 'fr',
+    profile,
+    server,
+    page = 'resultats',
+    width = 420,
+    pathname = null,
+    authLoading = false,
+    storage = null,
+    responses = null,
+  }
 ) {
   const p = await browser.newPage({ viewport: { width, height: 900 } });
   const errors = [];
@@ -133,15 +146,16 @@ async function freshPage(
   await p.goto('http://labo.test/');
   await p.addScriptTag({ path: BUNDLE });
   await p.evaluate(
-    ([l, prof, srv, pg, pn, waitAuth, store]) => {
+    ([l, prof, srv, pg, pn, waitAuth, store, resp]) => {
       window.__lang = l;
       window.__server = srv;
       window.__pathname = pn || `/${l}/${pg}`;
       if (store) for (const [k, v] of Object.entries(store)) window.localStorage.setItem(k, v);
+      if (resp) for (const [name, value] of Object.entries(resp)) window.__callables[name] = () => value;
       if (!waitAuth) window.__setAuth(prof);
       window.__mount(pg);
     },
-    [lang, profile, server || { identities: {} }, page, pathname, authLoading, storage]
+    [lang, profile, server || { identities: {} }, page, pathname, authLoading, storage, responses]
   );
   p.__errors = errors;
   return p;
@@ -174,11 +188,16 @@ function realErrors(p) {
   );
 }
 
-/** Clés de traduction brutes (« mes_patients.title ») affichées à l'écran. */
+/**
+ * Clés de traduction brutes (« mes_patients.title ») affichées à l'écran.
+ * Les adresses e-mail sont retirées d'abord : « prenom.nom@… » ressemble à une
+ * clé et n'en est pas une.
+ */
 function rawKeys(text) {
+  const noEmails = String(text || '').replace(/\S+@\S+/g, ' ');
   return [
     ...new Set(
-      (text.match(/\b[a-z_]+\.[a-z_]{3,}(?:\.[a-z_]+)?\b/g) || []).filter(
+      (noEmails.match(/\b[a-z_]+\.[a-z_]{3,}(?:\.[a-z_]+)?\b/g) || []).filter(
         (s) => !/\.(com|ma|fr|org|jpg|pdf|png|test)$/.test(s) && /^[a-z_]+(\.[a-z_]+)+$/.test(s)
       )
     ),

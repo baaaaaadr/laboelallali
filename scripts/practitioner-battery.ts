@@ -14,7 +14,9 @@
  *  G. chaque texte de l'espace médecin existe en français ET en arabe — la
  *     doublure de traduction du banc navigateur retombe sur le texte français,
  *     elle ne peut donc pas voir une clé arabe manquante ;
- *  H. la page de confidentialité déclare l'accès des médecins (fr et ar).
+ *  H. la page de confidentialité déclare l'accès des médecins (fr et ar) ;
+ *  I. le lien d'invitation des médecins (reconnu au retour de connexion,
+ *     numéros au format WhatsApp).
  */
 import fs from 'fs';
 import path from 'path';
@@ -36,6 +38,7 @@ import {
   readPractitioner,
   resolveIdentities,
 } from '../src/lib/results/identities';
+import { doctorSpacePath, isDoctorSpacePath, waDigits, whatsappInviteLink } from '../src/lib/practitioner/invitation';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 
@@ -219,7 +222,7 @@ section('G — chaque texte de l’espace médecin existe en français ET en ara
     key.split('.').reduce<unknown>((acc, part) => (acc && typeof acc === 'object' ? (acc as Dict)[part] : undefined), dict);
 
   // Toutes les clés que le CODE utilise, trouvées dans les sources.
-  const PREFIX = /\bt\(\s*['"]((?:mes_patients\.|admin\.pract_|admin\.dash_pract_|confidentialite\.practitioner_|resultats\.practitioner_)[\w.]+)['"]\s*(,\s*\{[^}]*\bcount\b)?/g;
+  const PREFIX = /\bt\(\s*['"]((?:mes_patients\.|admin\.pract_|admin\.dash_pract_|admin\.invite_|confidentialite\.practitioner_|resultats\.practitioner_)[\w.]+)['"]\s*(,\s*\{[^}]*\bcount\b)?/g;
   const files: string[] = [];
   const walk = (dir: string) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -269,6 +272,25 @@ section('H — la page de confidentialité déclare l’accès des médecins (fr
       typeof c.practitioner_title === 'string' && typeof c.practitioner_text === 'string' && c.practitioner_text.length > 200
     );
   }
+}
+
+// ── I. Le lien d'invitation des médecins ────────────────────────────────────
+section('I — le lien d’invitation : reconnu au retour de connexion, prêt pour WhatsApp');
+{
+  ok('lien de l’espace médecin par langue', doctorSpacePath('fr') === '/fr/mes-patients' && doctorSpacePath('ar') === '/ar/mes-patients');
+  ok('langue inconnue → français', doctorSpacePath('xx') === '/fr/mes-patients');
+  ok('retour de connexion vers l’espace médecin : reconnu', isDoctorSpacePath('/fr/mes-patients') && isDoctorSpacePath('/ar/mes-patients?x=1'));
+  // Ce test décide si la page de connexion inscrit ou non le compte dans la file
+  // des demandes PATIENT : un faux positif priverait un patient de son accueil.
+  ok('…mais pas /resultats, /profile, ni une page voisine au nom proche',
+    !isDoctorSpacePath('/fr/resultats') && !isDoctorSpacePath('/fr/profile') && !isDoctorSpacePath('/fr/mes-patients-old') && !isDoctorSpacePath('/mes-patients'));
+  ok('téléphone marocain « 06 12 34 56 78 » → 212612345678', waDigits('06 12 34 56 78') === '212612345678');
+  ok('« +212 6… » et « 00212 6… » → 2126…', waDigits('+212 612-345-678') === '212612345678' && waDigits('00212612345678') === '212612345678');
+  ok('sans numéro → vide (WhatsApp laisse choisir le contact)', waDigits('') === '' && whatsappInviteLink('', 'x').startsWith('https://wa.me/?text='));
+  const link = whatsappInviteLink('0612345678', 'Ouvrez : https://www.laboelallali.com/fr/mes-patients');
+  ok('message encodé, lien intact une fois décodé',
+    link.startsWith('https://wa.me/212612345678?text=') &&
+      decodeURIComponent(link.split('text=')[1]) === 'Ouvrez : https://www.laboelallali.com/fr/mes-patients');
 }
 
 console.log('\n─────────────────────────────────────────────────────────────────');
