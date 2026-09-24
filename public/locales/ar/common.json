@@ -677,6 +677,7 @@
     "link_id_placeholder": "مثال: 12345",
     "requester_id_placeholder": "مثال: 12345",
     "selected_account": "الحساب المحدّد",
+    "back_to_results": "العودة إلى النتائج ({{n}})",
     "link_remove_yes": "نعم، أزل",
     "requester_id_replace_warning": "هذا الحساب يحمل بالفعل المعرّف {{current}}. الحفظ سيستبدله.",
     "rel_req_title": "طلبات الاطّلاع على ملف أحد الأقارب",

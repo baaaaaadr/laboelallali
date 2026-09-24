@@ -580,6 +580,7 @@
     "link_id_placeholder": "Ex. : 12345",
     "requester_id_placeholder": "Ex. : 12345",
     "selected_account": "Compte sélectionné",
+    "back_to_results": "Retour aux résultats ({{n}})",
     "link_remove_yes": "Oui, retirer",
     "requester_id_replace_warning": "Ce compte a déjà l'identifiant {{current}}. Enregistrer le remplacera.",
     "rel_req_title": "Demandes de dossier d'un proche",

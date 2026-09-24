@@ -1241,8 +1241,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
               </div>
             )}
 
-            {results.length > 0 && (
-              <div className="space-y-3">
+            {/* The list hides as soon as an account is selected: the card below
+                repeats its name, e-mail and phone, and the owner read the pair as
+                « deux fiches pour une même personne » (24/09/2026). One person,
+                one card. With several hits, « Retour aux résultats » brings the
+                list back; a single hit needs no way back — it IS the result. */}
+            {results.length > 0 && !selected && (
+              <div className="space-y-3" data-testid="admin-results">
                 {truncated && (
                   <div className="flex items-center gap-2 text-sm text-[var(--status-warning)]">
                     <AlertCircle size={16} className="flex-shrink-0" />
@@ -1250,17 +1255,14 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                   </div>
                 )}
                 {results.map((r) => {
-                  const isSel = selected?.uid === r.uid;
+                  // No "selected" highlight any more: this list only renders
+                  // while nothing is selected (see above).
                   return (
                     <button
                       key={r.uid}
                       type="button"
                       onClick={() => selectPatient(r)}
-                      className={`w-full text-start rounded-lg border p-4 transition bg-[var(--background-default)] ${
-                        isSel
-                          ? 'border-[var(--color-fuchsia-accent)] ring-2 ring-[var(--color-fuchsia-accent)]'
-                          : 'border-[var(--border-default)] hover:border-[var(--color-fuchsia-accent)]'
-                      }`}
+                      className="w-full text-start rounded-lg border p-4 transition bg-[var(--background-default)] border-[var(--border-default)] hover:border-[var(--color-fuchsia-accent)]"
                     >
                       <div className="flex items-start gap-3">
                         <div className="h-10 w-10 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] flex items-center justify-center flex-shrink-0">
@@ -1302,12 +1304,23 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
               </div>
             )}
 
+            {selected && results.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="flex items-center gap-2 min-h-[44px] text-sm font-medium text-[var(--color-bordeaux-primary)]"
+                data-testid="admin-back-to-results"
+              >
+                <ArrowLeft size={18} className={isArabic ? 'rotate-180' : undefined} />
+                {t('admin.back_to_results', 'Retour aux résultats ({{n}})', { n: results.length })}
+              </button>
+            )}
+
             {selected && (
               <>
-              <div className="card p-6 space-y-5">
-                {/* Named on purpose: the search result above and this card show
-                    the same name, email and phone, which reads as a duplicate
-                    account at a glance. */}
+              <div className="card p-6 space-y-5" data-testid="admin-selected">
+                {/* The only card for this person: the result list above folds
+                    away while an account is selected. */}
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                   {t('admin.selected_account', 'Compte sélectionné')}
                 </p>
