@@ -232,7 +232,7 @@ section('G — chaque texte de l’espace médecin existe en français ET en ara
     key.split('.').reduce<unknown>((acc, part) => (acc && typeof acc === 'object' ? (acc as Dict)[part] : undefined), dict);
 
   // Toutes les clés que le CODE utilise, trouvées dans les sources.
-  const PREFIX = /\bt\(\s*['"]((?:mes_patients\.|admin\.pract_|admin\.dash_pract_|admin\.dash_sec_doctors|admin\.doctors_|admin\.tab_doctors|admin\.invite_|confidentialite\.practitioner_|resultats\.practitioner_)[\w.]+)['"]\s*(,\s*\{[^}]*\bcount\b)?/g;
+  const PREFIX = /\bt\(\s*['"]((?:mes_patients\.|admin\.pract_|admin\.dash_pract_|admin\.dash_sec_doctor|admin\.doctors_|admin\.tab_doctor|admin\.invite_|confidentialite\.practitioner_|resultats\.practitioner_)[\w.]+)['"]\s*(,\s*\{[^}]*\bcount\b)?/g;
   const files: string[] = [];
   const walk = (dir: string) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
