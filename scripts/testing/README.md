@@ -83,7 +83,7 @@ une clé).
 ## Banc « médecin » (`npm run test:practitioner:ui`)
 
 `node scripts/test-practitioner-ui.js` — même mécanique et mêmes doublures que le
-banc « résultats ». 179 vérifications :
+banc « résultats ». 237 vérifications :
 - l'espace « Mes patients » (M1–M9) : une liste = un appel sans PDF, un patient
   ouvert = un PDF, le sien ; recherche, états bloqués, collision, changement de
   compte, arabe ;
@@ -91,10 +91,21 @@ banc « résultats ». 179 vérifications :
 - les points d'entrée : M11 le menu « Résultats » (barre et tiroir), M12
   accueil, M13 profil et sélecteur « Moi et ma famille | Mes patients » ;
 - l'onglet Patients de l'admin (M14) : une seule fiche par personne ;
-- la demande d'accès du médecin (M15 : formulaire, verrou, envoi, en attente,
-  refusée, arabe ; M5 : « Vérifier à nouveau » après activation) et, côté admin
-  (M16), le lien d'invitation, la file des demandes, « Ouvrir sa fiche » et le
-  refus en deux clics.
+- la demande d'accès du médecin (M15 : formulaire avec l'engagement de
+  confidentialité, verrou, envoi, en attente, refusée, arabe ; M5 : « Vérifier à
+  nouveau » après activation) et, côté admin, l'onglet « Médecins » (M16 : lien
+  d'invitation, badge, file des demandes, « Ouvrir sa fiche », refus en deux
+  clics) ;
+- l'engagement demandé une fois au médecin activé directement (M17 : aucun appel
+  au serveur de résultats avant l'acceptation, une acceptation, puis un seul
+  appel ; échec ; arabe) ;
+- les médecins ayant accès (M18 : usage, engagement, étiquettes, code partagé,
+  lien WhatsApp, retrait en deux clics, « Ouvrir sa fiche », stagiaire en lecture
+  seule, liste vide) et le tableau de bord « Les médecins » (M19).
+
+L'onglet admin se monte avec des réponses fixes (`freshPage(…, { responses })`) :
+`adminListPractitioners`, `adminDashboardStats` (jeu d'essai complet dans M19),
+`acceptPractitionerEngagement`…
 
 Les tests purs sont à part : `npm run test:practitioner`.
 

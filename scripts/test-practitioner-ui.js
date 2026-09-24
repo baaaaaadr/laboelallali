@@ -23,7 +23,13 @@
  *    sélecteur en haut des deux pages), l'accueil replié sans flash « Activer
  *    mon accès » pour un médecin sans dossier personnel, le profil sans carte
  *    médecin ;
- *  - l'onglet Patients de l'admin (M14) : une seule fiche par personne.
+ *  - l'onglet Patients de l'admin (M14) : une seule fiche par personne ;
+ *  - la demande d'accès du médecin, avec son engagement de confidentialité
+ *    (M15), et l'onglet « Médecins » de l'admin : demandes, invitation (M16),
+ *    médecins ayant accès et leurs actions rapides (M18) ;
+ *  - l'engagement demandé UNE fois, avant tout appel, au médecin activé
+ *    directement par le labo (M17) ;
+ *  - le tableau de bord « Les médecins » (M19).
  *
  * ⚠ Aucune feuille de style : les classes responsives (`hidden lg:block`) sont
  *   sans effet ici — on vérifie la structure, les textes et les appels.
@@ -54,6 +60,9 @@ const DOCTOR = {
   phone: '0600000001',
   email: 'medecin.banc@example.test',
   practitioner: { requester_id: CODE, type: 'medecin', label: 'Dr Démo Banc' },
+  // Engagement de confidentialité déjà accepté : l'espace s'ouvre directement
+  // (M17 éprouve le cas contraire).
+  practitionerEngagement: { version: 1, via: 'request' },
 };
 const ROSTER = [
   { dossier_id: '100926901', patient_nom: 'DÉMO', patient_prenom: 'Amina', date_dossier: '2026-09-10T08:15:00Z', etat: 'Final', analyses_summary: 'C GLY^C HBA1^C CHOL' },
@@ -680,6 +689,11 @@ async function m15DoctorRequest(browser) {
   let text = await visibleText(p, '#app');
   ok('le formulaire « Demander votre accès médecin » s’affiche', text.includes('Demander votre accès médecin'));
   ok('son nom est prérempli avec « Dr »', (await p.inputValue('#mp-req-label')) === 'Dr Nouveau Banc');
+  const terms = await visibleText(p, '[data-testid="mp-engagement-terms"]');
+  ok('l’engagement de confidentialité est affiché, déplié, au-dessus de la case',
+    terms.includes('Mon engagement de confidentialité') && terms.includes('secret médical') && terms.includes('ne laisser personne utiliser mon compte'),
+    terms.slice(0, 160));
+  ok('…et la case dit « Je suis médecin et j’accepte cet engagement »', text.includes('Je suis médecin et j’accepte cet engagement.'));
   const submit = p.getByTestId('mp-request-submit');
   ok('bouton verrouillé tant que la case n’est pas cochée…', await submit.isDisabled());
   ok('…et il dit pourquoi', (await p.textContent('[data-testid="mp-request-why"]')).includes('Cochez la case'));
@@ -690,8 +704,8 @@ async function m15DoctorRequest(browser) {
   await submit.click();
   await p.waitForSelector('[data-testid="mp-request-pending"]', { timeout: 5000 });
   const sent = await calls(p, 'requestPractitionerAccess');
-  ok('UNE demande envoyée, avec ses trois champs et la case',
-    sent.length === 1 && same(sent[0], { label: 'Dr Nouveau Banc', specialty: 'Cardiologie', place: 'Agadir', attest: true }),
+  ok('UNE demande envoyée, avec ses trois champs, la case et la version de l’engagement lu',
+    sent.length === 1 && same(sent[0], { label: 'Dr Nouveau Banc', specialty: 'Cardiologie', place: 'Agadir', attest: true, engagement: 1 }),
     JSON.stringify(sent));
   ok('…puis « Votre demande est bien arrivée »', (await visibleText(p, '#app')).includes('Votre demande est bien arrivée'));
   ok('jamais d’appel au serveur de résultats', (await calls(p)).length === 0);
@@ -716,14 +730,15 @@ async function m15DoctorRequest(browser) {
   p = await freshPage(browser, { lang: 'ar', page: 'mes-patients', profile: newDoctor, server: { identities: {} } });
   await p.waitForSelector('[data-testid="mp-request-form"]', { timeout: 8000 });
   text = await visibleText(p, '#app');
-  ok('arabe : le formulaire en arabe (« طلب وصولي كطبيب »)', text.includes('طلب وصولي كطبيب'));
+  ok('arabe : le formulaire en arabe (« طلب وصولي كطبيب »), engagement compris (« تعهّدي بالسرّية »)',
+    text.includes('طلب وصولي كطبيب') && text.includes('تعهّدي بالسرّية'));
   assertClean(p, text);
   await p.close();
 }
 
 // ── M16 — l'admin : inviter un médecin, sa demande, « Ouvrir sa fiche » ─────
 async function m16AdminDoctorRequests(browser) {
-  scenario('M16 — admin : le lien d’invitation, la demande du médecin, « Ouvrir sa fiche » préremplit la carte');
+  scenario('M16 — admin, onglet « Médecins » : le lien d’invitation, la demande du médecin, « Ouvrir sa fiche » préremplit la carte');
   const ADMIN_USER = { uid: 'uid-admin-banc', fullName: 'Admin Banc', phone: '0600000010', email: 'admin.banc@example.test', role: 'admin' };
   const REQ = {
     uid: 'u-banc-0021',
@@ -734,6 +749,7 @@ async function m16AdminDoctorRequests(browser) {
     specialty: 'Cardiologie',
     place: 'Agadir',
     createdAt: Date.UTC(2026, 8, 24, 9, 0),
+    engagementAt: Date.UTC(2026, 8, 24, 9, 0),
   };
   const p = await freshPage(browser, {
     page: 'admin',
@@ -744,6 +760,7 @@ async function m16AdminDoctorRequests(browser) {
       adminListStaff: { members: [], callerLevel: 2 },
       adminListPractitionerRequests: { requests: [REQ] },
       adminRejectPractitionerRequest: { ok: true },
+      adminListPractitioners: { practitioners: [] },
       adminSearchPatients: {
         results: [
           { uid: REQ.uid, email: REQ.email, hasProfile: true, fullName: REQ.fullName, phone: REQ.phone, links: [], linkedCount: 0, practitioner: null },
@@ -752,8 +769,11 @@ async function m16AdminDoctorRequests(browser) {
       },
     },
   });
-  await p.getByRole('button', { name: /Demandes/ }).first().click();
+  await p.getByRole('button', { name: /Médecins/ }).first().click();
   await p.waitForSelector('[data-testid="invite-doctor-card"]', { timeout: 8000 });
+  const tabs = await p.$$eval('button', (els) => els.map((b) => (b.textContent || '').trim()));
+  ok('l’onglet « Médecins » porte le badge de la demande en attente', tabs.includes('Médecins(1)'), JSON.stringify(tabs.filter((x) => /Médecins|Demandes/.test(x))));
+  ok('…et l’onglet « Demandes » ne la compte plus', !tabs.includes('Demandes(1)'));
   const link = await p.inputValue('[data-testid="invite-link"]');
   ok('le lien d’invitation est celui de l’espace médecin', link === 'http://labo.test/fr/mes-patients', link);
   let wa = await p.getAttribute('[data-testid="invite-whatsapp"]', 'href');
@@ -766,6 +786,7 @@ async function m16AdminDoctorRequests(browser) {
   const reqText = await visibleText(p, '[data-testid="pract-request"]');
   ok('la demande montre son nom d’ordonnance, sa spécialité, sa ville, son compte',
     ['Dr Invité Banc', 'Cardiologie', 'Agadir', 'invite.medecin@example.test'].every((s) => reqText.includes(s)), reqText.slice(0, 160));
+  ok('…et qu’il a accepté l’engagement de confidentialité', !!(await p.$('[data-testid="pract-request-engaged"]')));
 
   await p.getByTestId('pract-request-open').click();
   await p.waitForSelector('[data-testid="practitioner-card"]', { timeout: 5000 });
@@ -776,7 +797,7 @@ async function m16AdminDoctorRequests(browser) {
   ok('…la carte « Accès médecin » préremplie avec son nom d’ordonnance', label === 'Dr Invité Banc', label);
 
   // Refus : deux clics, jamais un seul.
-  await p.getByRole('button', { name: /Demandes/ }).first().click();
+  await p.getByRole('button', { name: /Médecins/ }).first().click();
   await p.waitForSelector('[data-testid="pract-request-reject"]');
   await p.getByTestId('pract-request-reject').click();
   ok('« Refuser » demande une confirmation, rien n’est envoyé', (await calls(p, 'adminRejectPractitionerRequest')).length === 0);
@@ -786,6 +807,305 @@ async function m16AdminDoctorRequests(browser) {
   ok('…confirmé : le refus part pour CE compte', rej.length === 1 && rej[0]?.uid === REQ.uid, JSON.stringify(rej));
   assertClean(p, await visibleText(p, '#app'));
   await p.screenshot({ path: path.join(SHOTS, 'm16-admin-demandes-medecin.png'), fullPage: true });
+  await p.close();
+}
+
+// ── M17 — l'engagement, une fois, pour un médecin activé directement ────────
+// Le cas « le labo a déjà son compte » : il n'est jamais passé par le
+// formulaire de demande, où l'engagement se coche. Il le lit donc une fois,
+// AVANT que la moindre donnée de patient ne soit demandée.
+async function m17EngagementGate(browser) {
+  scenario('M17 — médecin activé directement : l’engagement d’abord, une fois, et aucun appel avant');
+  const { practitionerEngagement: _drop, ...notEngaged } = DOCTOR;
+  let p = await freshPage(browser, {
+    page: 'mes-patients',
+    profile: notEngaged,
+    server: doctorServer(),
+    responses: { acceptPractitionerEngagement: { ok: true, already: false } },
+  });
+  await p.waitForSelector('[data-testid="mp-engagement-gate"]', { timeout: 8000 });
+  await p.waitForTimeout(600);
+  let text = await visibleText(p, '#app');
+  ok('l’écran « Une dernière étape avant vos patients »', text.includes('Une dernière étape avant vos patients'));
+  ok('…avec le texte de l’engagement', text.includes('Mon engagement de confidentialité') && text.includes('secret médical'));
+  ok('AUCUN appel au serveur de résultats avant l’acceptation', (await calls(p)).length === 0, JSON.stringify(await calls(p)));
+  ok('…ni liste, ni nom de patient à l’écran', !(await p.$('[data-testid="mp-patient"]')) && !/EXEMPLE|FICTIF|ESSAI/.test(text));
+  ok('le sélecteur « Moi et ma famille | Mes patients » reste en haut', !!(await p.$('[data-testid="results-space-switch"]')));
+  const submit = p.getByTestId('mp-engagement-submit');
+  ok('« Accepter » verrouillé tant que la case n’est pas cochée…', await submit.isDisabled());
+  ok('…et il dit pourquoi', (await p.textContent('[data-testid="mp-engagement-why"]')).includes('Cochez la case'));
+  await p.getByTestId('mp-engagement-accept').check();
+  ok('case cochée : déverrouillé', !(await submit.isDisabled()));
+  await p.evaluate((doc) => {
+    window.__profileOnRefresh = doc;
+  }, DOCTOR);
+  await submit.click();
+  await waitForList(p);
+  const accepted = await calls(p, 'acceptPractitionerEngagement');
+  ok('UNE acceptation envoyée, avec la version du texte lu', accepted.length === 1 && same(accepted[0], { version: 1 }), JSON.stringify(accepted));
+  ok('…le profil est relu une fois', (await p.evaluate(() => window.__refreshCount)) === 1);
+  const c = await calls(p);
+  ok('…puis l’espace s’ouvre : UN appel, la liste sans PDF', c.length === 1 && same(c[0], { include_pdf: 'none', requester_id: CODE }), JSON.stringify(c));
+  ok('…avec ses 4 patients', (await patientNames(p)).length === 4);
+  assertClean(p, await visibleText(p, '#app'));
+  await p.screenshot({ path: path.join(SHOTS, 'm17-engagement.png'), fullPage: true });
+  await p.close();
+
+  // L'enregistrement échoue : il reste sur l'engagement, toujours sans appel.
+  p = await freshPage(browser, { page: 'mes-patients', profile: notEngaged, server: doctorServer() });
+  await p.waitForSelector('[data-testid="mp-engagement-gate"]', { timeout: 8000 });
+  await p.evaluate(() => {
+    window.__callables.acceptPractitionerEngagement = () => {
+      const e = new Error('unavailable');
+      e.code = 'functions/unavailable';
+      throw e;
+    };
+  });
+  await p.getByTestId('mp-engagement-accept').check();
+  await p.getByTestId('mp-engagement-submit').click();
+  await p.waitForTimeout(400);
+  text = await visibleText(p, '#app');
+  ok('échec de l’enregistrement : message clair, il reste sur l’engagement', text.includes('n’a pas pu être enregistrée') && !!(await p.$('[data-testid="mp-engagement-gate"]')));
+  ok('…et toujours aucun appel au serveur de résultats', (await calls(p)).length === 0);
+  await p.close();
+
+  // En arabe.
+  p = await freshPage(browser, { lang: 'ar', page: 'mes-patients', profile: notEngaged, server: doctorServer() });
+  await p.waitForSelector('[data-testid="mp-engagement-gate"]', { timeout: 8000 });
+  text = await visibleText(p, '#app');
+  ok('arabe : « خطوة أخيرة… » et « تعهّدي بالسرّية »', text.includes('خطوة أخيرة قبل الاطّلاع على مرضاكم') && text.includes('تعهّدي بالسرّية'));
+  const french = ['engagement', 'Accepter', 'secret médical', 'Cochez'].filter((w) => text.includes(w));
+  ok('…aucun texte français oublié', french.length === 0, french.join(', '));
+  assertClean(p, text);
+  await p.close();
+}
+
+// ── M18 — l'onglet « Médecins » : ceux qui ont accès, et les actions rapides ─
+const DOC_A = {
+  uid: 'u-banc-0031',
+  fullName: 'Médecin Actif Banc',
+  email: 'actif.medecin@example.test',
+  phone: '0600000031',
+  requester_id: 'DRDEMO',
+  type: 'medecin',
+  label: 'Dr Actif Banc',
+  linkedAt: Date.UTC(2026, 8, 20, 9, 0),
+  linkedByName: 'Admin Banc',
+  team: false,
+  sharedWith: 0,
+  engaged: true,
+  engagementAt: Date.UTC(2026, 8, 20, 10, 0),
+  lastVisitAt: Date.UTC(2026, 8, 24, 8, 0),
+  usage: { days: 7, reports: 21, monthDays: 3, monthReports: 8, firstAt: Date.UTC(2026, 8, 20, 11, 0), lastAt: Date.UTC(2026, 8, 24, 8, 0), lastReportAt: Date.UTC(2026, 8, 24, 8, 5) },
+};
+const DOC_B = {
+  uid: 'u-banc-0032',
+  fullName: 'Secrétaire Banc',
+  email: 'secretaire.banc@example.test',
+  phone: '',
+  requester_id: 'DRAUTRE',
+  type: 'correspondant',
+  label: 'Clinique Banc',
+  linkedAt: Date.UTC(2026, 8, 22, 9, 0),
+  linkedByName: '',
+  team: true,
+  sharedWith: 1,
+  engaged: false,
+  engagementAt: null,
+  lastVisitAt: null,
+  usage: { days: 0, reports: 0, monthDays: 0, monthReports: 0, firstAt: null, lastAt: null, lastReportAt: null },
+};
+
+async function m18AdminDoctorsTab(browser) {
+  scenario('M18 — admin, onglet « Médecins » : les médecins ayant accès, leur usage, « Ouvrir sa fiche », WhatsApp, « Retirer »');
+  const ADMIN_USER = { uid: 'uid-admin-banc', fullName: 'Admin Banc', phone: '0600000010', email: 'admin.banc@example.test', role: 'admin' };
+  let p = await freshPage(browser, {
+    page: 'admin',
+    profile: ADMIN_USER,
+    server: { identities: {} },
+    width: 1100,
+    responses: {
+      adminDashboardStats: null,
+      adminListStaff: { members: [], callerLevel: 2 },
+      adminListPractitionerRequests: { requests: [] },
+      adminListPractitioners: { practitioners: [DOC_A, DOC_B] },
+      adminSetPractitioner: { ok: true, dryRun: false, practitioner: null },
+      adminSearchPatients: {
+        results: [
+          {
+            uid: DOC_A.uid, email: DOC_A.email, hasProfile: true, fullName: DOC_A.fullName, phone: DOC_A.phone, links: [], linkedCount: 0,
+            practitioner: { requester_id: 'DRDEMO', type: 'medecin', label: 'Dr Actif Banc', linkedAt: DOC_A.linkedAt, lastUsedAt: null, engaged: true, engagementAt: DOC_A.engagementAt },
+          },
+        ],
+        truncated: false,
+      },
+    },
+  });
+  await p.getByRole('button', { name: /Médecins/ }).first().waitFor({ timeout: 8000 });
+  await p.waitForTimeout(300);
+  ok('la liste n’est PAS chargée tant que l’onglet n’est pas ouvert', (await calls(p, 'adminListPractitioners')).length === 0);
+  await p.getByRole('button', { name: /Médecins/ }).first().click();
+  await p.waitForSelector('[data-testid="doctor-row"]', { timeout: 8000 });
+  ok('onglet ouvert : UN appel', (await calls(p, 'adminListPractitioners')).length === 1);
+  ok('sans demande en attente, la file des demandes ne s’affiche pas', !(await p.$('[data-testid="pract-requests"]')));
+  const names = await p.$$eval('[data-testid="doctor-name"]', (els) => els.map((e) => e.textContent.trim()));
+  ok('les deux médecins ayant accès', same(names, ['Dr Actif Banc', 'Clinique Banc']), JSON.stringify(names));
+  const rows = p.locator('[data-testid="doctor-row"]');
+  const rowA = await rows.nth(0).innerText();
+  const rowB = await rows.nth(1).innerText();
+  ok('médecin A : son code, son compte, son e-mail', ['DRDEMO', 'Médecin Actif Banc', 'actif.medecin@example.test'].every((x) => rowA.includes(x)), rowA.slice(0, 200));
+  const usageA = await rows.nth(0).locator('[data-testid="doctor-usage"]').innerText();
+  ok('…son usage : jours de visite et bilans ouverts ce mois-ci, bilans au total',
+    usageA.includes('Jours de visite ce mois-ci') && /\b3\b/.test(usageA) && /\b8\b/.test(usageA) && /\b21\b/.test(usageA), usageA.replace(/\s+/g, ' '));
+  ok('…activé par qui, et son engagement accepté (en vert)',
+    rowA.includes('par Admin Banc') && !!(await rows.nth(0).locator('[data-testid="doctor-engaged"]').count()));
+  ok('médecin B : « Pas encore venu », engagement « demandé à sa prochaine visite »',
+    rowB.includes('Pas encore venu') && rowB.includes('prochaine visite'), rowB.slice(0, 300));
+  ok('…étiquettes « Correspondant » et « Compte de l’équipe », code partagé signalé',
+    rowB.includes('Correspondant') && rowB.includes('Compte de l’équipe') && rowB.includes('aussi sur d’autres comptes : 1'));
+  const wa = await rows.nth(0).locator('[data-testid="doctor-whatsapp"]').getAttribute('href');
+  ok('WhatsApp : son numéro au format international, message avec le lien de SON espace',
+    wa.startsWith('https://wa.me/212600000031?text=') && decodeURIComponent(wa.split('text=')[1]).includes('http://labo.test/fr/mes-patients') && decodeURIComponent(wa.split('text=')[1]).includes('Dr Actif Banc'), wa.slice(0, 70));
+  ok('…pas de bouton WhatsApp sans numéro', (await rows.nth(1).locator('[data-testid="doctor-whatsapp"]').count()) === 0);
+
+  // Retirer : deux clics.
+  await rows.nth(1).getByTestId('doctor-revoke').click();
+  ok('« Retirer l’accès » demande une confirmation, rien n’est envoyé', (await calls(p, 'adminSetPractitioner')).length === 0);
+  await rows.nth(1).getByTestId('doctor-revoke-confirm').click();
+  await p.waitForTimeout(300);
+  const set = await calls(p, 'adminSetPractitioner');
+  ok('…confirmé : retrait de CE compte', set.length === 1 && same(set[0], { uid: DOC_B.uid, clear: true }), JSON.stringify(set));
+  ok('…la ligne disparaît', (await p.$$('[data-testid="doctor-row"]')).length === 1);
+  const doctorsText = await visibleText(p, '[data-testid="doctors-section"]');
+  ok('…message de succès « Accès de Clinique Banc retiré. »', doctorsText.includes('Accès de Clinique Banc retiré.'));
+  const msgClass = await p.$eval('[data-testid="doctors-section"] [role="status"]', (el) => el.className);
+  ok('…en vert (succès)', msgClass.includes('--status-success'), msgClass);
+
+  // Ouvrir sa fiche : onglet Patients, SON compte, la carte « Accès médecin ».
+  await p.getByTestId('doctor-open').first().click();
+  await p.waitForSelector('[data-testid="practitioner-card"]', { timeout: 5000 });
+  const search = await calls(p, 'adminSearchPatients');
+  ok('« Ouvrir sa fiche » : recherche par SON e-mail', search.length === 1 && search[0]?.query === DOC_A.email, JSON.stringify(search));
+  ok('…onglet Patients, SON compte sélectionné', (await visibleText(p, '[data-testid="admin-selected"]')).includes(DOC_A.email));
+  const card = await visibleText(p, '[data-testid="practitioner-card"]');
+  ok('…la carte « Accès médecin » : son code et son engagement', card.includes('DRDEMO') && card.includes('Engagement de confidentialité accepté le'), card.slice(0, 240));
+  assertClean(p, await visibleText(p, '#app'));
+  await p.close();
+
+  // Un stagiaire : il voit, il ne retire pas.
+  p = await freshPage(browser, {
+    page: 'admin',
+    profile: STAFF,
+    server: { identities: {} },
+    responses: { adminListPractitionerRequests: { requests: [] }, adminListPractitioners: { practitioners: [DOC_A] } },
+  });
+  await p.getByRole('button', { name: /Médecins/ }).first().click();
+  await p.waitForSelector('[data-testid="doctor-row"]', { timeout: 8000 });
+  ok('stagiaire : la liste, « Ouvrir sa fiche »… mais pas « Retirer l’accès »',
+    !!(await p.$('[data-testid="doctor-open"]')) && !(await p.$('[data-testid="doctor-revoke"]')));
+  ok('…et il est dit pourquoi', (await visibleText(p, '[data-testid="doctors-section"]')).includes('Seul un administrateur'));
+  await p.close();
+
+  // Aucun médecin : un message qui dit quoi faire.
+  p = await freshPage(browser, {
+    page: 'admin',
+    profile: STAFF,
+    server: { identities: {} },
+    responses: { adminListPractitionerRequests: { requests: [] }, adminListPractitioners: { practitioners: [] } },
+  });
+  await p.getByRole('button', { name: /Médecins/ }).first().click();
+  await p.waitForSelector('[data-testid="doctors-empty"]', { timeout: 8000 });
+  ok('aucun médecin : « Invitez-en un ci-dessous », et la carte d’invitation est là',
+    (await visibleText(p, '[data-testid="doctors-empty"]')).includes('Invitez-en un ci-dessous') && !!(await p.$('[data-testid="invite-doctor-card"]')));
+  await p.close();
+}
+
+// ── M19 — le tableau de bord : « Les médecins » ─────────────────────────────
+function dashFixture(practitioners) {
+  const month = (key, created, cumulative) => ({ key, created, cumulative });
+  return {
+    totals: { accounts: 60, withAccess: 51, withoutAccess: 9, pendingRequests: 2, byType: { patient: 51, medecin: 0, correspondant: 0 } },
+    teamAccounts: 4,
+    includeTeam: false,
+    usage: { active: 22, dormant: 29, rate: 43, windowDays: 30 },
+    growth: { months: [month('2026-08', 17, 55), month('2026-09', 5, 60)] },
+    monthDelta: { current: 5, previous: 17, pct: -71 },
+    funnel: { created: 60, activated: 51, consulted: 22 },
+    freshness: { d7: 9, d30: 13, d90: 11, older: 7, never: 11 },
+    ages: [{ key: '31-45', total: 18, active: 11, rate: 61 }],
+    frequency: { once: 14, f2_5: 6, f6_15: 2, f16: 0 },
+    firstView: { avgDays: 3.4, overWeekPct: 21, sample: 22 },
+    relance: { relanced: 0, returned: 0, rate: 0, windowDays: 60 },
+    activation: { avgDays: 1.6, sample: 3, weeks: [{ label: '09-17', avgDays: 1.6, n: 3 }] },
+    requests: { fulfilled: 34, rejected: 3, pending: 2, oldestPendingDays: 0, oldestPendingName: '' },
+    team: [],
+    weekly: [{ label: '09-17', consultations: 12 }],
+    shares: { month: 0, signups: 0 },
+    practitioners,
+    latestCreated: [],
+    latestActive: [],
+    truncated: false,
+  };
+}
+
+async function m19Dashboard(browser) {
+  scenario('M19 — tableau de bord : « Les médecins », une ligne par médecin, des nombres seulement');
+  const ADMIN_USER = { uid: 'uid-admin-banc', fullName: 'Admin Banc', phone: '0600000010', email: 'admin.banc@example.test', role: 'admin' };
+  const row = (uid, label, code, lastVisitAt, monthDays, monthReports, reports) => ({
+    uid, label, fullName: label, requester_id: code, team: false, engaged: true, linkedAt: Date.UTC(2026, 8, 1), lastVisitAt,
+    days: monthDays + 2, reports, monthDays, monthReports,
+  });
+  let p = await freshPage(browser, {
+    page: 'admin',
+    profile: ADMIN_USER,
+    server: { identities: {} },
+    width: 1300,
+    responses: {
+      adminListStaff: { members: [], callerLevel: 2 },
+      adminListPractitionerRequests: { requests: [] },
+      adminDashboardStats: dashFixture({
+        accounts: 2, active: 1, consultations30d: 5, monthDays: 3, monthReports: 8, teamExcluded: 1,
+        list: [
+          row('u1', 'Dr Actif Banc', 'DRDEMO', Date.UTC(2026, 8, 24, 8), 3, 8, 21),
+          row('u2', 'Dr Jamais Banc', 'DRAUTRE', null, 0, 0, 0),
+        ],
+      }),
+    },
+  });
+  await p.waitForSelector('[data-testid="dash-doctors"]', { timeout: 8000 });
+  const figures = await p.$$eval('[data-testid="dash-doctors-figures"] > div', (els) =>
+    els.map((d) => [d.querySelector('dt').textContent.trim(), d.querySelector('dd').textContent.trim()])
+  );
+  ok('trois chiffres : médecins activés, actifs sur 30 jours, bilans ouverts ce mois-ci',
+    same(figures, [['Médecins activés', '2'], ['Actifs ces 30 jours', '1'], ['Bilans ouverts ce mois-ci', '8']]), JSON.stringify(figures));
+  const rows = await p.$$eval('[data-testid="dash-doctor-row"]', (els) => els.map((tr) => [...tr.querySelectorAll('td')].map((td) => td.textContent.trim())));
+  ok('une ligne par médecin, dans l’ordre reçu (le plus récent d’abord)', rows.length === 2 && rows[0][0].startsWith('Dr Actif Banc') && rows[1][0].startsWith('Dr Jamais Banc'), JSON.stringify(rows));
+  ok('…jours et bilans du mois, bilans au total', same(rows[0].slice(2), ['3', '8', '21']), JSON.stringify(rows[0]));
+  ok('…« jamais » pour un médecin qui n’est pas venu', rows[1][1] === 'jamais', JSON.stringify(rows[1]));
+  ok('les comptes de l’équipe laissés de côté sont annoncés, avec la case à cocher',
+    (await visibleText(p, '[data-testid="dash-doctors-team"]')).includes('Comptes de l’équipe non comptés ici : 1'));
+  const text = await visibleText(p, '#app');
+  ok('aucun nom de PATIENT, aucun n° de dossier sur le tableau de bord des médecins', !/DÉMO|EXEMPLE|FICTIF|ESSAI|100926901/.test(text));
+  assertClean(p, text);
+  await p.screenshot({ path: path.join(SHOTS, 'm19-tableau-medecins.png'), fullPage: true });
+  await p.close();
+
+  // Seul médecin = un compte de l'équipe : ni « aucun médecin activé », ni silence.
+  p = await freshPage(browser, {
+    page: 'admin',
+    profile: ADMIN_USER,
+    server: { identities: {} },
+    width: 1300,
+    responses: {
+      adminListStaff: { members: [], callerLevel: 2 },
+      adminListPractitionerRequests: { requests: [] },
+      adminDashboardStats: dashFixture({ accounts: 0, active: 0, consultations30d: 0, monthDays: 0, monthReports: 0, teamExcluded: 1, list: [] }),
+    },
+  });
+  await p.waitForSelector('[data-testid="dash-doctors-team"]', { timeout: 8000 });
+  const t2 = await visibleText(p, '#app');
+  ok('seul médecin sur un compte de l’équipe : « Aucun médecin en dehors des comptes de l’équipe » + la case à cocher',
+    t2.includes('Aucun médecin en dehors des comptes de l’équipe.') && t2.includes('Inclure les comptes de l’équipe'));
   await p.close();
 }
 
@@ -810,6 +1130,9 @@ async function main() {
     await m14AdminOneCard(browser);
     await m15DoctorRequest(browser);
     await m16AdminDoctorRequests(browser);
+    await m17EngagementGate(browser);
+    await m18AdminDoctorsTab(browser);
+    await m19Dashboard(browser);
   } finally {
     await browser.close();
   }

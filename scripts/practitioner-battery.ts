@@ -10,13 +10,16 @@
  *  D. le jumeau client de l'identité praticien : jamais une identité patient ;
  *  E. la parité de la clé de regroupement avec le serveur (le « Vérifier » de
  *     l'admin compte les patients avec la même règle) ;
- *  F. `firestore.rules` : « practitioner » dans les DEUX listes verrouillées ;
+ *  F. `firestore.rules` : « practitioner » et « practitionerEngagement » dans
+ *     les DEUX listes verrouillées ;
  *  G. chaque texte de l'espace médecin existe en français ET en arabe — la
  *     doublure de traduction du banc navigateur retombe sur le texte français,
  *     elle ne peut donc pas voir une clé arabe manquante ;
  *  H. la page de confidentialité déclare l'accès des médecins (fr et ar) ;
  *  I. le lien d'invitation des médecins (reconnu au retour de connexion,
- *     numéros au format WhatsApp).
+ *     numéros au format WhatsApp) ;
+ *  J. l'engagement de confidentialité : le jumeau client (`hasEngagement`) et
+ *     la MÊME version des deux côtés.
  */
 import fs from 'fs';
 import path from 'path';
@@ -39,6 +42,7 @@ import {
   resolveIdentities,
 } from '../src/lib/results/identities';
 import { doctorSpacePath, isDoctorSpacePath, waDigits, whatsappInviteLink } from '../src/lib/practitioner/invitation';
+import { hasEngagement, PRACTITIONER_ENGAGEMENT_VERSION } from '../src/lib/practitioner/engagement';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 
@@ -193,7 +197,7 @@ section('E — même clé de regroupement que le serveur (compte des patients de
 }
 
 // ── F. Règles Firestore ─────────────────────────────────────────────────────
-section('F — firestore.rules : « practitioner » verrouillé en création ET en mise à jour');
+section('F — firestore.rules : « practitioner » et son engagement verrouillés en création ET en mise à jour');
 {
   const rules = fs.readFileSync(path.join(ROOT, 'firestore.rules'), 'utf8');
   const block = rules.slice(rules.indexOf('match /users/{userId}'));
@@ -207,6 +211,12 @@ section('F — firestore.rules : « practitioner » verrouillé en création ET 
   ok('deux listes trouvées dans le bloc users', lists.length === 2);
   ok('« practitioner » dans la liste de création', !!lists[0]?.includes('practitioner'));
   ok('« practitioner » dans la liste de mise à jour', !!lists[1]?.includes('practitioner'));
+  // L'engagement est la preuve du laboratoire : un client ne doit ni en forger la
+  // date, ni sauter le texte en l'écrivant lui-même.
+  ok(
+    '« practitionerEngagement » dans les deux listes',
+    !!lists[0]?.includes('practitionerEngagement') && !!lists[1]?.includes('practitionerEngagement')
+  );
   ok('les deux listes sont identiques', JSON.stringify(lists[0]) === JSON.stringify(lists[1]), JSON.stringify(lists));
 }
 
@@ -222,7 +232,7 @@ section('G — chaque texte de l’espace médecin existe en français ET en ara
     key.split('.').reduce<unknown>((acc, part) => (acc && typeof acc === 'object' ? (acc as Dict)[part] : undefined), dict);
 
   // Toutes les clés que le CODE utilise, trouvées dans les sources.
-  const PREFIX = /\bt\(\s*['"]((?:mes_patients\.|admin\.pract_|admin\.dash_pract_|admin\.invite_|confidentialite\.practitioner_|resultats\.practitioner_)[\w.]+)['"]\s*(,\s*\{[^}]*\bcount\b)?/g;
+  const PREFIX = /\bt\(\s*['"]((?:mes_patients\.|admin\.pract_|admin\.dash_pract_|admin\.dash_sec_doctors|admin\.doctors_|admin\.tab_doctors|admin\.invite_|confidentialite\.practitioner_|resultats\.practitioner_)[\w.]+)['"]\s*(,\s*\{[^}]*\bcount\b)?/g;
   const files: string[] = [];
   const walk = (dir: string) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -291,6 +301,41 @@ section('I — le lien d’invitation : reconnu au retour de connexion, prêt po
   ok('message encodé, lien intact une fois décodé',
     link.startsWith('https://wa.me/212612345678?text=') &&
       decodeURIComponent(link.split('text=')[1]) === 'Ouvrez : https://www.laboelallali.com/fr/mes-patients');
+}
+
+// ── J. L'engagement de confidentialité ──────────────────────────────────────
+section('J — l’engagement de confidentialité : jumeau client et même version que le serveur');
+{
+  const V = PRACTITIONER_ENGAGEMENT_VERSION;
+  ok('engagement de la version actuelle → accepté', hasEngagement({ practitionerEngagement: { version: V } }));
+  ok('…une version plus récente aussi', hasEngagement({ practitionerEngagement: { version: V + 1 } }));
+  ok(
+    'absent, ancienne version, version en texte, tableau → pas encore accepté',
+    !hasEngagement({}) &&
+      !hasEngagement(null) &&
+      !hasEngagement({ practitionerEngagement: { version: V - 1 } }) &&
+      !hasEngagement({ practitionerEngagement: { version: String(V) } }) &&
+      !hasEngagement({ practitionerEngagement: [V] })
+  );
+  let server: { PRACTITIONER_ENGAGEMENT_VERSION: number; engagementOf: (d: unknown) => unknown } | null = null;
+  try {
+    const req = createRequire(path.join(ROOT, 'functions', 'package.json'));
+    server = req(path.join(ROOT, 'functions', 'lib', 'admin', 'practitionerEngagement.js'));
+  } catch {
+    server = null;
+  }
+  if (!server) {
+    ok('functions/lib compilé (lancer « npm --prefix functions run build »)', false);
+  } else {
+    // Un client en avance serait refusé par le serveur ; un client en retard
+    // sauterait un nouveau texte. Les deux constantes changent ensemble.
+    ok(`même version côté client et côté serveur (${V})`, server.PRACTITIONER_ENGAGEMENT_VERSION === V, `serveur : ${server.PRACTITIONER_ENGAGEMENT_VERSION}`);
+    const cases = [{ version: V }, { version: V - 1 }, { version: String(V) }, undefined];
+    ok(
+      'même verdict des deux côtés sur quatre formes',
+      cases.every((e) => (server!.engagementOf({ practitionerEngagement: e }) !== null) === hasEngagement({ practitionerEngagement: e }))
+    );
+  }
 }
 
 console.log('\n─────────────────────────────────────────────────────────────────');

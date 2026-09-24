@@ -94,6 +94,15 @@ const JEU = {
   ],
   weekly: ['S33', 'S34', 'S35', 'S36', 'S37', 'S38'].map((label, i) => ({ label, consultations: [12, 19, 24, 17, 31, 27][i] })),
   shares: { month: 11, signups: 22 },
+  // Section « Les médecins » (24/09/2026) : une ligne par medecin, des nombres.
+  practitioners: {
+    accounts: 3, active: 2, consultations30d: 14, monthDays: 9, monthReports: 31, teamExcluded: 1,
+    list: [
+      { uid: 'd1', label: 'Dr Moustadraf Zouhair', fullName: 'Moustadraf Zouhair', requester_id: 'MOUSTZOU', team: false, engaged: true, linkedAt: Date.now() - 20 * 86400000, lastVisitAt: Date.now() - 3600000, days: 12, reports: 58, monthDays: 6, monthReports: 23 },
+      { uid: 'd2', label: 'Dr Baki Salwa', fullName: 'Baki Salwa', requester_id: 'BAKISAL', team: false, engaged: true, linkedAt: Date.now() - 9 * 86400000, lastVisitAt: Date.now() - 5 * 86400000, days: 3, reports: 8, monthDays: 3, monthReports: 8 },
+      { uid: 'd3', label: 'Clinique Exemple', fullName: 'Secretariat Exemple', requester_id: 'CLINEX', team: false, engaged: false, linkedAt: Date.now() - 2 * 86400000, lastVisitAt: null, days: 0, reports: 0, monthDays: 0, monthReports: 0 },
+    ],
+  },
   latestCreated: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => compte(i, null)),
   latestActive: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => compte(i, i + 1)),
   truncated: false,
@@ -168,7 +177,7 @@ globalThis.__HTML__ = renderToStaticMarkup(React.createElement(AdminDashboard, {
       <p class="text-[var(--text-secondary)] mt-1">Associer un identifiant de résultats à un compte patient.</p>
     </div>
     <div class="border-b border-[var(--border-default)] py-3 text-sm text-[var(--text-secondary)]">
-      Tableau de bord · Patients · Demandes (2) · Relances (29) · Tester · Équipe
+      Tableau de bord · Patients · Demandes (2) · Médecins (1) · Relances (29) · Tester · Équipe
     </div>
     <div class="space-y-8 pt-8">${corps}</div>
   </div></div></body></html>`;
