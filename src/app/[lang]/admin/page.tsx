@@ -43,9 +43,10 @@ import PractitionerRequestsSection, {
   type PractitionerRequest,
 } from '@/components/features/admin/PractitionerRequestsSection';
 import InviteDoctorCard from '@/components/features/admin/InviteDoctorCard';
+import PatientProfileEditor, { type ProfileFields } from '@/components/features/admin/PatientProfileEditor';
 import PractitionersSection, { type PractitionerRow } from '@/components/features/admin/PractitionersSection';
 import { normalizePractitionerId } from '@/lib/results/identities';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, ArrowLeft, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList, Stethoscope } from 'lucide-react';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, ArrowLeft, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList, Stethoscope, Pencil } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
@@ -284,6 +285,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [doctorsError, setDoctorsError] = useState<string | null>(null);
   const [doctorsBusy, setDoctorsBusy] = useState<string | null>(null);
   const [doctorsMsg, setDoctorsMsg] = useState<string | null>(null);
+  // « Modifier le profil » of the selected account (07/10/2026): the front desk
+  // corrects a mistyped name, date of birth or phone (`adminUpdateProfile`).
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileNotice, setProfileNotice] = useState<string | null>(null);
   const [relInputs, setRelInputs] = useState<Record<string, RelativeInputs>>({});
   const [relBusy, setRelBusy] = useState<string | null>(null);
   const [relError, setRelError] = useState<string | null>(null);
@@ -782,6 +789,9 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     setSelected(p);
     setSaved(null);
     setError(null);
+    setEditingProfile(false);
+    setProfileError(null);
+    setProfileNotice(null);
     setRequesterId(p.requester_id || '');
     setType(TYPES.includes(p.type as RequesterType) ? (p.type as RequesterType) : 'patient');
     setLinkNotice(null);
@@ -802,6 +812,40 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     setPractCheck(null);
     setPractError(null);
     setPractNotice(null);
+  };
+
+  /**
+   * « Enregistrer les corrections » — name, date of birth, phone. The server
+   * writes only what really changed and keeps a trace (who, when, old and new
+   * value) in `adminProfileEdits`. The search list and the card are patched so
+   * the corrected name shows at once.
+   */
+  const saveProfile = async (fields: ProfileFields) => {
+    if (!selected?.uid) return;
+    const uid = selected.uid;
+    setProfileBusy(true);
+    setProfileError(null);
+    setProfileNotice(null);
+    try {
+      const res = await callFn<{ changed: string[]; fullName: string; dateOfBirth: string; phone: string }>(
+        'adminUpdateProfile',
+        { uid, ...fields }
+      );
+      const patch = (r: SearchResult) =>
+        r.uid === uid ? { ...r, fullName: res.fullName, dateOfBirth: res.dateOfBirth, phone: res.phone } : r;
+      setResults((prev) => prev.map(patch));
+      setSelected((prev) => (prev ? patch(prev) : prev));
+      setEditingProfile(false);
+      setProfileNotice(
+        res.changed.length > 0
+          ? t('admin.profile_saved', 'Profil corrigé. Le patient verra la correction à sa prochaine ouverture de l’application.')
+          : t('admin.profile_unchanged', 'Rien à enregistrer : le profil était déjà à jour.')
+      );
+    } catch (err: unknown) {
+      setProfileError(errMsg(err));
+    } finally {
+      setProfileBusy(false);
+    }
   };
 
   // ── Doctor access (« Mes patients ») — adminSetPractitioner, admin level ────
@@ -1576,10 +1620,30 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                   {t('admin.selected_account', 'Compte sélectionné')}
                 </p>
                 <div className="flex items-start gap-3 pb-4 border-b border-[var(--border-default)]">
+                  {/* Editing: the form takes the whole width (no avatar) — beside
+                      the avatar, its button overflowed the card at 390 px. */}
+                  {editingProfile ? (
+                    <PatientProfileEditor
+                      initial={{
+                        fullName: selected.fullName || '',
+                        dateOfBirth: selected.dateOfBirth || '',
+                        phone: selected.phone || '',
+                      }}
+                      email={selected.email}
+                      busy={profileBusy}
+                      error={profileError}
+                      onSave={(fields) => void saveProfile(fields)}
+                      onCancel={() => {
+                        setEditingProfile(false);
+                        setProfileError(null);
+                      }}
+                    />
+                  ) : (
+                  <>
                   <div className="h-11 w-11 rounded-lg bg-[var(--color-fuchsia-accent)]/10 text-[var(--color-fuchsia-accent)] flex items-center justify-center flex-shrink-0">
                     <User size={22} />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold text-[var(--text-primary)]">{selected.fullName || t('admin.name', 'Nom')}</p>
                     {selected.email && <p className="text-sm text-[var(--text-secondary)] break-all">{selected.email}</p>}
                     {selected.phone && <p className="text-sm text-[var(--text-secondary)]">{selected.phone}</p>}
@@ -1594,7 +1658,33 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         {t('admin.no_profile_warning', "Ce compte existe mais le profil n'est pas encore complété.")}
                       </p>
                     )}
+                    {profileNotice && (
+                      <p className="flex items-start gap-1.5 text-sm text-[var(--status-success)] mt-2" role="status" data-testid="profile-notice">
+                        <CheckCircle size={16} className="flex-shrink-0 mt-0.5" />
+                        <span>{profileNotice}</span>
+                      </p>
+                    )}
+                    {/* Under the details, not beside them: beside, it squeezed
+                        them into a narrow column on phones. A profile-less
+                        account has nothing to correct (the patient completes it
+                        himself at his first sign-in). */}
+                    {selected.hasProfile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingProfile(true);
+                          setProfileNotice(null);
+                        }}
+                        className="mt-3 flex items-center gap-1.5 min-h-[44px] px-3 rounded-lg border border-[var(--border-default)] text-sm font-medium text-[var(--text-primary)]"
+                        data-testid="profile-edit"
+                      >
+                        <Pencil size={16} className="flex-shrink-0" />
+                        {t('admin.profile_edit', 'Modifier le profil')}
+                      </button>
+                    )}
                   </div>
+                  </>
+                  )}
                 </div>
 
                 <form onSubmit={handleSave} className="space-y-4">

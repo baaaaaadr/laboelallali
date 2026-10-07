@@ -31,7 +31,9 @@
  *    directement par le labo (M17) ;
  *  - le tableau de bord « Les médecins » (M19) ;
  *  - l'admin : passer le dossier principal d'un compte en dossier d'un proche
- *    (M20 — un parent sans dossier, dont l'enfant avait été saisi comme lui).
+ *    (M20 — un parent sans dossier, dont l'enfant avait été saisi comme lui) ;
+ *  - l'admin : corriger le profil d'un patient — nom, date de naissance,
+ *    téléphone (M21).
  *
  * ⚠ Aucune feuille de style : les classes responsives (`hidden lg:block`) sont
  *   sans effet ici — on vérifie la structure, les textes et les appels.
@@ -1168,6 +1170,60 @@ async function m20MoveOwnToRelative(browser) {
   await p.close();
 }
 
+// ── M21 — l'accueil corrige le profil d'un patient ──────────────────────────
+// Demande de l'équipe (07/10/2026) : des patients saisissent un surnom, un nom
+// abrégé ou une mauvaise date de naissance, et deviennent introuvables.
+async function m21EditProfile(browser) {
+  scenario('M21 — admin : « Modifier le profil » (nom, date de naissance, téléphone)');
+  const P = {
+    uid: 'u-banc-0051', email: 'patient.surnom@example.test', hasProfile: true, fullName: 'Momo', phone: '0600000051',
+    createdAt: '2026-10-01T10:00:00Z', dateOfBirth: '1990-01-01', requester_id: '900051', type: 'patient',
+    links: [], linkedCount: 0, practitioner: null,
+  };
+  const p = await freshPage(browser, {
+    page: 'admin',
+    profile: STAFF,
+    server: { identities: {} },
+    responses: {
+      adminSearchPatients: { results: [P], truncated: false },
+      adminUpdateProfile: { changed: ['fullName', 'dateOfBirth'], fullName: 'Mohamed Démo', dateOfBirth: '1991-01-10', phone: '0600000051' },
+    },
+  });
+  await p.getByPlaceholder(/Email, nom/).waitFor({ timeout: 8000 });
+  await adminSearch(p, 'momo');
+  await p.waitForSelector('[data-testid="profile-edit"]', { timeout: 5000 });
+  await p.getByTestId('profile-edit').click();
+  await p.waitForSelector('[data-testid="profile-editor"]');
+  const save = p.getByTestId('profile-save');
+  ok('formulaire prérempli avec le profil actuel',
+    (await p.inputValue('#profile-fullname')) === 'Momo' && (await p.inputValue('#profile-dob')) === '1990-01-01' && (await p.inputValue('#profile-phone')) === '0600000051');
+  ok('rien de modifié : bouton verrouillé, et il dit pourquoi',
+    (await save.isDisabled()) && (await p.textContent('[data-testid="profile-why"]')).includes('Aucune modification'));
+  ok('l’e-mail est affiché mais pas modifiable (identifiant de connexion)',
+    (await visibleText(p, '[data-testid="profile-editor"]')).includes('identifiant de connexion') && !(await p.$('[data-testid="profile-editor"] input[type="email"]')));
+  await p.fill('#profile-fullname', 'O');
+  ok('nom trop court : verrouillé', await save.isDisabled());
+  await p.fill('#profile-fullname', '  Mohamed   Démo ');
+  await p.fill('#profile-dob', '1991-01-10');
+  ok('nom et date corrigés : déverrouillé', !(await save.isDisabled()));
+  await save.click();
+  await p.waitForSelector('[data-testid="profile-notice"]', { timeout: 5000 });
+  const sent = await calls(p, 'adminUpdateProfile');
+  ok('UN appel : ce compte, nom nettoyé, date, téléphone',
+    sent.length === 1 && same(sent[0], { uid: P.uid, fullName: 'Mohamed Démo', dateOfBirth: '1991-01-10', phone: '0600000051' }),
+    JSON.stringify(sent));
+  const card = await visibleText(p, '[data-testid="admin-selected"]');
+  ok('la fiche affiche le nom corrigé, et « Profil corrigé » en vert',
+    card.includes('Mohamed Démo') && card.includes('Profil corrigé') && !(await p.$('[data-testid="profile-editor"]')));
+  // Annuler ne change rien.
+  await p.getByTestId('profile-edit').click();
+  await p.fill('#profile-fullname', 'Autre Nom');
+  await p.getByTestId('profile-cancel').click();
+  ok('« Annuler » : formulaire fermé, aucun nouvel appel', !(await p.$('[data-testid="profile-editor"]')) && (await calls(p, 'adminUpdateProfile')).length === 1);
+  assertClean(p, await visibleText(p, '#app'));
+  await p.close();
+}
+
 async function main() {
   console.log('\n══ Banc « médecin » — /mes-patients sous le vrai ResultsProvider ══');
   await build();
@@ -1193,6 +1249,7 @@ async function main() {
     await m18AdminDoctorsTab(browser);
     await m19Dashboard(browser);
     await m20MoveOwnToRelative(browser);
+    await m21EditProfile(browser);
   } finally {
     await browser.close();
   }
