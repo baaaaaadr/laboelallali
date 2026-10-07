@@ -686,6 +686,52 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     }
   };
 
+  /**
+   * « Le passer en dossier d'un proche » (07/10/2026): the account's MAIN dossier
+   * is in fact a relative's — a parent who never had a test came with his child,
+   * and the child's number was typed as his own. One server transaction moves it
+   * (`adminLinkRequester` with `fromOwn`): main dossier emptied, relative row
+   * added with the label. The account keeps exactly the same access.
+   */
+  const moveOwnToRelative = async (label: string) => {
+    if (!selected?.uid || !selected.requester_id) return;
+    const id = selected.requester_id;
+    setLinkBusy('move');
+    setLinkError(null);
+    setLinkNotice(null);
+    setLinkAudit(null);
+    try {
+      const res = await callFn<{ links: LinkRow[]; holderNotified: boolean }>('adminLinkRequester', {
+        uid: selected.uid,
+        requester_id: id,
+        type: 'patient',
+        label,
+        fromOwn: true,
+      });
+      const links = res.links || [];
+      setLinkRows(links);
+      const patch = (r: SearchResult) =>
+        r.uid === selected.uid
+          ? { ...r, requester_id: undefined, type: undefined, links, linkedCount: links.length }
+          : r;
+      setResults((prev) => prev.map(patch));
+      setSelected((prev) => (prev ? patch(prev) : prev));
+      // The main-dossier form above now shows an empty field, as it should.
+      setRequesterId('');
+      setType('patient');
+      setLinkNotice(
+        t('admin.link_moved', 'Le dossier {{id}} est maintenant rattaché comme « {{label}} ». Le dossier principal de ce compte est vide.', {
+          id,
+          label,
+        })
+      );
+    } catch (err: unknown) {
+      setLinkError(errMsg(err));
+    } finally {
+      setLinkBusy(null);
+    }
+  };
+
   // The confirmation lives IN the card (LinkedRequestersCard), not in a native
   // window.confirm() — that dialog is painted outside the page, so only a human
   // at that screen can see it (it hung a browser agent during the 17/09 test).
@@ -1243,6 +1289,15 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 </span>
               )}
             </h2>
+            {/* 07/10/2026: a parent who never had a test came with his daughter,
+                and her number was validated here as HIS own dossier. The right
+                path is the relatives card; say so where the mistake happens. */}
+            <p className="text-sm text-[var(--text-secondary)]" data-testid="req-own-only-hint">
+              {t(
+                'admin.req_own_only_hint',
+                'Ne saisissez ici que le numéro de la personne elle-même. Un parent venu pour son enfant, sans dossier à lui : refusez cette demande, puis rattachez le dossier de l’enfant depuis sa fiche (onglet « Patients », carte « Dossiers d’un proche »).'
+              )}
+            </p>
             {arError && (
               <div className="flex items-center gap-2 text-sm text-[var(--status-error)]">
                 <AlertCircle size={16} /> <span>{arError}</span>
@@ -1620,6 +1675,8 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 onRemove={removeLink}
                 onTest={testFromLink}
                 fmtDate={fmtWhen}
+                ownDossier={selected.requester_id || null}
+                onMoveOwn={(label) => void moveOwnToRelative(label)}
               />
               <PractitionerCard
                 current={practCurrent}

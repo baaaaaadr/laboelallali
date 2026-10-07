@@ -781,7 +781,8 @@ async function attachRequester(
   type: RequesterType,
   label: string,
   adminUid: string,
-  proof?: LinkProof
+  proof?: LinkProof,
+  fromOwn = false
 ): Promise<void> {
   const ref = admin.firestore().doc(`users/${targetUid}`);
   await admin.firestore().runTransaction(async (tx) => {
@@ -791,10 +792,21 @@ async function attachRequester(
     }
     const data = snap.data() || {};
 
-    if (normalizeRequesterId(data.requester_id) === requesterId) {
+    const isOwn = normalizeRequesterId(data.requester_id) === requesterId;
+    if (isOwn && !fromOwn) {
       throw new HttpsError(
         "failed-precondition",
         "Ce dossier est déjà le dossier principal de ce compte."
+      );
+    }
+    // `fromOwn` MOVES the account's main dossier to its relatives — the case of
+    // a parent who never had a test, whose child's number was typed as his own
+    // (06/10/2026). It must still BE the main dossier when the write happens: a
+    // stale screen must not empty a dossier someone else just corrected.
+    if (fromOwn && !isOwn) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Ce numéro n'est plus le dossier principal de ce compte. Rechargez la fiche."
       );
     }
 
@@ -830,6 +842,15 @@ async function attachRequester(
         // inside an array, and "who else can read this dossier?" is a question
         // the lab is required to be able to answer.
         linkedRequesterIds: next.map((l) => l.requester_id),
+        // Moved from the main dossier: the account no longer claims it as its
+        // own. Same access, honest presentation (« Ma fille — … », not « votre
+        // dernier bilan »). `requesterLinkedAt` is kept: access WAS activated then.
+        ...(fromOwn ?
+          {
+            requester_id: admin.firestore.FieldValue.delete(),
+            type: admin.firestore.FieldValue.delete(),
+          } :
+          {}),
       },
       {merge: true}
     );
@@ -842,6 +863,11 @@ interface LinkData {
   type?: string;
   label?: string;
   proof?: string;
+  /**
+   * The id is the account's MAIN dossier, and it belongs to a relative: move it
+   * (main dossier emptied, relative row added, one transaction).
+   */
+  fromOwn?: boolean;
 }
 
 /**
@@ -884,13 +910,14 @@ export const adminLinkRequester = onCall(
       (request.data?.proof as LinkProof) :
       undefined;
 
+    const fromOwn = request.data?.fromOwn === true;
     await attachRequester(
-      targetUid, requesterId, type as RequesterType, label, adminUid, proof
+      targetUid, requesterId, type as RequesterType, label, adminUid, proof, fromOwn
     );
     const ref = admin.firestore().doc(`users/${targetUid}`);
 
     // uid only — never the label (a third party's name) nor the dossier holder.
-    logger.info("adminLinkRequester", { uid: targetUid, by: adminUid });
+    logger.info("adminLinkRequester", { uid: targetUid, by: adminUid, fromOwn });
 
     const holderNotified = await notifyDossierHolder(requesterId);
     const after = readLinks((await ref.get()).data());

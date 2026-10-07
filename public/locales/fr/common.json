@@ -726,7 +726,15 @@
     "dash_pract_col_total_reports": "Bilans ouverts (total)",
     "dash_pract_never": "jamais",
     "dash_pract_none_team": "Aucun médecin en dehors des comptes de l’équipe.",
-    "dash_pract_team_note": "Comptes de l’équipe non comptés ici : {{n}}. Cochez « Inclure les comptes de l’équipe » en haut de la page pour les voir."
+    "dash_pract_team_note": "Comptes de l’équipe non comptés ici : {{n}}. Cochez « Inclure les comptes de l’équipe » en haut de la page pour les voir.",
+    "link_move_intro": "Dossier principal de ce compte : {{id}}. Est-ce en fait celui d’un proche (son enfant, un parent) ?",
+    "link_move_open": "Le passer en dossier d’un proche",
+    "link_move_explain": "Le compte garde l’accès à ce dossier, présenté comme celui d’un proche, avec le libellé ci-dessous. Son dossier principal sera vide jusqu’à sa propre première analyse.",
+    "link_move_placeholder": "Ex. : Mon fils — Adam",
+    "link_move_confirm": "Passer en dossier d’un proche",
+    "link_moving": "Déplacement…",
+    "link_moved": "Le dossier {{id}} est maintenant rattaché comme « {{label}} ». Le dossier principal de ce compte est vide.",
+    "req_own_only_hint": "Ne saisissez ici que le numéro de la personne elle-même. Un parent venu pour son enfant, sans dossier à lui : refusez cette demande, puis rattachez le dossier de l’enfant depuis sa fiche (onglet « Patients », carte « Dossiers d’un proche »)."
   },
   "theme": {
     "toggle": "Changer le thème",

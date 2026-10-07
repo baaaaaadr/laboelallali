@@ -83,7 +83,7 @@ une clé).
 ## Banc « médecin » (`npm run test:practitioner:ui`)
 
 `node scripts/test-practitioner-ui.js` — même mécanique et mêmes doublures que le
-banc « résultats ». 237 vérifications :
+banc « résultats ». 249 vérifications :
 - l'espace « Mes patients » (M1–M9) : une liste = un appel sans PDF, un patient
   ouvert = un PDF, le sien ; recherche, états bloqués, collision, changement de
   compte, arabe ;

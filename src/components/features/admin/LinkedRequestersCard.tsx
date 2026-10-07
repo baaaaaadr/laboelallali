@@ -16,11 +16,18 @@
  *  - **The reassurance line.** Staff (and patients) assume attaching a dossier
  *    moves it. It does not: the holder's own account keeps working identically.
  *    Saying so on screen prevents a refusal born of a misunderstanding.
+ *
+ * And one repair (07/10/2026): « Le passer en dossier d'un proche ». A parent
+ * who never had a test came with his daughter; the front desk typed HER number
+ * as HIS main dossier. It worked, but the app presented her results as his
+ * (« votre dernier bilan », her number on his barcode), and his first own test
+ * would have overwritten it. This moves the main dossier into the relatives,
+ * with a label, in one server transaction (`adminLinkRequester` + `fromOwn`).
  */
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, CheckCircle, Link2, Loader2, Trash2, Users } from 'lucide-react';
+import { AlertCircle, ArrowDownToLine, CheckCircle, Link2, Loader2, Trash2, Users } from 'lucide-react';
 import type { RequesterType } from '@/types/cyberlab';
 
 export interface LinkRow {
@@ -70,6 +77,10 @@ interface Props {
   onRemove: (requesterId: string) => void;
   onTest: (requesterId: string, type: RequesterType) => void;
   fmtDate: (ms: number) => string;
+  /** The account's MAIN dossier (null when it has none) — offered to be moved here. */
+  ownDossier?: string | null;
+  /** Move the main dossier into the relatives, with this label. */
+  onMoveOwn?: (label: string) => void;
 }
 
 export default function LinkedRequestersCard({
@@ -84,8 +95,14 @@ export default function LinkedRequestersCard({
   onRemove,
   onTest,
   fmtDate,
+  ownDossier = null,
+  onMoveOwn,
 }: Props) {
   const { t } = useTranslation('common');
+  // « Le passer en dossier d'un proche » — opened on demand, never by default:
+  // most main dossiers ARE the account holder's.
+  const [moving, setMoving] = useState(false);
+  const [moveLabel, setMoveLabel] = useState('');
   const newId = draft.requester_id;
   // Always 'patient', whatever an older draft held: a relative is a patient
   // dossier by definition, and the server refuses anything else.
@@ -229,6 +246,82 @@ export default function LinkedRequestersCard({
             </li>
           ))}
         </ul>
+      )}
+
+      {/* The main dossier is in fact a relative's (a parent who never had a
+          test, his child's number typed as his own): move it here. */}
+      {ownDossier && onMoveOwn && (
+        <div className="rounded-lg p-3 border border-dashed border-[var(--border-default)] space-y-3" data-testid="link-move-own">
+          <p className="text-sm text-[var(--text-secondary)]">
+            {t('admin.link_move_intro', 'Dossier principal de ce compte : {{id}}. Est-ce en fait celui d’un proche (son enfant, un parent) ?', {
+              id: ownDossier,
+            })}
+          </p>
+          {!moving ? (
+            <button
+              type="button"
+              onClick={() => setMoving(true)}
+              className="flex items-center gap-2 min-h-[44px] text-sm font-medium underline text-[var(--text-primary)]"
+              data-testid="link-move-open"
+            >
+              <ArrowDownToLine size={16} />
+              {t('admin.link_move_open', 'Le passer en dossier d’un proche')}
+            </button>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (moveLabel.trim()) onMoveOwn(moveLabel.trim());
+              }}
+              className="space-y-3"
+            >
+              <p className="text-xs text-[var(--text-secondary)]">
+                {t(
+                  'admin.link_move_explain',
+                  'Le compte garde l’accès à ce dossier, présenté comme celui d’un proche, avec le libellé ci-dessous. Son dossier principal sera vide jusqu’à sa propre première analyse.'
+                )}
+              </p>
+              <div>
+                <label htmlFor="link-move-label" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                  {t('admin.link_label_label', "De qui s'agit-il ?")}
+                </label>
+                <input
+                  id="link-move-label"
+                  type="text"
+                  required
+                  maxLength={60}
+                  value={moveLabel}
+                  onChange={(e) => setMoveLabel(e.target.value)}
+                  placeholder={t('admin.link_move_placeholder', 'Ex. : Mon fils — Adam')}
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  disabled={busy === 'move' || !moveLabel.trim()}
+                  className="button-bordeaux justify-center disabled:opacity-60 flex items-center gap-2"
+                  data-testid="link-move-confirm"
+                >
+                  {busy === 'move' ? <Loader2 size={18} className="animate-spin flex-shrink-0" /> : <ArrowDownToLine size={18} className="flex-shrink-0" />}
+                  {busy === 'move'
+                    ? t('admin.link_moving', 'Déplacement…')
+                    : t('admin.link_move_confirm', 'Passer en dossier d’un proche')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoving(false);
+                    setMoveLabel('');
+                  }}
+                  className="min-h-[44px] px-4 rounded-lg text-sm text-[var(--text-secondary)]"
+                >
+                  {t('cancel', 'Annuler')}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       )}
 
       {/* Who else reads the dossier we just touched — the confidentiality answer */}

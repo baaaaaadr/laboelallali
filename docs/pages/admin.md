@@ -161,6 +161,16 @@ The label is the **only nominative third-party datum in the system** — the lab
 
 i18n lives under `admin.link_*` (flat prefix, matching the local `dash_*` / `test_*` / `req_*` convention — **not** a nested `admin.links.*` object), fr **and** ar.
 
+### « Le passer en dossier d'un proche » — a child's number typed as the parent's own (07/10/2026)
+
+**The incident (06/10/2026).** A father who never had a test at the lab came with his daughter. He signed up; signup filed his own access request; the front desk validated it in the Demandes tab **with his daughter's dossier number**. It worked — he saw her results — but the app treated them as HIS: the home page's « votre dernier bilan », her number as HIS barcode on the profile, and his first own test would have overwritten the number (her results vanishing from his app). The right path for such a parent is the relatives card, where her dossier gets a label (« Ma fille — … »); an account with no dossier of its own and one relative opens straight on that relative (`resolveIdentities` / `authorizedIdentities` fall back to the first relative).
+
+**The repair.** When the selected account HAS a main dossier, `LinkedRequestersCard` shows a dashed box (`data-testid="link-move-own"`): « Dossier principal de ce compte : N. Est-ce en fait celui d'un proche (son enfant, un parent) ? » → « Le passer en dossier d'un proche » opens a one-field form (« De qui s'agit-il ? », required) → `moveOwnToRelative(label)` in the page → **`adminLinkRequester({uid, requester_id: N, type: 'patient', label, fromOwn: true})`**. Server side (`attachRequester(..., fromOwn)`), ONE transaction: the id must STILL be the account's main dossier (else « Rechargez la fiche » — a stale screen must not empty a dossier someone just corrected), the relative row is added, and `requester_id` / `type` are deleted (`requesterLinkedAt` is kept — access WAS activated then). Without `fromOwn`, attaching the main dossier as a relative is still refused. Same holder notification as any attach (an account holding N as its own dossier, if any, is told a relative can read it). The page then clears the main-dossier field, patches the search results and shows `admin.link_moved`. Staff level, like every attach. The move box is opened on demand only: most main dossiers ARE the holder's.
+
+**Prevention.** The Demandes tab now says, under the queue title (`admin.req_own_only_hint`, `data-testid="req-own-only-hint"`): enter only the person's OWN number; a parent who came for his child and has no dossier → refuse the request, then attach the child from his fiche (Patients tab, « Dossiers d'un proche »).
+
+Covered by `scripts/test-practitioner-ui.js` M20 (the box, the locked confirm without a label, the exact payload with `fromOwn`, the success message, the emptied main-dossier field, the hint in Demandes).
+
 ## Doctor access — the Patients tab, third card (23/09/2026)
 
 `PractitionerCard` (`src/components/features/admin/PractitionerCard.tsx`) renders below `LinkedRequestersCard`, for the selected account. It gives the account a prescribing doctor's **Qalam code**, which opens `/[lang]/mes-patients` (see `docs/pages/mes-patients.md`).

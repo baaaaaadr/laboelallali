@@ -29,7 +29,9 @@
  *    médecins ayant accès et leurs actions rapides (M18) ;
  *  - l'engagement demandé UNE fois, avant tout appel, au médecin activé
  *    directement par le labo (M17) ;
- *  - le tableau de bord « Les médecins » (M19).
+ *  - le tableau de bord « Les médecins » (M19) ;
+ *  - l'admin : passer le dossier principal d'un compte en dossier d'un proche
+ *    (M20 — un parent sans dossier, dont l'enfant avait été saisi comme lui).
  *
  * ⚠ Aucune feuille de style : les classes responsives (`hidden lg:block`) sont
  *   sans effet ici — on vérifie la structure, les textes et les appels.
@@ -1109,6 +1111,63 @@ async function m19Dashboard(browser) {
   await p.close();
 }
 
+// ── M20 — passer le dossier principal en dossier d'un proche ────────────────
+// 06/10/2026 : un père qui n'a jamais fait d'analyse vient avec sa fille ; à
+// l'accueil, le numéro de la fille est validé comme SON dossier. Ça marche, mais
+// l'application présente les résultats de sa fille comme les siens. Le bouton
+// déplace le numéro vers « Dossiers d'un proche », avec un libellé.
+async function m20MoveOwnToRelative(browser) {
+  scenario('M20 — admin : « Le passer en dossier d’un proche » (parent sans dossier, enfant saisi comme lui)');
+  const PARENT = {
+    uid: 'u-banc-0041', email: 'parent.banc@example.test', hasProfile: true, fullName: 'Parent Banc', phone: '0600000041',
+    createdAt: '2026-10-06T12:00:00Z', dateOfBirth: '1982-02-11', requester_id: '900041', type: 'patient',
+    links: [], linkedCount: 0, practitioner: null,
+  };
+  const p = await freshPage(browser, {
+    page: 'admin',
+    profile: STAFF,
+    server: { identities: {} },
+    responses: {
+      adminSearchPatients: { results: [PARENT], truncated: false },
+      adminLinkRequester: {
+        success: true,
+        links: [{ requester_id: '900041', type: 'patient', label: 'Ma fille — Démo', linkedAt: Date.UTC(2026, 9, 7, 9, 0) }],
+        holderNotified: false,
+      },
+    },
+  });
+  await p.getByPlaceholder(/Email, nom/).waitFor({ timeout: 8000 });
+  await adminSearch(p, 'parent.banc@example.test');
+  await p.waitForSelector('[data-testid="link-move-own"]', { timeout: 5000 });
+  ok('la carte « Dossiers d’un proche » propose de déplacer le dossier principal (900041)',
+    (await visibleText(p, '[data-testid="link-move-own"]')).includes('900041'));
+  ok('le champ du dossier principal porte 900041 avant', (await p.inputValue('input[placeholder="Ex. : 12345"]')) === '900041');
+  await p.getByTestId('link-move-open').click();
+  const confirm = p.getByTestId('link-move-confirm');
+  ok('sans libellé : bouton verrouillé', await confirm.isDisabled());
+  await p.fill('#link-move-label', 'Ma fille — Démo');
+  ok('libellé saisi : déverrouillé', !(await confirm.isDisabled()));
+  await confirm.click();
+  await p.waitForTimeout(400);
+  const sent = await calls(p, 'adminLinkRequester');
+  ok('UN appel : ce compte, ce numéro, type patient, le libellé, fromOwn',
+    sent.length === 1 && same(sent[0], { uid: PARENT.uid, requester_id: '900041', type: 'patient', label: 'Ma fille — Démo', fromOwn: true }),
+    JSON.stringify(sent));
+  const text = await visibleText(p, '#app');
+  ok('message de succès : rattaché comme « Ma fille — Démo », dossier principal vide',
+    text.includes('Le dossier 900041 est maintenant rattaché comme « Ma fille — Démo »'));
+  ok('le proche apparaît dans la liste', text.includes('Ma fille — Démo'));
+  ok('le champ du dossier principal est vide', (await p.inputValue('input[placeholder="Ex. : 12345"]')) === '');
+  ok('la proposition de déplacement disparaît (plus de dossier principal)', !(await p.$('[data-testid="link-move-own"]')));
+  // Onglet Demandes : le rappel, là où l'erreur avait été faite.
+  await p.getByRole('button', { name: /Demandes/ }).first().click();
+  await p.waitForSelector('[data-testid="req-own-only-hint"]', { timeout: 5000 });
+  ok('onglet « Demandes » : rappel « ne saisissez ici que le numéro de la personne elle-même »',
+    (await visibleText(p, '[data-testid="req-own-only-hint"]')).includes('que le numéro de la personne elle-même'));
+  assertClean(p, await visibleText(p, '#app'));
+  await p.close();
+}
+
 async function main() {
   console.log('\n══ Banc « médecin » — /mes-patients sous le vrai ResultsProvider ══');
   await build();
@@ -1133,6 +1192,7 @@ async function main() {
     await m17EngagementGate(browser);
     await m18AdminDoctorsTab(browser);
     await m19Dashboard(browser);
+    await m20MoveOwnToRelative(browser);
   } finally {
     await browser.close();
   }
