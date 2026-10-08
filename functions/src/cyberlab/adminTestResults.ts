@@ -22,6 +22,7 @@
  *    id never ships that practitioner's whole nominative patient roster to the browser;
  *  - nothing is written to Firestore or logged (only the error kind/status).
  */
+import { withDossierDates } from "./dossierDate";
 import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { defineSecret, defineString } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
@@ -140,7 +141,8 @@ export const adminTestResults = onCall(
     }
 
     try {
-      const resp = await callCyberlab(cfg, req);
+      // Same dossier date as the patient sees — see ./dossierDate.ts.
+      const resp = withDossierDates(await callCyberlab(cfg, req));
       const isPatient = req.type === "patient";
 
       // A PATIENT id returns one person's own dossiers, so keeping the name is

@@ -854,7 +854,8 @@
     "req_proof_procuration": "توكيل",
     "req_need_label": "حدّدوا من هو.",
     "req_need_proof": "اختاروا الأساس الذي يُمنح عليه الوصول.",
-    "req_fulfilled_relative": "تم تفعيل الوصول: يرى {{name}} الآن « {{label}} »."
+    "req_fulfilled_relative": "تم تفعيل الوصول: يرى {{name}} الآن « {{label}} ».",
+    "req_dob": "تاريخ الميلاد: {{date}} ({{age}} سنة)"
   },
   "theme": {
     "toggle": "تغيير المظهر",

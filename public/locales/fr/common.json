@@ -757,7 +757,8 @@
     "req_proof_procuration": "Procuration",
     "req_need_label": "Indiquez de qui il s’agit.",
     "req_need_proof": "Choisissez sur quelle base l’accès est donné.",
-    "req_fulfilled_relative": "Accès validé : {{name}} voit maintenant « {{label}} »."
+    "req_fulfilled_relative": "Accès validé : {{name}} voit maintenant « {{label}} ».",
+    "req_dob": "Né(e) le {{date}} ({{age}} ans)"
   },
   "theme": {
     "toggle": "Changer le thème",

@@ -174,7 +174,7 @@ interface ArInput {
   label?: string;
   proof?: ArProof | '';
 }
-interface AccessRequest { uid: string; fullName: string; email: string; phone: string; createdAt: number | null; }
+interface AccessRequest { uid: string; fullName: string; email: string; phone: string; dateOfBirth?: string; createdAt: number | null; }
 /** Outcome of a staff probe on one requester_id, kept for the grant gate. */
 interface TestedId { status: 'ok' | 'empty' | 'error'; name: string; count: number; }
 
@@ -1408,6 +1408,16 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         <p className="font-semibold text-[var(--text-primary)] truncate">{req.fullName || '—'}</p>
                         <p className="text-sm text-[var(--text-secondary)] truncate">{req.email}</p>
                         {req.phone && <p className="text-sm text-[var(--text-secondary)]">{req.phone}</p>}
+                        {/* Date of birth + age: how the front desk finds the right
+                            patient in Qalam before typing a number (Dr Aziz, 08/10/2026). */}
+                        {req.dateOfBirth && (
+                          <p className="text-sm text-[var(--text-primary)] font-medium" data-testid="ar-dob">
+                            {t('admin.req_dob', 'Né(e) le {{date}} ({{age}} ans)', {
+                              date: fmtDate(req.dateOfBirth),
+                              age: Math.max(0, Math.floor((Date.now() - Date.parse(req.dateOfBirth)) / (365.25 * 86400000))),
+                            })}
+                          </p>
+                        )}
                         {req.createdAt != null && (
                           <p className="text-xs text-[var(--text-tertiary)] mt-1 flex items-center gap-1">
                             <Clock size={13} className="flex-shrink-0" />

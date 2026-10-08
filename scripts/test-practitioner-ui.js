@@ -1225,7 +1225,7 @@ async function m21EditProfile(browser) {
 // d'inscription se valide directement en rattachant l'enfant comme proche.
 async function m22RequestForRelative(browser) {
   scenario('M22 — Demandes : « Accès pour : un proche » rattache l’enfant et clôt la demande');
-  const REQ = { uid: 'u-banc-0061', fullName: 'Parent Demande', email: 'parent.demande@example.test', phone: '0600000061', createdAt: Date.UTC(2026, 9, 7, 16, 25) };
+  const REQ = { uid: 'u-banc-0061', fullName: 'Parent Demande', email: 'parent.demande@example.test', phone: '0600000061', dateOfBirth: '1982-02-11', createdAt: Date.UTC(2026, 9, 7, 16, 25) };
   const p = await freshPage(browser, {
     page: 'admin',
     profile: STAFF,
@@ -1234,6 +1234,8 @@ async function m22RequestForRelative(browser) {
   });
   await p.getByRole('button', { name: /Demandes/ }).first().click();
   await p.waitForSelector('[data-testid="ar-for"]', { timeout: 8000 });
+  ok('la carte montre la date de naissance et l’âge, pour retrouver le bon patient',
+    /Né\(e\) le 11 février 1982 \(\d+ ans\)/.test(await p.textContent('[data-testid="ar-dob"]')), await p.textContent('[data-testid="ar-dob"]'));
   ok('par défaut : accès pour lui-même, sans champs proche',
     (await p.getAttribute('[data-testid="ar-for-self"]', 'aria-checked')) === 'true' && !(await p.$('[data-testid="ar-relative-fields"]')));
   await p.getByPlaceholder('Identifiant patient (requester_id)').first().fill('900061');

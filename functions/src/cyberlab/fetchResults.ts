@@ -32,6 +32,7 @@ import {
   normalizeRequesterId,
 } from "./client";
 import {hasAnyIdentity, resolveIdentity} from "./identities";
+import {withDossierDates} from "./dossierDate";
 import {recordPractitionerReport, recordPractitionerVisit} from "../admin/practitionerUsage";
 import {
   alertRecipients,
@@ -352,7 +353,8 @@ export async function fetchResultsForUser(
     if (include) req.include_pdf = include;
   }
 
-  const resp = await callCyberlab(cfg, req);
+  // The dossier's date, not its record's creation date — see ./dossierDate.ts.
+  const resp = withDossierDates(await callCyberlab(cfg, req));
 
   // Stamp usage on the LIST fetch only — that's the one that runs when the patient
   // opens the app, so it marks "this account is used". Per-PDF fetches would just

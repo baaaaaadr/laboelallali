@@ -595,13 +595,23 @@ export const adminListAccessRequests = onCall(
       .where("status", "==", "pending")
       .limit(200)
       .get();
+    // The date of birth comes from the PROFILE (the request doc never had it):
+    // it is what tells the front desk which Qalam patient this is before typing
+    // a dossier number (Dr Aziz, 08/10/2026). Name and phone too, from the
+    // profile when present — the front desk may have corrected them since.
+    const profiles = snap.empty ?
+      [] :
+      await admin.firestore().getAll(...snap.docs.map((d) => admin.firestore().doc(`users/${d.id}`)));
+    const profileOf = new Map(profiles.map((p) => [p.id, p.data() || {}]));
     const requests = snap.docs.map((doc) => {
       const d = doc.data();
+      const u = profileOf.get(doc.id) || {};
       return {
         uid: doc.id,
-        fullName: d.fullName || "",
-        email: d.email || "",
-        phone: d.phone || "",
+        fullName: u.fullName || d.fullName || "",
+        email: d.email || u.email || "",
+        phone: u.phone || d.phone || "",
+        dateOfBirth: typeof u.dateOfBirth === "string" ? u.dateOfBirth : "",
         createdAt: d.createdAt?.toMillis ? d.createdAt.toMillis() : null,
       };
     });

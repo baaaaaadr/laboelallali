@@ -705,3 +705,9 @@ Au 23/09/2026 : `MOUSTZOU` → 5 bilans, 4 patients.
 - **Reprise de l'historique** d'un prescripteur activé, en une fois, au lieu de ré-enregistrer chaque dossier.
 - Un **identifiant patient stable** dans la réponse, pour séparer deux homonymes.
 - Au-delà de 50 bilans : pagination ou filtre par date (aujourd'hui, seuls les 50 plus récents sont visibles).
+
+## 14. La date affichée d'un dossier (08/10/2026)
+
+`date_dossier` est la date de **création** de la fiche dans Qalam : un devis préparé à l'avance porte le jour où il a été saisi (remarque de Dr Aziz sur le dossier 081026013 : bilan du 08/10, application au 07/10). Or Qalam numérote les dossiers par **leur** date : `JJMMAA` + un rang (081026013 = 13e dossier du 08/10/26). Mesuré sur 62 dossiers réels des comptes de l'application : 57 numéros commencent par le jour même de `date_dossier`, 5 par un jour **postérieur** (1 jour à 3 semaines et demie), jamais antérieur, jamais illisible.
+
+Le pont corrige donc la date une fois pour toutes (`functions/src/cyberlab/dossierDate.ts`, appliqué dans `fetchResults` et `adminTestResults`) : si le jour du numéro est postérieur (120 jours au plus), `date_dossier` devient ce jour à midi heure du labo, et la valeur d'origine est conservée dans `date_creation`. Sinon rien ne change. Tous les écrans (patient, médecin, accueil, page d'accueil, statistiques, tris) suivent sans modification. Tests : `functions/scripts/test-dossier-date.js`. À demander un jour à Si Brahim : un champ « date du dossier » explicite dans l'API, qui rendrait cette déduction inutile.
