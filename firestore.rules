@@ -53,6 +53,10 @@ service cloud.firestore {
     // profile and read that doctor's whole roster. Keep the two lists identical —
     // scripts/test-practitioner.js checks it.
     //
+    // `linkedRelativeDobs` (08/10/2026) is the flattened dates of birth of the
+    // attached relatives, read by the admin queue to say « this new patient may
+    // already be a relative here ». Server-written like `linkedRequesterIds`.
+    //
     // `practitionerEngagement` (24/09/2026) is the doctor's confidentiality
     // engagement — the date and version he accepted, the lab's proof. Written
     // only by requestPractitionerAccess / acceptPractitionerEngagement: a client
@@ -67,7 +71,7 @@ service cloud.firestore {
               .hasAny(['role', 'requester_id', 'type', 'lastResultsAt',
                        'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
                        'lastRelanceAt', 'relanceCount',
-                       'linkedRequesters', 'linkedRequesterIds',
+                       'linkedRequesters', 'linkedRequesterIds', 'linkedRelativeDobs',
                        'practitioner', 'practitionerEngagement']);
 
       // Update: allowed only if it does not CHANGE any privileged field. diff()
@@ -80,7 +84,7 @@ service cloud.firestore {
               .hasAny(['role', 'requester_id', 'type', 'lastResultsAt',
                        'firstResultsAt', 'resultsViewCount', 'requesterLinkedAt',
                        'lastRelanceAt', 'relanceCount',
-                       'linkedRequesters', 'linkedRequesterIds',
+                       'linkedRequesters', 'linkedRequesterIds', 'linkedRelativeDobs',
                        'practitioner', 'practitionerEngagement']);
     }
 

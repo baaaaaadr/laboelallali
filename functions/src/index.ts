@@ -49,6 +49,9 @@ export {
   adminLinkRequester,
   adminUnlinkRequester,
   adminListRequesterLinks,
+  // A relative's last name, first name and date of birth, completed after the
+  // link (08/10/2026) — what makes « Maman » findable by her own name.
+  adminSetLinkIdentity,
   // Patient-initiated requests for a relative's dossier. The patient may ASK
   // online; only staff may grant, in person, and the proof they saw is recorded.
   requestRelativeAccess,

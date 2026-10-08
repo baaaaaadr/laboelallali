@@ -23,18 +23,37 @@
  * (« votre dernier bilan », her number on his barcode), and his first own test
  * would have overwritten it. This moves the main dossier into the relatives,
  * with a label, in one server transaction (`adminLinkRequester` + `fromOwn`).
+ *
+ * And the relative's IDENTITY (Dr Aziz, 08/10/2026): last name, first name and
+ * date of birth, typed as in Qalam, required on every new attachment and
+ * completable on the old ones (« Compléter l'identité » → `adminSetLinkIdentity`).
+ * Aziz typed the mother's name in the search and found nothing: the app knew
+ * her only as « Maman » of her daughter. A row found THROUGH the search is
+ * highlighted (`highlightIds`).
  */
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, ArrowDownToLine, CheckCircle, Link2, Loader2, Trash2, Users } from 'lucide-react';
+import { AlertCircle, ArrowDownToLine, CheckCircle, Link2, Loader2, Pencil, Search, Trash2, Users } from 'lucide-react';
 import type { RequesterType } from '@/types/cyberlab';
+import RelativeIdentityFields from './RelativeIdentityFields';
+import {
+  EMPTY_IDENTITY,
+  identityLabel,
+  parseRelativeIdentity,
+  type IdentityField,
+  type RelativeIdentity,
+} from '@/lib/results/relativeIdentity';
 
 export interface LinkRow {
   requester_id: string;
   type: string;
   label: string;
   linkedAt: number | null;
+  /** The relative's identity ("" / absent on links made before 08/10/2026). */
+  lastName?: string;
+  firstName?: string;
+  dateOfBirth?: string;
 }
 
 export interface AuditAccount {
@@ -46,11 +65,15 @@ export interface AuditAccount {
   linkedAt: number | null;
 }
 
-/** The attach form's three fields. Held by the PAGE, not by this component. */
+/** The attach form's fields. Held by the PAGE, not by this component. */
 export interface LinkDraft {
   requester_id: string;
   type: RequesterType;
   label: string;
+  /** The relative's identity, as in Qalam (08/10/2026). */
+  lastName: string;
+  firstName: string;
+  dateOfBirth: string;
 }
 
 interface Props {
@@ -73,14 +96,22 @@ interface Props {
    */
   draft: LinkDraft;
   onDraft: (patch: Partial<LinkDraft>) => void;
-  onAdd: (requesterId: string, type: RequesterType, label: string) => void;
+  onAdd: (requesterId: string, type: RequesterType, label: string, identity: RelativeIdentity) => void;
   onRemove: (requesterId: string) => void;
   onTest: (requesterId: string, type: RequesterType) => void;
   fmtDate: (ms: number) => string;
+  /** "YYYY-MM-DD" → long date (a relative's date of birth). */
+  fmtDob?: (iso: string) => string;
   /** The account's MAIN dossier (null when it has none) — offered to be moved here. */
   ownDossier?: string | null;
-  /** Move the main dossier into the relatives, with this label. */
-  onMoveOwn?: (label: string) => void;
+  /** Move the main dossier into the relatives, with this label and identity. */
+  onMoveOwn?: (label: string, identity: RelativeIdentity) => void;
+  /** Complete or correct the identity of an attached relative. */
+  onSetIdentity?: (requesterId: string, identity: RelativeIdentity) => void;
+  /** The name the lab returned for a probed dossier (« Tester »), if any. */
+  labNameFor?: (requesterId: string) => string | undefined;
+  /** Rows the admin search matched (found by the relative's name or date). */
+  highlightIds?: string[];
 }
 
 export default function LinkedRequestersCard({
@@ -95,14 +126,22 @@ export default function LinkedRequestersCard({
   onRemove,
   onTest,
   fmtDate,
+  fmtDob = (iso) => iso,
   ownDossier = null,
   onMoveOwn,
+  onSetIdentity,
+  labNameFor,
+  highlightIds = [],
 }: Props) {
   const { t } = useTranslation('common');
   // « Le passer en dossier d'un proche » — opened on demand, never by default:
   // most main dossiers ARE the account holder's.
   const [moving, setMoving] = useState(false);
   const [moveLabel, setMoveLabel] = useState('');
+  const [moveIdentity, setMoveIdentity] = useState<RelativeIdentity>({ ...EMPTY_IDENTITY });
+  // The row whose identity is being completed, and what is typed.
+  const [identityFor, setIdentityFor] = useState<string | null>(null);
+  const [identityDraft, setIdentityDraft] = useState<RelativeIdentity>({ ...EMPTY_IDENTITY });
   const newId = draft.requester_id;
   // Always 'patient', whatever an older draft held: a relative is a patient
   // dossier by definition, and the server refuses anything else.
@@ -119,13 +158,36 @@ export default function LinkedRequestersCard({
   // access to a medical record.
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
+  const newIdentity: RelativeIdentity = {
+    lastName: draft.lastName ?? '',
+    firstName: draft.firstName ?? '',
+    dateOfBirth: draft.dateOfBirth ?? '',
+  };
+  const newCheck = parseRelativeIdentity(newIdentity);
+  const fieldName = (f: IdentityField) =>
+    f === 'lastName'
+      ? t('admin.rel_last_name', 'Nom du proche')
+      : f === 'firstName'
+        ? t('admin.rel_first_name', 'Prénom du proche')
+        : t('admin.rel_dob', 'Date de naissance du proche');
+  // A locked button always says why.
+  const addWhy = !newId.trim()
+    ? null
+    : !newLabel.trim()
+      ? t('admin.link_need_label', 'Indiquez de qui il s’agit (le libellé que le patient verra).')
+      : !newCheck.ok
+        ? t('admin.rel_need_field', 'À compléter : {{field}}.', { field: fieldName(newCheck.field) })
+        : null;
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newId.trim() || !newLabel.trim()) return;
+    if (!newId.trim() || !newLabel.trim() || !newCheck.ok) return;
     // The page clears the draft once the attach succeeds — clearing it here
     // would wipe the operator's input even when the callable rejects it.
-    onAdd(newId.trim(), newType, newLabel.trim());
+    onAdd(newId.trim(), newType, newLabel.trim(), newCheck.value);
   };
+  const moveCheck = parseRelativeIdentity(moveIdentity);
+  const editCheck = parseRelativeIdentity(identityDraft);
 
   const inputClass =
     'w-full rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm';
@@ -175,13 +237,37 @@ export default function LinkedRequestersCard({
         </p>
       ) : (
         <ul className="space-y-2">
-          {links.map((l) => (
+          {links.map((l) => {
+            const found = highlightIds.includes(l.requester_id);
+            const who = identityLabel(l);
+            return (
             <li
               key={l.requester_id}
-              className="flex items-center justify-between gap-3 rounded-lg p-3 bg-[var(--background-secondary)]"
+              className="rounded-lg p-3 bg-[var(--background-secondary)] space-y-3"
+              style={found ? { boxShadow: 'inset 0 0 0 2px var(--color-fuchsia-accent)' } : undefined}
+              data-testid="link-row"
+              data-id={l.requester_id}
             >
+            <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-medium text-[var(--text-primary)] truncate">{l.label}</p>
+                {found && (
+                  <p className="flex items-center gap-1 text-xs font-semibold text-[var(--color-fuchsia-accent)]" data-testid="link-found">
+                    <Search size={12} className="flex-shrink-0" />
+                    {t('admin.rel_found_by_search', 'Trouvé par votre recherche')}
+                  </p>
+                )}
+                {/* The relative's identity — or the invitation to complete it. */}
+                {who ? (
+                  <p className="text-sm text-[var(--text-primary)]" data-testid="link-identity">
+                    {who}
+                    {l.dateOfBirth ? ` · ${t('admin.rel_born', 'né(e) le {{date}}', { date: fmtDob(l.dateOfBirth) })}` : ''}
+                  </p>
+                ) : (
+                  <p className="text-sm text-[var(--status-warning)]" data-testid="link-identity-missing">
+                    {t('admin.rel_identity_missing', 'Identité non renseignée : introuvable par son nom.')}
+                  </p>
+                )}
                 {confirmingId === l.requester_id ? (
                   <p className="text-sm text-[var(--status-error)]">
                     {t('admin.link_remove_confirm', 'Retirer « {{label}} » de ce compte ?', {
@@ -225,6 +311,33 @@ export default function LinkedRequestersCard({
                   </>
                 ) : (
                   <>
+                    {onSetIdentity && identityFor !== l.requester_id && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIdentityFor(l.requester_id);
+                          setIdentityDraft({
+                            lastName: l.lastName || '',
+                            firstName: l.firstName || '',
+                            dateOfBirth: l.dateOfBirth || '',
+                          });
+                        }}
+                        aria-label={
+                          who
+                            ? t('admin.rel_identity_edit', 'Modifier l’identité')
+                            : t('admin.rel_identity_complete', 'Compléter l’identité')
+                        }
+                        title={
+                          who
+                            ? t('admin.rel_identity_edit', 'Modifier l’identité')
+                            : t('admin.rel_identity_complete', 'Compléter l’identité')
+                        }
+                        className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-[var(--text-secondary)]"
+                        data-testid="link-identity-open"
+                      >
+                        <Pencil size={17} />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => onTest(l.requester_id, l.type as RequesterType)}
@@ -243,8 +356,51 @@ export default function LinkedRequestersCard({
                   </>
                 )}
               </div>
+            </div>
+            {/* Complete / correct the identity — touches nothing else. */}
+            {identityFor === l.requester_id && onSetIdentity && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (editCheck.ok) onSetIdentity(l.requester_id, editCheck.value);
+                }}
+                className="space-y-3 pt-3 border-t border-[var(--border-default)]"
+                data-testid="link-identity-form"
+              >
+                <RelativeIdentityFields
+                  idPrefix={`link-id-${l.requester_id}`}
+                  value={identityDraft}
+                  onChange={(patch) => setIdentityDraft((d) => ({ ...d, ...patch }))}
+                  labName={labNameFor?.(l.requester_id)}
+                />
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={!editCheck.ok || busy === `identity:${l.requester_id}`}
+                    className="button-bordeaux justify-center disabled:opacity-60 flex items-center gap-2"
+                    data-testid="link-identity-save"
+                  >
+                    {busy === `identity:${l.requester_id}` && <Loader2 size={18} className="animate-spin flex-shrink-0" />}
+                    {t('admin.rel_identity_save', 'Enregistrer l’identité')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIdentityFor(null)}
+                    className="min-h-[44px] px-4 rounded-lg text-sm text-[var(--text-secondary)]"
+                  >
+                    {t('cancel', 'Annuler')}
+                  </button>
+                  {!editCheck.ok && (
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      {t('admin.rel_need_field', 'À compléter : {{field}}.', { field: fieldName(editCheck.field) })}
+                    </span>
+                  )}
+                </div>
+              </form>
+            )}
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
 
@@ -271,7 +427,7 @@ export default function LinkedRequestersCard({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (moveLabel.trim()) onMoveOwn(moveLabel.trim());
+                if (moveLabel.trim() && moveCheck.ok) onMoveOwn(moveLabel.trim(), moveCheck.value);
               }}
               className="space-y-3"
             >
@@ -296,10 +452,16 @@ export default function LinkedRequestersCard({
                   className={inputClass}
                 />
               </div>
+              <RelativeIdentityFields
+                idPrefix="link-move"
+                value={moveIdentity}
+                onChange={(patch) => setMoveIdentity((d) => ({ ...d, ...patch }))}
+                labName={ownDossier ? labNameFor?.(ownDossier) : undefined}
+              />
               <div className="flex flex-wrap gap-3">
                 <button
                   type="submit"
-                  disabled={busy === 'move' || !moveLabel.trim()}
+                  disabled={busy === 'move' || !moveLabel.trim() || !moveCheck.ok}
                   className="button-bordeaux justify-center disabled:opacity-60 flex items-center gap-2"
                   data-testid="link-move-confirm"
                 >
@@ -313,6 +475,7 @@ export default function LinkedRequestersCard({
                   onClick={() => {
                     setMoving(false);
                     setMoveLabel('');
+                    setMoveIdentity({ ...EMPTY_IDENTITY });
                   }}
                   className="min-h-[44px] px-4 rounded-lg text-sm text-[var(--text-secondary)]"
                 >
@@ -384,6 +547,12 @@ export default function LinkedRequestersCard({
             )}
           </p>
         </div>
+        <RelativeIdentityFields
+          idPrefix="link-add"
+          value={newIdentity}
+          onChange={(patch) => onDraft(patch)}
+          labName={newId.trim() ? labNameFor?.(newId.trim()) : undefined}
+        />
         {/* No type selector: a relative is ALWAYS a patient dossier. A doctor's
             code attached here would drop his whole named roster into the
             family tabs — doctors get the separate « accès médecin » instead.
@@ -392,7 +561,7 @@ export default function LinkedRequestersCard({
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={busy === 'add' || !newId.trim() || !newLabel.trim()}
+            disabled={busy === 'add' || !newId.trim() || !newLabel.trim() || !newCheck.ok}
             className="button-bordeaux justify-center disabled:opacity-60 flex items-center gap-2"
           >
             <Link2 size={18} />
@@ -409,6 +578,11 @@ export default function LinkedRequestersCard({
             {t('admin.link_test_first', "Tester d'abord")}
           </button>
         </div>
+        {addWhy && (
+          <p className="text-xs text-[var(--text-secondary)]" data-testid="link-add-why">
+            {addWhy}
+          </p>
+        )}
         <p className="text-xs text-[var(--text-secondary)]">
           {t(
             'admin.link_test_warning',

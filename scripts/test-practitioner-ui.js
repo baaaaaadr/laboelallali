@@ -1149,12 +1149,19 @@ async function m20MoveOwnToRelative(browser) {
   const confirm = p.getByTestId('link-move-confirm');
   ok('sans libellé : bouton verrouillé', await confirm.isDisabled());
   await p.fill('#link-move-label', 'Ma fille — Démo');
-  ok('libellé saisi : déverrouillé', !(await confirm.isDisabled()));
+  ok('libellé seul : toujours verrouillé (identité du proche demandée)', await confirm.isDisabled());
+  await p.fill('#link-move-last', 'DÉMO');
+  await p.fill('#link-move-first', 'Rime');
+  await p.fill('#link-move-dob', '2014-06-01');
+  ok('libellé + nom, prénom, date de naissance : déverrouillé', !(await confirm.isDisabled()));
   await confirm.click();
   await p.waitForTimeout(400);
   const sent = await calls(p, 'adminLinkRequester');
-  ok('UN appel : ce compte, ce numéro, type patient, le libellé, fromOwn',
-    sent.length === 1 && same(sent[0], { uid: PARENT.uid, requester_id: '900041', type: 'patient', label: 'Ma fille — Démo', fromOwn: true }),
+  ok('UN appel : ce compte, ce numéro, type patient, le libellé, fromOwn, l’identité',
+    sent.length === 1 && same(sent[0], {
+      uid: PARENT.uid, requester_id: '900041', type: 'patient', label: 'Ma fille — Démo', fromOwn: true,
+      identity: { lastName: 'DÉMO', firstName: 'Rime', dateOfBirth: '2014-06-01' },
+    }),
     JSON.stringify(sent));
   const text = await visibleText(p, '#app');
   ok('message de succès : rattaché comme « Ma fille — Démo », dossier principal vide',
@@ -1244,14 +1251,22 @@ async function m22RequestForRelative(browser) {
   ok('« un proche » : libellé et justificatif apparaissent, bouton verrouillé', !!(await p.$('[data-testid="ar-relative-fields"]')) && (await validate.isDisabled()));
   ok('…et il dit pourquoi (libellé)', (await p.textContent('[data-testid="ar-why"]')).includes('de qui'));
   await p.fill('[data-testid="ar-label"]', 'Ma fille — Démo');
-  ok('libellé saisi, pas de justificatif : verrouillé, « sur quelle base »', (await validate.isDisabled()) && (await p.textContent('[data-testid="ar-why"]')).includes('base'));
+  ok('libellé saisi, pas d’identité : verrouillé, « nom, prénom et date de naissance »',
+    (await validate.isDisabled()) && (await p.textContent('[data-testid="ar-why"]')).includes('date de naissance du proche'));
+  await p.fill(`#ar-${REQ.uid}-last`, 'DÉMO');
+  await p.fill(`#ar-${REQ.uid}-first`, 'Rime');
+  await p.fill(`#ar-${REQ.uid}-dob`, '2014-06-01');
+  ok('identité saisie, pas de justificatif : verrouillé, « sur quelle base »', (await validate.isDisabled()) && (await p.textContent('[data-testid="ar-why"]')).includes('base'));
   await p.getByTestId('ar-proof-autorite_parentale').click();
   ok('justificatif touché : déverrouillé', !(await validate.isDisabled()));
   await validate.click();
   await p.waitForTimeout(400);
   const sent = await calls(p, 'adminFulfillAccessRequest');
   ok('UN appel : ce compte, ce numéro, patient, proche avec libellé et justificatif',
-    sent.length === 1 && same(sent[0], { uid: REQ.uid, requester_id: '900061', type: 'patient', forRelative: { label: 'Ma fille — Démo', proof: 'autorite_parentale' } }),
+    sent.length === 1 && same(sent[0], {
+      uid: REQ.uid, requester_id: '900061', type: 'patient',
+      forRelative: { label: 'Ma fille — Démo', proof: 'autorite_parentale', lastName: 'DÉMO', firstName: 'Rime', dateOfBirth: '2014-06-01' },
+    }),
     JSON.stringify(sent));
   ok('message : « voit maintenant « Ma fille — Démo » »', (await visibleText(p, '#app')).includes('voit maintenant « Ma fille — Démo »'));
   assertClean(p, await visibleText(p, '#app'));
@@ -1314,6 +1329,169 @@ async function m23ViewAs(browser) {
   await p.close();
 }
 
+// ── M24 — retrouver un proche par SON nom (Dr Aziz, 08/10/2026) ────────────
+// Aziz tape le nom de la maman : rien, l'application ne la connaît que comme
+// « Maman » de sa fille. Désormais chaque proche a nom, prénom et date de
+// naissance ; la recherche le trouve ; et quand la maman crée son propre compte,
+// l'admin voit son numéro de dossier déjà présent.
+async function m24RelativeIdentity(browser) {
+  scenario('M24 — proche retrouvable par son nom ; la maman qui crée ensuite son compte');
+  const MAMAN = { requester_id: '900071', type: 'patient', label: 'Maman', linkedAt: Date.UTC(2026, 9, 8, 9), lastName: 'DÉMO', firstName: 'Fatima', dateOfBirth: '1955-03-02' };
+  const PAPA_OLD = { requester_id: '900072', type: 'patient', label: 'Papa', linkedAt: Date.UTC(2026, 9, 1, 9), lastName: '', firstName: '', dateOfBirth: '' };
+  const FILLE = {
+    uid: 'u-banc-0070', email: 'fille.banc@example.test', hasProfile: true, fullName: 'Fille Banc', phone: '0600000070',
+    createdAt: '2026-10-07T12:00:00Z', dateOfBirth: '1985-04-04', requester_id: '900070', type: 'patient',
+    links: [MAMAN, PAPA_OLD], linkedCount: 2, practitioner: null,
+    relativeHits: [MAMAN], relativeOf: [],
+  };
+  let p = await freshPage(browser, {
+    page: 'admin',
+    profile: STAFF,
+    server: { identities: {} },
+    responses: {
+      adminSearchPatients: { results: [FILLE], truncated: false },
+      adminSetLinkIdentity: { success: true, links: [MAMAN, { ...PAPA_OLD, lastName: 'DÉMO', firstName: 'Ahmed', dateOfBirth: '1950-01-20' }] },
+      adminLinkRequester: { success: true, links: [MAMAN, PAPA_OLD], holderNotified: false },
+    },
+  });
+  await p.getByPlaceholder(/Email, nom/).waitFor({ timeout: 8000 });
+  await adminSearch(p, 'fatima demo');
+  await p.waitForSelector('[data-testid="selected-via-relative"]', { timeout: 5000 });
+  const banner = await visibleText(p, '[data-testid="selected-via-relative"]');
+  ok('chercher la MAMAN ouvre le compte de sa fille, et le dit', banner.includes('« Maman »') && banner.includes('DÉMO Fatima') && banner.includes('900071'), banner);
+  ok('la ligne « Maman » est mise en évidence', (await visibleText(p, '[data-id="900071"]')).includes('Trouvé par votre recherche'));
+  ok('son identité est affichée sur la ligne', (await visibleText(p, '[data-id="900071"] [data-testid="link-identity"]')).includes('DÉMO Fatima'));
+  ok('un ancien proche sans identité le signale', !!(await p.$('[data-id="900072"] [data-testid="link-identity-missing"]')));
+
+  // Compléter l'identité de l'ancien rattachement.
+  await p.click('[data-id="900072"] [data-testid="link-identity-open"]');
+  const save = p.locator('[data-id="900072"] [data-testid="link-identity-save"]');
+  ok('formulaire vide : « Enregistrer l’identité » verrouillé', await save.isDisabled());
+  await p.fill('#link-id-900072-last', 'DÉMO');
+  await p.fill('#link-id-900072-first', 'Ahmed');
+  await p.fill('#link-id-900072-dob', '1950-01-20');
+  await save.click();
+  await p.waitForTimeout(400);
+  const idCalls = await calls(p, 'adminSetLinkIdentity');
+  ok('UN appel : ce compte, ce dossier, l’identité — rien d’autre',
+    idCalls.length === 1 && same(idCalls[0], { uid: FILLE.uid, requester_id: '900072', identity: { lastName: 'DÉMO', firstName: 'Ahmed', dateOfBirth: '1950-01-20' } }),
+    JSON.stringify(idCalls));
+  ok('la ligne montre maintenant « DÉMO Ahmed »', (await visibleText(p, '[data-id="900072"]')).includes('DÉMO Ahmed'));
+  ok('message : retrouvable par son nom', (await visibleText(p, '#app')).includes('DÉMO Ahmed est maintenant retrouvable par son nom'));
+
+  // Un nouveau rattachement exige l'identité.
+  await p.fill('input[placeholder="Ex. : 12345"] >> nth=1', '900073');
+  await p.fill('input[placeholder="Ex. : Maman — Fatima"]', 'Mon fils');
+  ok('nouveau proche sans identité : « Rattacher » verrouillé, et dit pourquoi',
+    (await p.getByRole('button', { name: /^Rattacher$/ }).isDisabled()) &&
+      (await p.textContent('[data-testid="link-add-why"]')).includes('Nom du proche'));
+  await p.fill('#link-add-last', 'DÉMO');
+  await p.fill('#link-add-first', 'Adam');
+  await p.fill('#link-add-dob', '2016-09-09');
+  await p.getByRole('button', { name: /^Rattacher$/ }).click();
+  await p.waitForTimeout(400);
+  const add = await calls(p, 'adminLinkRequester');
+  ok('le rattachement part AVEC l’identité',
+    add.length === 1 && same(add[0].identity, { lastName: 'DÉMO', firstName: 'Adam', dateOfBirth: '2016-09-09' }) && add[0].requester_id === '900073',
+    JSON.stringify(add));
+  assertClean(p, await visibleText(p, '#app'));
+  await p.close();
+
+  // La maman a créé SON compte : sa fiche le dit, son numéro en un clic.
+  const MAMAN_COMPTE = {
+    uid: 'u-banc-0071', email: 'maman.banc@example.test', hasProfile: true, fullName: 'Fatima Démo', phone: '0600000071',
+    createdAt: '2026-10-08T15:00:00Z', dateOfBirth: '1955-03-02', requester_id: '', type: '',
+    links: [], linkedCount: 0, practitioner: null, relativeHits: [],
+    relativeOf: [{ holderUid: FILLE.uid, holderName: 'Fille Banc', requester_id: '900071', label: 'Maman', lastName: 'DÉMO', firstName: 'Fatima', dateOfBirth: '1955-03-02', shared: false, nameMatch: true }],
+  };
+  p = await freshPage(browser, {
+    page: 'admin',
+    profile: STAFF,
+    server: { identities: {} },
+    responses: { adminSearchPatients: { results: [MAMAN_COMPTE], truncated: false } },
+  });
+  await p.getByPlaceholder(/Email, nom/).waitFor({ timeout: 8000 });
+  await adminSearch(p, 'maman.banc@example.test');
+  await p.waitForSelector('[data-testid="selected-relative-of"]', { timeout: 5000 });
+  const hint = await visibleText(p, '[data-testid="selected-relative-of"]');
+  ok('sa fiche : « peut-être déjà connue comme proche », dossier 900071, chez Fille Banc',
+    hint.includes('Peut-être déjà connu(e) comme proche') && hint.includes('900071') && hint.includes('Fille Banc') && hint.includes('Même nom et même date de naissance'), hint);
+  await p.click('[data-testid="selected-relative-of-use"]');
+  ok('« Utiliser ce numéro » remplit son dossier principal', (await p.inputValue('input[placeholder="Ex. : 12345"]')) === '900071');
+  assertClean(p, await visibleText(p, '#app'));
+  await p.close();
+
+  // … et sur sa demande d'accès, dans l'onglet Demandes.
+  const REQ = {
+    uid: 'u-banc-0071', fullName: 'Fatima Démo', email: 'maman.banc@example.test', phone: '0600000071', dateOfBirth: '1955-03-02',
+    createdAt: Date.UTC(2026, 9, 8, 15), relativeOf: MAMAN_COMPTE.relativeOf,
+  };
+  p = await freshPage(browser, {
+    page: 'admin',
+    profile: STAFF,
+    server: { identities: {} },
+    responses: { adminListAccessRequests: { requests: [REQ] }, adminFulfillAccessRequest: { success: true } },
+  });
+  await p.getByRole('button', { name: /Demandes/ }).first().click();
+  await p.waitForSelector('[data-testid="ar-relative-of"]', { timeout: 8000 });
+  ok('demande d’accès : le même indice, sur sa carte', (await visibleText(p, '[data-testid="ar-relative-of"]')).includes('900071'));
+  await p.click('[data-testid="ar-relative-of-use"]');
+  await p.getByRole('button', { name: /Valider l'accès/ }).first().click();
+  await p.waitForTimeout(400);
+  const ful = await calls(p, 'adminFulfillAccessRequest');
+  ok('« Utiliser ce numéro » puis « Valider » : SON dossier, pour elle-même (pas comme proche)',
+    ful.length === 1 && same(ful[0], { uid: REQ.uid, requester_id: '900071', type: 'patient' }), JSON.stringify(ful));
+  assertClean(p, await visibleText(p, '#app'));
+  await p.close();
+}
+
+// ── M25 — demande « pour un proche » : l'identité en deux clics ─────────────
+// La date de naissance donnée par le patient est préremplie ; le nom renvoyé
+// par le laboratoire (« DÉMO fatima ») se reprend en un clic, découpé sur ses
+// majuscules ; le rattachement part avec l'identité.
+async function m25RelativeRequestIdentity(browser) {
+  scenario('M25 — demande « pour un proche » : date préremplie, nom du laboratoire repris, identité envoyée');
+  const RR = {
+    id: 'rr-banc-81', uid: 'u-banc-0080', fullName: 'Fils Banc', email: 'fils.banc@example.test', phone: '0600000080',
+    relationship: 'mere', relativeName: 'Fatima Démo', relativeDob: '1955-03-02', relativePhone: '', createdAt: Date.UTC(2026, 9, 8, 10),
+  };
+  const p = await freshPage(browser, {
+    page: 'admin',
+    profile: STAFF,
+    server: { identities: {} },
+    responses: {
+      adminListRelativeRequests: { requests: [RR] },
+      adminTestResults: {
+        type: 'patient', requester_id: '900081', patient_name: 'DÉMO fatima', name_source: 'lab',
+        results: [{ dossier_id: '011026001', patient_nom: '', patient_prenom: '', date_dossier: '2026-10-01T10:00:00Z', etat: 'Final', analyses_summary: 'C GLY', pdf_base64: '' }],
+      },
+      adminFulfillRelativeRequest: { success: true, holderNotified: false },
+    },
+  });
+  await p.getByRole('button', { name: /Demandes/ }).first().click();
+  await p.waitForSelector(`#rel-req-${RR.id}-dob`, { timeout: 8000 });
+  ok('la date de naissance donnée par le patient est préremplie', (await p.inputValue(`#rel-req-${RR.id}-dob`)) === '1955-03-02');
+  await p.getByPlaceholder('Ex. : 12345').first().fill('900081');
+  await p.getByRole('button', { name: /Tester d'abord/ }).first().click();
+  await p.waitForTimeout(600);
+  await p.getByRole('button', { name: /Revenir à la demande/ }).click();
+  await p.waitForSelector(`[data-testid="rel-req-${RR.id}-labname"]`, { timeout: 5000 });
+  ok('après le test, le nom du laboratoire est proposé', (await p.textContent(`[data-testid="rel-req-${RR.id}-labname"]`)).includes('DÉMO fatima'));
+  await p.click(`[data-testid="rel-req-${RR.id}-labname"]`);
+  ok('un clic : nom DÉMO, prénom fatima',
+    (await p.inputValue(`#rel-req-${RR.id}-last`)) === 'DÉMO' && (await p.inputValue(`#rel-req-${RR.id}-first`)) === 'fatima');
+  await p.locator('select').filter({ hasText: /Choisir/ }).first().selectOption('present');
+  await p.getByRole('button', { name: /^Rattacher$/ }).first().click();
+  await p.waitForTimeout(400);
+  const sent = await calls(p, 'adminFulfillRelativeRequest');
+  ok('UN appel, avec l’identité (date du patient, nom du laboratoire)',
+    sent.length === 1 && sent[0].requester_id === '900081' &&
+      same(sent[0].identity, { lastName: 'DÉMO', firstName: 'fatima', dateOfBirth: '1955-03-02' }),
+    JSON.stringify(sent));
+  assertClean(p, await visibleText(p, '#app'));
+  await p.close();
+}
+
 async function main() {
   console.log('\n══ Banc « médecin » — /mes-patients sous le vrai ResultsProvider ══');
   await build();
@@ -1342,6 +1520,8 @@ async function main() {
     await m21EditProfile(browser);
     await m22RequestForRelative(browser);
     await m23ViewAs(browser);
+    await m24RelativeIdentity(browser);
+    await m25RelativeRequestIdentity(browser);
   } finally {
     await browser.close();
   }

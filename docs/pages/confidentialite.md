@@ -67,3 +67,7 @@ Ajoutée avec la page publique `/emploi` (voir `docs/pages/emploi.md`). Clés : 
 **Ce que le texte affirme, dans cet ordre :** les informations reçues (identité, coordonnées, parcours, permis et véhicule, langues) + CV et lettre ; usage unique : étudier la candidature ; lues par la direction du laboratoire seulement (= niveau admin dans l'app) ; pas de numéro de CIN ; effacement automatique, fichiers compris, 6 mois après l'envoi ; effacement anticipé ou correction sur simple e-mail à laboelallali@gmail.com, sans compte.
 
 **Alignement à tenir.** Chaque affirmation correspond à du code : `RETENTION_DAYS = 183` et `cleanupExpiredApplications` (6 mois), `requireLevel(LEVEL.admin)` sur les quatre callables (direction), aucun champ CIN dans `applicationRules.ts`, `adminDeleteApplication` (effacement sur demande). Changer l'un sans l'autre rend la page mensongère. `npm run test:emploi` (section D) vérifie la carte, l'ancre et les deux langues.
+
+### Mise à jour — l'identité du proche (08/10/2026)
+
+Le texte `confidentialite.relatives_text` (fr et ar) dit désormais que le laboratoire enregistre aussi, sur le compte du proche, **les nom, prénom et date de naissance du titulaire du dossier** tels qu'ils figurent dans son dossier, saisis par le personnel pour pouvoir le retrouver, et visibles du seul personnel et du compte du proche. Alignement : `RelativeIdentityFields` / `adminSetLinkIdentity` (voir `docs/pages/admin.md`, « The relative's IDENTITY »). Si un jour ces champs deviennent visibles du patient dans l'application, revoir cette phrase.

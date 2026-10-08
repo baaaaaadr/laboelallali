@@ -36,6 +36,19 @@ import { readPractitionerDTO, PractitionerDTO } from "./adminPractitioner";
 import { practitionerIdentity } from "../cyberlab/identities";
 // The dashboard's « Les médecins » section: one row per doctor, with usage.
 import { listPractitionerRows, PractitionerRow } from "./practitionerDirectory";
+// A relative's last name, first name and date of birth (08/10/2026): what makes
+// a relative findable in the search, and recognisable when she later creates
+// her own account. Pure module, shared as-is with the admin page.
+import {
+  IdentityField,
+  RelativeIdentity,
+  identityLabel,
+  namesOverlap,
+  parseRelativeIdentity,
+  queryMatchesName,
+  relativeDobs,
+  relativeMatches,
+} from "./relativeIdentity";
 
 const VALID_TYPES = ["patient", "medecin", "correspondant"] as const;
 type RequesterType = (typeof VALID_TYPES)[number];
@@ -107,6 +120,18 @@ interface LinkedRequesterDoc {
    * when, which answers nothing.
    */
   proof?: LinkProof;
+  /**
+   * The relative's identity, typed by the front desk as in Qalam (08/10/2026).
+   * Absent on links created before. The lab server never sends a patient's
+   * name: without these, the mother attached as « Maman » could not be found
+   * by her name anywhere in the admin space.
+   */
+  lastName?: string;
+  firstName?: string;
+  dateOfBirth?: string;
+  /** Who last set the identity, and when (it can be completed after the link). */
+  identityBy?: string;
+  identityAt?: admin.firestore.Timestamp;
 }
 
 const PROOFS: readonly LinkProof[] = [
@@ -120,6 +145,10 @@ interface LinkDTO {
   type: string;
   label: string;
   linkedAt: number | null;
+  /** The relative's identity ("" when not recorded yet). */
+  lastName: string;
+  firstName: string;
+  dateOfBirth: string;
 }
 
 /**
@@ -135,7 +164,96 @@ function toLinkDTO(l: LinkedRequesterDoc): LinkDTO {
     linkedAt: l.linkedAt && typeof l.linkedAt.toMillis === "function" ?
       l.linkedAt.toMillis() :
       null,
+    lastName: typeof l.lastName === "string" ? l.lastName : "",
+    firstName: typeof l.firstName === "string" ? l.firstName : "",
+    dateOfBirth: typeof l.dateOfBirth === "string" ? l.dateOfBirth : "",
   };
+}
+
+const IDENTITY_FIELD_FR: Record<IdentityField, string> = {
+  lastName: "le nom",
+  firstName: "le prénom",
+  dateOfBirth: "la date de naissance",
+};
+
+/**
+ * The relative's identity, required on every NEW attachment.
+ * @param {unknown} raw `{lastName, firstName, dateOfBirth}` from the client.
+ * @return {RelativeIdentity} the cleaned identity.
+ */
+function requireIdentity(raw: unknown): RelativeIdentity {
+  const r = parseRelativeIdentity(raw);
+  if (!r.ok) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Indiquez ${IDENTITY_FIELD_FR[r.field]} du proche, comme dans Qalam.`,
+      { field: r.field }
+    );
+  }
+  return r.value;
+}
+
+/**
+ * « Peut-être déjà connu comme proche » (08/10/2026) — a relative attached to
+ * ANOTHER account who may be this person: the mother attached as « Maman » of
+ * her daughter, who now has her own account.
+ */
+interface RelativeOfHint {
+  holderUid: string;
+  holderName: string;
+  requester_id: string;
+  label: string;
+  lastName: string;
+  firstName: string;
+  dateOfBirth: string;
+  /** This account's OWN dossier is attached there (certain, not a guess). */
+  shared: boolean;
+  /** Same date of birth AND a name word in common. */
+  nameMatch: boolean;
+}
+
+/** One attached relative, with the account that holds it. */
+type RelEntry = LinkDTO & { holderUid: string; holderName: string };
+
+const MAX_HINTS = 5;
+
+/**
+ * Which relatives attached elsewhere may be this account's person.
+ *  - shared: the account's own dossier is a relative of someone else — certain;
+ *  - same date of birth + a common name word — likely;
+ *  - same date of birth only, for an account WITHOUT a dossier of its own —
+ *    possible (names typed in Arabic by the patient and in Latin by the front
+ *    desk share no word). Shown with both names, the front desk decides.
+ * @param {object} account the person looked at.
+ * @param {RelEntry[]} entries relatives attached anywhere.
+ * @return {RelativeOfHint[]} at most MAX_HINTS, strongest first.
+ */
+export function hintsFor(
+  account: { uid: string; fullName: string; dateOfBirth: string; requester_id: string },
+  entries: RelEntry[]
+): RelativeOfHint[] {
+  const own = normalizeRequesterId(account.requester_id);
+  const out: RelativeOfHint[] = [];
+  for (const e of entries) {
+    if (e.holderUid === account.uid) continue;
+    const shared = own !== "" && normalizeRequesterId(e.requester_id) === own;
+    const sameDob = account.dateOfBirth !== "" && e.dateOfBirth === account.dateOfBirth;
+    const nameMatch = sameDob && namesOverlap(identityLabel(e), account.fullName);
+    if (!shared && !nameMatch && !(sameDob && own === "")) continue;
+    out.push({
+      holderUid: e.holderUid,
+      holderName: e.holderName,
+      requester_id: e.requester_id,
+      label: e.label,
+      lastName: e.lastName,
+      firstName: e.firstName,
+      dateOfBirth: e.dateOfBirth,
+      shared,
+      nameMatch,
+    });
+  }
+  out.sort((a, b) => Number(b.shared) - Number(a.shared) || Number(b.nameMatch) - Number(a.nameMatch));
+  return out.slice(0, MAX_HINTS);
 }
 
 /**
@@ -277,6 +395,13 @@ interface PatientMatch {
   links: LinkDTO[];
   /** The doctor access (« Mes patients »), when the account has one. */
   practitioner: PractitionerDTO | null;
+  /**
+   * The attached relatives whose name or date of birth matched the query —
+   * the account was found THROUGH them (« Trouvé par son proche « Maman » »).
+   */
+  relativeHits: LinkDTO[];
+  /** This person may already be a relative of another account (see hintsFor). */
+  relativeOf: RelativeOfHint[];
 }
 
 export const adminSearchPatients = onCall(
@@ -296,6 +421,9 @@ export const adminSearchPatients = onCall(
       .get();
 
     const matches: PatientMatch[] = [];
+    // Every attached relative, with its holder — read anyway by this scan, it
+    // feeds the « peut-être déjà connu comme proche » hints below.
+    const relEntries: RelEntry[] = [];
     snap.forEach((doc) => {
       const d = doc.data() || {};
       const fullName = String(d.fullName || "");
@@ -309,6 +437,10 @@ export const adminSearchPatients = onCall(
         d.linkedRequesterIds.map((x: unknown) => String(x)) :
         [];
       const links = readLinks(d).map(toLinkDTO);
+      for (const l of links) relEntries.push({ ...l, holderUid: doc.id, holderName: fullName });
+      // A relative's name or date of birth finds the account she is attached
+      // to (08/10/2026): the app knew the mother only as « Maman ».
+      const relativeHits = relativeMatches(q, links);
       // A doctor's code ("MOUSTZOU") or displayed name finds his account — the
       // way the lab thinks of him. Codes are compared case-insensitively.
       const practitioner = readPractitionerDTO(d);
@@ -320,6 +452,9 @@ export const adminSearchPatients = onCall(
         (rid !== "" && rid === q) || linkedIds.includes(q) || codeExact;
       const hit =
         stripAccents(fullName).includes(nq) ||
+        // Words in any order: « Nia Hassania » finds « Hassania Nia ».
+        queryMatchesName(q, fullName) ||
+        relativeHits.length > 0 ||
         (email !== "" && stripAccents(email).includes(nq)) ||
         ridExact ||
         (digits.length >= 1 && rid !== "" && rid.includes(digits)) ||
@@ -345,6 +480,8 @@ export const adminSearchPatients = onCall(
         linkedCount: linkedIds.length,
         links,
         practitioner,
+        relativeHits,
+        relativeOf: [],
       });
     });
 
@@ -355,6 +492,7 @@ export const adminSearchPatients = onCall(
     );
     const truncated = matches.length > MAX_RESULTS;
     const results = matches.slice(0, MAX_RESULTS);
+    for (const m of results) m.relativeOf = hintsFor(m, relEntries);
 
     // Fallback: an exact-email account that has authenticated but has no Firestore
     // profile yet (so it wasn't in the scan). Mirrors the old adminLookupPatient
@@ -384,6 +522,8 @@ export const adminSearchPatients = onCall(
           createdAt: String(d.createdAt || ""),
           dateOfBirth: String(d.dateOfBirth || ""),
           exact: true,
+          relativeHits: [],
+          relativeOf: [],
         });
       } catch {
         // No Auth user for this email — nothing to add.
@@ -603,16 +743,55 @@ export const adminListAccessRequests = onCall(
       [] :
       await admin.firestore().getAll(...snap.docs.map((d) => admin.firestore().doc(`users/${d.id}`)));
     const profileOf = new Map(profiles.map((p) => [p.id, p.data() || {}]));
+    // « Peut-être déjà connu comme proche » (08/10/2026): the mother attached as
+    // « Maman » of her daughter now asks for her own access — her dossier number
+    // is already in the app. Accounts holding a relative born the same day are
+    // found through `linkedRelativeDobs` (array-contains-any, 30 per query).
+    const dobs = [
+      ...new Set(
+        [...profileOf.values()]
+          .map((u) => (typeof u.dateOfBirth === "string" ? u.dateOfBirth : ""))
+          .filter(Boolean)
+      ),
+    ];
+    const relEntries: RelEntry[] = [];
+    try {
+      for (let i = 0; i < dobs.length; i += 30) {
+        const holders = await admin
+          .firestore()
+          .collection("users")
+          .where("linkedRelativeDobs", "array-contains-any", dobs.slice(i, i + 30))
+          .limit(200)
+          .get();
+        holders.forEach((h) => {
+          const hd = h.data() || {};
+          for (const l of readLinks(hd).map(toLinkDTO)) {
+            if (l.dateOfBirth && dobs.includes(l.dateOfBirth)) {
+              relEntries.push({ ...l, holderUid: h.id, holderName: String(hd.fullName || "") });
+            }
+          }
+        });
+      }
+    } catch {
+      // A hint, never a reason to hide the queue.
+      logger.warn("adminListAccessRequests: relative hints unavailable");
+    }
     const requests = snap.docs.map((doc) => {
       const d = doc.data();
       const u = profileOf.get(doc.id) || {};
+      const fullName = String(u.fullName || d.fullName || "");
+      const dateOfBirth = typeof u.dateOfBirth === "string" ? u.dateOfBirth : "";
       return {
         uid: doc.id,
-        fullName: u.fullName || d.fullName || "",
+        fullName,
         email: d.email || u.email || "",
         phone: u.phone || d.phone || "",
-        dateOfBirth: typeof u.dateOfBirth === "string" ? u.dateOfBirth : "",
+        dateOfBirth,
         createdAt: d.createdAt?.toMillis ? d.createdAt.toMillis() : null,
+        relativeOf: hintsFor(
+          { uid: doc.id, fullName, dateOfBirth, requester_id: String(u.requester_id || "") },
+          relEntries
+        ),
       };
     });
     requests.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
@@ -634,7 +813,8 @@ export const adminFulfillAccessRequest = onCall(
       // 08/10/2026 — the account holder has no dossier of his own: he came
       // with his child or a parent. The number is attached as a RELATIVE (label
       // + proof, both required) and the request is closed, in one call.
-      forRelative?: { label?: string; proof?: string };
+      // Plus the relative's identity (lastName, firstName, dateOfBirth).
+      forRelative?: { label?: string; proof?: string; lastName?: string; firstName?: string; dateOfBirth?: string };
     }>
   ) => {
     const { uid: adminUid, level } = await requireLevel(request, LEVEL.staff);
@@ -661,8 +841,9 @@ export const adminFulfillAccessRequest = onCall(
       if (!PROOFS.includes(rel.proof as LinkProof)) {
         throw new HttpsError("invalid-argument", "Choisissez sur quelle base l'accès est donné.");
       }
+      const identity = requireIdentity(rel);
       await attachRequester(
-        targetUid, requesterId, "patient", label, adminUid, rel.proof as LinkProof
+        targetUid, requesterId, "patient", label, adminUid, rel.proof as LinkProof, false, identity
       );
       await admin
         .firestore()
@@ -829,6 +1010,9 @@ async function notifyDossierHolder(requesterId: string): Promise<boolean> {
  * @param {string} label staff-typed name shown to the patient.
  * @param {string} adminUid uid of the staff member.
  * @param {LinkProof|undefined} proof what the staff saw.
+ * @param {boolean} fromOwn move the account's main dossier here.
+ * @param {RelativeIdentity|undefined} identity the relative's name and date of
+ *   birth; on a re-attachment without one, the stored identity is kept.
  * @return {Promise<void>} resolves once committed.
  */
 async function attachRequester(
@@ -838,7 +1022,8 @@ async function attachRequester(
   label: string,
   adminUid: string,
   proof?: LinkProof,
-  fromOwn = false
+  fromOwn = false,
+  identity?: RelativeIdentity
 ): Promise<void> {
   const ref = admin.firestore().doc(`users/${targetUid}`);
   await admin.firestore().runTransaction(async (tx) => {
@@ -877,6 +1062,18 @@ async function attachRequester(
       );
     }
 
+    // A re-attachment (corrected label) keeps the identity already recorded.
+    const prev = at >= 0 ? links[at] : undefined;
+    const keptIdentity =
+      prev && typeof prev.lastName === "string" && prev.lastName ?
+        {
+          lastName: prev.lastName,
+          firstName: String(prev.firstName || ""),
+          dateOfBirth: String(prev.dateOfBirth || ""),
+          ...(prev.identityBy ? {identityBy: prev.identityBy} : {}),
+          ...(prev.identityAt ? {identityAt: prev.identityAt} : {}),
+        } :
+        {};
     const entry: LinkedRequesterDoc = {
       requester_id: requesterId,
       type,
@@ -886,6 +1083,9 @@ async function attachRequester(
       linkedAt: admin.firestore.Timestamp.now(),
       linkedBy: adminUid,
       ...(proof ? {proof} : {}),
+      ...(identity ?
+        {...identity, identityBy: adminUid, identityAt: admin.firestore.Timestamp.now()} :
+        keptIdentity),
     };
     const next = [...links];
     if (at >= 0) next[at] = entry; else next.push(entry);
@@ -898,6 +1098,9 @@ async function attachRequester(
         // inside an array, and "who else can read this dossier?" is a question
         // the lab is required to be able to answer.
         linkedRequesterIds: next.map((l) => l.requester_id),
+        // Flattened dates of birth: the access-request queue finds « this new
+        // patient may already be a relative here » with array-contains-any.
+        linkedRelativeDobs: relativeDobs(next),
         // Moved from the main dossier: the account no longer claims it as its
         // own. Same access, honest presentation (« Ma fille — … », not « votre
         // dernier bilan »). `requesterLinkedAt` is kept: access WAS activated then.
@@ -924,6 +1127,8 @@ interface LinkData {
    * (main dossier emptied, relative row added, one transaction).
    */
   fromOwn?: boolean;
+  /** The relative's identity — required (08/10/2026). */
+  identity?: { lastName?: string; firstName?: string; dateOfBirth?: string };
 }
 
 /**
@@ -967,8 +1172,9 @@ export const adminLinkRequester = onCall(
       undefined;
 
     const fromOwn = request.data?.fromOwn === true;
+    const identity = requireIdentity(request.data?.identity);
     await attachRequester(
-      targetUid, requesterId, type as RequesterType, label, adminUid, proof, fromOwn
+      targetUid, requesterId, type as RequesterType, label, adminUid, proof, fromOwn, identity
     );
     const ref = admin.firestore().doc(`users/${targetUid}`);
 
@@ -1005,12 +1211,67 @@ export const adminUnlinkRequester = onCall(
         {
           linkedRequesters: next,
           linkedRequesterIds: next.map((l) => l.requester_id),
+          linkedRelativeDobs: relativeDobs(next),
         },
         { merge: true }
       );
     });
 
     logger.info("adminUnlinkRequester", { uid: targetUid, by: adminUid });
+    const after = readLinks((await ref.get()).data());
+    return { success: true, links: after.map(toLinkDTO) };
+  }
+);
+
+/**
+ * Complete or correct the IDENTITY of a relative already attached (staff and
+ * up, 08/10/2026) — the links created before the identity existed (« Maman »,
+ * no name) become searchable. Touches nothing else: not the label the patient
+ * sees, not the proof, not the access.
+ */
+export const adminSetLinkIdentity = onCall(
+  { region: REGION },
+  async (
+    request: CallableRequest<{
+      uid?: string;
+      requester_id?: string;
+      identity?: { lastName?: string; firstName?: string; dateOfBirth?: string };
+    }>
+  ) => {
+    const { uid: adminUid } = await requireLevel(request, LEVEL.staff);
+    const targetUid = (request.data?.uid || "").trim();
+    const requesterId = normalizeRequesterId(request.data?.requester_id);
+    if (!targetUid) throw new HttpsError("invalid-argument", "Compte requis.");
+    if (!requesterId) {
+      throw new HttpsError("invalid-argument", "Identifiant du dossier requis.");
+    }
+    const identity = requireIdentity(request.data?.identity);
+
+    const ref = admin.firestore().doc(`users/${targetUid}`);
+    await admin.firestore().runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) throw new HttpsError("not-found", "Ce compte n'existe pas.");
+      const links = readLinks(snap.data());
+      const at = links.findIndex((l) => normalizeRequesterId(l.requester_id) === requesterId);
+      if (at < 0) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Ce dossier n'est plus rattaché à ce compte. Rechargez la fiche."
+        );
+      }
+      const next = [...links];
+      next[at] = {
+        ...links[at],
+        ...identity,
+        identityBy: adminUid,
+        // ⚠ Not serverTimestamp(): a sentinel inside an array element is refused.
+        identityAt: admin.firestore.Timestamp.now(),
+      };
+      tx.set(ref, { linkedRequesters: next, linkedRelativeDobs: relativeDobs(next) }, { merge: true });
+    });
+
+    // uid only — never the relative's name.
+    logger.info("adminSetLinkIdentity", { uid: targetUid, by: adminUid });
     const after = readLinks((await ref.get()).data());
     return { success: true, links: after.map(toLinkDTO) };
   }
@@ -1303,6 +1564,8 @@ interface FulfilRelativeData {
   type?: string;
   label?: string;
   proof?: string;
+  /** The relative's identity, as in Qalam — required (08/10/2026). */
+  identity?: { lastName?: string; firstName?: string; dateOfBirth?: string };
 }
 
 /**
@@ -1340,6 +1603,8 @@ export const adminFulfillRelativeRequest = onCall(
       );
     }
 
+    const identity = requireIdentity(request.data?.identity);
+
     const reqRef = admin.firestore().doc(`relativeAccessRequests/${id}`);
     const reqSnap = await reqRef.get();
     if (!reqSnap.exists) {
@@ -1352,7 +1617,7 @@ export const adminFulfillRelativeRequest = onCall(
 
     await attachRequester(
       targetUid, requesterId, type as RequesterType, label, adminUid,
-      proof as LinkProof
+      proof as LinkProof, false, identity
     );
 
     await reqRef.set(

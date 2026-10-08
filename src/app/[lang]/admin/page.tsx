@@ -30,10 +30,20 @@ import LinkedRequestersCard, {
   type LinkRow,
 } from '@/components/features/admin/LinkedRequestersCard';
 import RelativeRequestsSection, {
+  effectiveIdentity,
   type LinkProof,
   type RelativeInputs,
   type RelativeRequest,
 } from '@/components/features/admin/RelativeRequestsSection';
+import RelativeIdentityFields from '@/components/features/admin/RelativeIdentityFields';
+import RelativeOfHints from '@/components/features/admin/RelativeOfHints';
+import {
+  EMPTY_IDENTITY,
+  identityLabel,
+  parseRelativeIdentity,
+  type RelativeIdentity,
+  type RelativeOfHint,
+} from '@/lib/results/relativeIdentity';
 import PractitionerCard, {
   type PractitionerCheck,
   type PractitionerDraft,
@@ -147,6 +157,10 @@ interface SearchResult {
   linkedCount?: number;
   /** The doctor access (« Mes patients »), when the account has one. */
   practitioner?: PractitionerDTO | null;
+  /** Attached relatives whose name or date of birth matched the search. */
+  relativeHits?: LinkRow[];
+  /** This person may already be a relative of another account. */
+  relativeOf?: RelativeOfHint[];
 }
 
 /** What `adminSetPractitioner` answers (dry run or real write). */
@@ -177,8 +191,21 @@ interface ArInput {
   forRelative?: boolean;
   label?: string;
   proof?: ArProof | '';
+  /** « Accès pour : un proche » — the relative's identity, as in Qalam. */
+  lastName?: string;
+  firstName?: string;
+  dateOfBirth?: string;
 }
-interface AccessRequest { uid: string; fullName: string; email: string; phone: string; dateOfBirth?: string; createdAt: number | null; }
+interface AccessRequest {
+  uid: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  createdAt: number | null;
+  /** « Peut-être déjà connu comme proche » — his dossier may already be in the app. */
+  relativeOf?: RelativeOfHint[];
+}
 /** Outcome of a staff probe on one requester_id, kept for the grant gate. */
 interface TestedId { status: 'ok' | 'empty' | 'error'; name: string; count: number; }
 
@@ -286,7 +313,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   // The attach form's fields. In the PAGE, so they survive the round trip
   // through the Tester tab — that tab switch unmounts the Patients block.
   const [linkDraft, setLinkDraft] = useState<LinkDraft>({
-    requester_id: '', type: 'patient', label: '',
+    requester_id: '', type: 'patient', label: '', ...EMPTY_IDENTITY,
   });
   // Which tab sent us to the Tester tab, so we can offer a way back. Nothing
   // brought the operator back before: the tab bar is not sticky, so after the
@@ -591,7 +618,14 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
           uid: req.uid,
           requester_id: inp.requester_id.trim(),
           type: 'patient',
-          forRelative: { label: (inp.label || '').trim(), proof: inp.proof },
+          forRelative: {
+            label: (inp.label || '').trim(),
+            proof: inp.proof,
+            // As in Qalam — what makes the relative findable by her name.
+            lastName: (inp.lastName || '').trim(),
+            firstName: (inp.firstName || '').trim(),
+            dateOfBirth: inp.dateOfBirth || '',
+          },
         });
         setArMsg(
           t('admin.req_fulfilled_relative', 'Accès validé : {{name}} voit maintenant « {{label}} ».', {
@@ -668,6 +702,8 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         // their own app rather than asking the staff to retype it.
         label: req.relativeName,
         proof: v.proof as LinkProof,
+        // The relative's identity as in Qalam (the date the patient gave by default).
+        identity: effectiveIdentity(req, v),
       });
       setRelMsg(
         res.holderNotified
@@ -700,7 +736,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   // ── Relatives' dossiers ("ayant droit") ─────────────────────────────────────
   // Attaching a dossier NEVER touches the holder's own account: two accounts may
   // point at the same requester_id. The callables enforce that; the UI says it.
-  const addLink = async (requesterId: string, linkType: RequesterType, label: string) => {
+  const addLink = async (requesterId: string, linkType: RequesterType, label: string, identity: RelativeIdentity) => {
     if (!selected?.uid) return;
     setLinkBusy('add');
     setLinkError(null);
@@ -709,12 +745,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     try {
       const res = await callFn<{ links: LinkRow[]; holderNotified: boolean }>(
         'adminLinkRequester',
-        { uid: selected.uid, requester_id: requesterId, type: linkType, label }
+        { uid: selected.uid, requester_id: requesterId, type: linkType, label, identity }
       );
       setLinkRows(res.links || []);
       // Cleared only now: a rejected attach must leave the operator's input in
       // place so they can correct it rather than retype everything.
-      setLinkDraft({ requester_id: '', type: 'patient', label: '' });
+      setLinkDraft({ requester_id: '', type: 'patient', label: '', ...EMPTY_IDENTITY });
       setLinkNotice(
         res.holderNotified
           ? t('admin.link_added_notified', 'Rattaché. Le titulaire du dossier a été prévenu par e-mail.')
@@ -747,7 +783,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
    * (`adminLinkRequester` with `fromOwn`): main dossier emptied, relative row
    * added with the label. The account keeps exactly the same access.
    */
-  const moveOwnToRelative = async (label: string) => {
+  const moveOwnToRelative = async (label: string, identity: RelativeIdentity) => {
     if (!selected?.uid || !selected.requester_id) return;
     const id = selected.requester_id;
     setLinkBusy('move');
@@ -761,6 +797,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         type: 'patient',
         label,
         fromOwn: true,
+        identity,
       });
       const links = res.links || [];
       setLinkRows(links);
@@ -777,6 +814,39 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         t('admin.link_moved', 'Le dossier {{id}} est maintenant rattaché comme « {{label}} ». Le dossier principal de ce compte est vide.', {
           id,
           label,
+        })
+      );
+    } catch (err: unknown) {
+      setLinkError(errMsg(err));
+    } finally {
+      setLinkBusy(null);
+    }
+  };
+
+  /**
+   * « Compléter l'identité » of a relative already attached (08/10/2026): the
+   * links made before had only a label (« Maman ») — this makes them findable
+   * by the relative's own name. Nothing else changes (label, proof, access).
+   */
+  const setLinkIdentity = async (requesterId: string, identity: RelativeIdentity) => {
+    if (!selected?.uid) return;
+    setLinkBusy(`identity:${requesterId}`);
+    setLinkError(null);
+    setLinkNotice(null);
+    try {
+      const res = await callFn<{ links: LinkRow[] }>('adminSetLinkIdentity', {
+        uid: selected.uid,
+        requester_id: requesterId,
+        identity,
+      });
+      const links = res.links || [];
+      setLinkRows(links);
+      const patch = (r: SearchResult) => (r.uid === selected.uid ? { ...r, links } : r);
+      setResults((prev) => prev.map(patch));
+      setSelected((prev) => (prev ? patch(prev) : prev));
+      setLinkNotice(
+        t('admin.rel_identity_saved', 'Identité enregistrée : {{name}} est maintenant retrouvable par son nom.', {
+          name: identityLabel(identity),
         })
       );
     } catch (err: unknown) {
@@ -1408,14 +1478,21 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
               {accessReqs.map((req) => {
                 const inp: ArInput = arInputs[req.uid] || { requester_id: '', type: 'patient' };
                 const rel = !!inp.forRelative;
+                const relIdentity: RelativeIdentity = {
+                  lastName: inp.lastName || '',
+                  firstName: inp.firstName || '',
+                  dateOfBirth: inp.dateOfBirth || '',
+                };
                 // A locked button always says why.
                 const arLock = !inp.requester_id.trim()
                   ? null
                   : rel && !(inp.label || '').trim()
                     ? t('admin.req_need_label', 'Indiquez de qui il s’agit.')
-                    : rel && !inp.proof
-                      ? t('admin.req_need_proof', 'Choisissez sur quelle base l’accès est donné.')
-                      : null;
+                    : rel && !parseRelativeIdentity(relIdentity).ok
+                      ? t('admin.rel_need_identity', 'Indiquez le nom, le prénom et la date de naissance du proche, comme dans Qalam.')
+                      : rel && !inp.proof
+                        ? t('admin.req_need_proof', 'Choisissez sur quelle base l’accès est donné.')
+                        : null;
                 // Inline colours: the global button rules beat Tailwind colour
                 // utilities on these chips (measured: grey text on bordeaux).
                 const chipClass = 'min-h-[40px] px-3 rounded-lg border text-sm font-medium';
@@ -1451,6 +1528,14 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         )}
                       </div>
                     </div>
+                    {/* His dossier may already be in the app — attached as a
+                        relative to someone else's account (08/10/2026). */}
+                    <RelativeOfHints
+                      hints={req.relativeOf}
+                      fmtDate={fmtDate}
+                      onUse={(id) => setArInput(req.uid, { requester_id: id, forRelative: false })}
+                      testId="ar-relative-of"
+                    />
                     <div className="flex flex-wrap items-center gap-2 text-sm" role="radiogroup" data-testid="ar-for">
                       <span className="text-[var(--text-secondary)]">{t('admin.req_for', 'Accès pour :')}</span>
                       <button type="button" role="radio" aria-checked={!rel} className={chipClass} style={chipStyle(!rel)} onClick={() => setArInput(req.uid, { forRelative: false })} data-testid="ar-for-self">
@@ -1496,6 +1581,13 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                           aria-label={t('admin.link_label_label', "De qui s'agit-il ?")}
                           className="w-full rounded-lg px-3 py-2.5 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
                           data-testid="ar-label"
+                        />
+                        <RelativeIdentityFields
+                          idPrefix={`ar-${req.uid}`}
+                          value={relIdentity}
+                          onChange={(patch) => setArInput(req.uid, patch)}
+                          labName={testedIds[inp.requester_id.trim()]?.name || undefined}
+                          showWhy={false}
                         />
                         <div className="flex flex-wrap items-center gap-2 text-sm" role="radiogroup" data-testid="ar-proof">
                           <span className="text-[var(--text-secondary)]">{t('admin.req_proof', 'Sur quelle base ?')}</span>
@@ -1692,6 +1784,26 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                               {t('admin.pract_badge', 'Médecin')} : <span dir="ltr">{r.practitioner.requester_id}</span>
                             </span>
                           )}
+                          {/* Found THROUGH a relative attached to this account. */}
+                          {(r.relativeHits || []).map((h) => (
+                            <p key={h.requester_id} className="flex items-start gap-1.5 mt-2 text-sm font-medium text-[var(--color-fuchsia-accent)]" data-testid="result-via-relative">
+                              <Users size={15} className="flex-shrink-0 mt-0.5" />
+                              <span>
+                                {t('admin.rel_found_via', 'Trouvé par son proche « {{label}} » : {{name}}{{born}} — dossier {{id}}', {
+                                  label: h.label,
+                                  name: identityLabel(h),
+                                  born: h.dateOfBirth ? `, ${t('admin.rel_born', 'né(e) le {{date}}', { date: fmtDate(h.dateOfBirth) })}` : '',
+                                  id: h.requester_id,
+                                })}
+                              </span>
+                            </p>
+                          ))}
+                          {(r.relativeOf || []).length > 0 && (
+                            <p className="flex items-start gap-1.5 mt-2 text-xs text-[var(--status-info)]" data-testid="result-relative-of">
+                              <Users size={13} className="flex-shrink-0 mt-0.5" />
+                              <span>{t('admin.rel_of_short', 'Peut-être déjà rattaché(e) comme proche à un autre compte — détail sur sa fiche.')}</span>
+                            </p>
+                          )}
                           {!r.hasProfile && (
                             <p className="text-sm text-[var(--status-error)] mt-1">
                               {t('admin.no_profile_warning', "Ce compte existe mais le profil n'est pas encore complété.")}
@@ -1793,6 +1905,35 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                   )}
                 </div>
 
+                {/* Found through a relative: say so, or the operator who typed
+                    the MOTHER's name wonders why the DAUGHTER's card opened. */}
+                {(selected.relativeHits || []).map((h) => (
+                  <div
+                    key={h.requester_id}
+                    className="flex items-start gap-2 rounded-lg p-3 text-sm"
+                    style={{ border: '2px solid var(--color-fuchsia-accent)', background: 'var(--background-secondary)' }}
+                    data-testid="selected-via-relative"
+                  >
+                    <Users size={18} className="flex-shrink-0 mt-0.5 text-[var(--color-fuchsia-accent)]" />
+                    <span className="text-[var(--text-primary)]">
+                      {t('admin.rel_selected_via', 'Votre recherche correspond à un proche rattaché à ce compte : « {{label}} » — {{name}}{{born}}, dossier {{id}}. Sa fiche est ci-dessous, dans « Dossiers d’un proche ».', {
+                        label: h.label,
+                        name: identityLabel(h),
+                        born: h.dateOfBirth ? `, ${t('admin.rel_born', 'né(e) le {{date}}', { date: fmtDate(h.dateOfBirth) })}` : '',
+                        id: h.requester_id,
+                      })}
+                    </span>
+                  </div>
+                ))}
+                {/* This person may already be someone's relative — her dossier
+                    number is then already in the app (« Utiliser ce numéro »). */}
+                <RelativeOfHints
+                  hints={selected.relativeOf}
+                  fmtDate={fmtDate}
+                  onUse={selected.requester_id ? undefined : (id) => setRequesterId(id)}
+                  testId="selected-relative-of"
+                />
+
                 <form onSubmit={handleSave} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
@@ -1871,8 +2012,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 onRemove={removeLink}
                 onTest={testFromLink}
                 fmtDate={fmtWhen}
+                fmtDob={fmtDate}
                 ownDossier={selected.requester_id || null}
-                onMoveOwn={(label) => void moveOwnToRelative(label)}
+                onMoveOwn={(label, identity) => void moveOwnToRelative(label, identity)}
+                onSetIdentity={(id, identity) => void setLinkIdentity(id, identity)}
+                labNameFor={(id) => testedIds[id]?.name || undefined}
+                highlightIds={(selected.relativeHits || []).map((h) => h.requester_id)}
               />
               <PractitionerCard
                 current={practCurrent}

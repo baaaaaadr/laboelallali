@@ -13,12 +13,19 @@
  *  - it REQUIRES a proof before granting. "On what basis was this access
  *    opened?" is the question the lab will be asked if an access is ever
  *    contested, and a link that only records who created it answers nothing.
+ *
+ * Since 08/10/2026 it also records the relative's IDENTITY as in Qalam (last
+ * name, first name, date of birth — the date the patient gave is prefilled,
+ * the name the lab returned can be copied in one click): that is what makes
+ * the relative findable by her own name in the admin search.
  */
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Check, Loader2, UserPlus, X } from 'lucide-react';
 import type { RequesterType } from '@/types/cyberlab';
+import RelativeIdentityFields from './RelativeIdentityFields';
+import { parseRelativeIdentity, type RelativeIdentity } from '@/lib/results/relativeIdentity';
 
 export type LinkProof = 'present' | 'procuration' | 'autorite_parentale';
 
@@ -41,6 +48,22 @@ export interface RelativeInputs {
   proof: LinkProof | '';
   /** Staff ticked "this really is the same person" despite differing names. */
   confirmed?: boolean;
+  /** The relative's identity as in Qalam (absent = not typed yet). */
+  lastName?: string;
+  firstName?: string;
+  dateOfBirth?: string;
+}
+
+/**
+ * The identity that will be sent: what the staff typed, the date of birth the
+ * patient gave as a default. Shared with the page (`fulfillRelReq`).
+ */
+export function effectiveIdentity(req: RelativeRequest, v: RelativeInputs | undefined): RelativeIdentity {
+  return {
+    lastName: v?.lastName ?? '',
+    firstName: v?.firstName ?? '',
+    dateOfBirth: v?.dateOfBirth ?? req.relativeDob ?? '',
+  };
 }
 
 /** What a staff probe returned for one requester_id. */
@@ -174,8 +197,10 @@ export default function RelativeRequestsSection({
         // words. The probe alone is no longer enough: it proved the operator
         // clicked "Tester", not that they READ the answer -- and reading it is
         // the entire point when the patient only supplied a name.
+        const identity = effectiveIdentity(req, v);
+        const identityOk = parseRelativeIdentity(identity).ok;
         const ready =
-          id !== '' && v.proof !== '' && probe !== undefined && (agree || v.confirmed === true);
+          id !== '' && v.proof !== '' && probe !== undefined && (agree || v.confirmed === true) && identityOk;
         return (
           <div key={req.id} className="card p-6 space-y-4">
             {/* Who is asking */}
@@ -328,6 +353,15 @@ export default function RelativeRequestsSection({
               </div>
             )}
 
+            {/* The relative's identity, as in Qalam: what makes her findable
+                by her own name afterwards (08/10/2026). */}
+            <RelativeIdentityFields
+              idPrefix={`rel-req-${req.id}`}
+              value={identity}
+              onChange={(patch) => onInput(req.id, patch)}
+              labName={probe?.name || undefined}
+            />
+
             {/* Grant row. "Refuser" is NOT here: two buttons side by side, one
                 confirming in the same spot, is how a legitimate request gets
                 refused by a double click. */}
@@ -362,7 +396,9 @@ export default function RelativeRequestsSection({
                     ? t('admin.rel_req_need_test', "Testez l'identifiant avant de rattacher : c'est le seul moyen de vérifier que le dossier est bien celui de cette personne.")
                     : !agree && v.confirmed !== true
                       ? t('admin.rel_req_need_confirm', "Les deux noms diffèrent : confirmez qu'il s'agit de la même personne.")
-                      : t('admin.rel_req_need_proof', "Indiquez sur quelle base vous accordez l'accès.")}
+                      : !identityOk
+                        ? t('admin.rel_need_identity', 'Indiquez le nom, le prénom et la date de naissance du proche, comme dans Qalam.')
+                        : t('admin.rel_req_need_proof', "Indiquez sur quelle base vous accordez l'accès.")}
               </p>
             )}
 
