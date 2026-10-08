@@ -734,7 +734,6 @@
     "link_move_confirm": "Passer en dossier d’un proche",
     "link_moving": "Déplacement…",
     "link_moved": "Le dossier {{id}} est maintenant rattaché comme « {{label}} ». Le dossier principal de ce compte est vide.",
-    "req_own_only_hint": "Ne saisissez ici que le numéro de la personne elle-même. Un parent venu pour son enfant, sans dossier à lui : refusez cette demande, puis rattachez le dossier de l’enfant depuis sa fiche (onglet « Patients », carte « Dossiers d’un proche »).",
     "profile_edit": "Modifier le profil",
     "profile_hint": "Corrigez les fautes de saisie du patient : son nom complet (prénom et nom, sans surnom ni abréviation), sa date de naissance, son téléphone. La correction est enregistrée à votre nom.",
     "profile_name": "Nom complet",
@@ -747,7 +746,18 @@
     "profile_save": "Enregistrer les corrections",
     "profile_saving": "Enregistrement…",
     "profile_saved": "Profil corrigé. Le patient verra la correction à sa prochaine ouverture de l’application.",
-    "profile_unchanged": "Rien à enregistrer : le profil était déjà à jour."
+    "profile_unchanged": "Rien à enregistrer : le profil était déjà à jour.",
+    "req_for": "Accès pour :",
+    "req_for_self": "lui-même",
+    "req_for_relative": "un proche (enfant, parent…)",
+    "req_label_placeholder": "De qui s’agit-il ? Ex. : Ma fille — Rime",
+    "req_proof": "Sur quelle base ?",
+    "req_proof_parent": "Parent d’un mineur",
+    "req_proof_present": "Proche présent",
+    "req_proof_procuration": "Procuration",
+    "req_need_label": "Indiquez de qui il s’agit.",
+    "req_need_proof": "Choisissez sur quelle base l’accès est donné.",
+    "req_fulfilled_relative": "Accès validé : {{name}} voit maintenant « {{label}} »."
   },
   "theme": {
     "toggle": "Changer le thème",

@@ -166,6 +166,14 @@ const EMPTY_PRACT_DRAFT: PractitionerDraft = {
 interface SetResult { success: boolean; uid: string; fullName: string; requester_id: string; type: string; }
 interface Member { uid: string; email: string; fullName: string; role: string; }
 interface ListResult { members: Member[]; callerLevel: number; }
+type ArProof = 'autorite_parentale' | 'present' | 'procuration';
+interface ArInput {
+  requester_id: string;
+  type: RequesterType;
+  forRelative?: boolean;
+  label?: string;
+  proof?: ArProof | '';
+}
 interface AccessRequest { uid: string; fullName: string; email: string; phone: string; createdAt: number | null; }
 /** Outcome of a staff probe on one requester_id, kept for the grant gate. */
 interface TestedId { status: 'ok' | 'empty' | 'error'; name: string; count: number; }
@@ -230,7 +238,10 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
 
   // Access requests section
   const [accessReqs, setAccessReqs] = useState<AccessRequest[]>([]);
-  const [arInputs, setArInputs] = useState<Record<string, { requester_id: string; type: RequesterType }>>({});
+  // Per pending request: the number typed, and — since 08/10/2026 — whether the
+  // access is for the account holder himself or for a RELATIVE (a parent who came
+  // with his child and has no dossier of his own), with its label and proof.
+  const [arInputs, setArInputs] = useState<Record<string, ArInput>>({});
   const [arBusy, setArBusy] = useState<string | false>(false);
   const [arMsg, setArMsg] = useState<string | null>(null);
   const [arError, setArError] = useState<string | null>(null);
@@ -542,20 +553,36 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     [loadDormant]
   );
 
-  const setArInput = (uid: string, patch: Partial<{ requester_id: string; type: RequesterType }>) =>
+  const setArInput = (uid: string, patch: Partial<ArInput>) =>
     setArInputs((m) => {
-      const cur = m[uid] || { requester_id: '', type: 'patient' as RequesterType };
+      const cur: ArInput = m[uid] || { requester_id: '', type: 'patient' };
       return { ...m, [uid]: { ...cur, ...patch } };
     });
 
   const fulfillReq = async (req: AccessRequest) => {
-    const inp = arInputs[req.uid] || { requester_id: '', type: 'patient' as RequesterType };
+    const inp: ArInput = arInputs[req.uid] || { requester_id: '', type: 'patient' };
     setArError(null);
     setArMsg(null);
     setArBusy(req.uid);
     try {
-      await callFn('adminFulfillAccessRequest', { uid: req.uid, requester_id: inp.requester_id.trim(), type: inp.type });
-      setArMsg(t('admin.req_fulfilled', { name: req.fullName || req.email }));
+      if (inp.forRelative) {
+        // One call: the number becomes a RELATIVE of this account, the request is closed.
+        await callFn('adminFulfillAccessRequest', {
+          uid: req.uid,
+          requester_id: inp.requester_id.trim(),
+          type: 'patient',
+          forRelative: { label: (inp.label || '').trim(), proof: inp.proof },
+        });
+        setArMsg(
+          t('admin.req_fulfilled_relative', 'Accès validé : {{name}} voit maintenant « {{label}} ».', {
+            name: req.fullName || req.email,
+            label: (inp.label || '').trim(),
+          })
+        );
+      } else {
+        await callFn('adminFulfillAccessRequest', { uid: req.uid, requester_id: inp.requester_id.trim(), type: inp.type });
+        setArMsg(t('admin.req_fulfilled', { name: req.fullName || req.email }));
+      }
       await loadAccessReqs();
     } catch (err: unknown) {
       setArError(errMsg(err));
@@ -1333,15 +1360,6 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 </span>
               )}
             </h2>
-            {/* 07/10/2026: a parent who never had a test came with his daughter,
-                and her number was validated here as HIS own dossier. The right
-                path is the relatives card; say so where the mistake happens. */}
-            <p className="text-sm text-[var(--text-secondary)]" data-testid="req-own-only-hint">
-              {t(
-                'admin.req_own_only_hint',
-                'Ne saisissez ici que le numéro de la personne elle-même. Un parent venu pour son enfant, sans dossier à lui : refusez cette demande, puis rattachez le dossier de l’enfant depuis sa fiche (onglet « Patients », carte « Dossiers d’un proche »).'
-              )}
-            </p>
             {arError && (
               <div className="flex items-center gap-2 text-sm text-[var(--status-error)]">
                 <AlertCircle size={16} /> <span>{arError}</span>
@@ -1363,7 +1381,23 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 </p>
               )}
               {accessReqs.map((req) => {
-                const inp = arInputs[req.uid] || { requester_id: '', type: 'patient' as RequesterType };
+                const inp: ArInput = arInputs[req.uid] || { requester_id: '', type: 'patient' };
+                const rel = !!inp.forRelative;
+                // A locked button always says why.
+                const arLock = !inp.requester_id.trim()
+                  ? null
+                  : rel && !(inp.label || '').trim()
+                    ? t('admin.req_need_label', 'Indiquez de qui il s’agit.')
+                    : rel && !inp.proof
+                      ? t('admin.req_need_proof', 'Choisissez sur quelle base l’accès est donné.')
+                      : null;
+                // Inline colours: the global button rules beat Tailwind colour
+                // utilities on these chips (measured: grey text on bordeaux).
+                const chipClass = 'min-h-[40px] px-3 rounded-lg border text-sm font-medium';
+                const chipStyle = (on: boolean): React.CSSProperties =>
+                  on
+                    ? { background: 'var(--color-bordeaux-primary)', color: 'var(--color-white)', borderColor: 'var(--color-bordeaux-primary)', transition: 'none' }
+                    : { background: 'transparent', color: 'var(--text-primary)', borderColor: 'var(--border-default)', transition: 'none' };
                 return (
                   <div key={req.uid} className="rounded-lg border border-[var(--border-default)] p-4 space-y-3">
                     <div className="flex items-start gap-3">
@@ -1382,6 +1416,15 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         )}
                       </div>
                     </div>
+                    <div className="flex flex-wrap items-center gap-2 text-sm" role="radiogroup" data-testid="ar-for">
+                      <span className="text-[var(--text-secondary)]">{t('admin.req_for', 'Accès pour :')}</span>
+                      <button type="button" role="radio" aria-checked={!rel} className={chipClass} style={chipStyle(!rel)} onClick={() => setArInput(req.uid, { forRelative: false })} data-testid="ar-for-self">
+                        {t('admin.req_for_self', 'lui-même')}
+                      </button>
+                      <button type="button" role="radio" aria-checked={rel} className={chipClass} style={chipStyle(rel)} onClick={() => setArInput(req.uid, { forRelative: true, type: 'patient' })} data-testid="ar-for-relative">
+                        {t('admin.req_for_relative', 'un proche (enfant, parent…)')}
+                      </button>
+                    </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
@@ -1391,7 +1434,8 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         className="flex-1 rounded-lg px-3 py-2.5 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
                       />
                       <select
-                        value={inp.type}
+                        value={rel ? 'patient' : inp.type}
+                        disabled={rel}
                         onChange={(e) => setArInput(req.uid, { type: e.target.value as RequesterType })}
                         className="rounded-lg px-3 py-2.5 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
                       >
@@ -1406,10 +1450,37 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         )}
                       </select>
                     </div>
+                    {rel && (
+                      <div className="space-y-2" data-testid="ar-relative-fields">
+                        <input
+                          type="text"
+                          maxLength={60}
+                          value={inp.label || ''}
+                          onChange={(e) => setArInput(req.uid, { label: e.target.value })}
+                          placeholder={t('admin.req_label_placeholder', 'De qui s’agit-il ? Ex. : Ma fille — Rime')}
+                          aria-label={t('admin.link_label_label', "De qui s'agit-il ?")}
+                          className="w-full rounded-lg px-3 py-2.5 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
+                          data-testid="ar-label"
+                        />
+                        <div className="flex flex-wrap items-center gap-2 text-sm" role="radiogroup" data-testid="ar-proof">
+                          <span className="text-[var(--text-secondary)]">{t('admin.req_proof', 'Sur quelle base ?')}</span>
+                          {(['autorite_parentale', 'present', 'procuration'] as ArProof[]).map((pr) => (
+                            <button key={pr} type="button" role="radio" aria-checked={inp.proof === pr} className={chipClass} style={chipStyle(inp.proof === pr)} onClick={() => setArInput(req.uid, { proof: pr })} data-testid={`ar-proof-${pr}`}>
+                              {pr === 'autorite_parentale'
+                                ? t('admin.req_proof_parent', 'Parent d’un mineur')
+                                : pr === 'present'
+                                  ? t('admin.req_proof_present', 'Proche présent')
+                                  : t('admin.req_proof_procuration', 'Procuration')}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {arLock && <p className="text-xs text-[var(--text-secondary)]" data-testid="ar-why">{arLock}</p>}
                     <div className="flex gap-2">
                       <button
                         onClick={() => fulfillReq(req)}
-                        disabled={arBusy === req.uid || !inp.requester_id.trim()}
+                        disabled={arBusy === req.uid || !inp.requester_id.trim() || !!arLock}
                         className="button-bordeaux justify-center flex items-center gap-2 disabled:opacity-60"
                       >
                         <Check size={16} /> {t('admin.req_validate', "Valider l'accès")}

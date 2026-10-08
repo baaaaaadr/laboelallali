@@ -614,7 +614,15 @@ export const adminListAccessRequests = onCall(
 export const adminFulfillAccessRequest = onCall(
   { region: REGION },
   async (
-    request: CallableRequest<{ uid?: string; requester_id?: string; type?: string }>
+    request: CallableRequest<{
+      uid?: string;
+      requester_id?: string;
+      type?: string;
+      // 08/10/2026 — the account holder has no dossier of his own: he came
+      // with his child or a parent. The number is attached as a RELATIVE (label
+      // + proof, both required) and the request is closed, in one call.
+      forRelative?: { label?: string; proof?: string };
+    }>
   ) => {
     const { uid: adminUid, level } = await requireLevel(request, LEVEL.staff);
     const targetUid = (request.data?.uid || "").trim();
@@ -626,6 +634,41 @@ export const adminFulfillAccessRequest = onCall(
     }
     if (!VALID_TYPES.includes(type as RequesterType)) {
       throw new HttpsError("invalid-argument", "Type invalide.");
+    }
+    const rel = request.data?.forRelative;
+    if (rel) {
+      assertRelativeType(type);
+      const label = String(rel.label || "").trim();
+      if (!label || label.length > MAX_LABEL_LEN) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Indiquez de qui il s'agit (ex. « Ma fille — Rime »)."
+        );
+      }
+      if (!PROOFS.includes(rel.proof as LinkProof)) {
+        throw new HttpsError("invalid-argument", "Choisissez sur quelle base l'accès est donné.");
+      }
+      await attachRequester(
+        targetUid, requesterId, "patient", label, adminUid, rel.proof as LinkProof
+      );
+      await admin
+        .firestore()
+        .doc(`resultAccessRequests/${targetUid}`)
+        .set(
+          {
+            status: "fulfilled",
+            requester_id: requesterId,
+            type,
+            forRelative: true,
+            fulfilledBy: adminUid,
+            fulfilledByEmail: request.auth?.token?.email || null,
+            fulfilledAt: admin.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      logger.info("adminFulfillAccessRequest", { uid: targetUid, by: adminUid, forRelative: true });
+      const holderNotified = await notifyDossierHolder(requesterId);
+      return { success: true, forRelative: true, holderNotified };
     }
     assertOwnTypeAllowed(type as RequesterType, level);
     await admin

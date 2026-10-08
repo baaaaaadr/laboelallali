@@ -33,7 +33,8 @@
  *  - l'admin : passer le dossier principal d'un compte en dossier d'un proche
  *    (M20 — un parent sans dossier, dont l'enfant avait été saisi comme lui) ;
  *  - l'admin : corriger le profil d'un patient — nom, date de naissance,
- *    téléphone (M21).
+ *    téléphone (M21) ;
+ *  - l'admin, onglet Demandes : valider l'accès « pour un proche » (M22).
  *
  * ⚠ Aucune feuille de style : les classes responsives (`hidden lg:block`) sont
  *   sans effet ici — on vérifie la structure, les textes et les appels.
@@ -1161,11 +1162,6 @@ async function m20MoveOwnToRelative(browser) {
   ok('le proche apparaît dans la liste', text.includes('Ma fille — Démo'));
   ok('le champ du dossier principal est vide', (await p.inputValue('input[placeholder="Ex. : 12345"]')) === '');
   ok('la proposition de déplacement disparaît (plus de dossier principal)', !(await p.$('[data-testid="link-move-own"]')));
-  // Onglet Demandes : le rappel, là où l'erreur avait été faite.
-  await p.getByRole('button', { name: /Demandes/ }).first().click();
-  await p.waitForSelector('[data-testid="req-own-only-hint"]', { timeout: 5000 });
-  ok('onglet « Demandes » : rappel « ne saisissez ici que le numéro de la personne elle-même »',
-    (await visibleText(p, '[data-testid="req-own-only-hint"]')).includes('que le numéro de la personne elle-même'));
   assertClean(p, await visibleText(p, '#app'));
   await p.close();
 }
@@ -1224,6 +1220,42 @@ async function m21EditProfile(browser) {
   await p.close();
 }
 
+// ── M22 — Demandes : valider l'accès « pour un proche » en une fois ─────────
+// 08/10/2026 : un parent sans dossier à lui vient avec son enfant. Sa demande
+// d'inscription se valide directement en rattachant l'enfant comme proche.
+async function m22RequestForRelative(browser) {
+  scenario('M22 — Demandes : « Accès pour : un proche » rattache l’enfant et clôt la demande');
+  const REQ = { uid: 'u-banc-0061', fullName: 'Parent Demande', email: 'parent.demande@example.test', phone: '0600000061', createdAt: Date.UTC(2026, 9, 7, 16, 25) };
+  const p = await freshPage(browser, {
+    page: 'admin',
+    profile: STAFF,
+    server: { identities: {} },
+    responses: { adminListAccessRequests: { requests: [REQ] }, adminFulfillAccessRequest: { success: true, forRelative: true, holderNotified: false } },
+  });
+  await p.getByRole('button', { name: /Demandes/ }).first().click();
+  await p.waitForSelector('[data-testid="ar-for"]', { timeout: 8000 });
+  ok('par défaut : accès pour lui-même, sans champs proche',
+    (await p.getAttribute('[data-testid="ar-for-self"]', 'aria-checked')) === 'true' && !(await p.$('[data-testid="ar-relative-fields"]')));
+  await p.getByPlaceholder('Identifiant patient (requester_id)').first().fill('900061');
+  await p.getByTestId('ar-for-relative').click();
+  const validate = p.getByRole('button', { name: /Valider l'accès/ }).first();
+  ok('« un proche » : libellé et justificatif apparaissent, bouton verrouillé', !!(await p.$('[data-testid="ar-relative-fields"]')) && (await validate.isDisabled()));
+  ok('…et il dit pourquoi (libellé)', (await p.textContent('[data-testid="ar-why"]')).includes('de qui'));
+  await p.fill('[data-testid="ar-label"]', 'Ma fille — Démo');
+  ok('libellé saisi, pas de justificatif : verrouillé, « sur quelle base »', (await validate.isDisabled()) && (await p.textContent('[data-testid="ar-why"]')).includes('base'));
+  await p.getByTestId('ar-proof-autorite_parentale').click();
+  ok('justificatif touché : déverrouillé', !(await validate.isDisabled()));
+  await validate.click();
+  await p.waitForTimeout(400);
+  const sent = await calls(p, 'adminFulfillAccessRequest');
+  ok('UN appel : ce compte, ce numéro, patient, proche avec libellé et justificatif',
+    sent.length === 1 && same(sent[0], { uid: REQ.uid, requester_id: '900061', type: 'patient', forRelative: { label: 'Ma fille — Démo', proof: 'autorite_parentale' } }),
+    JSON.stringify(sent));
+  ok('message : « voit maintenant « Ma fille — Démo » »', (await visibleText(p, '#app')).includes('voit maintenant « Ma fille — Démo »'));
+  assertClean(p, await visibleText(p, '#app'));
+  await p.close();
+}
+
 async function main() {
   console.log('\n══ Banc « médecin » — /mes-patients sous le vrai ResultsProvider ══');
   await build();
@@ -1250,6 +1282,7 @@ async function main() {
     await m19Dashboard(browser);
     await m20MoveOwnToRelative(browser);
     await m21EditProfile(browser);
+    await m22RequestForRelative(browser);
   } finally {
     await browser.close();
   }
