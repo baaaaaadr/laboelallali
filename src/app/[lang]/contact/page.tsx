@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Phone, Mail, MapPin, Clock, ChevronRight } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, ChevronRight, Briefcase } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import dynamic from 'next/dynamic';
 import ContactModal from '@/components/ui/ContactModal';
@@ -240,6 +240,30 @@ export default function ContactPage({
               )}
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* « Emploi & Stage » — people often look for « recrutement » on the
+          contact page; the form itself lives on /emploi. */}
+      <section id="emploi" className="mb-8">
+        <div className="card p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <Briefcase size={24} className="text-[var(--brand-primary)] flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-lg font-semibold text-[var(--text-primary)]">{t('emploi.contact_title', 'Rejoindre l’équipe')}</p>
+              <p className="text-[var(--text-secondary)] mt-1">
+                {t('emploi.contact_text', 'Stage ou emploi : envoyez votre candidature en ligne, sans créer de compte.')}
+              </p>
+            </div>
+          </div>
+          <Link
+            href={`/${resolvedParams.lang}/emploi`}
+            className="button-bordeaux justify-center flex items-center gap-2"
+            data-testid="contact-emploi"
+          >
+            {t('emploi.contact_cta', 'Postuler')}
+            <ChevronRight size={18} className={isRTL ? 'rotate-180' : ''} />
+          </Link>
         </div>
       </section>
     </div>

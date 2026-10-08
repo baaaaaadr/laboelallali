@@ -116,7 +116,9 @@ const HTML = '<!doctype html><html><head><meta charset="utf-8"></head><body><div
  *   - `storage`     : clés `localStorage` posées AVANT le montage ;
  *   - `responses`   : réponses fixes de fonctions Firebase, posées AVANT le
  *                     montage (`{ nomDuCallable: valeur }`) — l'appel reste
- *                     enregistré dans `window.__calls`.
+ *                     enregistré dans `window.__calls` ;
+ *   - `search`      : la chaîne de requête de l'adresse AVANT le montage
+ *                     (`'?tab=candidatures'` — le lien de l'e-mail d'alerte).
  */
 async function freshPage(
   browser,
@@ -130,6 +132,7 @@ async function freshPage(
     authLoading = false,
     storage = null,
     responses = null,
+    search = null,
   }
 ) {
   const p = await browser.newPage({ viewport: { width, height: 900 } });
@@ -146,7 +149,8 @@ async function freshPage(
   await p.goto('http://labo.test/');
   await p.addScriptTag({ path: BUNDLE });
   await p.evaluate(
-    ([l, prof, srv, pg, pn, waitAuth, store, resp]) => {
+    ([l, prof, srv, pg, pn, waitAuth, store, resp, q]) => {
+      if (q) window.history.replaceState(null, '', `/${q}`);
       window.__lang = l;
       window.__server = srv;
       window.__pathname = pn || `/${l}/${pg}`;
@@ -155,7 +159,7 @@ async function freshPage(
       if (!waitAuth) window.__setAuth(prof);
       window.__mount(pg);
     },
-    [lang, profile, server || { identities: {} }, page, pathname, authLoading, storage, responses]
+    [lang, profile, server || { identities: {} }, page, pathname, authLoading, storage, responses, search]
   );
   p.__errors = errors;
   return p;

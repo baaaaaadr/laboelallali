@@ -37,3 +37,7 @@ All laboratory metadata is loaded from `/src/constants/contact.ts`:
 ## Notes for AI
 - **Map Issues:** Never remove `{ ssr: false }` from the `SimpleMap` import. If the map fails to show up or throws errors, it is usually because the Leaflet styles are not loaded or the parent container doesn't have an explicit height defined.
 - **Icon styling in Dark Mode:** All icons (e.g., `Phone`, `Mail`, `MapPin`) must have color classes that remain legible when switching between light and dark modes (e.g., matching the theme primary color).
+
+## « Rejoindre l'équipe » card (08/10/2026)
+
+Last section of the page (`<section id="emploi">`): a `card` with the `Briefcase` icon, `emploi.contact_title` / `emploi.contact_text`, and a `button-bordeaux` link « Postuler » to `/{lang}/emploi` (`data-testid="contact-emploi"`, chevron rotated in RTL). People look for « recrutement » on a contact page; the form itself lives on `/emploi` (see `docs/pages/emploi.md`). Same reasoning as the FAQ q3 CTA: a separate `<Link>`, no `<Trans>`.

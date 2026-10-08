@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList, LayoutList } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList, LayoutList, Briefcase } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -615,6 +615,21 @@ const Header = () => {
               <Phone size={20} style={drawerIconStyle(isHere('/contact'))} />
               <span style={drawerTextStyle(isHere('/contact'))}>
                 {t('contact')}
+              </span>
+            </Link>
+
+            {/* « Emploi & Stage » — drawer only: the desktop bar is full
+                (measured, an 8th link overflows at 1024 px); the footer
+                carries it on every screen size. */}
+            <Link
+              href={`${currentLanguagePath}/emploi`}
+              style={drawerLinkStyle(isHere('/emploi'))}
+              aria-current={isHere('/emploi') ? 'page' : undefined}
+              onClick={toggleMenu}
+            >
+              <Briefcase size={20} style={drawerIconStyle(isHere('/emploi'))} />
+              <span style={drawerTextStyle(isHere('/emploi'))}>
+                {t('emploi.nav', { ns: 'common', defaultValue: 'Emploi & Stage' })}
               </span>
             </Link>
 

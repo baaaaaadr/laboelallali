@@ -17,6 +17,8 @@
     "test:results:ui": "node scripts/test-results-ui.js",
     "test:practitioner": "node scripts/test-practitioner.js",
     "test:practitioner:ui": "node scripts/test-practitioner-ui.js",
+    "test:emploi": "node scripts/test-emploi.js",
+    "test:emploi:ui": "node scripts/test-emploi-ui.js",
     "deploy": "npm run clean:devcache && npm run build && firebase deploy",
     "deploy:hosting": "npm run clean:devcache && npm run build && firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",
@@ -58,6 +60,7 @@
     "react-intersection-observer": "^10.0.3",
     "react-leaflet": "^5.0.0",
     "react-pdf": "^10.4.1",
+    "write-excel-file": "^4.1.1",
     "yup": "^1.6.1"
   },
   "devDependencies": {
@@ -72,8 +75,10 @@
     "autoprefixer": "^10.4.21",
     "critters": "^0.0.23",
     "css-loader": "^7.1.2",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
+    "fflate": "^0.8.2",
     "firebase-tools": "^15.1.0",
     "fs-extra": "^11.3.3",
     "next-sitemap": "^4.2.3",

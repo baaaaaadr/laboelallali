@@ -11,6 +11,7 @@ Labo El Allali PWA is a digital portal for a medical analysis laboratory in Agad
 *   **Progressive Web App (PWA):** Must be installable on mobile devices (iOS/Android) and desktop, providing a native-app-like experience.
 *   **Contact & Map Integrations:** Direct links to call, WhatsApp, and Google Maps for directions.
 *   **Dark/Light Mode:** First-class support for system and user-defined themes.
+*   **Emploi & Stage (08/10/2026, devis lines 27 & 40):** a public page where anyone applies for an internship or a job without an account (CV and letter, kept 6 months), and an admin « Candidatures » tab to sort, decide and export to Excel. See `docs/pages/emploi.md`.
 
 ## 3. Out of Scope
 *   Access to live patient results (No patient portal/login system is implemented locally).

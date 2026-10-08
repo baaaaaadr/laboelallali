@@ -105,6 +105,13 @@ service cloud.firestore {
     // the default deny on purpose; writes go through joinOutageWaitlist / the
     // Admin SDK.
 
+    // « Emploi & Stage » (08/10/2026): applications/{id} (a candidate's identity,
+    // path and the lab's decision) and applicationThrottle/{key} (hashed
+    // anti-spam counters) are server-only as well — written by submitApplication,
+    // read by the admin callables (ADMIN level), erased after 6 months by
+    // cleanupExpiredApplications. They fall to the default deny on purpose: a
+    // public form must never be able to read or rewrite another candidate.
+
     // Default deny for anything not explicitly allowed
     match /{document=**} {
       allow read, write: if false;

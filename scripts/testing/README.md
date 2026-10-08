@@ -111,6 +111,27 @@ L'onglet admin se monte avec des réponses fixes (`freshPage(…, { responses })
 
 Les tests purs sont à part : `npm run test:practitioner`.
 
+## Banc « Emploi & Stage » (`npm run test:emploi:ui`)
+
+`node scripts/test-emploi-ui.js` — même mécanique et mêmes doublures. La page
+`emploi` est montable (`window.__mount('emploi')`), `submitApplication` est
+répondu par le pilote (`responses`, ou un gestionnaire posé par `p.evaluate`
+qui lève `{ code, details: { fields } }` pour simuler un refus du serveur).
+98 vérifications :
+- F1–F7, le formulaire : vide (aucun appel, chaque manque listé), champs selon
+  le type de demande, la charge envoyée EXACTE, les fichiers (programme refusé,
+  plus de 5 Mo, photo redessinée en JPEG — une capture d'écran de la page sert
+  de vraie image), les refus du serveur, le préremplissage, le piège à robots
+  invisible, l'arabe ;
+- C1–C4, l'onglet admin « Candidatures » : stagiaire sans onglet ni appel,
+  badge, UNE lecture malgré les changements d'onglet, filtres et recherche,
+  décision, note, CV (visionneuse), lettre (photo), Word (téléchargement),
+  effacement en deux clics, le fichier Excel ouvert et lu (`fflate`), et le
+  lien de l'e-mail d'alerte (`freshPage(…, { search: '?tab=candidatures' })`).
+
+La batterie pure est `npm run test:emploi` (mêmes règles que le serveur
+DÉPLOYÉ, traductions, confidentialité, règles de sécurité, export).
+
 Pièges propres à ces bancs :
 
 - `buildSync` d'esbuild refuse les greffons : le pilote utilise `build()` (même

@@ -74,6 +74,18 @@ export { adminListPractitioners } from "./admin/practitionerDirectory";
 export { adminUpdateProfile } from "./admin/profileEdit";
 // Admin « Vue patient »: the app as a patient sees it, read-only (08/10/2026).
 export { adminViewAs } from "./admin/viewAs";
+// « Emploi & Stage » (devis lines 27 and 40, 08/10/2026): the public form sends
+// an application WITHOUT an account; the admin « Candidatures » tab (admin
+// level) decides; everything is erased 6 months after it was sent. The daily
+// erasure lives in europe-west1 (Cloud Scheduler), like the health check.
+export { submitApplication } from "./hr/submitApplication";
+export {
+  adminListApplications,
+  adminUpdateApplication,
+  adminGetApplicationFile,
+  adminDeleteApplication,
+  cleanupExpiredApplications,
+} from "./hr/adminApplications";
 // The doctor ASKS from the app (invitation link → « Demander mon accès
 // médecin »); an admin attaches his code. Asking grants nothing.
 export {

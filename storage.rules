@@ -16,6 +16,11 @@ service firebase.storage {
                        || request.resource.contentType.matches('application/pdf'));
     }
 
+    // CVs and letters of « Emploi & Stage » (candidatures/{id}/…) are written
+    // and read ONLY through the Admin SDK (submitApplication /
+    // adminGetApplicationFile): no rule here, so the default deny below covers
+    // them — never give that folder the public read of the prescriptions.
+
     // Default deny for all other paths
     match /{allPaths=**} {
       allow read, write: if false;

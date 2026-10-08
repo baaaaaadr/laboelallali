@@ -92,6 +92,9 @@ const HIDDEN_ROUTES = new Set([
   // The doctors' space: only ever reached signed in (the page redirects to
   // /login otherwise) — a sign-in invitation there is noise, or worse.
   'mes-patients',
+  // « Emploi & Stage »: a candidate needs NO account (owner's decision) — an
+  // invitation to sign in would suggest otherwise, over the submit button.
+  'emploi',
 ]);
 
 /** '/fr/analyses' → 'analyses'; '/fr' → ''. */

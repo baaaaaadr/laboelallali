@@ -10,7 +10,7 @@ Public privacy policy page (Moroccan loi 09-08 / CNDP). Explains what personal d
 ## Context & Key Components
 - No state, no auth, no data fetching. Renders content entirely from i18n.
 - `useTranslation('common')`; all copy under `confidentialite.*` in `public/locales/{fr,ar}/common.json`.
-- Structure: intro, `sections` cards (collect / results location / profile location / **usage tracking** / **relatives** / **prescribing doctors**), a rights list (5 items), then `afterRights` cards (security / retention / **outage waitlist** / contact). Icons from lucide-react (`ShieldCheck`, `FileText`, `Server`, `UserCog`, `Scale`, `Lock`, `Clock`, `Mail`, `Activity`, `BellRing`, `Users`, `Stethoscope`).
+- Structure: intro, `sections` cards (collect / results location / profile location / **usage tracking** / **relatives** / **prescribing doctors**), a rights list (5 items), then `afterRights` cards (security / retention / **outage waitlist** / **candidatures** / contact). Icons from lucide-react (`ShieldCheck`, `FileText`, `Server`, `UserCog`, `Scale`, `Lock`, `Clock`, `Mail`, `Activity`, `BellRing`, `Users`, `Stethoscope`, `Briefcase`). An `afterRights` entry may carry an `id` (rendered on its card, with `scrollMarginTop` under the fixed header) — the candidatures card has `id: 'candidatures'`.
 - **Outage waitlist card** (`confidentialite.outage_waitlist_*`, `BellRing` icon): declares the opt-in "notify me when the results server is back" processing — an email kept temporarily, only if the patient asks, deleted right after the recovery message. New PII processing → must stay declared here. See `src/components/features/results/OutageOptIn.tsx` + `docs/integrations/server-monitoring.md`.
 - Styling: `.card`, bordeaux heading, CSS vars.
 
@@ -57,3 +57,13 @@ Le texte affirme, dans cet ordre, et chaque affirmation doit rester vraie :
 **Depuis le 24/09/2026**, s'y ajoutent des compteurs **par médecin** (`practitionerUsage/{uid}` : jours de visite, nombre de bilans ouverts, dates de première et dernière visite, par mois) pour l'onglet « Médecins » et le tableau de bord de l'admin — toujours **des dates et des nombres, jamais quel patient ni quel dossier**. Même nature, et le médecin en est informé dans son engagement (« le laboratoire enregistre la date et le nombre de mes consultations (jamais lesquelles) »).
 
 **L'engagement du médecin est désormais pris dans l'application** (24/09/2026) : il le coche sur son formulaire de demande, ou l'accepte à sa première visite s'il a été activé directement ; sa date et sa version sont enregistrées sur son compte (`users/{uid}.practitionerEngagement`, verrouillé dans `firestore.rules`). La mention « après engagement écrit du médecin » du texte ci-dessus correspond à cette acceptation, horodatée — voir `docs/pages/mes-patients.md` §10.
+
+## Section « Candidatures (Emploi & Stage) » (08/10/2026)
+
+Ajoutée avec la page publique `/emploi` (voir `docs/pages/emploi.md`). Clés : `confidentialite.candidates_title` / `candidates_text`, fr **et** ar. Carte dans `afterRights`, après la liste d'attente panne, avec l'ancre `#candidatures` : la case de consentement du formulaire y renvoie (`/{lang}/confidentialite#candidatures`, nouvel onglet).
+
+**Pourquoi elle ne peut pas être omise.** Un traitement à part : les candidats ne sont pas des patients, n'ont pas de compte, et leurs données ont leur propre durée de conservation. Les droits « depuis votre profil » de la liste générale ne s'appliquent donc pas à eux — le texte donne sa propre voie (un e-mail).
+
+**Ce que le texte affirme, dans cet ordre :** les informations reçues (identité, coordonnées, parcours, permis et véhicule, langues) + CV et lettre ; usage unique : étudier la candidature ; lues par la direction du laboratoire seulement (= niveau admin dans l'app) ; pas de numéro de CIN ; effacement automatique, fichiers compris, 6 mois après l'envoi ; effacement anticipé ou correction sur simple e-mail à laboelallali@gmail.com, sans compte.
+
+**Alignement à tenir.** Chaque affirmation correspond à du code : `RETENTION_DAYS = 183` et `cleanupExpiredApplications` (6 mois), `requireLevel(LEVEL.admin)` sur les quatre callables (direction), aucun champ CIN dans `applicationRules.ts`, `adminDeleteApplication` (effacement sur demande). Changer l'un sans l'autre rend la page mensongère. `npm run test:emploi` (section D) vérifie la carte, l'ancre et les deux langues.

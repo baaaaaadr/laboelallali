@@ -168,6 +168,12 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link href={`/${i18n.language}/emploi`} className="flex items-center space-x-2 hover:text-[var(--color-fuchsia-accent)] dark:hover:text-[var(--color-fuchsia-light)] transition-colors duration-200 min-h-[44px] py-2">
+                  <ChevronRight size={16} className="w-4 h-4" />
+                  <span>{t('emploi.nav', 'Emploi & Stage')}</span>
+                </Link>
+              </li>
+              <li>
                 <Link href={`/${i18n.language}/contact#faq`} className="flex items-center space-x-2 hover:text-[var(--brand-accent)] transition-colors min-h-[44px] py-2">
                   <ChevronRight size={16} className="w-4 h-4" />
                   <span>{t('faq')}</span>

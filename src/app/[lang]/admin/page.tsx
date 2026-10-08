@@ -9,7 +9,7 @@
  * server-side by the callables (adminPatients.ts).
  */
 
-import React, { useState, useEffect, useCallback, use } from 'react';
+import React, { useState, useEffect, useCallback, useRef, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
@@ -44,10 +44,11 @@ import PractitionerRequestsSection, {
 } from '@/components/features/admin/PractitionerRequestsSection';
 import InviteDoctorCard from '@/components/features/admin/InviteDoctorCard';
 import PatientViewAs from '@/components/features/admin/PatientViewAs';
+import ApplicationsTab from '@/components/features/admin/ApplicationsTab';
 import PatientProfileEditor, { type ProfileFields } from '@/components/features/admin/PatientProfileEditor';
 import PractitionersSection, { type PractitionerRow } from '@/components/features/admin/PractitionersSection';
 import { normalizePractitionerId } from '@/lib/results/identities';
-import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, ArrowLeft, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList, Stethoscope, Pencil } from 'lucide-react';
+import { ShieldAlert, Search, UserCog, CheckCircle, AlertCircle, ArrowLeft, User, Users, UserPlus, Trash2, Crown, Inbox, Clock, Check, X, FlaskConical, FileText, Eye, Loader2, LayoutDashboard, MessageCircle, ClipboardList, LayoutList, Stethoscope, Pencil, Briefcase } from 'lucide-react';
 
 type RequesterType = 'patient' | 'medecin' | 'correspondant';
 const TYPES: RequesterType[] = ['patient', 'medecin', 'correspondant'];
@@ -56,7 +57,7 @@ const LEVEL: Record<string, number> = { owner: 3, admin: 2, staff: 1 };
 // `dashboard` and `team` need level >= 2; everything else is staff-level.
 // `doctors` (24/09/2026): the doctors holding an access, their requests, the
 // invitation link — everything « Mes patients » in one place.
-type AdminTab = 'dashboard' | 'patients' | 'requests' | 'doctors' | 'relances' | 'test' | 'team';
+type AdminTab = 'dashboard' | 'patients' | 'requests' | 'doctors' | 'relances' | 'test' | 'candidatures' | 'team';
 /**
  * Largeur utile du contenu, par onglet.
  *
@@ -89,6 +90,8 @@ const CONTENT_WIDTH: Record<AdminTab, string> = {
   // One card per doctor, with its actions: a reading measure, like Patients.
   doctors: 'max-w-4xl',
   test: 'max-w-4xl',
+  // One card per application, unfolded in place: a reading measure.
+  candidatures: 'max-w-4xl',
   team: 'max-w-4xl',
 };
 
@@ -200,6 +203,22 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
 
   // Tabs
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+  // « Candidatures » badge: applications still « à étudier » (managers only).
+  const [candPending, setCandPending] = useState<number | undefined>(undefined);
+  // Deep link `?tab=candidatures` — the link in the staff alert e-mail of a new
+  // application. Read once, after the role is known (a staff account stays on
+  // its default tab: the tab does not exist for it).
+  const deepLinkDone = useRef(false);
+  useEffect(() => {
+    if (loading || deepLinkDone.current) return;
+    deepLinkDone.current = true;
+    try {
+      const wanted = new URLSearchParams(window.location.search).get('tab');
+      if (wanted === 'candidatures' && isManager) setActiveTab('candidatures');
+    } catch {
+      /* no URL to read (tests) */
+    }
+  }, [loading, isManager]);
 
   // Dashboard tab
   const [dash, setDash] = useState<DashboardStats | null>(null);
@@ -1226,6 +1245,11 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     { id: 'doctors', label: t('admin.tab_doctors', 'Médecins'), icon: Stethoscope, count: practReqs.length },
     { id: 'relances', label: t('admin.tab_relances', 'Relances'), icon: MessageCircle, count: dormant?.length },
     { id: 'test', label: t('admin.tab_test', 'Vue patient'), icon: FlaskConical },
+    // Job applications (« Emploi & Stage »): admins and owners only — a CV is a
+    // lot of personal data. Its badge = applications still « à étudier ».
+    ...(isManager
+      ? [{ id: 'candidatures', label: t('admin.tab_candidatures', 'Candidatures'), icon: Briefcase, count: candPending }]
+      : []),
     ...(isManager ? [{ id: 'team', label: t('admin.tab_team', 'Équipe'), icon: Users }] : []),
   ];
 
@@ -2078,6 +2102,14 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         )}
 
         {/* ── Équipe tab: team management (admin + owner) ──────────────────── */}
+        {/* ── Candidatures — kept MOUNTED (hidden) for managers: it loads once
+            (the badge) and keeps a note being typed across tab switches. ── */}
+        {isManager && (
+          <div hidden={activeTab !== 'candidatures'}>
+            <ApplicationsTab lang={lang} fmtDate={fmtDate} fmtWhenTime={fmtWhenTime} onPending={setCandPending} />
+          </div>
+        )}
+
         {activeTab === 'team' && isManager && (
           <div className="card p-6 space-y-5">
             <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">

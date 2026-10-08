@@ -20,6 +20,7 @@ import ResultatsPage from '../../src/app/[lang]/resultats/page';
 import MesPatientsPage from '../../src/app/[lang]/mes-patients/page';
 import ProfilePage from '../../src/app/[lang]/profile/page';
 import AdminPage from '../../src/app/[lang]/admin/page';
+import EmploiPage from '../../src/app/[lang]/emploi/page';
 import Header from '../../src/components/layout/Header';
 import HeroPersonalPanel from '../../src/components/features/home/HeroPersonalPanel';
 import PractitionerCard, {
@@ -214,6 +215,9 @@ w.__mount = (page: string = 'resultats') => {
     admin: AdminPage,
     header: HeaderHarness,
     'home-panel': HeroPanelHarness,
+    // « Emploi & Stage » (public, no account): `submitApplication` is answered
+    // by the pilot (`responses` or `window.__callables`).
+    emploi: EmploiPage,
   };
   const Page = pages[page];
   if (!Page) throw new Error(`page inconnue du banc : ${page}`);

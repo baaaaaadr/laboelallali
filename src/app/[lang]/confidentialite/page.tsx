@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail, Activity, BellRing, Users, Stethoscope } from 'lucide-react';
+import { ShieldCheck, FileText, Server, UserCog, Scale, Lock, Clock, Mail, Activity, BellRing, Users, Stethoscope, Briefcase } from 'lucide-react';
 
 export default function ConfidentialitePage() {
   const { t } = useTranslation('common');
@@ -38,12 +38,16 @@ export default function ConfidentialitePage() {
     'confidentialite.rights_oppose',
     'confidentialite.rights_complaint',
   ];
-  const afterRights = [
+  const afterRights: { icon: typeof Lock; title: string; text: string; id?: string }[] = [
     { icon: Lock, title: 'confidentialite.security_title', text: 'confidentialite.security_text' },
     { icon: Clock, title: 'confidentialite.retention_title', text: 'confidentialite.retention_text' },
     // Opt-in outage waitlist: a temporarily-kept email, deleted right after the
     // "server is back" message. See src/components/features/results/OutageOptIn.tsx.
     { icon: BellRing, title: 'confidentialite.outage_waitlist_title', text: 'confidentialite.outage_waitlist_text' },
+    // « Emploi & Stage » (08/10/2026): a separate processing — candidates are
+    // not patients, have no account, and their data has its own 6-month
+    // erasure. The form's consent box links here (#candidatures).
+    { icon: Briefcase, title: 'confidentialite.candidates_title', text: 'confidentialite.candidates_text', id: 'candidatures' },
     { icon: Mail, title: 'confidentialite.contact_title', text: 'confidentialite.contact_text' },
   ];
 
@@ -93,7 +97,7 @@ export default function ConfidentialitePage() {
         {afterRights.map((s) => {
           const Icon = s.icon;
           return (
-            <div key={s.title} className="card p-6">
+            <div key={s.title} id={s.id} className="card p-6" style={s.id ? { scrollMarginTop: 'var(--header-total-height)' } : undefined}>
               <h2 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2 mb-2">
                 <Icon size={20} className="text-[var(--color-fuchsia-accent)]" />
                 {t(s.title)}
