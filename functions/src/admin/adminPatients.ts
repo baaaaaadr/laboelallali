@@ -622,7 +622,10 @@ export const adminListAccessRequests = onCall(
 
 /** Staff: fulfill a request — attach requester_id/type + mark fulfilled. */
 export const adminFulfillAccessRequest = onCall(
-  { region: REGION },
+  // SMTP secrets: the « pour un proche » branch tells the dossier's holder
+  // (notifyDossierHolder → sendMail). Without them `.value()` is empty and the
+  // mailer SIMULATES — it answered holderNotified: true with nothing sent.
+  { region: REGION, secrets: [SMTP_USER, SMTP_PASS] },
   async (
     request: CallableRequest<{
       uid?: string;
