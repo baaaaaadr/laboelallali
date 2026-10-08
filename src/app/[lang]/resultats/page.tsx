@@ -69,7 +69,9 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   const { lang } = use(params);
   const { t } = useTranslation('common');
   const router = useRouter();
-  const { user, userProfile, loading: authLoading } = useAuth();
+  // `viewAs`: the admin « Vue patient » renders this page AS another account,
+  // read-only — every write action below is hidden (it would act as the admin).
+  const { user, userProfile, loading: authLoading, viewAs } = useAuth();
   // Which person's results are on screen. LOCAL and never persisted: a selection
   // kept in the provider would leak to the home page, and on a shared family
   // phone remembering "I was looking at Dad's results" is a risk, not a comfort.
@@ -144,8 +146,8 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
   // When the (prefetched) fetch reports no online access yet, check whether the
   // patient already has a pending / rejected access request to show the right UI.
   useEffect(() => {
-    if (status === 'need_access') loadAccessStatus();
-  }, [status, loadAccessStatus]);
+    if (status === 'need_access' && !viewAs) loadAccessStatus();
+  }, [status, loadAccessStatus, viewAs]);
 
   const handleRequestAccess = useCallback(async () => {
     setRequesting(true);
@@ -579,7 +581,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             halves of Résultats. This page is the first half — the account's own
             dossiers and its relatives'; the doctor code is never one of its
             identities. Renders nothing for everyone else. */}
-        <ResultsSpaceSwitch lang={lang} current="mine" />
+        {!viewAs && <ResultsSpaceSwitch lang={lang} current="mine" />}
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -716,7 +718,7 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
                   <RotateCw size={18} />
                   {t('resultats.retry', 'Réessayer')}
                 </button>
-                {errorCode !== 'resource-exhausted' && outage.down && <OutageOptIn lang={lang} />}
+                {errorCode !== 'resource-exhausted' && outage.down && !viewAs && <OutageOptIn lang={lang} />}
               </>
             }
           />
@@ -761,7 +763,11 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
             <h2 className="text-lg font-semibold text-[var(--text-primary)]">
               {t('resultats.access_title', 'Accédez à vos résultats en ligne')}
             </h2>
-            {accessStatus === 'pending' ? (
+            {viewAs ? (
+              <p className="text-[var(--text-secondary)] max-w-md" data-testid="viewas-no-access">
+                {t('resultats.viewas_no_access', 'Ce compte n’a encore aucun dossier activé : c’est cet écran que voit le patient.')}
+              </p>
+            ) : accessStatus === 'pending' ? (
               <div className="flex flex-col items-center gap-2">
                 <span className="inline-flex items-center gap-2 text-sm font-semibold px-3 py-1.5 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)]">
                   <Clock size={16} /> {t('resultats.access_pending_badge', 'Demande en attente')}
@@ -853,11 +859,11 @@ export default function ResultatsPage({ params }: { params: Promise<{ lang: stri
         {/* Only on your OWN dossier: its copy is first-person ("je consulte
             désormais mes analyses") and inviting a relative from inside a
             relative's record makes no sense. */}
-        {isSelf && <ShareAccessCard lang={lang} />}
+        {isSelf && !viewAs && <ShareAccessCard lang={lang} />}
 
         {/* Ask the lab to attach a relative's dossier. Only on your OWN tab:
             relatives are added to YOUR account, not to someone else's. */}
-        {isSelf && <AddRelativeCard lang={lang} />}
+        {isSelf && !viewAs && <AddRelativeCard lang={lang} />}
 
         {/* Privacy reassurance — kept at the very bottom, below all results */}
         <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] text-sm">

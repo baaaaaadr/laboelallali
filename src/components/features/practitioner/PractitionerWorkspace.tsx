@@ -24,6 +24,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { MessageCircle, Phone, RefreshCw, Search, Stethoscope, Users, X } from 'lucide-react';
 import { useResultsFor } from '@/contexts/ResultsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import LastUpdatedLabel from '@/components/features/results/LastUpdatedLabel';
 import PdfViewerModal from '@/components/features/results/PdfViewerModal';
 import OutageOptIn, { useOutageStatus } from '@/components/features/results/OutageOptIn';
@@ -65,6 +66,8 @@ export default function PractitionerWorkspace({ lang, practitioner }: Props) {
   const { t } = useTranslation('common');
   const isArabic = lang === 'ar';
 
+  // Admin « Vue patient »: read-only, no opt-in written in the admin's name.
+  const { viewAs } = useAuth();
   const view = useResultsFor(practitioner.requester_id);
   const { results, status, errorCode, lastUpdated, pdfState, loadPdf, ensureLoaded, refresh } = view;
 
@@ -201,7 +204,7 @@ export default function PractitionerWorkspace({ lang, practitioner }: Props) {
               <RefreshCw size={18} />
               {t('resultats.retry', 'Réessayer')}
             </button>
-            {down && <OutageOptIn lang={lang} />}
+            {down && !viewAs && <OutageOptIn lang={lang} />}
           </div>
         }
       />

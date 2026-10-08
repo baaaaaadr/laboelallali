@@ -123,6 +123,12 @@ async function fetchResults(raw: unknown) {
 // Les autres callables que les pages appellent en passant. Réponses neutres :
 // aucune demande en cours, aucune panne connue.
 w.__callables.fetchResults = fetchResults;
+// « Vue patient » de l'admin : mêmes règles, le compte vu est le « profil » simulé.
+w.__callables.adminViewAs = (raw: unknown) => {
+  const { uid: _uid, ...rest } = (raw ?? {}) as Record<string, unknown>;
+  void _uid;
+  return fetchResults(rest);
+};
 w.__callables.myAccessRequest = () => ({ status: null });
 w.__callables.myRelativeRequests = () => ({ requests: [] });
 w.__callables.recordShare = () => ({});

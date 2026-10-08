@@ -194,3 +194,7 @@ Pending requests are listed on the card (`myRelativeRequests`), so "is my reques
 - **Prefetch is opt-in by access:** only patients with `requester_id` prefetch. If you change the gate, do NOT prefetch for users without access (avoids failing calls at every login).
 - **The global Google sign-in prompt is excluded from this page** (`GoogleSignInPrompt`, see `docs/pages/login.md`): the `need_access` and unauthenticated states already carry their own, better-targeted call to action, and two competing sign-in CTAs cancel each other out. `resultats` is in the component's `HIDDEN_ROUTES`.
 - **The /contact FAQ now links here.** Answer `faq_questions.a3` used to promise online results "bientôt"; it was rewritten in août 2026 with a CTA to this page. Whatever wording you use there must not promise permanent availability — the outage panel below would contradict it.
+
+## Admin « Vue patient » mode (08/10/2026)
+
+This page is also mounted inside the admin « Vue patient » tab under `ViewAsAuthProvider` (`useAuth().viewAs === true`, `user`/`userProfile` = the VIEWED account). In that mode: `loadAccessStatus` is skipped, `ResultsSpaceSwitch`, `OutageOptIn`, `ShareAccessCard` and `AddRelativeCard` are hidden, the need-access block shows `resultats.viewas_no_access` instead of the request form, and every results call goes through `adminViewAs` (see `docs/pages/admin.md`). Any new write action added to this page MUST be hidden when `viewAs` is set.

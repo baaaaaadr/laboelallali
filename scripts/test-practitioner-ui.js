@@ -1258,6 +1258,62 @@ async function m22RequestForRelative(browser) {
   await p.close();
 }
 
+// ── M23 — « Vue patient » : voir l'application comme le patient ─────────────
+// 08/10/2026 (Dr Aziz) : l'onglet « Tester » devient « Vue patient ». On cherche
+// un compte, puis on navigue SES vrais écrans, en lecture seule.
+async function m23ViewAs(browser) {
+  scenario('M23 — Vue patient : ses résultats, ses proches, « Mes patients » pour un médecin, en lecture seule');
+  const ADMIN_USER = { uid: 'uid-admin-banc', fullName: 'Admin Banc', phone: '0600000010', email: 'admin.banc@example.test', role: 'admin' };
+  const VIEWED = {
+    uid: 'uid-vu-banc', email: 'vu.banc@example.test', hasProfile: true, fullName: 'Patient Vu Banc', phone: '0600000023',
+    requester_id: '900001', type: 'patient',
+    links: [{ requester_id: '900003', type: 'patient', label: 'Ma fille Démo' }],
+    practitioner: { requester_id: CODE, type: 'medecin', label: 'Dr Démo Banc' },
+  };
+  const server = doctorServer({
+    primary: '900001',
+    identities: { '900001': { list: MY_DOSSIERS }, '900003': { list: [{ ...MY_DOSSIERS[0], dossier_id: 'D-9003-A' }] }, [CODE]: { list: ROSTER } },
+  });
+  let p = await freshPage(browser, { page: 'admin', profile: ADMIN_USER, server, width: 1100, responses: { adminDashboardStats: null, adminListStaff: { members: [], callerLevel: 2 }, adminListPractitionerRequests: { requests: [] }, adminListPractitioners: { practitioners: [] }, adminSearchPatients: { results: [VIEWED], truncated: false } } });
+  await p.getByRole('button', { name: /Vue patient/ }).first().click();
+  await p.waitForSelector('[data-testid="viewas-search"]', { timeout: 8000 });
+  ok('l’onglet garde le test du serveur sans compte, en dessous', (await visibleText(p, '#app')).includes('Tester un numéro sans compte'));
+  await p.fill('[data-testid="viewas-query"]', 'Patient Vu');
+  await p.locator('[data-testid="viewas-search"] button[type="submit"]').click();
+  await p.waitForSelector('[data-testid="viewas-banner"]', { timeout: 8000 });
+  await p.waitForTimeout(800);
+  ok('un seul compte trouvé : il s’ouvre directement, bandeau « lecture seule » à son nom',
+    /comme Patient Vu Banc.*lecture seule/.test(await p.textContent('[data-testid="viewas-banner"]')));
+  const first = await calls(p, 'adminViewAs');
+  ok('ses résultats passent par adminViewAs, pour CE compte — jamais fetchResults',
+    first.length >= 1 && first.every((c) => c.uid === 'uid-vu-banc') && (await calls(p, 'fetchResults')).length === 0, JSON.stringify(first));
+  ok('jamais son code médecin au démarrage', withCode(first).length === 0);
+  const text = await visibleText(p, '[data-testid="viewas"]');
+  ok('l’onglet de son proche est là', text.includes('Ma fille Démo'));
+  ok('aucune action à son nom (partage, ajout d’un proche, alerte panne)',
+    !(await p.$('[data-testid="share-access-card"]')) && !/Ajouter un proche/.test(text));
+  await p.getByTestId('viewas-tab-patients').click();
+  await waitForList(p);
+  ok('« Mes patients » : sa liste, un appel sans PDF avec son code', withCode(await calls(p, 'adminViewAs')).some((c) => c.include_pdf === 'none'));
+  ok('…ses 4 patients', (await patientNames(p)).length === 4);
+  assertClean(p, await visibleText(p, '#app'));
+  await p.getByTestId('viewas-close').click();
+  ok('« Changer de compte » revient à la recherche', !!(await p.$('[data-testid="viewas-search"]')));
+  await p.close();
+
+  // Un stagiaire : la patientèle d'un médecin reste fermée.
+  p = await freshPage(browser, { page: 'admin', profile: STAFF, server, responses: { adminSearchPatients: { results: [VIEWED], truncated: false } } });
+  await p.getByRole('button', { name: /Vue patient/ }).first().click();
+  await p.fill('[data-testid="viewas-query"]', 'Patient Vu');
+  await p.locator('[data-testid="viewas-search"] button[type="submit"]').click();
+  await p.waitForSelector('[data-testid="viewas-banner"]', { timeout: 8000 });
+  await p.getByTestId('viewas-tab-patients').click();
+  await p.waitForTimeout(300);
+  ok('stagiaire : « Mes patients » d’un médecin réservé aux administrateurs, aucun appel avec son code',
+    !!(await p.$('[data-testid="viewas-doctor-locked"]')) && withCode(await calls(p, 'adminViewAs')).length === 0);
+  await p.close();
+}
+
 async function main() {
   console.log('\n══ Banc « médecin » — /mes-patients sous le vrai ResultsProvider ══');
   await build();
@@ -1285,6 +1341,7 @@ async function main() {
     await m20MoveOwnToRelative(browser);
     await m21EditProfile(browser);
     await m22RequestForRelative(browser);
+    await m23ViewAs(browser);
   } finally {
     await browser.close();
   }

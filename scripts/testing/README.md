@@ -83,7 +83,7 @@ une clé).
 ## Banc « médecin » (`npm run test:practitioner:ui`)
 
 `node scripts/test-practitioner-ui.js` — même mécanique et mêmes doublures que le
-banc « résultats ». 268 vérifications :
+banc « résultats ». 280 vérifications :
 - l'espace « Mes patients » (M1–M9) : une liste = un appel sans PDF, un patient
   ouvert = un PDF, le sien ; recherche, états bloqués, collision, changement de
   compte, arabe ;
@@ -101,7 +101,9 @@ banc « résultats ». 268 vérifications :
   appel ; échec ; arabe) ;
 - les médecins ayant accès (M18 : usage, engagement, étiquettes, code partagé,
   lien WhatsApp, retrait en deux clics, « Ouvrir sa fiche », stagiaire en lecture
-  seule, liste vide) et le tableau de bord « Les médecins » (M19).
+  seule, liste vide) et le tableau de bord « Les médecins » (M19) ;
+- M20–M22 : dossier principal passé en proche, correction du profil, demande « pour un proche » ;
+- M23 : la « Vue patient » de l'admin (`adminViewAs` simulé dans `results-harness-entry.tsx` : il délègue au serveur simulé).
 
 L'onglet admin se monte avec des réponses fixes (`freshPage(…, { responses })`) :
 `adminListPractitioners`, `adminDashboardStats` (jeu d'essai complet dans M19),

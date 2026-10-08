@@ -43,6 +43,7 @@ import PractitionerRequestsSection, {
   type PractitionerRequest,
 } from '@/components/features/admin/PractitionerRequestsSection';
 import InviteDoctorCard from '@/components/features/admin/InviteDoctorCard';
+import PatientViewAs from '@/components/features/admin/PatientViewAs';
 import PatientProfileEditor, { type ProfileFields } from '@/components/features/admin/PatientProfileEditor';
 import PractitionersSection, { type PractitionerRow } from '@/components/features/admin/PractitionersSection';
 import { normalizePractitionerId } from '@/lib/results/identities';
@@ -1224,7 +1225,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     // Its badge = the doctors waiting for an activation.
     { id: 'doctors', label: t('admin.tab_doctors', 'Médecins'), icon: Stethoscope, count: practReqs.length },
     { id: 'relances', label: t('admin.tab_relances', 'Relances'), icon: MessageCircle, count: dormant?.length },
-    { id: 'test', label: t('admin.tab_test', 'Tester'), icon: FlaskConical },
+    { id: 'test', label: t('admin.tab_test', 'Vue patient'), icon: FlaskConical },
     ...(isManager ? [{ id: 'team', label: t('admin.tab_team', 'Équipe'), icon: Users }] : []),
   ];
 
@@ -1869,8 +1870,16 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         )}
 
         {/* ── Tester tab: results-ID onboarding probe ─────────────────────── */}
+        {activeTab === 'test' && !testOrigin && (
+          <PatientViewAs lang={lang} canSeeDoctor={isManager} fmtDate={fmtDate} />
+        )}
         {activeTab === 'test' && (
-        <div className="card p-6 space-y-4">
+        <div className="card p-6 space-y-4 mt-6">
+          {!testOrigin && (
+            <p className="text-base font-semibold text-[var(--text-primary)]">
+              {t('admin.viewas_probe_title', 'Tester un numéro sans compte')}
+            </p>
+          )}
           {testOrigin && (
             <button
               type="button"

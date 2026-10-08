@@ -261,7 +261,8 @@
     "relative_sending": "Envoi…",
     "relative_sent": "Demande envoyée. Le laboratoire vous recontactera : la vérification se fait sur place, elle ne peut pas être faite en ligne.",
     "relative_pending": "Demande en cours pour {{name}}",
-    "relative_error": "Votre demande n'a pas pu être envoyée."
+    "relative_error": "Votre demande n'a pas pu être envoyée.",
+    "viewas_no_access": "Ce compte n'a encore aucun dossier activé : le patient voit ici le formulaire de demande d'accès."
   },
   "continue_with_google": "Continuer avec Google",
   "or_use_email": "Ou utiliser une adresse e-mail",
@@ -368,7 +369,7 @@
     "subtitle": "Associer un identifiant de résultats à un compte patient.",
     "tab_patients": "Patients",
     "tab_requests": "Demandes",
-    "tab_test": "Tester",
+    "tab_test": "Vue patient",
     "tab_team": "Équipe",
     "search_label": "Rechercher un patient",
     "search_placeholder": "Email, nom, téléphone, date de naissance ou identifiant",
@@ -758,7 +759,16 @@
     "req_need_label": "Indiquez de qui il s’agit.",
     "req_need_proof": "Choisissez sur quelle base l’accès est donné.",
     "req_fulfilled_relative": "Accès validé : {{name}} voit maintenant « {{label}} ».",
-    "req_dob": "Né(e) le {{date}} ({{age}} ans)"
+    "req_dob": "Né(e) le {{date}} ({{age}} ans)",
+    "viewas_title": "Vue patient",
+    "viewas_intro": "Voyez l'application exactement comme le patient : ses résultats, ceux de sa famille rattachée et, pour un médecin, « Mes patients ». En lecture seule : rien n'est modifié ni compté à son nom.",
+    "viewas_placeholder": "N° de dossier, nom, e-mail ou téléphone",
+    "viewas_error": "La recherche n'a pas abouti. Réessayez.",
+    "viewas_none": "Aucun compte trouvé. Pour un numéro sans compte, utilisez le test du serveur ci-dessous.",
+    "viewas_banner": "Vous voyez l'application comme {{name}} — lecture seule.",
+    "viewas_change": "Changer de compte",
+    "viewas_doctor_admin_only": "La vue « Mes patients » d'un médecin est réservée aux administrateurs.",
+    "viewas_probe_title": "Tester un numéro sans compte"
   },
   "theme": {
     "toggle": "Changer le thème",

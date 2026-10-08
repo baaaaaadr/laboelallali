@@ -1,7 +1,7 @@
 # Page: /admin
 
 ## Purpose
-Staff space, organized into **seven tabs** (Tableau de bord · Patients · Demandes · Médecins · Relances · Tester · Équipe) so it stays usable on mobile as it grows. Five jobs:
+Staff space, organized into **seven tabs** (Tableau de bord · Patients · Demandes · Médecins · Relances · Vue patient · Équipe) so it stays usable on mobile as it grows. Five jobs:
 1. **Search patients, attach a CyberLab identity, and attach relatives' dossiers** — the **Patients** tab. A multi-field search (email, name/prénom, phone, date of birth, `requester_id`) finds the patient; picking a result shows their account creation date + date of birth and prefills the attach form, which merges `requester_id` + `type` onto their account (browser equivalent of `functions/scripts/seed-requester.js`). Replaces the old exact-email-only lookup.
 2. **Fulfill patient access requests** — the **Demandes** tab lists patients with a `pending` request; staff verifies identity (face-to-face) and attaches `requester_id` + `type` to activate access. A request lands here **two ways**: the patient tapped "Demander l'accès" on `/resultats`, OR it was **auto-created at signup** (`autoRequestResultsAccess()`, see `docs/pages/login.md`). Dr Aziz uses this queue as the **new-registrant outreach list** — the front desk phones each new signup to offer/explain the online-results service — so it is intentionally NOT limited to explicit requests.
 3. **Manage the team** (roles) — the **Équipe** tab (managers only): owners add/remove admins; owners and admins add/remove staff (stagiaires).
@@ -261,3 +261,15 @@ Callables: `requestRelativeAccess` (auth only, caps at 5 pending, de-duplicates 
 - **Adding a tool** = add a `TabItem` to `tabs` + wrap a section in `{activeTab === 'x' && …}`; `TabsNavigation` handles overflow, no layout change.
 - Patient search by name/phone/DOB/`requester_id` is now implemented (`adminSearchPatients`, Patients tab). The per-search scan reads up to `SCAN_LIMIT` docs — fine for this lab; past a few thousand patients, migrate to a normalized-field prefix index or a search service (`truncated:true` is the early signal).
 - Out of scope (future / Étape 2): traceability dashboard (accounts proposed/validated/dormant, filter by period + CIN — **CIN is not collected yet**), a "last results view" usage timestamp for the used/dormant indicator, account creation from admin, audit log of role/identity changes. Any usage tracking must store only an access timestamp, never medical content.
+
+## « Vue patient » tab (08/10/2026, Dr Aziz) — replaces the « Tester » label
+
+The tab id is still `'test'` (so `testFromLink` / `testOrigin` keep working); its label is now « Vue patient ». It holds two things:
+
+1. **`PatientViewAs`** (`src/components/features/admin/PatientViewAs.tsx`, hidden while `testOrigin` is set, i.e. when the operator came from « Tester d'abord »). Search with `adminSearchPatients` (accounts with a profile only; a single hit opens directly). The chosen account is turned into a `UserProfile` (`toProfile`: requester_id/type, `links` → `linkedRequesters`, `practitioner`) and the **real production pages** are mounted under `<ViewAsAuthProvider key={uid} profile>` + their own `<ResultsProvider>`:
+   - « Moi et ma famille » → `ResultatsPage` (own dossier + relatives' tabs + PDFs), with a stable `params` promise (`use(params)` needs the same instance);
+   - « Mes patients » (only if `readPractitioner(profile)`) → `PractitionerWorkspace`; **staff see a lock message** (`viewas-doctor-locked`), only `isManager` opens it — the server enforces the same.
+   State: `query`, `busy`, `error`, `hits`, `viewed`, `space ('mine'|'patients')`. Banner `viewas-banner` « Vous voyez l'application comme X — lecture seule » + `viewas-close` (« Changer de compte »).
+2. **The old ID probe card** below, now titled « Tester un numéro sans compte » (unchanged behaviour).
+
+How read-only is guaranteed: under `ViewAsAuthProvider`, `useAuth().viewAs === true`; `ResultsContext.callFetch` calls **`adminViewAs`** `{...args, uid}` instead of `fetchResults`; `/resultats` skips `loadAccessStatus` and hides `ResultsSpaceSwitch`, `OutageOptIn`, `ShareAccessCard`, `AddRelativeCard` (no-access state shows `resultats.viewas_no_access`); `PractitionerWorkspace` hides `OutageOptIn`. Server side `adminViewAs` writes no usage stamp (viewing must never count as the patient's visit) and traces each LIST read in `adminViewAsLog {by, uid, kind, at}`. `toProfile` always sets `practitionerEngagement` for a doctor: the engagement screen is never shown in this view, because its accept button would write on the ADMIN's own account (whether the doctor signed is visible in the « Médecins » tab). Bench: M23 in `scripts/test-practitioner-ui.js`.

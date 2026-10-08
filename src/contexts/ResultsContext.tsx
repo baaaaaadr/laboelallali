@@ -205,7 +205,7 @@ export const usePrimaryRequesterId = (): string | null =>
   useContext(ResultsContext).primaryRequesterId;
 
 export function ResultsProvider({ children }: { children: React.ReactNode }) {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, viewAs } = useAuth();
   const [buckets, setBuckets] = useState<Record<BucketKey, Bucket>>({});
   const [pdfById, setPdfById] = useState<Record<string, PdfState>>({});
 
@@ -287,12 +287,19 @@ export function ResultsProvider({ children }: { children: React.ReactNode }) {
     setPdfById(nextState);
   }, []);
 
+  // « Vue patient » (admin): the same requests, through `adminViewAs`, for the
+  // viewed account's uid — the admin's own session never reads as itself here.
+  const viewAsUid = viewAs ? user?.uid ?? null : null;
   const callFetch = useCallback(async (args: FetchArgs): Promise<CyberlabResponse> => {
     const functions = await getClientFunctions();
     if (!functions) throw new Error('functions-unavailable');
+    if (viewAsUid) {
+      const call = httpsCallable<FetchArgs & { uid: string }, CyberlabResponse>(functions, 'adminViewAs');
+      return (await call({ ...args, uid: viewAsUid })).data;
+    }
     const call = httpsCallable<FetchArgs, CyberlabResponse>(functions, 'fetchResults');
     return (await call(args)).data;
-  }, []);
+  }, [viewAsUid]);
 
   /**
    * Resolve a possibly-null identity to a concrete requester id.

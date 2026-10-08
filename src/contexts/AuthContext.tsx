@@ -43,6 +43,12 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /**
+   * True only under `ViewAsAuthProvider`: the admin « Vue patient » shows the app
+   * AS this account, read-only. Results then go through `adminViewAs`, and every
+   * write action (requests, shares, opt-ins) is hidden by the pages.
+   */
+  viewAs?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -54,6 +60,26 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const useAuth = () => useContext(AuthContext);
+
+/**
+ * « Vue patient » (admin, 08/10/2026): render the patient-side pages as the
+ * account `profile.uid`, read-only. Nothing here signs anyone in — the admin's
+ * own Firebase session is untouched; only what the components READ changes.
+ */
+export const ViewAsAuthProvider: React.FC<{ profile: UserProfile; children: React.ReactNode }> = ({ profile, children }) => {
+  const value = React.useMemo<AuthContextType>(
+    () => ({
+      user: { uid: profile.uid, email: profile.email } as unknown as User,
+      userProfile: profile,
+      loading: false,
+      logout: async () => {},
+      refreshProfile: async () => {},
+      viewAs: true,
+    }),
+    [profile]
+  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);

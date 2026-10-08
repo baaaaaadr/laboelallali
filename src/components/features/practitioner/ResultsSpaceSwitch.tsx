@@ -26,8 +26,10 @@ export type ResultsSpace = 'mine' | 'patients';
 
 export default function ResultsSpaceSwitch({ lang, current }: { lang: string; current: ResultsSpace }) {
   const { t } = useTranslation('common');
-  const { userProfile } = useAuth();
-  if (!readPractitioner(userProfile)) return null;
+  const { userProfile, viewAs } = useAuth();
+  // In the admin « Vue patient » these links would leave the admin space: the
+  // admin view has its own tabs.
+  if (viewAs || !readPractitioner(userProfile)) return null;
 
   const item = (space: ResultsSpace, href: string, label: string) => {
     const active = space === current;

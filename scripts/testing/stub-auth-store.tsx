@@ -89,6 +89,18 @@ async function logout() {
 
 export function useAuth() {
   const s = useSyncExternalStore(subscribe, () => state, () => state);
+  const viewed = React.useContext(ViewAsCtx);
+  if (viewed) {
+    return {
+      user: { uid: viewed.uid, email: typeof viewed.email === 'string' ? viewed.email : null, displayName: null },
+      userProfile: viewed,
+      loading: false,
+      refreshProfile: async () => {},
+      logout: async () => {},
+      signOut: async () => {},
+      viewAs: true,
+    };
+  }
   return {
     user: s.user,
     userProfile: s.userProfile,
@@ -101,4 +113,10 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
+}
+
+// « Vue patient »: the admin page mounts the patient pages under this provider.
+const ViewAsCtx = React.createContext<StubProfile | null>(null);
+export function ViewAsAuthProvider({ profile, children }: { profile: StubProfile; children: React.ReactNode }) {
+  return <ViewAsCtx.Provider value={profile}>{children}</ViewAsCtx.Provider>;
 }
