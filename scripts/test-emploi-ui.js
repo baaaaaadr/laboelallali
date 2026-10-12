@@ -592,6 +592,42 @@ async function c4DeleteExport(browser) {
   await p.close();
 }
 
+async function c5Rh(browser) {
+  scenario('C5 — rôle « RH » : uniquement l’onglet Candidatures ; l’équipe l’attribue');
+  const RH = { uid: 'uid-rh-banc', fullName: 'RH Banc', phone: '0600000012', email: 'rh.banc@example.test', role: 'rh' };
+  let p = await freshPage(browser, { page: 'admin', profile: RH, width: 1100, responses: adminResponses() });
+  await p.waitForSelector('[data-testid="cand-card"]', { timeout: 8000 });
+  const tabs = await p.$$eval('[role="tablist"] button, nav button', (els) => els.map((e) => e.textContent.trim()).filter(Boolean));
+  const text = await visibleText(p, '#app');
+  ok('titre « Espace recrutement », onglet Candidatures ouvert d’office', text.includes('Espace recrutement') && (await p.isVisible('[data-testid="cand-list"]')));
+  ok('aucun autre onglet (Patients, Demandes, Médecins, Équipe…)', !/Patients|Demandes|Médecins|Relances|Vue patient|Équipe|Tableau de bord/.test(tabs.join(' ')), tabs.join(' | '));
+  const other = ['adminListAccessRequests', 'adminListDormant', 'adminListRelativeRequests', 'adminListPractitionerRequests', 'adminDashboardStats', 'adminListStaff'];
+  const made = [];
+  for (const n of other) if ((await calls(p, n)).length) made.push(n);
+  ok('aucun appel aux données patients / équipe', made.length === 0, made.join(', '));
+  ok('pas de liens « Parcours (test) »', !text.includes('Parcours patient unifié'));
+  assertClean(p, text);
+  await p.close();
+
+  p = await freshPage(browser, {
+    page: 'admin', profile: ADMIN_USER, width: 1100,
+    responses: adminResponses({
+      adminListStaff: { members: [{ uid: 'u1', email: 'rh.banc@example.test', fullName: 'RH Banc', role: 'rh' }], callerLevel: 2 },
+      adminSetRh: { success: true },
+    }),
+  });
+  await p.waitForTimeout(600);
+  await p.getByRole('button', { name: /Équipe/ }).first().click();
+  await p.waitForSelector('[data-testid="team-add-rh"]', { timeout: 5000 });
+  ok('le membre RH apparaît avec le badge « RH »', (await visibleText(p, '#app')).includes('RH Banc'));
+  await p.fill('[data-testid="team-add-rh"] input', 'nouvelle.rh@example.test');
+  await p.click('[data-testid="team-add-rh"] button[type="submit"]');
+  await p.waitForTimeout(400);
+  const set = await calls(p, 'adminSetRh');
+  ok('« Ajouter un compte RH » : adminSetRh {email, grant: true}', set.length === 1 && set[0].email === 'nouvelle.rh@example.test' && set[0].grant === true, JSON.stringify(set));
+  await p.close();
+}
+
 async function main() {
   console.log('\n══ Banc « Emploi & Stage » — la page publique et l’onglet admin ══');
   await build();
@@ -608,6 +644,7 @@ async function main() {
     await c2List(browser);
     await c3Card(browser);
     await c4DeleteExport(browser);
+    await c5Rh(browser);
   } finally {
     await browser.close();
   }

@@ -859,7 +859,14 @@
     "rel_need_identity": "Indiquez le nom, le prénom et la date de naissance du proche, comme dans Qalam.",
     "link_need_label": "Indiquez de qui il s’agit (le libellé que le patient verra).",
     "rel_found_via": "Trouvé par son proche « {{label}} » : {{name}}{{born}} — dossier {{id}}",
-    "rel_selected_via": "Votre recherche correspond à un proche rattaché à ce compte : « {{label}} » — {{name}}{{born}}, dossier {{id}}. Sa fiche est ci-dessous, dans « Dossiers d’un proche »."
+    "rel_selected_via": "Votre recherche correspond à un proche rattaché à ce compte : « {{label}} » — {{name}}{{born}}, dossier {{id}}. Sa fiche est ci-dessous, dans « Dossiers d’un proche ».",
+    "role_rh": "RH",
+    "nav_rh": "Candidatures",
+    "team_rh_placeholder": "email de la personne RH",
+    "team_add_rh": "Ajouter un compte RH",
+    "team_rh_hint": "Un compte RH voit uniquement l’onglet « Candidatures » : ni patients, ni résultats, ni médecins.",
+    "rh_title": "Espace recrutement",
+    "rh_subtitle": "Les candidatures reçues par la page « Emploi & Stage »."
   },
   "theme": {
     "toggle": "Changer le thème",

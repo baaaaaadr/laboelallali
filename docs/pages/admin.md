@@ -317,3 +317,12 @@ Every application sent from the public page `/emploi` (see `docs/pages/emploi.md
 - `cleanupExpiredApplications` (daily, europe-west1) — the 6-month erasure.
 
 i18n: `admin.tab_candidatures`, `admin.cand_*` (fr + ar); the answers' labels are the form's `emploi.*` keys. Benches: `npm run test:emploi:ui` scenarios C1–C4 (staff sees no tab and makes no call; badge; one read across tab switches; filters, search; decision, note, CV/photo/Word; two-click erase; Excel content; the e-mail deep link).
+
+## The « RH » role — recruitment services see ONLY « Candidatures » (Dr Aziz, 12/10/2026)
+
+`users/{uid}.role = 'rh'` (locked like every `role`). **Outside the level ladder**: `levelOf('rh') = 0`, so the page's `isStaff`/`isManager` stay false and every staff-level load (access requests, relances, relative/doctor requests, dashboard, team) never runs; every server callable guarded by `requireLevel(...)` refuses it. Only the applications callables accept it (`requireApplicationsAccess`, `canReadApplications` in `functions/src/admin/roles.ts`).
+- Page: `isRh`, `canSeeApplications = isManager || isRh`. The access gate lets RH in; `tabs` is ONLY `candidatures`; the dashboard guard sends RH to `candidatures`; title « Espace recrutement » + subtitle (`admin.rh_*`); the journey-prototype links are hidden; `ApplicationsTab` mounted for `canSeeApplications`; the `?tab=candidatures` deep link works for RH.
+- Équipe tab (admins and owners): form « Ajouter un compte RH » (`team-add-rh`, → `adminSetRh {email, grant}`), badge « RH », removable (→ `adminSetRh {grant:false}`; it refuses to clear a role that is not `rh`, and never touches an admin/owner). `adminListStaff` lists `rh` members too.
+- Header: the admin link shows for RH, labelled « Candidatures » (`admin.nav_rh`).
+- `submitApplication` sends the new-application alert to `ALERT_EMAILS` + every `rh` account's e-mail.
+- Bench: C5 in `scripts/test-emploi-ui.js`; rule tests in `functions/scripts/test-applications.js`.

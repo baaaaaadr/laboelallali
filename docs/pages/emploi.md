@@ -69,3 +69,6 @@ Footer « Liens rapides » (`emploi.nav`), mobile drawer (after Contact — the 
 - Never ask for a CIN; never attach a CV to an e-mail (they open in the admin tab); never log a candidate's data (ids and types only).
 - Chip colours are inline (global button rules beat Tailwind colours); selected text uses `--background-default` so it stays readable on the dark-mode pink.
 - Benches: `npm run test:emploi` (pure, 32 checks), `npm run test:emploi:ui` (browser, F1–F7 form + C1–C4 admin tab), `node functions/scripts/test-applications.js` (server rules and e-mails, 75 checks).
+
+## Who reads the applications (12/10/2026)
+Admins, owners and the **« RH » role** (recruitment services, see `docs/pages/admin.md` « The « RH » role »). RH accounts see only the « Candidatures » tab and also receive the new-application alert e-mail. Never the stagiaires.

@@ -21,6 +21,35 @@ export function levelOf(role?: string): number {
   return (role && LEVEL[role]) || 0;
 }
 
+/**
+ * « RH » (Dr Aziz, 12/10/2026): the recruitment services see the job
+ * applications (« Candidatures ») and NOTHING else. Deliberately OUTSIDE the
+ * level ladder — `levelOf("rh")` is 0 — so every callable guarded by
+ * `requireLevel(…)` (patients, results, doctors, team…) keeps refusing it
+ * without a single change; only the applications callables let it in.
+ */
+export const RH_ROLE = "rh";
+
+/** Admins, owners and the « RH » role read the job applications. Pure. */
+export function canReadApplications(role?: string): boolean {
+  return role === RH_ROLE || levelOf(role) >= LEVEL.admin;
+}
+
+/** Throws unless the caller may read the job applications (`canReadApplications`). */
+export async function requireApplicationsAccess(
+  request: CallableRequest
+): Promise<{ uid: string; role: string }> {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentification requise.");
+  }
+  const uid = request.auth.uid;
+  const role = String((await admin.firestore().doc(`users/${uid}`).get()).data()?.role || "");
+  if (!canReadApplications(role)) {
+    throw new HttpsError("permission-denied", "Accès réservé au recrutement et à la direction du laboratoire.");
+  }
+  return { uid, role };
+}
+
 /** Throws unless the caller is authenticated and at least `min` level. */
 export async function requireLevel(
   request: CallableRequest,

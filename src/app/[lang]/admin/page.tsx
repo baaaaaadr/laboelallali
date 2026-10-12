@@ -226,6 +226,11 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const isStaff = level >= 1;
   const isManager = level >= 2; // admin or owner
   const isOwner = level >= 3;
+  // « RH » (Dr Aziz, 12/10/2026): the recruitment services see the
+  // « Candidatures » tab and NOTHING else. Outside the level ladder (level 0),
+  // so every staff-level load and tab below stays closed to them.
+  const isRh = userProfile?.role === 'rh';
+  const canSeeApplications = isManager || isRh;
   const isArabic = lang === 'ar';
 
   // Tabs
@@ -241,11 +246,11 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     deepLinkDone.current = true;
     try {
       const wanted = new URLSearchParams(window.location.search).get('tab');
-      if (wanted === 'candidatures' && isManager) setActiveTab('candidatures');
+      if (wanted === 'candidatures' && canSeeApplications) setActiveTab('candidatures');
     } catch {
       /* no URL to read (tests) */
     }
-  }, [loading, isManager]);
+  }, [loading, canSeeApplications]);
 
   // Dashboard tab
   const [dash, setDash] = useState<DashboardStats | null>(null);
@@ -282,6 +287,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   const [teamMsg, setTeamMsg] = useState<string | null>(null);
   const [newStaffEmail, setNewStaffEmail] = useState('');
   const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newRhEmail, setNewRhEmail] = useState('');
 
   // Access requests section
   const [accessReqs, setAccessReqs] = useState<AccessRequest[]>([]);
@@ -528,8 +534,9 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
   // `dashboard` is the default tab but is managers-only: a stagiaire landing here
   // would otherwise face an empty screen with no tab selected.
   useEffect(() => {
-    if (!loading && !isManager && activeTab === 'dashboard') setActiveTab('patients');
-  }, [loading, isManager, activeTab]);
+    // An « RH » account has a single tab: the applications.
+    if (!loading && !isManager && activeTab === 'dashboard') setActiveTab(isRh ? 'candidatures' : 'patients');
+  }, [loading, isManager, isRh, activeTab]);
 
   const loadTeam = useCallback(async () => {
     try {
@@ -1276,8 +1283,17 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       t('admin.team_added', { email: target })
     ).then(() => setNewAdminEmail(''));
   };
+  // « RH »: sees the applications only (adminSetRh, admin level like a stagiaire).
+  const addRh = (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = newRhEmail.trim();
+    teamAction(
+      () => callFn('adminSetRh', { email: target, grant: true }),
+      t('admin.team_added', { email: target })
+    ).then(() => setNewRhEmail(''));
+  };
   const removeMember = (m: Member) => {
-    const fnName = m.role === 'admin' ? 'adminSetAdmin' : 'adminSetStaff';
+    const fnName = m.role === 'admin' ? 'adminSetAdmin' : m.role === 'rh' ? 'adminSetRh' : 'adminSetStaff';
     teamAction(
       () => callFn(fnName, { email: m.email, grant: false }),
       t('admin.team_removed', { email: m.email || m.fullName })
@@ -1292,7 +1308,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       </div>
     );
   }
-  if (!isStaff) {
+  if (!isStaff && !isRh) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 bg-[var(--background-default)]">
         <div className="card p-8 max-w-md text-center flex flex-col items-center gap-3">
@@ -1304,7 +1320,9 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
     );
   }
 
-  const tabs: TabItem[] = [
+  const tabs: TabItem[] = isRh
+    ? [{ id: 'candidatures', label: t('admin.tab_candidatures', 'Candidatures'), icon: Briefcase, count: candPending }]
+    : [
     // Steering figures: managers only. The front desk gets "Relances" instead.
     ...(isManager
       ? [{ id: 'dashboard', label: t('admin.tab_dashboard', 'Tableau de bord'), icon: LayoutDashboard }]
@@ -1321,13 +1339,14 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
       ? [{ id: 'candidatures', label: t('admin.tab_candidatures', 'Candidatures'), icon: Briefcase, count: candPending }]
       : []),
     ...(isManager ? [{ id: 'team', label: t('admin.tab_team', 'Équipe'), icon: Users }] : []),
-  ];
+    ];
 
   const roleBadge = (role: string) => {
     const label =
       role === 'owner' ? t('admin.role_owner', 'Propriétaire')
         : role === 'admin' ? t('admin.role_admin', 'Admin')
-          : t('admin.role_staff', 'Stagiaire');
+          : role === 'rh' ? t('admin.role_rh', 'RH')
+            : t('admin.role_staff', 'Stagiaire');
     return (
       <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[var(--background-secondary)] text-[var(--text-secondary)] border border-[var(--border-default)] flex items-center gap-1">
         {role === 'owner' && <Crown size={12} className="text-[var(--color-fuchsia-accent)]" />}
@@ -1342,10 +1361,12 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-[var(--color-bordeaux-primary)] flex items-center gap-2">
             <UserCog size={26} />
-            {t('admin.title', 'Espace administrateur')}
+            {isRh ? t('admin.rh_title', 'Espace recrutement') : t('admin.title', 'Espace administrateur')}
           </h1>
           <p className="text-[var(--text-secondary)] mt-1">
-            {t('admin.subtitle', 'Associer un identifiant de résultats à un compte patient.')}
+            {isRh
+              ? t('admin.rh_subtitle', 'Les candidatures reçues par la page « Emploi & Stage ».')
+              : t('admin.subtitle', 'Associer un identifiant de résultats à un compte patient.')}
           </p>
         </div>
 
@@ -1356,6 +1377,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             dans src/components/layout/Header.tsx. Le tiroir mobile, lui, porte
             bien le lien (liste verticale, aucune contrainte de largeur).
             A SUPPRIMER quand le parcours deviendra /rendez-vous. */}
+        {!isRh && (
         <div className="mb-4 grid gap-2 sm:grid-cols-2">
           <Link
             href={`/${lang}/test-rdv`}
@@ -1392,6 +1414,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             </span>
           </Link>
         </div>
+        )}
 
         {/* Tab bar — a normal in-flow element: it scrolls away with the page, so it
             takes zero fixed screen space. To switch tabs, scroll back to the top. */}
@@ -2247,9 +2270,9 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
         )}
 
         {/* ── Équipe tab: team management (admin + owner) ──────────────────── */}
-        {/* ── Candidatures — kept MOUNTED (hidden) for managers: it loads once
+        {/* ── Candidatures — kept MOUNTED (hidden) for managers and « RH »: it loads once
             (the badge) and keeps a note being typed across tab switches. ── */}
-        {isManager && (
+        {canSeeApplications && (
           <div hidden={activeTab !== 'candidatures'}>
             <ApplicationsTab lang={lang} fmtDate={fmtDate} fmtWhenTime={fmtWhenTime} onPending={setCandPending} />
           </div>
@@ -2277,7 +2300,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
             <ul className="divide-y divide-[var(--border-default)]">
               {team.map((m) => {
                 const canRemove =
-                  m.role === 'staff' || (m.role === 'admin' && isOwner);
+                  m.role === 'staff' || m.role === 'rh' || (m.role === 'admin' && isOwner);
                 return (
                   <li key={m.uid} className="flex items-center justify-between gap-3 py-3">
                     <div className="min-w-0">
@@ -2319,6 +2342,27 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                 <UserPlus size={18} />
                 {t('admin.team_add_staff', 'Ajouter un stagiaire')}
               </button>
+            </form>
+
+            {/* Add an « RH » account (admin + owner): sees ONLY « Candidatures ». */}
+            <form onSubmit={addRh} className="space-y-1" data-testid="team-add-rh">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  required
+                  value={newRhEmail}
+                  onChange={(e) => setNewRhEmail(e.target.value)}
+                  placeholder={t('admin.team_rh_placeholder', 'email de la personne RH')}
+                  className="flex-1 rounded-lg px-3 py-3 border border-[var(--border-default)] bg-[var(--background-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-fuchsia-accent)] sm:text-sm"
+                />
+                <button type="submit" disabled={teamBusy} className="button-outline justify-center flex items-center gap-2 disabled:opacity-60">
+                  <UserPlus size={18} />
+                  {t('admin.team_add_rh', 'Ajouter un compte RH')}
+                </button>
+              </div>
+              <p className="text-xs text-[var(--text-secondary)]">
+                {t('admin.team_rh_hint', 'Un compte RH voit uniquement l’onglet « Candidatures » : ni patients, ni résultats, ni médecins.')}
+              </p>
             </form>
 
             {/* Add admin (owner only) */}

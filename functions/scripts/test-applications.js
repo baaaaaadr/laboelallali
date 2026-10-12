@@ -180,5 +180,14 @@ const ar = E.renderAck(form, "ar", { ref: "AB3DE9", when: "08/10/2026 à 11:00" 
 assert(ar.html.includes('dir="rtl"') && ar.subject.includes("مختبر العلالي"), "arabe : de droite à gauche");
 assert(!ar.html.includes(" à "), "arabe : pas de « à » français dans la date");
 
+console.log("\nQui voit les candidatures (rôle « RH », 12/10/2026)");
+const Roles = require(path.join(__dirname, "..", "lib/admin/roles"));
+assert(Roles.canReadApplications("owner") && Roles.canReadApplications("admin"), "propriétaires et admins : oui");
+assert(Roles.canReadApplications("rh"), "rôle « RH » : oui");
+assert(!Roles.canReadApplications("staff"), "stagiaire : non (décision du propriétaire)");
+assert(!Roles.canReadApplications("") && !Roles.canReadApplications(undefined), "patient sans rôle : non");
+assert(!Roles.canReadApplications("RH") && !Roles.canReadApplications("rh "), "valeur approchante (« RH », « rh  ») : non");
+assert(Roles.levelOf("rh") === 0, "« RH » reste HORS de l'échelle : toute fonction « stagiaire et plus » le refuse (patients, résultats, médecins, équipe)");
+
 console.log(failures === 0 ? "\nTout est vert." : `\n${failures} échec(s).`);
 process.exit(failures === 0 ? 0 : 1);

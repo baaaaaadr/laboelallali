@@ -37,6 +37,8 @@ export {
   adminSetRequester,
   adminSetStaff,
   adminSetAdmin,
+  // « RH » (12/10/2026): sees ONLY the « Candidatures » tab.
+  adminSetRh,
   adminListStaff,
   // Patient results-access requests (self-service) + staff fulfillment.
   requestResultsAccess,

@@ -25,7 +25,7 @@ import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { createHash, randomBytes } from "crypto";
-import { REGION } from "../admin/roles";
+import { REGION, RH_ROLE } from "../admin/roles";
 import { APP_URL, SMTP_USER, SMTP_PASS, alertRecipients, fmtCasablanca, sendMail } from "../email/mailer";
 import {
   APPLICATIONS,
@@ -223,9 +223,21 @@ export const submitApplication = onCall(
         adminUrl: `${APP_URL.value()}/fr/admin?tab=candidatures`,
         files: { cv: !!stored.cv, letter: !!stored.letter },
       });
+      // The « RH » accounts are the people who process the applications: they
+      // get the alert too (12/10/2026), on top of the usual lab list.
+      let to = alertRecipients();
+      try {
+        const rh = await db.collection("users").where("role", "==", RH_ROLE).limit(20).get();
+        const extra = rh.docs
+          .map((d) => String(d.data().email || "").trim().toLowerCase())
+          .filter((e) => e.includes("@"));
+        to = [...new Set([...to.map((e) => e.toLowerCase()), ...extra])];
+      } catch {
+        logger.warn("submitApplication: RH recipients unavailable", { id: docRef.id });
+      }
       sends.push(
         sendMail({
-          to: alertRecipients(),
+          to,
           subject: alert.subject,
           html: alert.html,
           replyTo: form.email || undefined,

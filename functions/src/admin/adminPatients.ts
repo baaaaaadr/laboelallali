@@ -15,7 +15,7 @@ import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 // Role gate + region live in a side-effect-free leaf module, shared with the
 // CyberLab staff callable (adminTestResults) so both use the exact same check.
-import { LEVEL, levelOf, requireLevel, REGION } from "./roles";
+import { LEVEL, levelOf, requireLevel, REGION, RH_ROLE } from "./roles";
 // Ids are typed by hand at the front desk; strip any whitespace (Qalam shows big
 // ids as "67 305") before storing, or the lab server answers requester_not_found.
 import { normalizeRequesterId } from "../cyberlab/client";
@@ -562,6 +562,38 @@ export const adminSetStaff = onCall(
   }
 );
 
+/**
+ * Grant/revoke the « RH » role (12/10/2026): the account then sees ONLY the
+ * « Candidatures » tab (see RH_ROLE in roles.ts). Requires admin (>=2), like
+ * the stagiaires. Never demotes an admin or an owner; revoking only clears an
+ * « RH » role — never a stagiaire's by mistake.
+ */
+export const adminSetRh = onCall(
+  { region: REGION },
+  async (request: CallableRequest<RoleData>) => {
+    const { uid: adminUid } = await requireLevel(request, LEVEL.admin);
+    const email = (request.data?.email || "").trim();
+    const grant = request.data?.grant !== false;
+    if (!email) throw new HttpsError("invalid-argument", "Email requis.");
+    const uid = await getUidByEmail(email, "La personne");
+    const ref = admin.firestore().doc(`users/${uid}`);
+    const cur = String((await ref.get()).data()?.role || "");
+    if (cur === "owner" || cur === "admin") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Cette personne est admin ou propriétaire : elle voit déjà les candidatures."
+      );
+    }
+    if (!grant && cur !== RH_ROLE) {
+      throw new HttpsError("failed-precondition", "Cette personne n'a pas le rôle RH.");
+    }
+    await ref.set({ role: grant ? RH_ROLE : null }, { merge: true });
+    // uid only — never the e-mail.
+    logger.info("adminSetRh", { uid, by: adminUid, grant });
+    return { success: true, uid, email, role: grant ? RH_ROLE : "" };
+  }
+);
+
 /** Grant/revoke ADMIN. Requires owner (>=3). Cannot touch another owner. */
 export const adminSetAdmin = onCall(
   { region: REGION },
@@ -581,7 +613,7 @@ export const adminSetAdmin = onCall(
   }
 );
 
-/** List all team members (staff/admin/owner). Requires admin (>=2). */
+/** List all team members (staff/admin/owner, and « RH »). Requires admin (>=2). */
 export const adminListStaff = onCall(
   { region: REGION },
   async (request: CallableRequest) => {
@@ -589,7 +621,7 @@ export const adminListStaff = onCall(
     const snap = await admin
       .firestore()
       .collection("users")
-      .where("role", "in", ["owner", "admin", "staff"])
+      .where("role", "in", ["owner", "admin", "staff", RH_ROLE])
       .limit(200)
       .get();
     const members = snap.docs.map((doc) => {
@@ -601,7 +633,7 @@ export const adminListStaff = onCall(
         role: d.role || "",
       };
     });
-    // Sort: owner, admin, staff, then by name.
+    // Sort: owner, admin, staff, RH (level 0), then by name.
     members.sort(
       (a, b) => levelOf(b.role) - levelOf(a.role) || a.fullName.localeCompare(b.fullName)
     );

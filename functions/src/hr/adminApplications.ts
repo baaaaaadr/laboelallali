@@ -1,7 +1,8 @@
 /**
- * The admin « Candidatures » tab (devis line 40, 08/10/2026) — ADMIN level
- * (admins and owners; the stagiaires never see a candidate's CV: owner's
- * decision). Server side of `src/components/features/admin/ApplicationsTab.tsx`.
+ * The admin « Candidatures » tab (devis line 40, 08/10/2026) — admins,
+ * owners and the « RH » role (12/10/2026, `requireApplicationsAccess`); the
+ * stagiaires never see a candidate's CV (owner's decision). Server side of
+ * `src/components/features/admin/ApplicationsTab.tsx`.
  *
  *  - `adminListApplications`  — every application still kept (≤ 6 months).
  *  - `adminUpdateApplication` — the lab's decision (à étudier / entretien /
@@ -17,7 +18,7 @@ import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
-import { LEVEL, REGION, requireLevel } from "../admin/roles";
+import { REGION, requireApplicationsAccess } from "../admin/roles";
 import { APPLICATIONS, FILE_KINDS, NOTE_MAX, STATUSES, STORAGE_PREFIX, THROTTLE, Status } from "./applicationRules";
 
 const MAX_LIST = 500;
@@ -89,7 +90,7 @@ function toDTO(doc: admin.firestore.DocumentSnapshot) {
 
 /** Admin: every application still kept, newest first. */
 export const adminListApplications = onCall({ region: REGION }, async (request: CallableRequest) => {
-  await requireLevel(request, LEVEL.admin);
+  await requireApplicationsAccess(request);
   try {
     const snap = await admin
       .firestore()
@@ -108,7 +109,7 @@ export const adminListApplications = onCall({ region: REGION }, async (request: 
 export const adminUpdateApplication = onCall(
   { region: REGION },
   async (request: CallableRequest<{ id?: unknown; status?: unknown; note?: unknown }>) => {
-    const { uid } = await requireLevel(request, LEVEL.admin);
+    const { uid } = await requireApplicationsAccess(request);
     const d = request.data || {};
     const id = readId(d.id);
     let status: Status | undefined;
@@ -160,7 +161,7 @@ export const adminGetApplicationFile = onCall(
     } catch {
       /* best-effort */
     }
-    const { uid } = await requireLevel(request, LEVEL.admin);
+    const { uid } = await requireApplicationsAccess(request);
     const d = request.data || {};
     const id = readId(d.id);
     if (!(FILE_KINDS as readonly unknown[]).includes(d.kind)) throw new HttpsError("invalid-argument", "Pièce inconnue.");
@@ -187,7 +188,7 @@ async function eraseApplication(id: string): Promise<void> {
 export const adminDeleteApplication = onCall(
   { region: REGION },
   async (request: CallableRequest<{ id?: unknown }>) => {
-    const { uid } = await requireLevel(request, LEVEL.admin);
+    const { uid } = await requireApplicationsAccess(request);
     const id = readId(request.data?.id);
     try {
       await eraseApplication(id);

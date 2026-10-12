@@ -136,6 +136,9 @@ const Header = () => {
 
   const currentLanguagePath = `/${urlLang}`;
   const isStaff = ['owner', 'admin', 'staff'].includes(userProfile?.role || '');
+  // « RH » (12/10/2026): the admin space reduced to the « Candidatures » tab.
+  const isRh = userProfile?.role === 'rh';
+  const adminLabel = isRh ? t('admin.nav_rh', 'Candidatures') : t('admin.nav', 'Admin');
   // Compte titulaire d'un accès médecin : « Résultats » se divise alors en
   // « Moi et ma famille » et « Mes patients » (docs/pages/mes-patients.md §7).
   const isPractitioner = readPractitioner(userProfile) !== null;
@@ -318,13 +321,13 @@ const Header = () => {
             >
               {t('contact')}
             </Link>
-            {isStaff && (
+            {(isStaff || isRh) && (
               <Link
                 href={`${currentLanguagePath}/admin`}
                 className={`nav-link font-semibold text-sm lg:text-base flex items-center gap-1 ${isHere('/admin') ? 'active' : ''}`}
                 aria-current={isHere('/admin') ? 'page' : undefined}
               >
-                <UserCog size={16} /> {t('admin.nav', 'Admin')}
+                <UserCog size={16} /> {adminLabel}
               </Link>
             )}
             {/* ⛔ PAS de lien "Parcours (test)" ICI, et c'est mesuré.
@@ -646,8 +649,8 @@ const Header = () => {
               </span>
             </Link>
 
-            {/* Admin Link - Mobile, staff only */}
-            {isStaff && (
+            {/* Admin Link - Mobile, staff and « RH » */}
+            {(isStaff || isRh) && (
               <Link
                 href={`${currentLanguagePath}/admin`}
                 style={drawerLinkStyle(isHere('/admin'))}
@@ -656,7 +659,7 @@ const Header = () => {
               >
                 <UserCog size={20} style={drawerIconStyle(isHere('/admin'))} />
                 <span style={drawerTextStyle(isHere('/admin'))}>
-                  {t('admin.nav', 'Admin')}
+                  {adminLabel}
                 </span>
               </Link>
             )}
