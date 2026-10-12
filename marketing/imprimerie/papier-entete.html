@@ -85,7 +85,18 @@
   .logo { width:19mm; height:19mm; flex:0 0 auto; margin-top:1mm; }
 
   /* --------------------------------------------------------------- pied */
-  footer { position:absolute; bottom:14mm; left:18mm; right:18mm; text-align:center; }
+  footer { position:absolute; bottom:14mm; left:18mm; right:18mm; }
+  /* Pied en deux parties : a gauche le QR « Scannez-moi » (decision du
+     12/10/2026, un QR unique sur tous les supports), a droite les
+     coordonnees. 20 mm, le plancher du referentiel : sur une lettre il doit
+     rester discret, la page appartient au texte du courrier. */
+  .pied { display:flex; align-items:center; gap:6mm; }
+  .qr { display:flex; align-items:center; gap:2.6mm; flex:0 0 auto; }
+  .qr img { width:20mm; height:20mm; display:block; }
+  .qr .appel { font-family:"Public Sans",sans-serif; font-weight:700; font-size:8pt; color:var(--bordeaux); }
+  .qr .quoi { font-size:6.8pt; color:var(--gris); line-height:1.35; margin-top:.4mm; }
+  .qr .ar { font-family:"Tajawal",sans-serif; font-weight:700; font-size:7.4pt; color:var(--bordeaux); direction:rtl; text-align:left; margin-top:.8mm; }
+  .infos { flex:1 1 auto; text-align:right; }
   .filet { height:0.35mm; background:linear-gradient(90deg, var(--fuchsia), var(--bordeaux)); margin-bottom:2.6mm; }
   .coord { font-size:7.5pt; line-height:1.55; color:var(--encre); }
   .coord strong { color:var(--bordeaux); font-weight:700; }
@@ -125,14 +136,28 @@
 
   <footer>
     <div class="filet"></div>
-    <div class="coord">
-      61 Bis, Rue de Marrakech, 80020 Agadir &nbsp;·&nbsp; Tél : <strong>05 28 84 33 84</strong>
-      &nbsp;·&nbsp; G.S.M : <strong>06 54 07 95 92</strong> &nbsp;·&nbsp; laboelallali@gmail.com<br>
-      <span class="site">www.laboelallali.com</span>
-    </div>
-    <div class="legal">
-      PATENTE : 48153350 &nbsp;|&nbsp; I.F : 76143330 &nbsp;|&nbsp; I.C.E : 001702973000057
-      &nbsp;|&nbsp; INPE : 043060623 &nbsp;|&nbsp; CNSS : 8519409
+    <div class="pied">
+      <div class="qr">
+        <img src="../assets/qr/qr-scannez-moi-bordeaux.svg" alt="">
+        <div>
+          <div class="appel">Scannez-moi</div>
+          <div class="quoi">résultats, rendez-vous,<br>contact</div>
+          <div class="ar">امسحوا الرمز: النتائج،<br>المواعيد، الاتصال</div>
+        </div>
+      </div>
+      <div class="infos">
+        <div class="coord">
+          61 Bis, Rue de Marrakech, 80020 Agadir &nbsp;·&nbsp; laboelallali@gmail.com<br>
+          Fixe <strong>05 28 84 33 84</strong> &nbsp;·&nbsp; WhatsApp <strong>06 54 07 95 92</strong>
+          &nbsp;·&nbsp; Dr El Allali <strong>06 61 29 14 11</strong><br>
+          Du lundi au vendredi <strong>7h30 – 18h30</strong> &nbsp;·&nbsp; Samedi <strong>7h30 – 13h00</strong> &nbsp;·&nbsp; Dimanche fermé<br>
+          <span class="site">laboelallali.com</span>
+        </div>
+        <div class="legal">
+          PATENTE : 48153350 &nbsp;|&nbsp; I.F : 76143330 &nbsp;|&nbsp; I.C.E : 001702973000057
+          &nbsp;|&nbsp; INPE : 043060623 &nbsp;|&nbsp; CNSS : 8519409
+        </div>
+      </div>
     </div>
   </footer>
 </body>

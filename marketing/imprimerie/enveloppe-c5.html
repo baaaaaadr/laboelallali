@@ -107,9 +107,12 @@
     position:absolute; left:14mm; top:57mm; width:91mm;
     display:flex; align-items:center; gap:5mm;
   }
-  .enligne img { width:26mm; height:26mm; flex:0 0 auto; }
+  /* QR « Scannez-moi » (decision du 12/10/2026 : un QR unique sur tous les
+     supports). 24 mm, au-dessus du plancher de 20 mm du referentiel. */
+  .enligne img { width:24mm; height:24mm; flex:0 0 auto; }
   .enligne .titre { font-family:"Public Sans",sans-serif; font-weight:700; font-size:9pt;
                     color:var(--bordeaux); line-height:1.25; }
+  .enligne .quoi { font-size:7.6pt; color:var(--encre); margin-top:.6mm; }
   .enligne .ar { font-family:"Tajawal",sans-serif; font-size:7.6pt; color:var(--gris);
                  direction:rtl; margin-top:1.1mm; line-height:1.4; }
   .enligne .site { font-weight:700; font-size:8.2pt; color:var(--bordeaux); margin-top:1.8mm; }
@@ -167,21 +170,22 @@
   <div class="filet"></div>
 
   <div class="enligne">
-    <img src="../affiches/qr-site.png" alt="">
+    <img src="../assets/qr/qr-scannez-moi-bordeaux.svg" alt="">
     <div>
-      <div class="titre">Vos résultats et vos<br>rendez-vous en ligne</div>
-      <div class="ar">نتائجكم ومواعيدكم عبر الإنترنت</div>
-      <div class="site">www.laboelallali.com</div>
+      <div class="titre">Scannez-moi</div>
+      <div class="quoi">résultats, rendez-vous, contact</div>
+      <div class="ar">امسحوا الرمز: النتائج، المواعيد، الاتصال</div>
+      <div class="site">laboelallali.com</div>
     </div>
   </div>
 
   <footer>
     <div class="filet2"></div>
     <div class="horaires">
-      Du lundi au vendredi de <strong>7h30 à 18h30</strong> · Le samedi de <strong>7h30 à 13h00</strong>
+      Du lundi au vendredi de <strong>7h30 à 18h30</strong> · Le samedi de <strong>7h30 à 13h00</strong> · Dimanche fermé
     </div>
     <div class="coord">
-      61 Bis, rue de Marrakech, Quartier Industriel - Agadir · Tél : 05 28 84 33 84 · G.S.M : 06 54 07 95 92 · laboelallali@gmail.com
+      61 Bis, Rue de Marrakech, 80020 Agadir · Fixe 05 28 84 33 84 · WhatsApp 06 54 07 95 92 · Dr El Allali 06 61 29 14 11 · laboelallali@gmail.com
     </div>
   </footer>
 

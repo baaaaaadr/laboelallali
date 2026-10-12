@@ -118,23 +118,24 @@
   /* ---- la bande centrale reste vide : c'est la zone d'ecriture ---- */
 
   /* ------------------------------------------------------------ message */
-  .message{position:absolute; left:8mm; right:8mm; top:47mm; text-align:center}
-  .message .ar{font-family:"Tajawal",sans-serif; font-weight:700; font-size:8pt;
+  .message{position:absolute; left:8mm; right:8mm; top:42.8mm; text-align:center}
+  .message .ar{font-family:"Tajawal",sans-serif; font-weight:700; font-size:7.6pt;
                line-height:1.5; color:var(--bordeaux); direction:rtl}
-  .message .fr{font-family:"Public Sans",sans-serif; font-weight:700; font-size:7.2pt;
-               line-height:1.4; color:var(--bordeaux); margin-top:1.4mm}
+  .message .fr{font-family:"Public Sans",sans-serif; font-weight:700; font-size:6.9pt;
+               line-height:1.4; color:var(--bordeaux); margin-top:0.8mm}
 
   /* --------------------------------------------------------------- pied */
-  .filet2{position:absolute; left:7mm; right:7mm; top:66mm; height:0.3mm;
+  .filet2{position:absolute; left:7mm; right:7mm; top:60.6mm; height:0.3mm;
           background:var(--filet); opacity:.85}
 
-  footer{position:absolute; left:7mm; right:7mm; top:68mm;
+  footer{position:absolute; left:7mm; right:7mm; top:62.4mm;
          display:flex; align-items:flex-start; gap:3.2mm}
-  footer .qr{width:15mm; height:15mm; flex:0 0 auto; display:block}
+  footer .qr{width:20mm; height:20mm; flex:0 0 auto; display:block}
   .coord{flex:1 1 auto; font-size:4.8pt; line-height:1.5; color:var(--gris)}
   .coord .site{font-family:"Public Sans",sans-serif; font-weight:700; font-size:6.2pt;
                color:var(--bordeaux); line-height:1.15; margin-bottom:0.6mm}
   .coord b{color:var(--encre); font-weight:700}
+  .coord .site-ar{font-family:"Tajawal",sans-serif; font-weight:700; font-size:5.8pt; color:var(--bordeaux); direction:rtl; text-align:left; margin-bottom:0.6mm}
   .coord .site .et{font-family:"Inter",sans-serif; font-weight:400; font-size:5pt;
                    color:var(--gris)}
 </style>
@@ -168,12 +169,13 @@
   <div class="filet2"></div>
 
   <footer>
-    <img class="qr" src="../assets/qr/qr-site.svg" alt="">
+    <img class="qr" src="../assets/qr/qr-scannez-moi-bordeaux.svg" alt="">
     <div class="coord">
-      <div class="site"><span class="et">L’application :</span> www.laboelallali.com</div>
-      61 Bis, rue de Marrakech, 80020 — Agadir<br>
+      <div class="site">Scannez-moi <span class="et">: résultats, rendez-vous, contact</span></div>
+      <div class="site-ar">امسحوا الرمز: النتائج، المواعيد، الاتصال</div>
+      61 Bis, Rue de Marrakech, 80020 Agadir<br>
       Fixe <b>05 28 84 33 84</b> &nbsp;·&nbsp; WhatsApp <b>06 54 07 95 92</b><br>
-      laboelallali@gmail.com<br>
+      Dr El Allali <b>06 61 29 14 11</b> &nbsp;·&nbsp; laboelallali@gmail.com<br>
       Lun – Ven <b>7h30 – 18h30</b> &nbsp;·&nbsp; Sam <b>7h30 – 13h00</b> &nbsp;·&nbsp; Dimanche <b>fermé</b>
     </div>
   </footer>

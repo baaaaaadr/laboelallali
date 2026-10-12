@@ -45,6 +45,21 @@ const FORMATS = {
       { suffixe: "-mono", query: "?ton=mono", note: "offset 1 couleur, bordeaux — repli" },
     ],
   },
+  // Carte de visite, ligne 55 du devis. Le PDF de l'imprimeur porte les DEUX
+  // faces en 2 pages, fond perdu compris. La version « numerique » (sans fond
+  // perdu, 85 x 55) est celle que l'application reutilise pour la carte
+  // telechargeable (ligne 63) : un bandeau a fond perdu y deborderait.
+  "carte-visite.html": {
+    w: 91, h: 61, fini: "85 × 55 mm recto-verso", fp: 3,
+    variantes: [
+      { suffixe: "", query: "", note: "recto + verso, 2 pages — À IMPRIMER", pngNon: true },
+      { suffixe: "-recto", query: "?face=fr", note: "recto, français", pdfNon: true },
+      { suffixe: "-verso", query: "?face=ar", note: "verso, arabe", pdfNon: true },
+      { suffixe: "-numerique", query: "?num=1", w: 85, h: 55, note: "sans fond perdu, 2 pages — application", pngNon: true },
+      { suffixe: "-numerique-recto", query: "?num=1&face=fr", w: 85, h: 55, pdfNon: true },
+      { suffixe: "-numerique-verso", query: "?num=1&face=ar", w: 85, h: 55, pdfNon: true },
+    ],
+  },
   "enveloppe-c5.html": {
     w: 229, h: 162, fini: "C5 229 × 162 mm", fp: 0,
     variantes: [
@@ -85,6 +100,9 @@ const DPI = 300;
     const pxH = Math.round((fmt.h / MM_PER_IN) * DPI);
 
     for (const v of fmt.variantes || [{ suffixe: "", query: "" }]) {
+      // Une variante peut avoir son propre format (carte numerique sans fond perdu).
+      const W = v.w || fmt.w, H = v.h || fmt.h;
+      await page.setViewportSize({ width: cssPx(W), height: cssPx(H) });
       await page.goto(url + v.query, { waitUntil: "load" });
       await page.evaluate(async () => {
         await document.fonts.ready;
@@ -99,24 +117,26 @@ const DPI = 300;
         // PDF : vectoriel, aux dimensions exactes du canevas.
         await page.pdf({
           path: path.join(OUT, `${nom}.pdf`),
-          width: `${fmt.w}mm`,
-          height: `${fmt.h}mm`,
+          width: `${W}mm`,
+          height: `${H}mm`,
           printBackground: true,
           margin: { top: "0", right: "0", bottom: "0", left: "0" },
           preferCSSPageSize: false,
         });
         console.log(
-          `OK  ${nom}.pdf  ${fmt.w}×${fmt.h} mm (fini ${fmt.fini}, fond perdu ${fmt.fp} mm)` +
+          `OK  ${nom}.pdf  ${W}×${H} mm (fini ${fmt.fini}, fond perdu ${fmt.fp} mm)` +
             (v.note ? ` — ${v.note}` : "")
         );
       }
 
-      // PNG : apercu 300 dpi.
-      await page.screenshot({
-        path: path.join(OUT, `${nom}.png`),
-        clip: { x: 0, y: 0, width: cssPx(fmt.w), height: cssPx(fmt.h) },
-      });
-      console.log(`OK  ${nom}.png  ${pxW}×${pxH} px @${DPI} dpi`);
+      // PNG : apercu 300 dpi (sauf variantes multipages, sans sens en image).
+      if (!v.pngNon) {
+        await page.screenshot({
+          path: path.join(OUT, `${nom}.png`),
+          clip: { x: 0, y: 0, width: cssPx(W), height: cssPx(H) },
+        });
+        console.log(`OK  ${nom}.png  ${Math.round((W / MM_PER_IN) * DPI)}×${Math.round((H / MM_PER_IN) * DPI)} px @${DPI} dpi`);
+      }
     }
 
     await page.close();
