@@ -334,3 +334,9 @@ Section 6c of `AdminDashboard.tsx` (`dash-qr`), shown only when `dash.qr` is pre
 ## Team tab — « Que peut faire chaque type de compte ? » (12/10/2026)
 
 A folded `<details>` (`team-roles`) at the top of the Équipe tab lists each role and its rights (keys `admin.roles_<owner|admin|staff|rh|patient>_name/_desc`, fr + ar). Plain text: keep it in step with `roles.ts`, `requireLevel` and `requireApplicationsAccess` whenever a right changes.
+
+## Waiting time and « Tester » shortcut (12/10/2026, Dr Aziz)
+
+- **Waiting time:** every request card (access requests, relative requests, doctor requests) shows « Demandé le … · en attente depuis 2 j 16 h » via `src/components/features/admin/WaitingSince.tsx` (`data-testid="req-waiting"`). It refreshes every minute; the text turns amber after 24 h and red after 72 h. Keys: `admin.wait_since`, `admin.wait_days`, `admin.wait_hours`, `admin.wait_minutes` (fr + ar).
+- **« Tester » shortcut:** a search-result card in the Patients tab with a `requester_id` gets a « Tester » button (`data-testid="result-test"`). It calls `testFromLink`, which opens the Tester (« Vue patient ») tab, runs the probe, and returns to Patients with « Retour ». There is no copy-paste step. The button sits OUTSIDE the card's own `<button>`, because nested buttons are invalid. Each card is therefore a `<div class="relative">` wrapper, and the bench selector is `admin-results > div > button:first-child`.
+- Bench: `test:practitioner:ui` covers the « Tester » button in M14 and the waiting time in M22.

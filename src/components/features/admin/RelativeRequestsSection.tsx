@@ -22,6 +22,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import WaitingSince from '@/components/features/admin/WaitingSince';
 import { AlertCircle, Check, Loader2, UserPlus, X } from 'lucide-react';
 import type { RequesterType } from '@/types/cyberlab';
 import RelativeIdentityFields from './RelativeIdentityFields';
@@ -214,6 +215,7 @@ export default function RelativeRequestsSection({
               {req.createdAt && (
                 <p className="text-sm text-[var(--text-secondary)]">
                   {t('admin.req_created_at', 'Demandé le')} {fmtWhenTime(req.createdAt)}
+                  <WaitingSince since={req.createdAt} />
                 </p>
               )}
             </div>

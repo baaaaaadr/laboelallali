@@ -54,6 +54,7 @@ import PractitionerRequestsSection, {
 } from '@/components/features/admin/PractitionerRequestsSection';
 import InviteDoctorCard from '@/components/features/admin/InviteDoctorCard';
 import PatientViewAs from '@/components/features/admin/PatientViewAs';
+import WaitingSince from '@/components/features/admin/WaitingSince';
 import ApplicationsTab from '@/components/features/admin/ApplicationsTab';
 import PatientProfileEditor, { type ProfileFields } from '@/components/features/admin/PatientProfileEditor';
 import PractitionersSection, { type PractitionerRow } from '@/components/features/admin/PractitionersSection';
@@ -1546,7 +1547,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         {req.createdAt != null && (
                           <p className="text-xs text-[var(--text-tertiary)] mt-1 flex items-center gap-1">
                             <Clock size={13} className="flex-shrink-0" />
-                            <span>{t('admin.req_created_at', 'Demandé le')} {fmtWhenTime(req.createdAt)}</span>
+                            <span>{t('admin.req_created_at', 'Demandé le')} {fmtWhenTime(req.createdAt)}<WaitingSince since={req.createdAt} /></span>
                           </p>
                         )}
                       </div>
@@ -1774,8 +1775,8 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                   // No "selected" highlight any more: this list only renders
                   // while nothing is selected (see above).
                   return (
+                    <div key={r.uid} className="relative">
                     <button
-                      key={r.uid}
                       type="button"
                       onClick={() => selectPatient(r)}
                       className="w-full text-start rounded-lg border p-4 transition bg-[var(--background-default)] border-[var(--border-default)] hover:border-[var(--color-fuchsia-accent)]"
@@ -1785,7 +1786,7 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                           <User size={20} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-[var(--text-primary)] truncate">{r.fullName || t('admin.name', 'Nom')}</p>
+                          <p className="font-semibold text-[var(--text-primary)] truncate pe-24">{r.fullName || t('admin.name', 'Nom')}</p>
                           {r.email && <p className="text-sm text-[var(--text-secondary)] truncate">{r.email}</p>}
                           {r.phone && <p className="text-sm text-[var(--text-secondary)]">{r.phone}</p>}
                           {(r.dateOfBirth || r.createdAt) && (
@@ -1835,6 +1836,20 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
                         </div>
                       </div>
                     </button>
+                    {/* Straight to « Vue patient » with this id — no copy-paste
+                        (Dr Aziz, 12/10/2026). Outside the card's button: no nesting. */}
+                    {r.requester_id && (
+                      <button
+                        type="button"
+                        onClick={() => testFromLink(r.requester_id as string, (r.type || 'patient') as RequesterType)}
+                        className="btn-secondary absolute top-3 end-3 flex items-center gap-1.5 min-h-[40px] px-3 rounded-lg text-sm font-semibold"
+                        data-testid="result-test"
+                      >
+                        <FlaskConical size={15} />
+                        {t('admin.link_test', 'Tester')}
+                      </button>
+                    )}
+                    </div>
                   );
                 })}
               </div>

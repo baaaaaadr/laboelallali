@@ -19,6 +19,7 @@
  */
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import WaitingSince from '@/components/features/admin/WaitingSince';
 import { AlertCircle, Check, CheckCircle, ExternalLink, Stethoscope } from 'lucide-react';
 
 export interface PractitionerRequest {
@@ -123,6 +124,7 @@ export default function PractitionerRequestsSection({
               {req.createdAt != null && (
                 <p>
                   {t('admin.req_created_at', 'Demandé le')} {fmtWhenTime(req.createdAt)}
+                  <WaitingSince since={req.createdAt} />
                 </p>
               )}
               {req.engagementAt != null && (
