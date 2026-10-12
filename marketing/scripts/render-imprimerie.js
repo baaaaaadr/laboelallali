@@ -115,6 +115,16 @@ const DPI = 300;
 
       if (!v.pdfNon) {
         // PDF : vectoriel, aux dimensions exactes du canevas.
+        //
+        // Chromium arrondit la taille de la PAGE au pixel CSS superieur
+        // (216 mm = 816,38 px -> page de 817 px) mais pas le contenu, fixe en
+        // mm : il restait une bande blanche de 0,2 a 0,4 mm a droite et en
+        // bas de chaque PDF (mesuree par verifier-bords-pdf.js), alors que
+        // l'apercu PNG etait juste. En impression, html et body epousent
+        // donc la page : les aplats ancres a droite et en bas touchent le bord.
+        await page.addStyleTag({
+          content: "@media print { html, body { width: 100% !important; height: 100% !important; } }",
+        });
         await page.pdf({
           path: path.join(OUT, `${nom}.pdf`),
           width: `${W}mm`,
