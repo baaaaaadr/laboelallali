@@ -326,3 +326,7 @@ i18n: `admin.tab_candidatures`, `admin.cand_*` (fr + ar); the answers' labels ar
 - Header: the admin link shows for RH, labelled « Candidatures » (`admin.nav_rh`).
 - `submitApplication` sends the new-application alert to `ALERT_EMAILS` + every `rh` account's e-mail.
 - Bench: C5 in `scripts/test-emploi-ui.js`; rule tests in `functions/scripts/test-applications.js`.
+
+## Dashboard — « Le QR code « Scannez-moi » » (12/10/2026, devis line 65)
+
+Section 6c of `AdminDashboard.tsx` (`dash-qr`), shown only when `dash.qr` is present: scans this month (big figure) with last month and the last 30 days, and the most-used tiles of the last 30 days (`HBars`, labels `admin.dash_qr_key_<key>`). Fed by `qrSummary` (`functions/src/qr/qrStats.ts`) inside `buildDashboard`, best-effort (`qr: null` on failure). Anonymous counts only. See `docs/pages/qr.md`.

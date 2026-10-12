@@ -19,6 +19,7 @@
     "test:practitioner:ui": "node scripts/test-practitioner-ui.js",
     "test:emploi": "node scripts/test-emploi.js",
     "test:emploi:ui": "node scripts/test-emploi-ui.js",
+    "test:qr:ui": "node scripts/test-qr-ui.js",
     "deploy": "npm run clean:devcache && npm run build && firebase deploy",
     "deploy:hosting": "npm run clean:devcache && npm run build && firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",

@@ -21,6 +21,8 @@ import MesPatientsPage from '../../src/app/[lang]/mes-patients/page';
 import ProfilePage from '../../src/app/[lang]/profile/page';
 import AdminPage from '../../src/app/[lang]/admin/page';
 import EmploiPage from '../../src/app/[lang]/emploi/page';
+import QrPage from '../../src/app/[lang]/qr/page';
+import CartePage from '../../src/app/[lang]/carte/page';
 import Header from '../../src/components/layout/Header';
 import HeroPersonalPanel from '../../src/components/features/home/HeroPersonalPanel';
 import PractitionerCard, {
@@ -218,6 +220,9 @@ w.__mount = (page: string = 'resultats') => {
     // « Emploi & Stage » (public, no account): `submitApplication` is answered
     // by the pilot (`responses` or `window.__callables`).
     emploi: EmploiPage,
+    // « Scannez-moi » (the printed QR code) and the business card, 12/10/2026.
+    qr: QrPage,
+    carte: CartePage,
   };
   const Page = pages[page];
   if (!Page) throw new Error(`page inconnue du banc : ${page}`);

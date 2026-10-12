@@ -95,6 +95,10 @@ const HIDDEN_ROUTES = new Set([
   // « Emploi & Stage »: a candidate needs NO account (owner's decision) — an
   // invitation to sign in would suggest otherwise, over the submit button.
   'emploi',
+  // « Scannez-moi » (the printed QR code) and the business card: a sign-in card
+  // would cover the tiles the person scanned for.
+  'qr',
+  'carte',
 ]);
 
 /** '/fr/analyses' → 'analyses'; '/fr' → ''. */

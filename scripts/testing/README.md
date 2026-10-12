@@ -146,3 +146,12 @@ Pièges propres à ces bancs :
   `query`/`where`/`orderBy`/`limit` (sans effet) dans `stub-firebase-results`.
 - Un emplacement REPLIÉ (hauteur nulle) est « invisible » pour Playwright :
   l'attendre avec `{ state: 'attached' }`, pas avec la visibilité par défaut.
+
+## Banc « Scannez-moi » + carte de visite (`npm run test:qr:ui`)
+
+`node scripts/test-qr-ui.js` — même harnais ; pages montables `qr` et `carte`.
+45 vérifications : règle de langue du QR (compilée à part avec esbuild), parité
+des clés avec la liste blanche du serveur, chaque lien de chaque tuile, le
+compteur anonyme (`freshPage(…, { search: '?scan=1' })` : UN scan, l'adresse
+nettoyée, un clic = une clé), visiteur connecté, arabe, la carte (images, .vcf,
+image, PDF, coordonnées cliquables, horaires) et le fichier .vcf lui-même.

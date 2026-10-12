@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Phone, Mail, MapPin, Clock, ChevronRight, Briefcase } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, ChevronRight, Briefcase, ContactRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import dynamic from 'next/dynamic';
 import ContactModal from '@/components/ui/ContactModal';
@@ -240,6 +240,25 @@ export default function ContactPage({
               )}
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* The lab's business card (12/10/2026): save the contact in one gesture. */}
+      <section id="carte" className="mb-6">
+        <div className="card p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <ContactRound size={24} className="text-[var(--brand-primary)] flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-lg font-semibold text-[var(--text-primary)]">{t('carte.contact_link', 'Notre carte de visite')}</p>
+              <p className="text-[var(--text-secondary)] mt-1">
+                {t('carte.contact_link_desc', 'Enregistrez nos coordonnées dans votre téléphone en un geste.')}
+              </p>
+            </div>
+          </div>
+          <Link href={`/${resolvedParams.lang}/carte`} className="button-bordeaux justify-center flex items-center gap-2" data-testid="contact-carte">
+            {t('carte.save_contact', 'Enregistrer dans mes contacts')}
+            <ChevronRight size={18} className={isRTL ? 'rotate-180' : ''} />
+          </Link>
         </div>
       </section>
 

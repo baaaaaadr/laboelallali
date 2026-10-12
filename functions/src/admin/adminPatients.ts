@@ -36,6 +36,8 @@ import { readPractitionerDTO, PractitionerDTO } from "./adminPractitioner";
 import { practitionerIdentity } from "../cyberlab/identities";
 // The dashboard's « Les médecins » section: one row per doctor, with usage.
 import { listPractitionerRows, PractitionerRow } from "./practitionerDirectory";
+// The « Scannez-moi » QR code counter (12/10/2026), shown on the dashboard.
+import { qrSummary, QrSummary } from "../qr/qrStats";
 // A relative's last name, first name and date of birth (08/10/2026): what makes
 // a relative findable in the search, and recognisable when she later creates
 // her own account. Pure module, shared as-is with the admin page.
@@ -2300,7 +2302,16 @@ async function buildDashboard(includeTeam: boolean) {
         lastResultsAt: a.lastResultsMs,
       }));
 
+    // The QR code's anonymous counter — best-effort, never blanks the screen.
+    let qr: QrSummary | null = null;
+    try {
+      qr = await qrSummary(now);
+    } catch {
+      logger.warn("adminDashboardStats: QR summary unavailable");
+    }
+
     return {
+      qr,
       totals: {
         accounts: accounts.length,
         withAccess: withAccess.length,

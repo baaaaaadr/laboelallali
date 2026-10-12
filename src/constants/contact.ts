@@ -57,5 +57,8 @@ export const LAB_CONTACT = {
 // Default WhatsApp number (first number from the WHATSAPP array)
 export const LAB_WHATSAPP_NUMBER = LAB_CONTACT.WHATSAPP[0].display;
 
+// The review form of the lab's Google listing (« Laisser un avis Google »).
+export const GOOGLE_REVIEW_URL = "https://g.page/r/Ce6V_SOBrPJxEAE/review";
+
 // Canonical public site URL (matches the domain used in the lab's PDFs).
 export const LAB_SITE_URL = "https://www.laboelallali.com";

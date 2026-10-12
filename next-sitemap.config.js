@@ -13,7 +13,7 @@ module.exports = {
     '/test-rdv2', '/*/test-rdv2',
     // Espace des medecins prescripteurs : resultats nominatifs derriere un
     // compte. Rien a faire dans un moteur de recherche.
-    '/mes-patients', '/*/mes-patients',
+    '/mes-patients', '/*/mes-patients', '/qr', '/*/qr',
   ],
   robotsTxtOptions: {
     policies: [

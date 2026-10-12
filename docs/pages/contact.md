@@ -41,3 +41,7 @@ All laboratory metadata is loaded from `/src/constants/contact.ts`:
 ## « Rejoindre l'équipe » card (08/10/2026)
 
 Last section of the page (`<section id="emploi">`): a `card` with the `Briefcase` icon, `emploi.contact_title` / `emploi.contact_text`, and a `button-bordeaux` link « Postuler » to `/{lang}/emploi` (`data-testid="contact-emploi"`, chevron rotated in RTL). People look for « recrutement » on a contact page; the form itself lives on `/emploi` (see `docs/pages/emploi.md`). Same reasoning as the FAQ q3 CTA: a separate `<Link>`, no `<Trans>`.
+
+## « Notre carte de visite » card (12/10/2026)
+
+Section `#carte`, just before « Rejoindre l'équipe »: `ContactRound` icon, `carte.contact_link` / `carte.contact_link_desc`, a `button-bordeaux` « Enregistrer dans mes contacts » → `/{lang}/carte` (`data-testid="contact-carte"`). See `docs/pages/carte.md`.

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import acceptLanguage from 'accept-language';
 import { fallbackLng, supportedLngs, cookieName } from '../i18n'; // Ajustez le chemin si nécessaire
+import { QR_PATH, qrLanguage } from './lib/qr/qrLanguage';
 
 acceptLanguage.languages(supportedLngs);
 
@@ -72,6 +73,12 @@ export function middleware(req: NextRequest) {
         lng = cookieLang;
       }
     }
+    // The printed QR code (laboelallali.com/qr, 12/10/2026): without a cookie,
+    // the PHONE's language decides — see src/lib/qr/qrLanguage.ts.
+    const isQr = pathname === QR_PATH || pathname === `${QR_PATH}/`;
+    if (!lng && isQr) {
+      lng = qrLanguage(req.headers.get('accept-language'), fallbackLng);
+    }
     // Décommenter ce bloc si on veut détecter la langue du navigateur
     // if (!lng && req.headers.has('accept-language')) {
     //   lng = acceptLanguage.get(req.headers.get('accept-language'));
@@ -83,8 +90,11 @@ export function middleware(req: NextRequest) {
 
     // Rediriger vers le même chemin préfixé par la langue détectée
     // ex: /about -> /fr/about, / -> /fr
-    const newPath = pathname === '/' ? '' : pathname;
+    const newPath = isQr ? QR_PATH : pathname === '/' ? '' : pathname;
     const newUrl = new URL(`/${lng}${newPath}`, req.url);
+    // Marks a REAL scan (not a visit from inside the app) for the anonymous
+    // counter; the page removes it from the address once counted.
+    if (isQr) newUrl.searchParams.set('scan', '1');
     const response = NextResponse.redirect(newUrl);
     // Mettre à jour le cookie avec la langue de redirection
     if (lng && supportedLngs.includes(lng)) {

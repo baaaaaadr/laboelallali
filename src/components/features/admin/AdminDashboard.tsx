@@ -87,6 +87,16 @@ export interface DashboardStats {
     teamExcluded?: number;
     list?: DashPractitioner[];
   };
+  /**
+   * The « Scannez-moi » QR code (12/10/2026): anonymous counts only. Optional:
+   * absent (or null) from a payload served by an older function.
+   */
+  qr?: {
+    thisMonth: number;
+    lastMonth: number;
+    last30: number;
+    topClicks: { key: string; count: number }[];
+  } | null;
   latestCreated: DashAccount[];
   latestActive: DashAccount[];
   truncated: boolean;
@@ -499,6 +509,47 @@ export default function AdminDashboard({
           </p>
         )}
       </ChartCard>
+
+      {/* 6c — The printed QR code « Scannez-moi » (devis line 65, 12/10/2026):
+          scans per month and the buttons pressed. Anonymous counts only. */}
+      {dash.qr && (
+        <>
+          {sectionTitle(
+            t('admin.dash_sec_qr', 'Le QR code « Scannez-moi »'),
+            t('admin.dash_sec_qr_desc', 'Le QR imprimé sur les enveloppes, les comptes rendus et la carte de visite est-il scanné ?')
+          )}
+          <div className="grid md:grid-cols-2 gap-4 items-start" data-testid="dash-qr">
+            <ChartCard
+              title={t('admin.dash_qr_scans_title', 'Scans du QR code')}
+              subtitle={t('admin.dash_qr_scans_sub', 'Ce mois-ci, comparé au mois dernier')}
+              hint={t('admin.dash_qr_hint', 'Comptage anonyme : aucune personne, aucun téléphone n’est enregistré.')}
+            >
+              <StatBig
+                value={String(dash.qr.thisMonth)}
+                caption={t('admin.dash_qr_caption', {
+                  last: dash.qr.lastMonth,
+                  d30: dash.qr.last30,
+                  defaultValue: 'Mois dernier : {{last}} · 30 derniers jours : {{d30}}',
+                })}
+              />
+            </ChartCard>
+            <ChartCard
+              title={t('admin.dash_qr_clicks_title', 'Boutons les plus utilisés')}
+              subtitle={t('admin.dash_qr_clicks_sub', 'Sur la page « Scannez-moi », 30 derniers jours')}
+            >
+              <HBars
+                rows={dash.qr.topClicks.slice(0, 8).map((c) => ({
+                  label: t(`admin.dash_qr_key_${c.key}`, c.key),
+                  value: c.count,
+                  display: String(c.count),
+                }))}
+                ariaLabel={t('admin.dash_qr_clicks_title', 'Boutons les plus utilisés')}
+                emptyLabel={t('admin.dash_qr_empty', 'Aucun clic pour le moment.')}
+              />
+            </ChartCard>
+          </div>
+        </>
+      )}
 
       {/* 7 — Team responsiveness */}
       {sectionTitle(
