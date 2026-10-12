@@ -330,3 +330,7 @@ i18n: `admin.tab_candidatures`, `admin.cand_*` (fr + ar); the answers' labels ar
 ## Dashboard — « Le QR code « Scannez-moi » » (12/10/2026, devis line 65)
 
 Section 6c of `AdminDashboard.tsx` (`dash-qr`), shown only when `dash.qr` is present: scans this month (big figure) with last month and the last 30 days, and the most-used tiles of the last 30 days (`HBars`, labels `admin.dash_qr_key_<key>`). Fed by `qrSummary` (`functions/src/qr/qrStats.ts`) inside `buildDashboard`, best-effort (`qr: null` on failure). Anonymous counts only. See `docs/pages/qr.md`.
+
+## Team tab — « Que peut faire chaque type de compte ? » (12/10/2026)
+
+A folded `<details>` (`team-roles`) at the top of the Équipe tab lists each role and its rights (keys `admin.roles_<owner|admin|staff|rh|patient>_name/_desc`, fr + ar). Plain text: keep it in step with `roles.ts`, `requireLevel` and `requireApplicationsAccess` whenever a right changes.

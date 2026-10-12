@@ -2296,6 +2296,22 @@ export default function AdminPage({ params }: { params: Promise<{ lang: string }
               </div>
             )}
 
+            {/* What each role may do — folded, opened on demand (12/10/2026).
+                Keep in step with the server: roles.ts, requireLevel, requireApplicationsAccess. */}
+            <details className="rounded-lg border border-[var(--border-default)] p-4" data-testid="team-roles">
+              <summary className="cursor-pointer font-medium text-[var(--text-primary)]">
+                {t('admin.roles_title', 'Que peut faire chaque type de compte ?')}
+              </summary>
+              <dl className="mt-3 space-y-3 text-sm">
+                {(['owner', 'admin', 'staff', 'rh', 'patient'] as const).map((r) => (
+                  <div key={r}>
+                    <dt className="font-semibold text-[var(--text-primary)]">{t(`admin.roles_${r}_name`, r)}</dt>
+                    <dd className="text-[var(--text-secondary)]">{t(`admin.roles_${r}_desc`, '')}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+
             {/* Current members */}
             <ul className="divide-y divide-[var(--border-default)]">
               {team.map((m) => {

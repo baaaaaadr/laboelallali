@@ -891,7 +891,18 @@
     "dash_qr_key_review": "Laisser un avis Google",
     "dash_qr_key_doctors": "Espace médecins",
     "dash_qr_key_jobs": "Emploi & Stage",
-    "dash_qr_key_install": "Installer l'application"
+    "dash_qr_key_install": "Installer l'application",
+    "roles_title": "Que peut faire chaque type de compte ?",
+    "roles_owner_name": "Propriétaire",
+    "roles_owner_desc": "Tout ce que fait un admin, plus : nommer ou retirer des admins.",
+    "roles_admin_name": "Admin",
+    "roles_admin_desc": "Tout ce que fait un stagiaire, plus : tableau de bord, onglet Candidatures, onglet Équipe (ajouter ou retirer stagiaires et comptes RH), activer ou retirer l'accès d'un médecin, refuser une demande médecin, attribuer les types Médecin et Correspondant, voir « Mes patients » d'un médecin dans la Vue patient.",
+    "roles_staff_name": "Stagiaire (accueil)",
+    "roles_staff_desc": "Onglets Patients, Demandes, Médecins (consultation), Relances et Vue patient : chercher un patient, lui attribuer son dossier (type Patient uniquement), rattacher ou retirer un proche, corriger son profil, valider ou refuser une demande d'accès, relancer les comptes inactifs. Ne voit ni le tableau de bord, ni les candidatures, ni l'équipe.",
+    "roles_rh_name": "RH (recrutement)",
+    "roles_rh_desc": "Uniquement l'onglet Candidatures : lire les candidatures et les CV, décider, noter, effacer, exporter en Excel. Reçoit l'e-mail de chaque nouvelle candidature. Aucun accès aux patients, aux résultats ni aux médecins.",
+    "roles_patient_name": "Patient (sans rôle)",
+    "roles_patient_desc": "Pas d'espace admin : ses résultats et ceux des proches rattachés par le laboratoire. Un médecin activé voit en plus « Mes patients » (les bilans qu'il a prescrits)."
   },
   "theme": {
     "toggle": "Changer le thème",
