@@ -60,6 +60,18 @@ const FORMATS = {
       { suffixe: "-numerique-verso", query: "?num=1&face=ar", w: 85, h: 55, pdfNon: true },
     ],
   },
+  // Version 2 de la carte (retour de Dr Aziz, 13/10/2026) : memes sorties.
+  "carte-visite-v2.html": {
+    w: 91, h: 61, fini: "85 × 55 mm recto-verso", fp: 3,
+    variantes: [
+      { suffixe: "", query: "", note: "v2, recto + verso — À IMPRIMER", pngNon: true },
+      { suffixe: "-recto", query: "?face=fr", pdfNon: true },
+      { suffixe: "-verso", query: "?face=ar", pdfNon: true },
+      { suffixe: "-numerique", query: "?num=1", w: 85, h: 55, note: "v2 sans fond perdu — application", pngNon: true },
+      { suffixe: "-numerique-recto", query: "?num=1&face=fr", w: 85, h: 55, pdfNon: true },
+      { suffixe: "-numerique-verso", query: "?num=1&face=ar", w: 85, h: 55, pdfNon: true },
+    ],
+  },
   "enveloppe-c5.html": {
     w: 229, h: 162, fini: "C5 229 × 162 mm", fp: 0,
     variantes: [

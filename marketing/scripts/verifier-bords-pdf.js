@@ -30,6 +30,7 @@ const WORKER = pathToFileURL(path.join(ROOT, "node_modules", "pdfjs-dist", "buil
 const CAS = [
   ["papier-entete.pdf", 1, { droite: 1.2, bas: null }],
   ["carte-visite.pdf", 1, { droite: 1.5, bas: 50 }],
+  ["carte-visite-v2.pdf", 1, { droite: 1.5, bas: null }],
   ["carte-visite.pdf", 2, { droite: null, bas: null }],
   ["carte-visite-numerique.pdf", 1, { droite: 1.0, bas: 50 }],
 ];

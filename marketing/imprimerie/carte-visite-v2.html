@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Carte de visite — version 2 — Laboratoire El Allali</title>
+<style>
+  /* ------------------------------------------------------------------
+     Carte de visite, VERSION 2 — retour de Dr Aziz du 13/10/2026.
+
+     « Un peu vieillot » : on quitte la bande bordeaux du bas. Tout est
+     BLANC, seuls restent la barre degradee du haut et le logo.
+
+     « Un minimum d'information, et mettre en valeur le QR unique. Les deux
+     ciblent deux categories de gens : les anciens qui appellent, les
+     nouveaux qui cliquent. » D'ou deux portes d'entree, et rien d'autre :
+       a gauche  LE NUMERO du laboratoire en grand, puis le WhatsApp et le
+                 portable du Dr — pour ceux qui appellent ;
+       a droite  LE QR en grand (26 mm) avec sa mention — pour ceux qui
+                 scannent. Horaires, itineraire, e-mail, rendez-vous : tout
+                 le reste est derriere lui.
+     Le verso reste le plan d'acces, avec l'adresse en une ligne dessous.
+
+     La version 1 (carte-visite.html) est conservee telle quelle.
+     Memes sorties : (defaut) PDF 2 pages avec fond perdu, ?face=fr /
+     ?face=ar apercus, &num=1 version de l'application.
+     ------------------------------------------------------------------ */
+  @font-face { font-family:"Inter";       src:url("../assets/fonts/inter-latin.woff2") format("woff2"); font-weight:100 900; font-display:block; }
+  @font-face { font-family:"Public Sans"; src:url("../assets/fonts/publicsans-700-latin.woff2") format("woff2"); font-weight:700; font-display:block; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-700-arabic.woff2") format("woff2"); font-weight:700; font-display:block;
+               unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-400-arabic.woff2") format("woff2"); font-weight:400; font-display:block;
+               unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-700-latin.woff2") format("woff2"); font-weight:700; font-display:block;
+               unicode-range:U+0000-024F,U+2000-206F; }
+  @font-face { font-family:"Tajawal";     src:url("../assets/fonts/tajawal-400-latin.woff2") format("woff2"); font-weight:400; font-display:block;
+               unicode-range:U+0000-024F,U+2000-206F; }
+
+  :root{
+    --bordeaux:#800020; --fuchsia:#FF4081; --encre:#3A2226; --gris:#7A5A62;
+    --fp:3mm; --w:91mm; --h:61mm;
+  }
+  body.num{ --fp:0mm; --w:85mm; --h:55mm; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#fff}
+  body{font-family:"Inter","Segoe UI",sans-serif;color:var(--encre);-webkit-font-smoothing:antialiased}
+  @page{ margin:0 }
+  .face{ width:var(--w); height:var(--h); position:relative; overflow:hidden; background:#fff;
+         break-after:page; page-break-after:always }
+  .face:last-child{ break-after:auto; page-break-after:auto }
+  .fini{ position:absolute; left:var(--fp); top:var(--fp); width:85mm; height:55mm }
+
+  /* ============================================================ RECTO */
+  .filet-tete{ position:absolute; left:calc(-1*var(--fp)); right:calc(-1*var(--fp)); top:calc(-1*var(--fp));
+               height:calc(var(--fp) + 2.4mm); background:linear-gradient(90deg,var(--fuchsia),var(--bordeaux)) }
+
+  .gauche{ position:absolute; left:4.5mm; top:6.6mm; bottom:4.6mm; width:44mm;
+           display:flex; flex-direction:column; justify-content:space-between }
+  .marque{ display:flex; align-items:center; gap:2.4mm }
+  .marque img{ width:10.5mm; height:10.5mm; flex:0 0 auto }
+  .nom{ font-family:"Public Sans",sans-serif; font-weight:700; font-size:8.8pt; line-height:1.1; color:var(--bordeaux); letter-spacing:-.15pt; white-space:nowrap }
+  .nom .leger{ font-weight:400; color:var(--encre) }
+  .nom-ar{ font-family:"Tajawal",sans-serif; font-weight:700; font-size:9.4pt; color:var(--bordeaux); line-height:1.15; margin-top:.4mm; white-space:nowrap }
+  .dr{ font-size:6.6pt; color:var(--gris); margin-top:2.4mm; white-space:nowrap }
+  .dr b{ color:var(--encre); font-weight:700 }
+  .dr{ line-height:1.35 }
+  .dr .ar{ font-family:"Tajawal",sans-serif; font-size:7pt; direction:rtl; unicode-bidi:isolate }
+
+  .appel .etiq{ font-size:5.8pt; letter-spacing:.06em; text-transform:uppercase; color:var(--gris); font-weight:600 }
+  .appel .etiq .ar{ font-family:"Tajawal",sans-serif; text-transform:none; letter-spacing:0; font-size:6.6pt }
+  .appel .grand{ font-family:"Public Sans",sans-serif; font-weight:700; font-size:13pt; color:var(--bordeaux); line-height:1.15; margin-top:.4mm }
+  .appel .ligne{ font-size:7pt; line-height:1.45; white-space:nowrap }
+  .appel .ligne .l{ color:var(--gris) }
+  .appel .ligne b{ font-weight:700 }
+  .num-tel{ direction:ltr; unicode-bidi:isolate-override; display:inline-block; white-space:nowrap; font-variant-numeric:tabular-nums }
+
+  /* Fine separation entre les deux portes d'entree */
+  .sep{ position:absolute; left:51.5mm; top:9mm; bottom:6mm; width:.25mm; background:#E9D9DE }
+
+  .droite{ position:absolute; right:3.8mm; top:5.6mm; bottom:3.8mm; width:28mm;
+           display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center }
+  .droite img{ width:26mm; height:26mm; display:block }
+  .droite .appel-qr{ font-family:"Public Sans",sans-serif; font-weight:700; font-size:8pt; color:var(--bordeaux); margin-top:1.2mm; line-height:1.1 }
+  .droite .quoi{ font-size:5.8pt; color:var(--gris); line-height:1.3; margin-top:.3mm }
+  .droite .ar{ font-family:"Tajawal",sans-serif; direction:rtl }
+  .droite .appel-qr.ar{ font-size:8.4pt; margin-top:.8mm }
+  .droite .quoi.ar{ font-size:6.2pt; margin-top:0 }
+
+  /* ============================================================ VERSO */
+  .plan{ position:absolute; left:2.4mm; top:2.4mm; width:80.2mm; height:45.4mm }
+  .adresse{ position:absolute; left:2.4mm; right:2.4mm; bottom:2.6mm; text-align:center;
+            font-size:6.2pt; color:var(--encre); white-space:nowrap }
+  .adresse .ar{ font-family:"Tajawal",sans-serif; font-size:6.8pt; direction:rtl; unicode-bidi:isolate }
+</style>
+</head>
+<body>
+
+  <!-- ================================================================ RECTO -->
+  <section class="face" id="fr"><div class="fini">
+    <div class="filet-tete"></div>
+
+    <div class="gauche">
+      <div>
+        <div class="marque">
+          <img src="../assets/logos/logo-icone-degrade.svg" alt="">
+          <div>
+            <div class="nom"><span class="leger">Laboratoire</span> EL ALLALI</div>
+            <div class="nom-ar">مختبر العلالي</div>
+          </div>
+        </div>
+        <div class="dr"><b>Dr Mohamed Aziz EL ALLALI</b><br>Pharmacien biologiste · <span class="ar">صيدلاني إحيائي</span></div>
+      </div>
+
+      <div class="appel">
+        <div class="etiq">Appelez-nous · <span class="ar">اتصلوا بنا</span></div>
+        <div class="grand num-tel">05 28 84 33 84</div>
+        <div class="ligne"><span class="l">WhatsApp</span> <b class="num-tel">06 54 07 95 92</b></div>
+        <div class="ligne"><span class="l">Dr El Allali</span> <b class="num-tel">06 61 29 14 11</b></div>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="droite">
+      <img src="../assets/qr/qr-scannez-moi-bordeaux.svg" alt="">
+      <div class="appel-qr">Scannez-moi</div>
+      <div class="quoi">résultats, <span style="white-space:nowrap">rendez-vous,</span> contact</div>
+      <div class="appel-qr ar">امسحوا الرمز</div>
+      <div class="quoi ar">النتائج، المواعيد، الاتصال</div>
+    </div>
+  </div></section>
+
+  <!-- ================================================================ VERSO
+       Plan d'acces. Repere 800 x 500 = la surface utile (80 x 50 mm) :
+       1 unite = 0,1 mm. Redessine d'apres la carte actuelle : memes rues,
+       memes reperes, memes libelles, dans les couleurs de la charte. -->
+  <section class="face" id="ar"><div class="fini">
+    <svg class="plan" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" font-family="Inter, sans-serif">
+      <defs>
+        <style>
+          .ilot{fill:#fff;stroke:#3A2226;stroke-width:3.2;stroke-linejoin:round}
+          .rue{font-size:21px;font-weight:700;fill:#3A2226}
+          .rue-ar{font-family:Tajawal,sans-serif;font-size:23px;font-weight:700;fill:#3A2226}
+          .rep{font-size:19px;font-weight:700;fill:#800020;text-anchor:middle}
+          .rep-ar{font-family:Tajawal,sans-serif;font-size:22px;font-weight:700;fill:#800020;text-anchor:middle}
+          .pet{font-size:15px;font-weight:600;fill:#3A2226;text-anchor:middle}
+          .pet-ar{font-family:Tajawal,sans-serif;font-size:18px;font-weight:700;fill:#3A2226;text-anchor:middle}
+        </style>
+      </defs>
+
+      <rect x="2" y="2" width="796" height="496" rx="26" fill="#fff" stroke="#3A2226" stroke-width="4"/>
+
+      <!-- Rue de Marrakech : la rue du laboratoire, mise en avant -->
+      <rect x="78" y="212" width="586" height="38" fill="#FF4081" opacity=".22"/>
+      <text x="92" y="239" class="rue" style="fill:#800020">RUE DE MARRAKECH</text>
+      <text x="470" y="240" class="rue-ar" style="fill:#800020">زنقة مراكش</text>
+
+      <!-- rangee nord -->
+      <path class="ilot" d="M84 18 v26 a6 6 0 0 0 6 6 h118 a6 6 0 0 0 6-6 v-26"/>
+      <path class="ilot" d="M262 18 v26 a6 6 0 0 0 6 6 h46 a6 6 0 0 0 6-6 v-26"/>
+      <path class="ilot" d="M372 18 v26 a6 6 0 0 0 6 6 h46 a6 6 0 0 0 6-6 v-26"/>
+      <rect class="ilot" x="80" y="72" width="140" height="122" rx="12"/>
+      <rect class="ilot" x="262" y="72" width="62" height="140" rx="12"/>
+      <path d="M470 212 L580 72 L644 72 L644 18" fill="none" stroke="#3A2226" stroke-width="3.2" stroke-linejoin="round"/>
+      <path class="ilot" d="M530 212 L612 100 L664 100 L664 212 Z"/>
+
+      <!-- rangee sud -->
+      <rect class="ilot" x="80" y="250" width="72" height="200" rx="10"/>
+      <rect class="ilot" x="186" y="250" width="66" height="200" rx="10"/>
+      <rect class="ilot" x="286" y="250" width="378" height="200" rx="12"/>
+
+      <!-- au-dela de l'avenue du 18 Novembre -->
+      <rect class="ilot" x="734" y="22" width="64" height="190" rx="10"/>
+      <rect class="ilot" x="734" y="250" width="64" height="200" rx="10"/>
+
+      <!-- voies verticales -->
+      <text transform="translate(40 452) rotate(-90)" class="rue">Av. Mouquaoama</text>
+      <text transform="translate(52 150) rotate(-90)" class="rue-ar" style="text-anchor:middle">شارع المقاومة</text>
+      <text transform="translate(690 26) rotate(90)" class="rue" style="font-size:18px">Av. 18 Novembre</text>
+      <text transform="translate(688 350) rotate(90)" class="rue-ar" style="text-anchor:middle;font-size:20px">شارع 18 نونبر</text>
+      <text transform="translate(236 82) rotate(90)" class="rue">Rue Massa</text>
+      <text transform="translate(278 340) rotate(-90)" class="pet-ar">زنقة ماسة</text>
+      <text transform="translate(174 350) rotate(-90)" class="pet" style="font-size:14px">Rue Président El Bekkay</text>
+
+      <!-- reperes -->
+      <!-- le tribunal : un ilot borde par la rue en diagonale -->
+      <path class="ilot" d="M342 72 L556 72 L462 194 L342 194 Z"/>
+      <text x="416" y="106" class="rep-ar">المحكمة</text>
+      <text x="416" y="130" class="rep-ar">الإبتدائية</text>
+      <text x="416" y="154" class="rep">TRIBUNAL</text>
+      <text x="498" y="40" class="pet-ar">الوقاية</text>
+      <text x="498" y="62" class="pet-ar">المدنية</text>
+      <text x="600" y="48" class="pet" style="font-size:16px;font-weight:700">POMPIERS</text>
+      <text x="622" y="136" class="rep-ar" style="font-size:16px">المفوضية</text>
+      <text x="624" y="156" class="rep-ar" style="font-size:16px">المركزية</text>
+      <text x="614" y="178" class="rep" style="font-size:11px">COMMISSARIAT</text>
+      <text x="618" y="193" class="rep" style="font-size:11px">CENTRAL</text>
+      <text x="766" y="84" class="pet" style="font-size:13px">Jardin</text>
+      <text x="766" y="100" class="pet" style="font-size:13px">Ibn</text>
+      <text x="766" y="116" class="pet" style="font-size:13px">Zaidoun</text>
+      <text x="766" y="144" class="pet-ar" style="font-size:16px">حديقة</text>
+      <text x="766" y="164" class="pet-ar" style="font-size:14px">ابن زيدون</text>
+      <text x="766" y="340" class="pet" style="font-size:14px">JARDIN</text>
+      <text x="766" y="364" class="pet-ar" style="font-size:16px">حديقة</text>
+      <text x="116" y="290" class="pet" style="font-size:11px">ATTIJARI</text>
+      <text x="116" y="306" class="pet" style="font-size:11px">WAFA BANK</text>
+      <text x="116" y="330" class="pet" style="font-size:11px">BMCI</text>
+
+      <!-- le laboratoire -->
+      
+      <path d="M402 212 c-15 0-27 12-27 27 c0 20 27 47 27 47 s27-27 27-47 c0-15-12-27-27-27z" fill="#800020"/>
+      <circle cx="402" cy="239" r="9" fill="#fff"/>
+      <rect x="320" y="286" width="164" height="88" rx="12" fill="#800020"/>
+      <text x="402" y="318" font-family="Tajawal,sans-serif" font-size="25" font-weight="700" fill="#fff" text-anchor="middle">مختبر العلالي</text>
+      <text x="402" y="345" font-family="Public Sans,sans-serif" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">LABORATOIRE</text>
+      <text x="402" y="365" font-family="Public Sans,sans-serif" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">EL ALLALI</text>
+    </svg>
+    <div class="adresse">61 Bis, Rue de Marrakech, 80020 Agadir &nbsp;·&nbsp; <span class="ar">61 مكرر، زنقة مراكش، أكادير</span></div>
+  </div></section>
+
+<script>
+  var p = new URLSearchParams(location.search);
+  if (p.get('num')) document.body.classList.add('num');
+  var f = p.get('face');
+  if (f === 'fr') document.getElementById('ar').remove();
+  if (f === 'ar') document.getElementById('fr').remove();
+</script>
+</body>
+</html>

@@ -34,6 +34,8 @@ const PX_MM = DPI / 25.4;
 const SUPPORTS = [
   ["Carte de visite, recto", "imprimerie/carte-visite.html", "?face=fr", 91, 61],
   ["Carte de visite numerique", "imprimerie/carte-visite.html", "?num=1&face=fr", 85, 55],
+  ["Carte de visite v2, recto", "imprimerie/carte-visite-v2.html", "?face=fr", 91, 61],
+  ["Carte de visite v2 numerique", "imprimerie/carte-visite-v2.html", "?num=1&face=fr", 85, 55],
   ["Enveloppe C5, quadri", "imprimerie/enveloppe-c5.html", "", 229, 162],
   ["Enveloppe C5, 1 couleur", "imprimerie/enveloppe-c5.html", "?ton=mono", 229, 162],
   ["Papier a en-tete A4", "imprimerie/papier-entete.html", "", 216, 303],
