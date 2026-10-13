@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList, LayoutList, Briefcase } from 'lucide-react';
+import { Menu, X, Search, User, Globe, Home, CalendarDays, Truck, FlaskConical, Phone, MessageCircle, Check, Download, Stethoscope, FileText, LogOut, UserCog, ClipboardList, LayoutList, Briefcase, QrCode } from 'lucide-react';
 import { LAB_WHATSAPP_NUMBER } from '@/constants/contact';
 import { useTranslation } from 'react-i18next';
 import { useRouter, usePathname } from 'next/navigation';
@@ -376,6 +376,18 @@ const Header = () => {
             </button>
             {/* Theme Switcher - Always visible but minimal */}
             <ThemeSwitcher />
+            {/* « Accès rapide » → la page « Scannez-moi » (Dr Aziz, 13/10/2026).
+                Icône seule sur ordinateur : la barre de liens est pleine (mesuré).
+                Lien vers /{lang}/qr SANS ?scan=1 : un clic ici n'est pas un scan. */}
+            <Link
+              href={`${currentLanguagePath}/qr`}
+              className="hidden lg:flex p-2 lg:p-3 rounded-lg min-h-[44px] min-w-[44px] hover:bg-[var(--color-bordeaux-dark)] dark:hover:bg-[var(--background-tertiary)] items-center justify-center transition-colors"
+              aria-label={t('quick_access', 'Accès rapide')}
+              title={t('quick_access', 'Accès rapide')}
+              data-testid="nav-quick-access"
+            >
+              <QrCode size={20} className="text-white" />
+            </Link>
             {/* Search - Universal search modal trigger */}
             <button
               onClick={() => setIsSearchOpen(true)}
@@ -491,6 +503,20 @@ const Header = () => {
               <Home size={20} style={drawerIconStyle(isHere('/'))} />
               <span style={drawerTextStyle(isHere('/'))}>
                 {t('home')}
+              </span>
+            </Link>
+
+            {/* « Accès rapide » → « Scannez-moi » (Dr Aziz, 13/10/2026). */}
+            <Link
+              href={`${currentLanguagePath}/qr`}
+              style={drawerLinkStyle(isHere('/qr'))}
+              aria-current={isHere('/qr') ? 'page' : undefined}
+              onClick={toggleMenu}
+              data-testid="drawer-quick-access"
+            >
+              <QrCode size={20} style={drawerIconStyle(isHere('/qr'))} />
+              <span style={drawerTextStyle(isHere('/qr'))}>
+                {t('quick_access', 'Accès rapide')}
               </span>
             </Link>
 

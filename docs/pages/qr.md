@@ -29,3 +29,10 @@ The page behind the ONE QR code printed on every support — reception, envelope
 ## Notes for AI
 - Never change the printed address `/qr`. Adding a tile = its key in BOTH `QR_KEYS` lists + `qr.*` and `admin.dash_qr_key_*` labels in fr AND ar.
 - Bench: `npm run test:qr:ui` (45 checks: language rule, every link, the counter, signed-in, Arabic, the card, the vCard file).
+
+## Site-wide entry « Accès rapide » (13/10/2026, Dr Aziz)
+`src/components/layout/Header.tsx` gives every page a way to reach this page:
+- **Desktop:** a `QrCode` icon sits in the action buttons, before the search (`nav-quick-access`, label/title `quick_access`). It is an icon only, because the link bar is full (measured).
+- **Drawer:** a row placed just after « Accueil » (`drawer-quick-access`).
+
+Both point to `/{lang}/qr` WITHOUT `?scan=1`: a menu click is not a QR scan, so it does not inflate the scan counter. Clicks on the page's tiles are still counted.
