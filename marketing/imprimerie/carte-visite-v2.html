@@ -101,6 +101,15 @@
   .adresse{ position:absolute; left:2.4mm; right:2.4mm; bottom:2.6mm; text-align:center;
             font-size:6.2pt; color:var(--encre); white-space:nowrap }
   .adresse .ar{ font-family:"Tajawal",sans-serif; font-size:6.8pt; direction:rtl; unicode-bidi:isolate }
+  /* LIENS (13/10/2026) — dans le PDF, chaque <a> devient une zone
+     cliquable : QR et adresse -> page « Acces rapide », logo WhatsApp ->
+     discussion, numero -> appel, plan et adresse -> itineraire. Sur papier
+     ils sont invisibles : aucun changement d'aspect. Une image PNG, elle,
+     ne peut porter aucun lien. */
+  a{ color:inherit; text-decoration:none }
+  .grand a, .dr-tel a{ display:inline-flex; align-items:center; gap:inherit }
+  .droite a{ display:block }
+  .lien-plan{ position:absolute; inset:0; display:block }
 </style>
 </head>
 <body>
@@ -123,16 +132,16 @@
 
       <div class="appel">
         <div class="etiq">Appelez-nous · <span class="ar">اتصلوا بنا</span></div>
-        <div class="grand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7a11.6 11.6 0 0 1-4.5-4c-.5-.7-1.1-1.8-1.1-2.9a3.1 3.1 0 0 1 1-2.3 1 1 0 0 1 .7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6a8.6 8.6 0 0 0 1.6 2 7.8 7.8 0 0 0 2.3 1.4c.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3a2.3 2.3 0 0 1-.1 1.3z"/></svg><span class="num-tel">06 54 07 95 92</span></div>
-        <div class="dr-tel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7a11.6 11.6 0 0 1-4.5-4c-.5-.7-1.1-1.8-1.1-2.9a3.1 3.1 0 0 1 1-2.3 1 1 0 0 1 .7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6a8.6 8.6 0 0 0 1.6 2 7.8 7.8 0 0 0 2.3 1.4c.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3a2.3 2.3 0 0 1-.1 1.3z"/></svg><span class="l">Dr El Allali</span> <b class="num-tel">06 61 29 14 11</b></div>
+        <div class="grand"><a href="https://wa.me/212654079592"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7a11.6 11.6 0 0 1-4.5-4c-.5-.7-1.1-1.8-1.1-2.9a3.1 3.1 0 0 1 1-2.3 1 1 0 0 1 .7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6a8.6 8.6 0 0 0 1.6 2 7.8 7.8 0 0 0 2.3 1.4c.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3a2.3 2.3 0 0 1-.1 1.3z"/></svg></a><a href="tel:+212654079592"><span class="num-tel">06 54 07 95 92</span></a></div>
+        <div class="dr-tel"><a href="https://wa.me/212661291411"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7a11.6 11.6 0 0 1-4.5-4c-.5-.7-1.1-1.8-1.1-2.9a3.1 3.1 0 0 1 1-2.3 1 1 0 0 1 .7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6a8.6 8.6 0 0 0 1.6 2 7.8 7.8 0 0 0 2.3 1.4c.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3a2.3 2.3 0 0 1-.1 1.3z"/></svg></a><a href="tel:+212661291411"><span class="l">Dr El Allali</span> <b class="num-tel">06 61 29 14 11</b></a></div>
       </div>
     </div>
 
     <div class="sep"></div>
 
     <div class="droite">
-      <img src="../assets/qr/qr-scannez-moi-bordeaux.svg" alt="">
-      <div class="url">laboelallali.com/qr</div>
+      <a href="https://laboelallali.com/qr"><img src="../assets/qr/qr-scannez-moi-bordeaux.svg" alt=""></a>
+      <div class="url"><a href="https://laboelallali.com/qr">laboelallali.com/qr</a></div>
       <div class="appel-qr">ACCÈS RAPIDE</div>
       <div class="appel-qr ar">الولوج السريع</div>
       <div class="quoi">résultats, rendez-vous, contact</div>
@@ -145,7 +154,7 @@
        1 unite = 0,1 mm. Redessine d'apres la carte actuelle : memes rues,
        memes reperes, memes libelles, dans les couleurs de la charte. -->
   <section class="face" id="ar"><div class="fini">
-    <svg class="plan" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" font-family="Inter, sans-serif">
+    <a class="lien-plan" href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA"><svg class="plan" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" font-family="Inter, sans-serif">
       <defs>
         <style>
           .ilot{fill:#fff;stroke:#3A2226;stroke-width:3.2;stroke-linejoin:round}
@@ -224,8 +233,8 @@
       <text x="402" y="318" font-family="Tajawal,sans-serif" font-size="25" font-weight="700" fill="#fff" text-anchor="middle">مختبر العلالي</text>
       <text x="402" y="345" font-family="Public Sans,sans-serif" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">LABORATOIRE</text>
       <text x="402" y="365" font-family="Public Sans,sans-serif" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">EL ALLALI</text>
-    </svg>
-    <div class="adresse">61 Bis, Rue de Marrakech, 80020 Agadir &nbsp;·&nbsp; <span class="ar">61 مكرر، زنقة مراكش، أكادير</span></div>
+    </svg></a>
+    <div class="adresse"><a href="https://maps.app.goo.gl/NUiSsY2AQjeNHcDeA">61 Bis, Rue de Marrakech, 80020 Agadir &nbsp;·&nbsp; <span class="ar">61 مكرر، زنقة مراكش، أكادير</span></a></div>
   </div></section>
 
 <script>
